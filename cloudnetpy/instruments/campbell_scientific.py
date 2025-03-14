@@ -1,6 +1,6 @@
 import binascii
+import datetime
 import re
-from datetime import datetime, timezone
 from typing import NamedTuple
 
 import numpy as np
@@ -9,6 +9,34 @@ from cloudnetpy import utils
 from cloudnetpy.exceptions import InconsistentDataError, ValidTimeStampError
 from cloudnetpy.instruments import instruments
 from cloudnetpy.instruments.ceilometer import Ceilometer
+
+
+def _date_format_to_regex(fmt: bytes) -> bytes:
+    """Converts a date format string to a regex pattern."""
+    mapping = {
+        b"%Y": rb"\d{4}",
+        b"%m": rb"0[1-9]|1[0-2]",
+        b"%d": rb"0[1-9]|[12]\d|3[01]",
+        b"%H": rb"[01]\d|2[0-3]",
+        b"%M": rb"[0-5]\d",
+        b"%S": rb"[0-5]\d",
+        b"%f": rb"\d{6}",
+    }
+    pattern = re.escape(fmt)
+    for key, value in mapping.items():
+        pattern = pattern.replace(
+            re.escape(key), b"(?P<" + key[1:] + b">" + value + b")"
+        )
+    return pattern
+
+
+FORMATS = [
+    re.compile(_date_format_to_regex(fmt))
+    for fmt in [
+        b"%Y-%m-%dT%H:%M:%S.%f,",
+        b"%%% %Y/%m/%d %H:%M:%S %%%\n",
+    ]
+]
 
 
 class Cs135(Ceilometer):
@@ -34,25 +62,34 @@ class Cs135(Ceilometer):
         tilt_angles = []
         range_resolutions = []
 
-        parts = re.split(rb"(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}.\d{6}),", content)
-        for i in range(1, len(parts), 2):
-            timestamp = datetime.strptime(
-                parts[i].decode(),
-                "%Y-%m-%dT%H:%M:%S.%f",
-            ).replace(tzinfo=timezone.utc)
-            try:
-                self._check_timestamp(timestamp)
-            except ValidTimeStampError:
-                continue
-            try:
-                message = _read_message(parts[i + 1])
-            except InvalidMessageError:
-                continue
-            profile = (message.data[:-2] * 1e-8) * (message.scale / 100)
-            timestamps.append(timestamp)
-            profiles.append(profile)
-            tilt_angles.append(message.tilt_angle)
-            range_resolutions.append(message.range_resolution)
+        for fmt in FORMATS:
+            parts = re.split(fmt, content)
+            for i in range(1, len(parts), fmt.groups + 1):
+                timestamp = datetime.datetime(
+                    int(parts[i + fmt.groupindex["Y"] - 1]),
+                    int(parts[i + fmt.groupindex["m"] - 1]),
+                    int(parts[i + fmt.groupindex["d"] - 1]),
+                    int(parts[i + fmt.groupindex["H"] - 1]),
+                    int(parts[i + fmt.groupindex["M"] - 1]),
+                    int(parts[i + fmt.groupindex["S"] - 1]),
+                    int(parts[i + fmt.groupindex["f"] - 1])
+                    if "f" in fmt.groupindex
+                    else 0,
+                    tzinfo=datetime.timezone.utc,
+                )
+                try:
+                    self._check_timestamp(timestamp)
+                except ValidTimeStampError:
+                    continue
+                try:
+                    message = _read_message(parts[i + fmt.groups])
+                except InvalidMessageError:
+                    continue
+                profile = (message.data[:-2] * 1e-8) * (message.scale / 100)
+                timestamps.append(timestamp)
+                profiles.append(profile)
+                tilt_angles.append(message.tilt_angle)
+                range_resolutions.append(message.range_resolution)
 
         if len(timestamps) == 0:
             msg = "No valid timestamps found in the file"
@@ -77,7 +114,7 @@ class Cs135(Ceilometer):
         self.data["time"] = utils.datetime2decimal_hours(timestamps)
         self.data["zenith_angle"] = np.median(tilt_angles)
 
-    def _check_timestamp(self, timestamp: datetime) -> None:
+    def _check_timestamp(self, timestamp: datetime.datetime) -> None:
         timestamp_components = str(timestamp.date()).split("-")
         if (
             self.expected_date is not None
@@ -119,19 +156,33 @@ def _read_message(message: bytes) -> Message:
             f"got {actual_checksum:04x}"
         )
         raise InvalidMessageError(msg)
-    lines = message.splitlines()
-    if len(lines[0]) != 11:
-        msg = f"Expected 11 characters in first line, got {len(lines[0])}"
+    lines = message[1 : end_idx - 1].splitlines()
+    n_lines = len(lines) + 1
+    n_first = len(lines[0]) + 1
+    if n_first != 11:
+        msg = f"Expected 11 characters in first line, got {n_first}"
         raise NotImplementedError(msg)
-    if (msg_no := lines[0][-4:-1]) != b"002":
-        msg = f"Message number {msg_no.decode()} not implemented"
-        raise NotImplementedError(msg)
-    if len(lines) != 5:
-        msg = f"Expected 5 lines, got {len(lines)}"
-        raise InvalidMessageError(msg)
-    scale, res, n, energy, lt, ti, bl, pulse, rate, _sum = map(int, lines[2].split())
-    data = _read_backscatter(lines[3].strip(), n)
-    return Message(scale, res, energy, lt, ti, bl, pulse, rate, data)
+    msg_no = lines[0][-4:-1]
+    if msg_no == b"002":
+        if n_lines != 5:
+            msg = f"Expected 5 lines, got {len(lines)}"
+            raise InvalidMessageError(msg)
+        scale, res, n, energy, lt, ti, bl, pulse, rate, _sum = map(
+            int, lines[2].split()
+        )
+        data = _read_backscatter(lines[3].strip(), n)
+        return Message(scale, res, energy, lt, ti, bl, pulse, rate, data)
+    if msg_no == b"004":
+        if n_lines != 6:
+            msg = f"Expected 6 lines, got {len(lines)}"
+            raise InvalidMessageError(msg)
+        scale, res, n, energy, lt, ti, bl, pulse, rate, _sum = map(
+            int, lines[3].split()
+        )
+        data = _read_backscatter(lines[4].strip(), n)
+        return Message(scale, res, energy, lt, ti, bl, pulse, rate, data)
+    msg = f"Message number {msg_no.decode()} not implemented"
+    raise NotImplementedError(msg)
 
 
 def _read_backscatter(data: bytes, n_gates: int) -> np.ndarray:
