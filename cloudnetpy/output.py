@@ -44,6 +44,9 @@ def save_level1b(
         nc.source = get_l1b_source(obj.instrument)
         if hasattr(obj, "serial_number") and obj.serial_number is not None:
             nc.serial_number = obj.serial_number
+        if hasattr(obj, "software"):
+            for software, version in obj.software.items():
+                nc.setncattr(f"{software}_version", version)
         nc.references = get_references()
     return file_uuid
 

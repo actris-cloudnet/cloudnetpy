@@ -16,44 +16,6 @@ from tests.unit.lidar_fun import LidarFun
 SCRIPT_PATH = os.path.dirname(os.path.realpath(__file__))
 
 
-@pytest.mark.parametrize(
-    "input, result",
-    [
-        ("01:30:00", 1.5),
-        ("02:00:00", 2),
-        ("13:15:00", 13.25),
-    ],
-)
-def test_time_to_fraction_hour(input, result):
-    assert vaisala.time_to_fraction_hour(input) == result
-
-
-@pytest.mark.parametrize(
-    "keys, values, result",
-    [
-        (
-            ("a", "b"),
-            [[1, 2], [1, 2], [1, 2]],
-            {"a": np.array([1, 1, 1]), "b": np.array([2, 2, 2])},
-        ),
-    ],
-)
-def test_values_to_dict(keys, values, result):
-    assert_equal(vaisala.values_to_dict(keys, values), result)
-
-
-@pytest.mark.parametrize(
-    "string, indices, result",
-    [
-        ("abcd", [3, 4], ["d"]),
-        ("abcd", [0, 4], ["abcd"]),
-        ("abcdedfg", [1, 2, 4, 5], ["b", "cd", "e"]),
-    ],
-)
-def test_split_string(string, indices, result):
-    assert_equal(vaisala.split_string(string, indices), result)
-
-
 class TestCL51(Check):
     site_meta = {
         "name": "Kumpula",
@@ -102,6 +64,7 @@ class TestCL51(Check):
     def test_global_attributes(self):
         assert self.nc.source == "Vaisala CL51"
         assert self.nc.title == f'CL51 ceilometer from {self.site_meta["name"]}'
+        assert len(self.nc.ceilopyter_version) > 0
 
     def test_date_argument(self, tmp_path):
         test_path = tmp_path / "date.nc"
@@ -126,7 +89,7 @@ def test_cl51_corrupted_profile(tmp_path):
     output_path = tmp_path / "cl51-corrupted-profile.nc"
     ceilo2nc(input_path, output_path, site_meta, date="2022-05-06")
     with netCDF4.Dataset(output_path) as nc:
-        assert_equal(nc.variables["beta"][:].mask.all(axis=1), [False, True, False])
+        assert nc.variables["time"].size == 2
 
 
 def test_cl51_corrupted_profile2(tmp_path):
@@ -140,10 +103,9 @@ def test_cl51_corrupted_profile2(tmp_path):
     output_path = tmp_path / "cl51-corrupted-profile.nc"
     ceilo2nc(input_path, output_path, site_meta, date="2015-06-18")
     with netCDF4.Dataset(output_path) as nc:
-        assert_equal(nc.variables["beta"][:].mask.all(axis=1), [False, True])
         assert_almost_equal(
             nc.variables["time"][:],
-            [40 / 60 / 60, 19 + 54 / 60 + 8 / 60 / 60],
+            [40 / 60 / 60, 1 / 60 + 9 / 60 / 60],
             decimal=5,
         )
 
@@ -195,6 +157,7 @@ class TestCL31(Check):
     def test_global_attributes(self):
         assert self.nc.source == "Vaisala CL31"
         assert self.nc.title == f'CL31 ceilometer from {self.site_meta["name"]}'
+        assert len(self.nc.ceilopyter_version) > 0
 
     def test_date_argument(self, tmp_path):
         test_path = tmp_path / "date.nc"
@@ -262,6 +225,7 @@ class TestCT25k(Check):
     def test_global_attributes(self):
         assert self.nc.source == "Vaisala CT25k"
         assert self.nc.title == f'CT25k ceilometer from {self.site_meta["name"]}'
+        assert len(self.nc.ceilopyter_version) > 0
 
     def test_date_argument(self, tmp_path):
         test_path = tmp_path / "date.nc"

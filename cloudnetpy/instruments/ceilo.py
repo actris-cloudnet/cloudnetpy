@@ -6,10 +6,9 @@ import netCDF4
 from numpy import ma
 
 from cloudnetpy import output, utils
-from cloudnetpy.instruments.campbell_scientific import Cs135
 from cloudnetpy.instruments.cl61d import Cl61d
 from cloudnetpy.instruments.lufft import LufftCeilo
-from cloudnetpy.instruments.vaisala import ClCeilo, Ct25k
+from cloudnetpy.instruments.vaisala import ClCeilo, Cs135, Ct25k
 from cloudnetpy.metadata import MetaData
 
 

@@ -121,6 +121,7 @@ class TestCS135_2(Check):
     def test_global_attributes(self):
         assert self.nc.source == "Campbell Scientific CS135"
         assert self.nc.title == f'CS135 ceilometer from {self.site_meta["name"]}'
+        assert len(self.nc.ceilopyter_version) > 0
 
     def test_date_argument(self, tmp_path):
         with pytest.raises(ValidTimeStampError):
