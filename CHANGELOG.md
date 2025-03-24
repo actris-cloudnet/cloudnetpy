@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.71.4 – 2025-03-24
+
+- Read ceilometer ASCII files using [`ceilopyter`](https://pypi.org/project/ceilopyter/) package
+
 ## 1.71.3 – 2025-03-14
 
 - Extend CS135 support
