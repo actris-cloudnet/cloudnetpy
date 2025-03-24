@@ -10,11 +10,8 @@ classifiers = [
   "Intended Audience :: Science/Research",
   "License :: OSI Approved :: MIT License",
   "Operating System :: OS Independent",
-  "Programming Language :: Python :: 3.10",
-  "Programming Language :: Python :: 3.11",
-  "Programming Language :: Python :: 3.12",
-  "Programming Language :: Python :: 3.13",
-  "Topic :: Scientific/Engineering",
+  "Programming Language :: Python :: 3",
+  "Topic :: Scientific/Engineering :: Atmospheric Science",
 ]
 dependencies = [
   "ceilopyter",
