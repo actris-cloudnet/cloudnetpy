@@ -199,7 +199,7 @@ class FigureData:
                 if "altitude" not in self.file.variables:
                     msg = "No altitude information in the file."
                     raise ValueError(msg)
-                height -= self.file.variables["altitude"][:]
+                height -= np.median(self.file.variables["altitude"][:])
             return height * con.M_TO_KM
         if "range" in self.file.variables:
             return self.file.variables["range"][:] * con.M_TO_KM
