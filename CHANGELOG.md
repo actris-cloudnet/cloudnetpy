@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.71.6 – 2025-03-31
+
+- Fix bug related to time attribute in MWRpy
+
 ## 1.71.5 – 2025-03-31
 
 - Fix IR dimension name in MWRpy
