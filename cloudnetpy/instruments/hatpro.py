@@ -110,7 +110,8 @@ def hatpro2l1c(
         if key in site_meta:
             hatpro.data[key] = CloudnetArray(site_meta[key], key, data_type="f4")
 
-    attributes = output.add_time_attribute(ATTRIBUTES_1B01, hatpro.date)
+    attrs_copy = ATTRIBUTES_1B01.copy()
+    attributes = output.add_time_attribute(attrs_copy, hatpro.date)
     output.update_attributes(hatpro.data, attributes)
     uuid = output.save_level1b(hatpro, output_file, uuid)
     with netCDF4.Dataset(output_file, "a") as nc:
