@@ -103,6 +103,8 @@ def hatpro2l1c(
 
     if "ir_wavelength" in hatpro.data:
         hatpro.data["ir_wavelength"].dimensions = ("ir_channel",)
+    if "irt" in hatpro.data:
+        hatpro.data["irt"].dimensions = ("time", "ir_channel")
 
     for key in ("latitude", "longitude", "altitude"):
         if key in site_meta:
