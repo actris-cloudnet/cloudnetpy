@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.71.5 – 2025-03-31
+
+- Fix IR dimension name in MWRpy
+- Support altitude vectors in plotting
+
 ## 1.71.4 – 2025-03-24
 
 - Read ceilometer ASCII files using [`ceilopyter`](https://pypi.org/project/ceilopyter/) package
