@@ -107,8 +107,8 @@ def hatpro2l1c(
         hatpro.data["irt"].dimensions = ("time", "ir_channel")
 
     for key in ("latitude", "longitude", "altitude"):
-        if key in site_meta:
-            hatpro.data[key] = CloudnetArray(site_meta[key], key, data_type="f4")
+        value = float(ma.mean(hatpro.data[key].data))
+        hatpro.data[key] = CloudnetArray(value, key)
 
     attrs_copy = ATTRIBUTES_1B01.copy()
     attributes = output.add_time_attribute(attrs_copy, hatpro.date)

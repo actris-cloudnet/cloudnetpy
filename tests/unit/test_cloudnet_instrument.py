@@ -25,4 +25,4 @@ def test_parse_global_attribute_numeral(data: str, result: float):
         instrument.dataset = nc
         for key in ["Altitude", "Latitude", "Longitude"]:
             setattr(nc, key, data)
-            assert instrument.parse_global_attribute_numeral(key) == result
+            assert instrument._parse_global_attribute_numeral(key) == result

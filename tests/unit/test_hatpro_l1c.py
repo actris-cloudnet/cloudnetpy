@@ -16,9 +16,9 @@ class TestHatpro2nc(Check):
 
     site_meta = {
         "name": "hyytiala",
-        "altitude": 50,
-        "latitude": 23.0,
-        "longitude": 123,
+        "latitude": 61.844,
+        "longitude": 24.287,
+        "altitude": 150,
         "coefficientFiles": coeff_files,
         "coefficientLinks": coeff_files,
     }

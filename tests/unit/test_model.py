@@ -166,7 +166,8 @@ class TestEcmwf:
         n = 0
         report = quality.run_tests(
             Path(self.filename),
-            ignore_tests=["TestCFConvention"],
+            {"latitude": 0, "longitude": 0, "altitude": 0},
+            ignore_tests=["TestCFConvention", "TestCoordinates"],
         )
         keys = ("TestUnits",)
         for test in report.tests:

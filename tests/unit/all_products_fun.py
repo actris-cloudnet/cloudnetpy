@@ -30,7 +30,8 @@ class Check:
         n = 0
         report = quality.run_tests(
             Path(self.temp_path),
-            ignore_tests=["TestCFConvention"],
+            {"latitude": 0, "longitude": 0, "altitude": 0},
+            ignore_tests=["TestCFConvention", "TestCoordinates"],
         )
         keys = ("TestUnits", "TestLongNames", "TestStandardNames")
         for test in report.tests:
@@ -77,7 +78,7 @@ class AllProductsFun:
         for key in ("altitude", "latitude", "longitude"):
             value = self.nc.variables[key][:]
             expected = self.site_meta[key]
-            assert np.isclose(value, expected), f"{value} != {expected}"
+            assert np.isclose(value, expected, atol=1e-2), f"{value} != {expected}"
 
     def test_invalid_units(self):
         for key in self.nc.variables:

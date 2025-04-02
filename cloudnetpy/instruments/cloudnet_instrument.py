@@ -7,6 +7,7 @@ from numpy import ma
 from cloudnetpy import utils
 from cloudnetpy.cloudnetarray import CloudnetArray
 from cloudnetpy.exceptions import ValidTimeStampError
+from cloudnetpy.instruments.instruments import BASTA, FMCW35, FMCW94, HATPRO, Instrument
 
 
 class CloudnetInstrument:
@@ -16,37 +17,66 @@ class CloudnetInstrument:
         self.site_meta: dict = {}
         self.data: dict = {}
         self.serial_number: str | None = None
+        self.instrument: Instrument | None = None
 
     def add_site_geolocation(self) -> None:
         for key in ("latitude", "longitude", "altitude"):
             value = None
-            # User-supplied:
-            if key in self.site_meta:
+            source = None
+            # From source data (BASTA, RPG-FMCW, HATPRO).
+            # Should be the accurate GPS coordinates.
+            if (
+                value is None
+                and self.instrument is not None
+                and self.instrument in (BASTA, FMCW94, FMCW35, HATPRO)
+                and hasattr(self, "dataset")
+                and isinstance(self.dataset, netCDF4.Dataset)
+                and key in self.dataset.variables
+                and not np.all(ma.getmaskarray(self.dataset[key][:]))
+            ):
+                value = self.dataset[key][:]
+                source = "GPS"
+            # User-supplied site coordinate.
+            if value is None and key in self.site_meta:
                 value = self.site_meta[key]
-            # From source global attributes (MIRA):
-            elif (
-                hasattr(self, "dataset")
+                source = "site coordinates"
+            # From source data (CHM15k, CL61, MRR-PRO, Copernicus, Galileo...).
+            # Assume value is manually set, so cannot trust it.
+            if (
+                value is None
+                and hasattr(self, "dataset")
+                and isinstance(self.dataset, netCDF4.Dataset)
+                and key in self.dataset.variables
+                and not np.all(ma.getmaskarray(self.dataset[key][:]))
+            ):
+                value = self.dataset[key][:]
+                source = "raw file"
+            # From source global attributes (MIRA).
+            # Seems to be manually set, so cannot trust it.
+            if (
+                value is None
+                and hasattr(self, "dataset")
                 and isinstance(self.dataset, netCDF4.Dataset)
                 and hasattr(
                     self.dataset,
                     key.capitalize(),
                 )
             ):
-                value = self.parse_global_attribute_numeral(key.capitalize())
-            # From source data (BASTA / RPG):
-            elif (
-                hasattr(self, "dataset")
-                and isinstance(self.dataset, netCDF4.Dataset)
-                and key in self.dataset.variables
-            ):
-                value = self.dataset.variables[key][:]
+                value = self._parse_global_attribute_numeral(key.capitalize())
+                source = "raw file"
             if value is not None:
                 value = float(ma.mean(value))
-                self.data[key] = CloudnetArray(value, key)
+                # Convert from 0...360 to -180...180
+                if key == "longitude" and value > 180:
+                    value -= 360
+                self.data[key] = CloudnetArray(value, key, source=source)
 
-    def parse_global_attribute_numeral(self, key: str) -> float:
+    def _parse_global_attribute_numeral(self, key: str) -> float | None:
         new_str = ""
-        for char in getattr(self.dataset, key):
+        attr = getattr(self.dataset, key)
+        if attr == "Unknown":
+            return None
+        for char in attr:
             if char.isdigit() or char == ".":
                 new_str += char
         return float(new_str)

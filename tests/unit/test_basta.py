@@ -16,9 +16,9 @@ filename = f"{SCRIPT_PATH}/data/basta/basta_1a_cldradLz1R025m_v03_20210827_00000
 class TestBASTA(Check):
     site_meta = {
         "name": "Palaiseau",
-        "latitude": 50,
-        "longitude": 104.5,
-        "altitude": 50,
+        "latitude": 48.717,
+        "longitude": 2.209,
+        "altitude": 158,
     }
     date = "2021-08-27"
     temp_dir = TemporaryDirectory()

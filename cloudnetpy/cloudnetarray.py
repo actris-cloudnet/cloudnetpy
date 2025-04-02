@@ -21,6 +21,7 @@ class CloudnetArray:
         units_from_user: Explicit units, optional.
         dimensions: Explicit dimension names, optional.
         data_type: Explicit data type, optional.
+        source: Source attribute, optional.
 
     """
 
@@ -31,6 +32,7 @@ class CloudnetArray:
         units_from_user: str | None = None,
         dimensions: Sequence[str] | None = None,
         data_type: str | None = None,
+        source: str | None = None,
     ):
         self.variable = variable
         self.name = name
@@ -38,6 +40,7 @@ class CloudnetArray:
         self.units = units_from_user or self._init_units()
         self.data_type = data_type or self._init_data_type()
         self.dimensions = dimensions
+        self.source = source
 
     def lin2db(self) -> None:
         """Converts linear units to log."""
@@ -83,15 +86,19 @@ class CloudnetArray:
     def fetch_attributes(self) -> list:
         """Returns list of user-defined attributes."""
         attributes = []
-        for attr in self.__dict__:
-            if attr not in (
-                "variable",
-                "name",
-                "data",
-                "data_type",
-                "dimensions",
+        for key, value in self.__dict__.items():
+            if (
+                key
+                not in (
+                    "variable",
+                    "name",
+                    "data",
+                    "data_type",
+                    "dimensions",
+                )
+                and value is not None
             ):
-                attributes.append(attr)
+                attributes.append(key)
         return attributes
 
     def set_attributes(self, attributes: MetaData) -> None:

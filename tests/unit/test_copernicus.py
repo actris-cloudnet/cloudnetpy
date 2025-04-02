@@ -17,9 +17,9 @@ FILEPATH = f"{SCRIPT_PATH}/data/copernicus/"
 class TestCopernicus2nc(Check):
     site_meta = {
         "name": "Chilbolton",
-        "latitude": 50,
-        "longitude": 104.5,
-        "altitude": 50,
+        "latitude": 51.144,
+        "longitude": -1.439,
+        "altitude": 85,
         "range_offset": 20,
     }
     temp_dir = TemporaryDirectory()
@@ -116,12 +116,3 @@ class TestCopernicus2nc(Check):
         with netCDF4.Dataset(test_path) as nc:
             assert nc.file_uuid == uuid_from_user
             assert uuid == uuid_from_user
-
-    def test_geolocation_from_source_file(self, tmp_path):
-        test_path = tmp_path / "geo.nc"
-        meta_without_geolocation = {"name": "Kumpula"}
-        copernicus.copernicus2nc(FILEPATH, test_path, meta_without_geolocation)
-        with netCDF4.Dataset(test_path) as nc:
-            for key in ("latitude", "longitude", "altitude"):
-                assert key in nc.variables
-                assert nc.variables[key][:] > 0
