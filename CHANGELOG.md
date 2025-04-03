@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.72.0 – 2025-04-03
+
+- Prefer instrument's GPS coordinates over site coordinates
+- Screen invalid temperature and pressure from RPG cloud radar
+
 ## 1.71.6 – 2025-03-31
 
 - Fix bug related to time attribute in MWRpy
