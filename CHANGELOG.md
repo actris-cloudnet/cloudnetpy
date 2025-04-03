@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.72.1 – 2025-04-03
+
+- Fix reading RPG radar coordinates
+
 ## 1.72.0 – 2025-04-03
 
 - Prefer instrument's GPS coordinates over site coordinates
