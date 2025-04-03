@@ -39,8 +39,12 @@ class CloudnetInstrument:
                     data = self.dataset[key][:]
                 elif key in self.data:
                     data = self.data[key].data
-                if data is not None and not np.all(ma.getmaskarray(data)):
-                    value = data
+                if (
+                    data is not None
+                    and not np.all(ma.getmaskarray(data))
+                    and np.any(data != 0)
+                ):
+                    value = data[data != 0]
                     source = "GPS"
             # User-supplied site coordinate.
             if value is None and key in self.site_meta:
