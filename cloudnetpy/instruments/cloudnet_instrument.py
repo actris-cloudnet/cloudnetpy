@@ -29,13 +29,19 @@ class CloudnetInstrument:
                 value is None
                 and self.instrument is not None
                 and self.instrument in (BASTA, FMCW94, FMCW35, HATPRO)
-                and hasattr(self, "dataset")
-                and isinstance(self.dataset, netCDF4.Dataset)
-                and key in self.dataset.variables
-                and not np.all(ma.getmaskarray(self.dataset[key][:]))
             ):
-                value = self.dataset[key][:]
-                source = "GPS"
+                data = None
+                if (
+                    hasattr(self, "dataset")
+                    and isinstance(self.dataset, netCDF4.Dataset)
+                    and key in self.dataset.variables
+                ):
+                    data = self.dataset[key][:]
+                elif key in self.data:
+                    data = self.data[key].data
+                if data is not None and not np.all(ma.getmaskarray(data)):
+                    value = data
+                    source = "GPS"
             # User-supplied site coordinate.
             if value is None and key in self.site_meta:
                 value = self.site_meta[key]

@@ -11,7 +11,7 @@ from numpy.testing import assert_equal
 
 from cloudnetpy.exceptions import InconsistentDataError, ValidTimeStampError
 from cloudnetpy.instruments import rpg, rpg2nc
-from tests.unit.all_products_fun import SITE_META, Check
+from tests.unit.all_products_fun import Check
 from tests.unit.radar_fun import RadarFun
 
 SCRIPT_PATH = path.dirname(path.realpath(__file__))
@@ -32,7 +32,12 @@ class TestReduceHeader:
 
 
 class TestRPG2nc94GHz(Check):
-    site_meta = SITE_META
+    site_meta = {
+        "name": "Bucharest",
+        "latitude": 44.344,
+        "longitude": 26.012,
+        "altitude": 77,
+    }
     date = "2020-10-22"
     temp_dir = TemporaryDirectory()
     temp_path = temp_dir.name + "/rpg.nc"
@@ -177,7 +182,12 @@ class TestRPG2nc94GHz(Check):
 
 
 class TestRPG2ncSTSR35GHz(Check):
-    site_meta = SITE_META
+    site_meta = {
+        "name": "Cabauw",
+        "latitude": 51.968,
+        "longitude": 4.927,
+        "altitude": -1,
+    }
     date = "2021-09-13"
     temp_dir = TemporaryDirectory()
     temp_path = temp_dir.name + "/rpg.nc"
