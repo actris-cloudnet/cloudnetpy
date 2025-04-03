@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.72.2 – 2025-04-03
+
+- Skip zero GPS coordinates
+
 ## 1.72.1 – 2025-04-03
 
 - Fix reading RPG radar coordinates
