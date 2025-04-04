@@ -7,7 +7,7 @@ from numpy import ma
 from cloudnetpy import utils
 from cloudnetpy.cloudnetarray import CloudnetArray
 from cloudnetpy.exceptions import ValidTimeStampError
-from cloudnetpy.instruments.instruments import BASTA, FMCW35, FMCW94, HATPRO, Instrument
+from cloudnetpy.instruments.instruments import BASTA, FMCW35, FMCW94, Instrument
 
 
 class CloudnetInstrument:
@@ -23,12 +23,13 @@ class CloudnetInstrument:
         for key in ("latitude", "longitude", "altitude"):
             value = None
             source = None
-            # From source data (BASTA, RPG-FMCW, HATPRO).
+            # From source data (BASTA, RPG-FMCW).
             # Should be the accurate GPS coordinates.
+            # HATPRO is handled elsewhere.
             if (
                 value is None
                 and self.instrument is not None
-                and self.instrument in (BASTA, FMCW94, FMCW35, HATPRO)
+                and self.instrument in (BASTA, FMCW94, FMCW35)
             ):
                 data = None
                 if (

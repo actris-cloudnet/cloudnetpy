@@ -106,9 +106,21 @@ def hatpro2l1c(
     if "irt" in hatpro.data:
         hatpro.data["irt"].dimensions = ("time", "ir_channel")
 
-    for key in ("latitude", "longitude", "altitude"):
-        value = float(ma.mean(hatpro.data[key].data))
-        hatpro.data[key] = CloudnetArray(value, key)
+    lat = hatpro.data["latitude"].data
+    lon = hatpro.data["longitude"].data
+    valid_latlon = (lat != 0) | (lon != 0)
+    if np.any(valid_latlon):
+        lat = float(ma.mean(lat[valid_latlon]))
+        lon = float(ma.mean(lon[valid_latlon]))
+        latlon_source = "GPS"
+    else:
+        lat = site_meta["latitude"]
+        lon = site_meta["longitude"]
+        latlon_source = "site coordinates"
+    alt = float(site_meta["altitude"])
+    hatpro.data["latitude"] = CloudnetArray(lat, "latitude", source=latlon_source)
+    hatpro.data["longitude"] = CloudnetArray(lon, "longitude", source=latlon_source)
+    hatpro.data["altitude"] = CloudnetArray(alt, "altitude", source="site coordinates")
 
     attrs_copy = ATTRIBUTES_1B01.copy()
     attributes = output.add_time_attribute(attrs_copy, hatpro.date)
