@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.72.3 – 2025-04-04
+
+- Fix HATPRO coordinate handling
+
 ## 1.72.2 – 2025-04-03
 
 - Skip zero GPS coordinates
