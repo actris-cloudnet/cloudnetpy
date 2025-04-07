@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.73.0 – 2025-04-07
+
+- Add bowtie2nc for processing RV Meteor radar data (#115)
+
 ## 1.72.3 – 2025-04-04
 
 - Fix HATPRO coordinate handling
