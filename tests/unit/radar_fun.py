@@ -17,11 +17,10 @@ class RadarFun:
             "v",
             "radar_frequency",
             "range",
-            "zenith_angle",
             "height",
         }
         for key in keys:
-            assert key in self.nc.variables
+            assert key in self.nc.variables, key
 
     def test_axis(self):
         assert self.nc.variables["range"].axis == "Z"
@@ -30,7 +29,8 @@ class RadarFun:
                 assert hasattr(self.nc.variables[key], "axis") is False
 
     def test_variable_values(self):
-        assert 0 <= np.all(self.nc.variables["zenith_angle"][:]) < 10
+        if "zenith_angle" in self.nc.variables:
+            assert 0 <= np.all(self.nc.variables["zenith_angle"][:]) < 10
         assert np.all(
             (
                 self.nc.variables["height"][:]

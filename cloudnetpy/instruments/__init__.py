@@ -1,4 +1,5 @@
 from .basta import basta2nc
+from .bowtie import bowtie2nc
 from .ceilo import ceilo2nc
 from .copernicus import copernicus2nc
 from .disdrometer import parsivel2nc, thies2nc
