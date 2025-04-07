@@ -445,10 +445,6 @@ RPG_ATTRIBUTES = {
         long_name="Number of spectral samples in each chirp sequence",
         units="1",
     ),
-    "chirp_start_indices": MetaData(
-        long_name="Chirp sequences start indices",
-        units="1",
-    ),
     "number_of_averaged_chirps": MetaData(
         long_name="Number of averaged chirps in sequence",
         units="1",
@@ -516,10 +512,6 @@ RPG_ATTRIBUTES = {
     "pc_temperature": MetaData(
         long_name="PC temperature",
         units="K",
-    ),
-    "skewness": MetaData(
-        long_name="Skewness of spectra",
-        units="1",
     ),
     "kurtosis": MetaData(
         long_name="Kurtosis of spectra",

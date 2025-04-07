@@ -93,6 +93,10 @@ COMMON_ATTRIBUTES = {
         long_name="Kurtosis of spectra",
         units="1",
     ),
+    "skewness": MetaData(
+        long_name="Skewness of spectra",
+        units="1",
+    ),
     "nyquist_velocity": MetaData(long_name="Nyquist velocity", units="m s-1"),
     "radar_frequency": MetaData(long_name="Radar transmit frequency", units="GHz"),
     "beta": MetaData(
@@ -189,5 +193,9 @@ COMMON_ATTRIBUTES = {
         long_name="SNR limit",
         units="dB",
         comment="SNR threshold used in data screening.",
+    ),
+    "chirp_start_indices": MetaData(
+        long_name="Chirp sequences start indices",
+        units="1",
     ),
 }
