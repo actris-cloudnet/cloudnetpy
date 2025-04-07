@@ -15,7 +15,7 @@ def bowtie2nc(
     uuid: str | None = None,
     date: str | None = None,
 ) -> str:
-    """Converts data from 'Bowtie' cloud radar on RV-Meteor into
+    """Converts data from 'BOW-TIE' campaign cloud radar on RV-Meteor into
        Cloudnet Level 1b netCDF file.
 
     Args:
