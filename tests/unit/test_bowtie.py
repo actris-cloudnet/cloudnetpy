@@ -1,7 +1,6 @@
 from os import path
 from tempfile import TemporaryDirectory
 
-import netCDF4
 import numpy as np
 import pytest
 
@@ -14,7 +13,7 @@ SCRIPT_PATH = path.dirname(path.realpath(__file__))
 FILEPATH = f"{SCRIPT_PATH}/data/bowtie/bowtie-trunc.nc"
 
 
-class TestCopernicus2nc(Check):
+class TestBowtie2nc(Check):
     site_meta = {
         "altitude": 16,
         "latitude": 6.1,
