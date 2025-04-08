@@ -105,6 +105,7 @@ def ceilo2nc(
     ceilo_obj.screen_invalid_values()
     ceilo_obj.prepare_data()
     ceilo_obj.data_to_cloudnet_arrays()
+    ceilo_obj.add_site_geolocation()
     attributes = output.add_time_attribute(ATTRIBUTES, ceilo_obj.date)
     output.update_attributes(ceilo_obj.data, attributes)
     for key in ("beta", "beta_smooth"):

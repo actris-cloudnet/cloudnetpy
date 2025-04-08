@@ -1,13 +1,16 @@
 import logging
+from typing import TYPE_CHECKING
 
-import netCDF4
 import numpy as np
 from numpy import ma
 
 from cloudnetpy import utils
 from cloudnetpy.cloudnetarray import CloudnetArray
 from cloudnetpy.exceptions import ValidTimeStampError
-from cloudnetpy.instruments.instruments import BASTA, FMCW35, FMCW94, Instrument
+from cloudnetpy.instruments.instruments import BASTA, FMCW35, FMCW94, HATPRO, Instrument
+
+if TYPE_CHECKING:
+    import netCDF4
 
 
 class CloudnetInstrument:
@@ -20,77 +23,13 @@ class CloudnetInstrument:
         self.instrument: Instrument | None = None
 
     def add_site_geolocation(self) -> None:
-        for key in ("latitude", "longitude", "altitude"):
-            value = None
-            source = None
-            # From source data (BASTA, RPG-FMCW).
-            # Should be the accurate GPS coordinates.
-            # HATPRO is handled elsewhere.
-            if (
-                value is None
-                and self.instrument is not None
-                and self.instrument in (BASTA, FMCW94, FMCW35)
-            ):
-                data = None
-                if (
-                    hasattr(self, "dataset")
-                    and isinstance(self.dataset, netCDF4.Dataset)
-                    and key in self.dataset.variables
-                ):
-                    data = self.dataset[key][:]
-                elif key in self.data:
-                    data = self.data[key].data
-                if (
-                    data is not None
-                    and not np.all(ma.getmaskarray(data))
-                    and np.any(data != 0)
-                ):
-                    value = data[data != 0]
-                    source = "GPS"
-            # User-supplied site coordinate.
-            if value is None and key in self.site_meta:
-                value = self.site_meta[key]
-                source = "site coordinates"
-            # From source data (CHM15k, CL61, MRR-PRO, Copernicus, Galileo...).
-            # Assume value is manually set, so cannot trust it.
-            if (
-                value is None
-                and hasattr(self, "dataset")
-                and isinstance(self.dataset, netCDF4.Dataset)
-                and key in self.dataset.variables
-                and not np.all(ma.getmaskarray(self.dataset[key][:]))
-            ):
-                value = self.dataset[key][:]
-                source = "raw file"
-            # From source global attributes (MIRA).
-            # Seems to be manually set, so cannot trust it.
-            if (
-                value is None
-                and hasattr(self, "dataset")
-                and isinstance(self.dataset, netCDF4.Dataset)
-                and hasattr(
-                    self.dataset,
-                    key.capitalize(),
-                )
-            ):
-                value = self._parse_global_attribute_numeral(key.capitalize())
-                source = "raw file"
-            if value is not None:
-                value = float(ma.mean(value))
-                # Convert from 0...360 to -180...180
-                if key == "longitude" and value > 180:
-                    value -= 360
-                self.data[key] = CloudnetArray(value, key, source=source)
-
-    def _parse_global_attribute_numeral(self, key: str) -> float | None:
-        new_str = ""
-        attr = getattr(self.dataset, key)
-        if attr == "Unknown":
-            return None
-        for char in attr:
-            if char.isdigit() or char == ".":
-                new_str += char
-        return float(new_str)
+        has_gps = self.instrument in (BASTA, FMCW94, FMCW35, HATPRO)
+        utils.add_site_geolocation(
+            self.data,
+            gps=has_gps,
+            site_meta=self.site_meta,
+            dataset=self.dataset if hasattr(self, "dataset") else None,
+        )
 
     def add_height(self) -> None:
         zenith_angle = self._get_zenith_angle()

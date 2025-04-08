@@ -60,6 +60,7 @@ def pollyxt2nc(
     polly.prepare_data()
     polly.screen_completely_masked_profiles()
     polly.data_to_cloudnet_arrays(time_dtype="f8")
+    polly.add_site_geolocation()
     attributes = output.add_time_attribute(ATTRIBUTES, polly.date)
     output.update_attributes(polly.data, attributes)
     polly.add_snr_info("beta", snr_limit)
