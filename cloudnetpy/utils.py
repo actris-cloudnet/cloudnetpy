@@ -15,10 +15,12 @@ from typing import Literal, TypeVar
 
 import netCDF4
 import numpy as np
+import numpy.typing as npt
 from numpy import ma
 from scipy import ndimage, stats
 from scipy.interpolate import RectBivariateSpline, RegularGridInterpolator, griddata
 
+from cloudnetpy.cloudnetarray import CloudnetArray
 from cloudnetpy.constants import SEC_IN_DAY, SEC_IN_HOUR, SEC_IN_MINUTE
 from cloudnetpy.exceptions import ValidTimeStampError
 
@@ -1050,3 +1052,100 @@ def _calc_hash_sum(filename, method, *, is_base64: bool) -> str:
     if is_base64:
         return base64.encodebytes(hash_sum.digest()).decode("utf-8").strip()
     return hash_sum.hexdigest()
+
+
+def add_site_geolocation(
+    data: dict,
+    *,
+    gps: bool,
+    site_meta: dict | None = None,
+    dataset: netCDF4.Dataset | None = None,
+):
+    tmp_data = {}
+    tmp_source = {}
+
+    for key in ("latitude", "longitude", "altitude"):
+        value = None
+        source = None
+        # Prefer accurate GPS coordinates.
+        if gps:
+            values = None
+            if isinstance(dataset, netCDF4.Dataset) and key in dataset.variables:
+                values = dataset[key][:]
+            elif key in data:
+                values = data[key].data
+            if (
+                values is not None
+                and not np.all(ma.getmaskarray(values))
+                and np.any(values != 0)
+            ):
+                value = ma.masked_where(values == 0, values)
+                source = "GPS"
+        # User-supplied site coordinate.
+        if value is None and site_meta is not None and key in site_meta:
+            value = float(site_meta[key])
+            source = "site coordinates"
+        # From source data (CHM15k, CL61, MRR-PRO, Copernicus, Galileo...).
+        # Assume value is manually set, so cannot trust it.
+        if (
+            value is None
+            and isinstance(dataset, netCDF4.Dataset)
+            and key in dataset.variables
+            and not np.all(ma.getmaskarray(dataset[key][:]))
+        ):
+            value = dataset[key][:]
+            source = "raw file"
+        # From source global attributes (MIRA).
+        # Seems to be manually set, so cannot trust it.
+        if (
+            value is None
+            and isinstance(dataset, netCDF4.Dataset)
+            and hasattr(dataset, key.capitalize())
+        ):
+            value = _parse_global_attribute_numeral(dataset, key.capitalize())
+            source = "raw file"
+        if value is not None:
+            tmp_data[key] = value
+            tmp_source[key] = source
+
+    if "latitude" in tmp_data and "longitude" in tmp_data:
+        lat = np.atleast_1d(tmp_data["latitude"])
+        lon = np.atleast_1d(tmp_data["longitude"])
+        lon[lon > 180] - 360
+        if _are_stationary(lat, lon):
+            tmp_data["latitude"] = float(ma.mean(lat))
+            tmp_data["longitude"] = float(ma.mean(lon))
+        else:
+            tmp_data["latitude"] = lat
+            tmp_data["longitude"] = lon
+
+    if "altitude" in tmp_data:
+        alt = np.atleast_1d(tmp_data["altitude"])
+        if ma.max(alt) - ma.min(alt) < 100:
+            tmp_data["altitude"] = float(ma.mean(alt))
+
+    for key in ("latitude", "longitude", "altitude"):
+        if key in tmp_data:
+            data[key] = CloudnetArray(tmp_data[key], key, source=tmp_source[key])
+
+
+def _parse_global_attribute_numeral(dataset: netCDF4.Dataset, key: str) -> float | None:
+    new_str = ""
+    attr = getattr(dataset, key)
+    if attr == "Unknown":
+        return None
+    for char in attr:
+        if char.isdigit() or char == ".":
+            new_str += char
+    return float(new_str)
+
+
+def _are_stationary(latitude: npt.NDArray, longitude: npt.NDArray) -> bool:
+    min_lat, max_lat = np.min(latitude), np.max(latitude)
+    min_lon, max_lon = np.min(longitude), np.max(longitude)
+    lat_threshold = 0.01  # deg, around 1 km
+    avg_lat = (min_lat + max_lat) / 2
+    lon_threshold = lat_threshold / np.cos(np.radians(avg_lat))
+    lat_diff = max_lat - min_lat
+    lon_diff = max_lon - min_lon
+    return lat_diff <= lat_threshold and lon_diff <= lon_threshold

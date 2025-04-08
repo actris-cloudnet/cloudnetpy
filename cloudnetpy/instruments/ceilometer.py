@@ -93,9 +93,6 @@ class Ceilometer:
             msg = "Instrument wavelength not defined"
             raise RuntimeError(msg)
         self.data["wavelength"] = float(self.instrument.wavelength)
-        for key in ("latitude", "longitude", "altitude"):
-            if key in self.site_meta:
-                self.data[key] = float(self.site_meta[key])
 
     def get_date_and_time(self, epoch: Epoch) -> None:
         if "time" not in self.data:
@@ -112,6 +109,9 @@ class Ceilometer:
                 self.data[key] = CloudnetArray(array, key, data_type=time_dtype)
             else:
                 self.data[key] = CloudnetArray(array, key)
+
+    def add_site_geolocation(self):
+        utils.add_site_geolocation(self.data, gps=False, site_meta=self.site_meta)
 
     def screen_depol(self) -> None:
         key = "depolarisation"

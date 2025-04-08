@@ -891,3 +891,23 @@ def test_find_unmasked_profiles():
 def test_find_unmasked_profiles2(data, expected):
     valid_ind = utils.remove_masked_blocks(data, limit=2)
     assert_array_equal(np.array(valid_ind), np.array(expected))
+
+
+@pytest.mark.parametrize(
+    "data, result",
+    [
+        ("23", 23.0),
+        ("23.0", 23.0),
+        ("23.0m", 23.0),
+        ("23.0 m", 23.0),
+    ],
+)
+def test_parse_global_attribute_numeral(data: str, result: float, tmp_path):
+    with netCDF4.Dataset(
+        tmp_path / "file.nc",
+        "w",
+        format="NETCDF4_CLASSIC",
+    ) as nc:
+        for key in ["Altitude", "Latitude", "Longitude"]:
+            setattr(nc, key, data)
+            assert utils._parse_global_attribute_numeral(nc, key) == result
