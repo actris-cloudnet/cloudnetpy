@@ -89,7 +89,6 @@ class Mwr:
 
     def harmonize(self, product: Literal["multi", "single"]) -> str:
         self._truncate_global_attributes()
-        self._copy_variable_values()
         self._copy_global_attributes()
         self._fix_variable_attributes()
         self._write_missing_global_attributes(product)
@@ -98,12 +97,6 @@ class Mwr:
     def _truncate_global_attributes(self):
         for attr in self.nc_l2.ncattrs():
             delattr(self.nc_l2, attr)
-
-    def _copy_variable_values(self):
-        keys = ("latitude", "longitude", "altitude")
-        for var in keys:
-            if var in self.nc_l2.variables:
-                self.nc_l2.variables[var][:] = self.nc_l1c.variables[var][:]
 
     def _copy_global_attributes(self):
         keys = ("year", "month", "day", "location", "source")
