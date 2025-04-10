@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.73.1 – 2025-04-10
+
+- Write latitude and longitude as vector if they are not stationary
+
 ## 1.73.0 – 2025-04-07
 
 - Add bowtie2nc for processing RV Meteor radar data (#115)
