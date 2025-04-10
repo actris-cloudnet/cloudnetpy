@@ -352,7 +352,7 @@ def plot_colormesh(ax, data: np.ndarray, axes: tuple, variable_info) -> None:
     colorbar = init_colorbar(pl, ax)
     if variable_info.plot_scale == "logarithmic":
         tick_labels = get_log_cbar_tick_labels(vmin, vmax)
-        colorbar.set_ticks(np.arange(vmin, vmax + 1).tolist())
+        colorbar.set_ticks(np.arange(vmin, vmax + 1).tolist())  # type: ignore[arg-type]
         colorbar.ax.set_yticklabels(tick_labels)
     ax.set_facecolor("white")
     colorbar.set_label(variable_info.clabel, fontsize=13)
