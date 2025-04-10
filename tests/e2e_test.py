@@ -90,7 +90,7 @@ def _run_tests(filename: str):
     n = 0
     report = quality.run_tests(
         Path(filename),
-        {"latitude": 0, "longitude": 0, "altitude": 0},
+        {"time": None, "latitude": 0, "longitude": 0, "altitude": 0},
         ignore_tests=["TestCFConvention", "TestCoordinates"],
     )
     keys = ("TestUnits", "TestLongNames", "TestStandardNames")

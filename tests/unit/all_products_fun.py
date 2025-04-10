@@ -30,7 +30,7 @@ class Check:
         n = 0
         report = quality.run_tests(
             Path(self.temp_path),
-            {"latitude": 0, "longitude": 0, "altitude": 0},
+            {"time": None, "latitude": 0, "longitude": 0, "altitude": 0},
             ignore_tests=["TestCFConvention", "TestCoordinates"],
         )
         keys = ("TestUnits", "TestLongNames", "TestStandardNames")
