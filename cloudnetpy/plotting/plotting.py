@@ -589,7 +589,7 @@ class Plot2D(Plot):
         cbar.set_label(str(self._plot_meta.clabel), fontsize=13)
 
         if self._is_log:
-            cbar.set_ticks(np.arange(vmin, vmax + 1).tolist())
+            cbar.set_ticks(np.arange(vmin, vmax + 1).tolist())  # type: ignore[arg-type]
             tick_labels = get_log_cbar_tick_labels(vmin, vmax)
             cbar.ax.set_yticklabels(tick_labels)
 

@@ -5,7 +5,7 @@ import cloudnetpy.constants as con
 
 
 def calc_liquid_specific_attenuation(
-    temperature: npt.NDArray, frequency: float
+    temperature: npt.NDArray, frequency: float | np.floating
 ) -> npt.NDArray:
     """Calculate cloud liquid water specific attenuation coefficient for
     frequency up to 200 GHz.
@@ -43,7 +43,7 @@ def calc_gas_specific_attenuation(
     pressure: npt.NDArray,
     vapor_pressure: npt.NDArray,
     temperature: npt.NDArray,
-    frequency: float,
+    frequency: float | np.floating,
 ) -> npt.NDArray:
     """Calculate specific attenuation due to dry air and water vapor for
     frequency up to 1000 GHz.
@@ -72,7 +72,7 @@ def calc_gas_specific_attenuation(
 
 
 def _calc_line_shape(
-    frequency: float,
+    frequency: float | np.floating,
     center: npt.NDArray,
     width: npt.NDArray,
     correction: npt.NDArray | float,
@@ -92,7 +92,7 @@ def _calc_line_shape(
 def _calc_oxygen_refractivity(
     dry_pressure: npt.NDArray,
     vapor_pressure: npt.NDArray,
-    frequency: float,
+    frequency: float | np.floating,
     theta: npt.NDArray,
 ) -> npt.NDArray:
     f0, a1, a2, a3, a4, a5, a6 = OXYGEN_TABLE[:, :, np.newaxis, np.newaxis]
@@ -119,7 +119,7 @@ def _calc_oxygen_refractivity(
 def _calc_vapor_refractivity(
     dry_pressure: npt.NDArray,
     vapor_pressure: npt.NDArray,
-    frequency: float,
+    frequency: float | np.floating,
     theta: npt.NDArray,
 ) -> npt.NDArray:
     f0, b1, b2, b3, b4, b5, b6 = VAPOR_TABLE[:, :, np.newaxis, np.newaxis]

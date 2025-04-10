@@ -19,8 +19,8 @@ def test_calc_liquid_specific_attenuation():
 
 
 def test_calc_gas_specific_attenuation():
-    F = np.arange(1, 351)
-    p = np.array([101325])
+    F = np.arange(1.0, 351.0)
+    p = np.array([101325.0])
     e = np.array([997.288879])
     T = np.array([288.15])
     # P.676-13 SpAtt in Validation examples for Study Group 3 Earth-space
