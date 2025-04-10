@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.73.2 – 2025-04-10
+
+- Fix MWRpy products with moving coordinates
+
 ## 1.73.1 – 2025-04-10
 
 - Write latitude and longitude as vector if they are not stationary
