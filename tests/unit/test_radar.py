@@ -86,12 +86,17 @@ def test_add_meta(fake_radar_file):
     for key in (
         "time",
         "height",
-        "altitude",
-        "latitude",
-        "longitude",
         "radar_frequency",
     ):
         assert key in obj.data
+
+
+def test_add_location(fake_radar_file):
+    obj = Radar(fake_radar_file)
+    obj.add_location(np.arange(0, 24))
+    assert_array_equal(obj.data["latitude"].data, 60.43)
+    assert_array_equal(obj.data["longitude"].data, 25.4)
+    assert_array_equal(obj.data["altitude"].data, 120.3)
 
 
 def test_prf_to_folding_velocity():

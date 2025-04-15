@@ -166,6 +166,7 @@ def generate_categorize(
             except DisdrometerDataError as err:
                 logging.warning("Unable to use disdrometer: %s", err)
         time, height = _define_dense_grid()
+        data.radar.add_location(time)
         valid_ind = _interpolate_to_cloudnet_grid()
         if len(valid_ind) < 2:
             msg = "Less than 2 overlapping radar, lidar and model timestamps found"

@@ -316,10 +316,24 @@ class Radar(DataSource):
 
     def add_meta(self) -> None:
         """Copies misc. metadata from the input file."""
-        for key in ("latitude", "longitude", "altitude"):
-            self.append_data(np.array(self.getvar(key)), key)
         for key in ("time", "height", "radar_frequency"):
             self.append_data(np.array(getattr(self, key)), key)
+
+    def add_location(self, time_new: np.ndarray):
+        """Add latitude, longitude and altitude from nearest timestamp."""
+        idx = np.searchsorted(self.time, time_new)
+        idx_left = np.clip(idx - 1, 0, len(self.time) - 1)
+        idx_right = np.clip(idx, 0, len(self.time) - 1)
+        diff_left = np.abs(time_new - self.time[idx_left])
+        diff_right = np.abs(time_new - self.time[idx_right])
+        idx_closest = np.where(diff_left < diff_right, idx_left, idx_right)
+        for key in ("latitude", "longitude", "altitude"):
+            data = self.getvar(key)
+            if not utils.isscalar(data):
+                data = data[idx_closest]
+            if not np.any(ma.getmaskarray(data)):
+                data = np.array(data)
+            self.append_data(data, key)
 
     def _init_data(self) -> None:
         self.append_data(self.getvar("Zh"), "Z", units="dBZ")
