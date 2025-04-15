@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.74.0 – 2025-04-15
+
+- Support categorize file with changing location
+
 ## 1.73.2 – 2025-04-10
 
 - Fix MWRpy products with moving coordinates
