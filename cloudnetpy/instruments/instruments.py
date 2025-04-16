@@ -150,11 +150,25 @@ HALO = Instrument(
     model="StreamLine",
 )
 
+WINDCUBE_WLS100S = Instrument(
+    manufacturer="Vaisala",
+    domain="lidar",
+    category="Doppler lidar",
+    model="WindCube WLS100S",
+)
+
 WINDCUBE_WLS200S = Instrument(
     manufacturer="Vaisala",
     domain="lidar",
     category="Doppler lidar",
     model="WindCube WLS200S",
+)
+
+WINDCUBE_WLS400S = Instrument(
+    manufacturer="Vaisala",
+    domain="lidar",
+    category="Doppler lidar",
+    model="WindCube WLS400S",
 )
 
 WINDCUBE_WLS70 = Instrument(
