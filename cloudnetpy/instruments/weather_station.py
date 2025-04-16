@@ -1,7 +1,10 @@
 import csv
 import datetime
 import math
+import re
+from collections import defaultdict
 from collections.abc import Iterable
+from os import PathLike
 
 import numpy as np
 from numpy import ma
@@ -59,6 +62,8 @@ def ws2nc(
         ws = JuelichWS(weather_station_file, site_meta)
     elif site_meta["name"] == "Lampedusa":
         ws = LampedusaWS(weather_station_file, site_meta)
+    elif site_meta["name"] == "Limassol":
+        ws = LimassolWS(weather_station_file, site_meta)
     else:
         msg = "Unsupported site"
         raise ValueError(msg)
@@ -122,6 +127,8 @@ class WS(CSVFile):
         self.data["rainfall_rate"].data = rainfall_rate / 60 / 1000  # mm/min -> m/s
 
     def convert_pressure(self) -> None:
+        if "air_pressure" not in self.data:
+            return
         self.data["air_pressure"].data = self.data["air_pressure"][:] * HPA_TO_PA
 
     def convert_time(self) -> None:
@@ -539,3 +546,105 @@ class LampedusaWS(WS):
             "rainfall_rate": raw_data["rain1m"],
         }
         return self.format_data(data)
+
+
+class LimassolWS(WS):
+    def __init__(self, filenames: list[str], site_meta: dict):
+        super().__init__(site_meta)
+        self.filenames = filenames
+        self._data = defaultdict(list)
+        for filename in filenames:
+            for key, values in _parse_sirta(filename).items():
+                self._data[key].extend(values)
+        self._data["time"] = np.array(
+            self._data.pop("Date Time (yyyy-mm-ddThh:mm:ss)")
+        ) - datetime.timedelta(hours=2)
+
+    def convert_time(self) -> None:
+        decimal_hours = datetime2decimal_hours(self._data["time"])
+        self.data["time"] = CloudnetArray(decimal_hours, "time")
+
+    def screen_timestamps(self, date: str) -> None:
+        dates = [str(d.date()) for d in self._data["time"]]
+        valid_ind = [ind for ind, d in enumerate(dates) if d == date]
+        if not valid_ind:
+            raise ValidTimeStampError
+        for key in self._data:
+            self._data[key] = [
+                x for ind, x in enumerate(self._data[key]) if ind in valid_ind
+            ]
+
+    def add_data(self) -> None:
+        self.data["air_temperature"] = CloudnetArray(
+            np.array(self._data["Air temperature (°C)"]), "air_temperature"
+        )
+        self.data["relative_humidity"] = CloudnetArray(
+            np.array(self._data["Relative humidity (%)"]), "relative_humidity"
+        )
+        self.data["rainfall_rate"] = CloudnetArray(
+            np.array(self._data["Total precipitation (mm)"]), "rainfall_rate"
+        )
+        # Wind speed and direction are available since 2025-02-13:
+        if (
+            "Wind speed at 10m (m/s)" in self._data
+            and "Wind direction at 10m (degrees)" in self._data
+        ):
+            self.data["wind_speed"] = CloudnetArray(
+                np.array(self._data["Wind speed at 10m (m/s)"]), "wind_speed"
+            )
+            self.data["wind_direction"] = CloudnetArray(
+                np.array(self._data["Wind direction at 10m (degrees)"]),
+                "wind_direction",
+            )
+        else:
+            self.data["wind_speed"] = CloudnetArray(
+                np.array(self._data["Wind speed (m/s)"]), "wind_speed"
+            )
+
+    def convert_rainfall_rate(self) -> None:
+        rainfall_rate = self.data["rainfall_rate"][:]
+        self.data["rainfall_rate"].data = (
+            rainfall_rate / (10 * 60) / 1000
+        )  # mm/(10 min) -> m/s
+
+
+def _parse_sirta(filename: str | PathLike):
+    """Parse SIRTA-style weather station file."""
+    with open(filename, "rb") as f:
+        raw_content = f.read()
+    try:
+        content = raw_content.decode("utf-8")
+    except UnicodeDecodeError:
+        content = raw_content.decode("latin-1")
+    lines = [line.strip() for line in content.splitlines()]
+    columns: list[str] = []
+    output: dict = {}
+    for line in lines:
+        m = re.fullmatch(r"#\s*Col.\s*(\d+)\s*:\s*(.*)", line)
+        if m is None:
+            continue
+        if m[1] != str(len(columns) + 1):
+            msg = f"Expected column {m[1]}, found {len(columns)+1}"
+            raise ValueError(msg)
+        columns.append(m[2])
+        output[m[2]] = []
+    for line in lines:
+        if not line or line.startswith("#"):
+            continue
+        values = line.split()
+        if len(columns) != len(values):
+            continue
+        for column, value in zip(columns, values, strict=False):
+            parsed: float | datetime.datetime
+            if column == "Date Time (yyyy-mm-ddThh:mm:ss)":
+                parsed = datetime.datetime.strptime(value, "%Y-%m-%dT%H:%M:%S").replace(
+                    tzinfo=datetime.timezone.utc
+                )
+            elif column == "Date Time (yyyy-mm-ddThh:mm:ssZ)":
+                parsed = datetime.datetime.strptime(
+                    value, "%Y-%m-%dT%H:%M:%SZ"
+                ).replace(tzinfo=datetime.timezone.utc)
+            else:
+                parsed = float(value)
+            output[column].append(parsed)
+    return output

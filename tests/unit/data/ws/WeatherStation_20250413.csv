@@ -1,0 +1,18 @@
+# Weather data for: 2025-04-13
+# Data are 10 min averages of temperature, wind speed, humidity and rain, all at 2m AGL, and wind speed and direction at 10m AGL
+# Station location: TEPAK (34.677°N, 33.038°E)
+# For information concerning those files, contact email : george.kotsias@eratosthenes.org.cy
+# Col. 1 : Date Time (yyyy-mm-ddThh:mm:ss)
+# Col. 2 : Air temperature (°C)
+# Col. 3 : Wind speed at 2m (m/s)
+# Col. 4 : Relative humidity (%)
+# Col. 5 : Total precipitation (mm)
+# Col. 6 : Wind speed at 10m (m/s)
+# Col. 7 : Wind direction at 10m (degrees)
+# 01 02 03 04 05 06 07
+
+2025-04-13T23:10:00	9.3	0.3	79	0.0	0.5	295.313
+2025-04-13T23:20:00	9.2	0.3	77	0.0	0.9	290.655
+2025-04-13T23:30:00	9.0	0.1	77	0.0	1.0	317.658
+2025-04-13T23:40:00	8.8	0.1	77	0.0	0.8	330.625
+2025-04-13T23:50:00	8.7	0.1	77	0.0	0.3	305.159

@@ -1,0 +1,16 @@
+# Weather data for: 2024-04-27
+# Data are 10 min averages of temperature, wind speed, humidity and rain, all at 2m AGL
+# Station location: TEPAK (34.677°N, 33.038°E)
+# For information concerning those files, contact email : george.kotsias@eratosthenes.org.cy
+# Col. 1 : Date Time (yyyy-mm-ddThh:mm:ss)
+# Col. 2 : Air temperature (°C)
+# Col. 3 : Wind speed (m/s)
+# Col. 4 : Relative humidity (%)
+# Col. 5 : Total precipitation (mm)
+# 01 02 03 04 05
+
+2024-04-27T23:10:00	19.6	0.1	50	0.0
+2024-04-27T23:20:00	19.6	0.5	50	0.0
+2024-04-27T23:30:00	20.3	1.0	46	0.0
+2024-04-27T23:40:00	21.2	0.8	42	0.0
+2024-04-27T23:50:00	21.4	0.1	41	0.0

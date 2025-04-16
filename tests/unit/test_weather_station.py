@@ -25,6 +25,8 @@ class WS(Check):
     temp_path = temp_dir.name + "/test.nc"
 
     def test_pressure_values(self):
+        if "air_pressure" not in self.nc.variables:
+            return
         assert self.nc.variables["air_pressure"].units == "Pa"
         min_pressure = ma.min(self.nc.variables["air_pressure"][:])
         max_pressure = ma.max(self.nc.variables["air_pressure"][:])
@@ -225,6 +227,30 @@ class TestWeatherStationLampedusa(WS):
     temp_path = temp_dir.name + "/test.nc"
     site_meta = {**SITE_META, "name": "Lampedusa"}
     filename = f"{SCRIPT_PATH}/data/ws/lampedusa.rep"
+    uuid = weather_station.ws2nc(filename, temp_path, site_meta, date=date)
+
+    def test_dimensions(self):
+        assert self.nc.dimensions["time"].size == 5
+
+
+class TestWeatherStationLimassol(WS):
+    date = "2024-04-27"
+    temp_dir = TemporaryDirectory()
+    temp_path = temp_dir.name + "/test.nc"
+    site_meta = {**SITE_META, "name": "Limassol"}
+    filename = f"{SCRIPT_PATH}/data/ws/WeatherStation_20240427.csv"
+    uuid = weather_station.ws2nc(filename, temp_path, site_meta, date=date)
+
+    def test_dimensions(self):
+        assert self.nc.dimensions["time"].size == 5
+
+
+class TestWeatherStationLimassol2(WS):
+    date = "2025-04-13"
+    temp_dir = TemporaryDirectory()
+    temp_path = temp_dir.name + "/test.nc"
+    site_meta = {**SITE_META, "name": "Limassol"}
+    filename = f"{SCRIPT_PATH}/data/ws/WeatherStation_20250413.csv"
     uuid = weather_station.ws2nc(filename, temp_path, site_meta, date=date)
 
     def test_dimensions(self):
