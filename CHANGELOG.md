@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.74.1 – 2025-04-16
+
+- Support Limassol weather station
+- Add missing WindCube metadata
+
 ## 1.74.0 – 2025-04-15
 
 - Support categorize file with changing location
