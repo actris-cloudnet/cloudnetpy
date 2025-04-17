@@ -556,9 +556,7 @@ class LimassolWS(WS):
         for filename in filenames:
             for key, values in _parse_sirta(filename).items():
                 self._data[key].extend(values)
-        self._data["time"] = np.array(
-            self._data.pop("Date Time (yyyy-mm-ddThh:mm:ss)")
-        ) - datetime.timedelta(hours=2)
+        self._data["time"] = self._data.pop("Date Time (yyyy-mm-ddThh:mm:ss)")
 
     def convert_time(self) -> None:
         decimal_hours = datetime2decimal_hours(self._data["time"])
