@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.74.2 – 2025-04-17
+
+- Fix Limassol weather station time
+
 ## 1.74.1 – 2025-04-16
 
 - Support Limassol weather station
