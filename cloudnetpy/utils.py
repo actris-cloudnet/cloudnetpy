@@ -1067,8 +1067,9 @@ def add_site_geolocation(
     for key in ("latitude", "longitude", "altitude"):
         value = None
         source = None
-        # Prefer accurate GPS coordinates.
-        if gps:
+        # Prefer accurate GPS coordinates. Don't trust altitude because its less
+        # accurate and at least in Lindenberg BASTA there are large jumps.
+        if gps and key != "altitude":
             values = None
             if isinstance(dataset, netCDF4.Dataset) and key in dataset.variables:
                 values = dataset[key][:]
