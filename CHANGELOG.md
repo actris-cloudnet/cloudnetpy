@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.74.3 – 2025-04-22
+
+- Ignore altitude from GPS
+
 ## 1.74.2 – 2025-04-17
 
 - Fix Limassol weather station time
