@@ -163,6 +163,18 @@ class MrrPro(NcRadar):
 
 
 ATTRIBUTES = {
-    "lwc": MetaData(long_name="Liquid water content", units="kg m-3"),
-    "pia": MetaData(long_name="Path integrated rain attenuation", units="dB"),
+    "lwc": MetaData(
+        long_name="Liquid water content", units="kg m-3", dimensions=("time", "range")
+    ),
+    "pia": MetaData(
+        long_name="Path integrated rain attenuation",
+        units="dB",
+        dimensions=("time", "range"),
+    ),
+    "rainfall_rate": MetaData(
+        long_name="Rainfall rate",
+        standard_name="rainfall_rate",
+        units="m s-1",
+        dimensions=("time", "range"),
+    ),
 }
