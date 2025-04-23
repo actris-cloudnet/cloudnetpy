@@ -201,55 +201,67 @@ DRIZZLE_ATTRIBUTES = {
         long_name="Drizzle number concentration",
         units="m-3",
         ancillary_variables="drizzle_N_error drizzle_N_bias",
+        dimensions=("time", "height"),
     ),
     "drizzle_N_error": MetaData(
         long_name="Random error in drizzle number concentration",
         units="dB",
+        dimensions=("time", "height"),
     ),
     "drizzle_N_bias": MetaData(
         long_name="Possible bias in drizzle number concentration",
         units="dB",
+        dimensions=("time", "height"),
     ),
     "drizzle_lwc": MetaData(
         long_name="Drizzle liquid water content",
         units="kg m-3",
         ancillary_variables="drizzle_lwc_error drizzle_lwc_bias",
         standard_name="mass_concentration_of_drizzle_in_air",
+        dimensions=("time", "height"),
     ),
     "drizzle_lwc_error": MetaData(
         long_name="Random error in drizzle liquid water content",
         units="dB",
+        dimensions=("time", "height"),
     ),
     "drizzle_lwc_bias": MetaData(
         long_name="Possible bias in drizzle liquid water content",
         units="dB",
+        dimensions=("time", "height"),
     ),
     "drizzle_lwf": MetaData(
         long_name="Drizzle liquid water flux",
         units="kg m-2 s-1",
         ancillary_variables="drizzle_lwf_error drizzle_lwf_bias",
+        dimensions=("time", "height"),
     ),
     "drizzle_lwf_error": MetaData(
         long_name="Random error in drizzle liquid water flux",
         units="dB",
+        dimensions=("time", "height"),
     ),
     "drizzle_lwf_bias": MetaData(
         long_name="Possible bias in drizzle liquid water flux",
         units="dB",
+        dimensions=("time", "height"),
     ),
     "v_drizzle": MetaData(
         long_name="Drizzle droplet fall velocity",  # TODO: should include 'terminal' ?
         units="m s-1",
         ancillary_variables="v_drizzle_error v_drizzle_bias",
         comment="Positive values are towards the ground.",
+        dimensions=("time", "height"),
     ),
     "v_drizzle_error": MetaData(
         long_name="Random error in drizzle droplet fall velocity",
         units="dB",
+        dimensions=("time", "height"),
     ),
     "v_drizzle_bias": MetaData(
         long_name="Possible bias in drizzle droplet fall velocity",
         units="dB",
+        dimensions=("time", "height"),
     ),
     "v_air": MetaData(
         long_name="Vertical air velocity",
@@ -257,45 +269,59 @@ DRIZZLE_ATTRIBUTES = {
         ancillary_variables="v_air_error",
         comment="Positive values are towards the sky.",
         standard_name="upward_air_velocity",
+        dimensions=("time", "height"),
     ),
     "v_air_error": MetaData(
         long_name="Random error in vertical air velocity",
         units="dB",
+        dimensions=("time", "height"),
     ),
     "Do": MetaData(
         long_name="Drizzle median diameter",
         units="m",
         ancillary_variables="Do_error Do_bias",
+        dimensions=("time", "height"),
     ),
     "Do_error": MetaData(
         long_name="Random error in drizzle median diameter",
         units="dB",
+        dimensions=("time", "height"),
     ),
     "Do_bias": MetaData(
         long_name="Possible bias in drizzle median diameter",
         units="dB",
+        dimensions=("time", "height"),
     ),
     "mu": MetaData(
         long_name="Drizzle droplet size distribution shape parameter",
         ancillary_variables="mu_error",
         units="1",
+        dimensions=("time", "height"),
     ),
     "mu_error": MetaData(
         long_name="Random error in drizzle droplet size distribution shape parameter",
         units="dB",
+        dimensions=("time", "height"),
     ),
     "S": MetaData(
         long_name="Lidar backscatter-to-extinction ratio",
         ancillary_variables="S_error",
         units="sr",
+        dimensions=("time", "height"),
     ),
     "S_error": MetaData(
         long_name="Random error in lidar backscatter-to-extinction ratio",
         units="dB",
+        dimensions=("time", "height"),
     ),
-    "beta_corr": MetaData(long_name="Lidar backscatter correction factor", units="1"),
+    "beta_corr": MetaData(
+        long_name="Lidar backscatter correction factor",
+        units="1",
+        dimensions=("time", "height"),
+    ),
     "drizzle_retrieval_status": MetaData(
         long_name="Drizzle parameter retrieval status",
         units="1",
+        dimensions=("time", "height"),
     ),
 }

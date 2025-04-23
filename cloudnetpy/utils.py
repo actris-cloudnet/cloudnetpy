@@ -1100,7 +1100,12 @@ def add_site_geolocation(
 
     for key in ("latitude", "longitude", "altitude"):
         if key in tmp_data:
-            data[key] = CloudnetArray(tmp_data[key], key, source=tmp_source[key])
+            data[key] = CloudnetArray(
+                tmp_data[key],
+                key,
+                source=tmp_source[key],
+                dimensions=None if isinstance(tmp_data[key], float) else ("time",),
+            )
 
 
 def _parse_global_attribute_numeral(dataset: netCDF4.Dataset, key: str) -> float | None:

@@ -164,13 +164,21 @@ ATTRIBUTES = {
         long_name="Radar reflectivity calibration offset",
         units="dBZ",
         comment="Calibration offset applied.",
+        dimensions=None,
     ),
     "range_offset": MetaData(
         long_name="Radar range offset",
         units="m",
         comment="Range offset applied.",
+        dimensions=None,
     ),
-    "antenna_diameter": MetaData(long_name="Antenna diameter", units="m"),
-    "beamwidthV": MetaData(long_name="Vertical angular beamwidth", units="degree"),
-    "beamwidthH": MetaData(long_name="Horizontal angular beamwidth", units="degree"),
+    "antenna_diameter": MetaData(
+        long_name="Antenna diameter", units="m", dimensions=None
+    ),
+    "beamwidthV": MetaData(
+        long_name="Vertical angular beamwidth", units="degree", dimensions=None
+    ),
+    "beamwidthH": MetaData(
+        long_name="Horizontal angular beamwidth", units="degree", dimensions=None
+    ),
 }

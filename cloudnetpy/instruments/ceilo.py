@@ -8,11 +8,11 @@ import numpy as np
 from ceilopyter import read_ct25k
 from numpy import ma
 
-from cloudnetpy import output, utils
+from cloudnetpy import output
 from cloudnetpy.instruments.cl61d import Cl61d
 from cloudnetpy.instruments.lufft import LufftCeilo
 from cloudnetpy.instruments.vaisala import ClCeilo, Cs135, Ct25k
-from cloudnetpy.metadata import MetaData
+from cloudnetpy.metadata import COMMON_ATTRIBUTES, MetaData
 
 
 def ceilo2nc(
@@ -205,92 +205,19 @@ ATTRIBUTES = {
         long_name="Lidar volume linear depolarisation ratio",
         units="1",
         comment="SNR-screened lidar volume linear depolarisation ratio at 910.55 nm.",
+        dimensions=("time", "range"),
     ),
     "depolarisation_raw": MetaData(
         long_name="Lidar volume linear depolarisation ratio",
         units="1",
         comment="SNR-screened lidar volume linear depolarisation ratio at 910.55 nm.",
-    ),
-    "scale": MetaData(long_name="Scale", units="%", comment="100 (%) is normal."),
-    "software_level": MetaData(
-        long_name="Software level ID",
-        units="1",
-    ),
-    "laser_temperature": MetaData(
-        long_name="Laser temperature",
-        units="C",
-    ),
-    "window_transmission": MetaData(
-        long_name="Window transmission estimate",
-        units="%",
-    ),
-    "laser_energy": MetaData(
-        long_name="Laser pulse energy",
-        units="%",
-    ),
-    "background_light": MetaData(
-        long_name="Background light",
-        units="mV",
-        comment="Measured at internal ADC input.",
-    ),
-    "backscatter_sum": MetaData(
-        long_name="Sum of detected and normalized backscatter",
-        units="sr-1",
-        comment="Multiplied by scaling factor times 1e4.",
-    ),
-    "range_resolution": MetaData(
-        long_name="Range resolution",
-        units="m",
-    ),
-    "number_of_gates": MetaData(
-        long_name="Number of range gates in profile",
-        units="1",
-    ),
-    "unit_id": MetaData(
-        long_name="Ceilometer unit number",
-        units="1",
-    ),
-    "message_number": MetaData(
-        long_name="Message number",
-        units="1",
-    ),
-    "message_subclass": MetaData(
-        long_name="Message subclass number",
-        units="1",
-    ),
-    "detection_status": MetaData(
-        long_name="Detection status",
-        units="1",
-        comment="From the internal software of the instrument.",
-    ),
-    "warning": MetaData(
-        long_name="Warning and Alarm flag",
-        units="1",
-        definition=utils.status_field_definition(
-            {
-                "0": "Self-check OK",
-                "W": "At least one warning on",
-                "A": "At least one error active.",
-            }
-        ),
-    ),
-    "warning_flags": MetaData(
-        long_name="Warning flags",
-        units="1",
-    ),
-    "receiver_sensitivity": MetaData(
-        long_name="Receiver sensitivity",
-        units="%",
-        comment="Expressed as % of nominal factory setting.",
-    ),
-    "window_contamination": MetaData(
-        long_name="Window contamination",
-        units="mV",
-        comment="Measured at internal ADC input.",
+        dimensions=("time", "range"),
     ),
     "calibration_factor": MetaData(
         long_name="Attenuated backscatter calibration factor",
         units="1",
         comment="Calibration factor applied.",
+        dimensions=None,
     ),
+    "zenith_angle": COMMON_ATTRIBUTES["zenith_angle"]._replace(dimensions=None),
 }
