@@ -199,7 +199,7 @@ class FigureData:
                 if "altitude" not in self.file.variables:
                     msg = "No altitude information in the file."
                     raise ValueError(msg)
-                height -= np.median(self.file.variables["altitude"][:])
+                height -= ma.median(self.file.variables["altitude"][:])
             return height * con.M_TO_KM
         if "range" in self.file.variables:
             return self.file.variables["range"][:] * con.M_TO_KM
@@ -848,7 +848,7 @@ class Plot1D(Plot):
             return np.array([])
         if len(data) == 1:
             return data
-        time_delta_hours = np.median(np.diff(time))
+        time_delta_hours = ma.median(np.diff(time))
         window_size = int(window / 60 / time_delta_hours)
         if window_size < 1:
             window_size = 1
