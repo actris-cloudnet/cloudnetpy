@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.74.4 – 2025-04-25
+
+- Fix mask-ignore warnings
+
 ## 1.74.3 – 2025-04-22
 
 - Ignore altitude from GPS
