@@ -1,10 +1,11 @@
 import os
 import tempfile
-from typing import Literal
+from typing import TYPE_CHECKING, Literal
 
 import netCDF4
 import numpy as np
 import requests
+from mwrpy.level2.lev2_collocated import generate_lev2_lhumpro as gen_lhumpro
 from mwrpy.level2.lev2_collocated import generate_lev2_multi as gen_multi
 from mwrpy.level2.lev2_collocated import generate_lev2_single as gen_single
 from mwrpy.level2.write_lev2_nc import MissingInputData
@@ -12,6 +13,9 @@ from mwrpy.version import __version__ as mwrpy_version
 
 from cloudnetpy import output, utils
 from cloudnetpy.exceptions import ValidTimeStampError
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 
 def generate_mwr_single(
@@ -32,6 +36,26 @@ def generate_mwr_single(
         >>> generate_mwr_single('input_mwr_l1c_file', 'output_file', 'abcdefg1234567')
     """
     return _generate_product(mwr_l1c_file, output_file, uuid, "single")
+
+
+def generate_mwr_lhumpro(
+    mwr_l1c_file: str, output_file: str, uuid: str | None = None
+) -> str:
+    """Generates LHUMPRO single-pointing product including liquid water path, integrated
+    water vapor, etc. from zenith measurements.
+
+    Args:
+        mwr_l1c_file: The Level 1C MWR file to be processed.
+        output_file: The file path where the output file should be saved.
+        uuid: The UUID, if any, associated with the output file. Defaults to None.
+
+    Returns:
+        UUID of generated file.
+
+    Example:
+        >>> generate_mwr_lhumpro('input_mwr_l1c_file', 'output_file', 'abcdefg1234567')
+    """
+    return _generate_product(mwr_l1c_file, output_file, uuid, "lhumpro")
 
 
 def generate_mwr_multi(
@@ -56,9 +80,19 @@ def _generate_product(
     mwr_l1c_file: str,
     output_file: str,
     uuid: str | None,
-    product: Literal["multi", "single"],
+    product: Literal["multi", "single", "lhumpro"],
 ) -> str:
-    fun = gen_multi if product == "multi" else gen_single
+    fun: Callable
+    if product == "multi":
+        fun = gen_multi
+    elif product == "single":
+        fun = gen_single
+    elif product == "lhumpro":
+        fun = gen_lhumpro
+        product = "single"
+    else:
+        msg = f"Invalid product: {product}"
+        raise ValueError(msg)
     with tempfile.TemporaryDirectory() as temp_dir:
         coeffs = _read_mwrpy_coeffs(mwr_l1c_file, temp_dir)
         try:

@@ -137,6 +137,20 @@ HATPRO = Instrument(
     model="HATPRO",
 )
 
+LHATPRO = Instrument(
+    manufacturer="RPG-Radiometer Physics",
+    domain="mwr",
+    category="microwave radiometer",
+    model="LHATPRO",
+)
+
+LHUMPRO_U90 = Instrument(
+    manufacturer="RPG-Radiometer Physics",
+    domain="mwr",
+    category="microwave radiometer",
+    model="LHUMPRO-U90",
+)
+
 RADIOMETRICS = Instrument(
     manufacturer="Radiometrics",
     domain="mwr",

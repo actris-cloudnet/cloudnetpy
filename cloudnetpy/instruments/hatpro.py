@@ -4,6 +4,7 @@ import datetime
 import logging
 from collections import defaultdict
 from pathlib import Path
+from typing import Literal
 
 import netCDF4
 import numpy as np
@@ -17,7 +18,7 @@ from cloudnetpy import output, utils
 from cloudnetpy.cloudnetarray import CloudnetArray
 from cloudnetpy.exceptions import HatproDataError, ValidTimeStampError
 from cloudnetpy.instruments import rpg
-from cloudnetpy.instruments.instruments import HATPRO
+from cloudnetpy.instruments.instruments import HATPRO, LHATPRO, LHUMPRO_U90, Instrument
 from cloudnetpy.instruments.rpg_reader import (
     HatproBin,
     HatproBinCombined,
@@ -25,11 +26,19 @@ from cloudnetpy.instruments.rpg_reader import (
     HatproBinLwp,
 )
 
+IType = Literal["hatpro", "lhatpro", "lhumpro_u90"]
+ITYPE_MAP: dict[IType, Instrument] = {
+    "hatpro": HATPRO,
+    "lhatpro": LHATPRO,
+    "lhumpro_u90": LHUMPRO_U90,
+}
+
 
 def hatpro2l1c(
     mwr_dir: str,
     output_file: str,
     site_meta: dict,
+    instrument_type: IType = "hatpro",
     uuid: str | None = None,
     date: datetime.date | str | None = None,
 ) -> str:
@@ -39,6 +48,7 @@ def hatpro2l1c(
         mwr_dir: Folder containing one day of HATPRO files.
         output_file: Output file name.
         site_meta: Dictionary containing information about the site and instrument
+        instrument_type: Specific type of the RPG microwave radiometer.
         uuid: Set specific UUID for the file.
         date: Expected date in the input files.
 
@@ -55,6 +65,7 @@ def hatpro2l1c(
         hatpro_raw = lev1_to_nc(
             "1C01",
             mwr_dir,
+            instrument_type=instrument_type,
             output_file=output_file,
             coeff_files=coeff_files,
             instrument_config=site_meta,
@@ -64,7 +75,7 @@ def hatpro2l1c(
     except MissingInputData as err:
         raise HatproDataError(str(err)) from err
 
-    hatpro = HatproL1c(hatpro_raw, site_meta)
+    hatpro = HatproL1c(hatpro_raw, site_meta, ITYPE_MAP[instrument_type])
 
     flags = hatpro.data["quality_flag"][:]
     bad_percentage = ma.sum(flags != 0) / flags.size * 100
@@ -123,18 +134,19 @@ def hatpro2l1c(
 
 
 class HatproL1c:
-    def __init__(self, hatpro, site_meta: dict):
+    def __init__(self, hatpro, site_meta: dict, instrument: Instrument):
         self.raw_data = hatpro.raw_data
         self.data = hatpro.data
         self.date = hatpro.date.isoformat().split("-")
         self.site_meta = site_meta
-        self.instrument = HATPRO
+        self.instrument = instrument
 
 
 def hatpro2nc(
     path_to_files: str,
     output_file: str,
     site_meta: dict,
+    instrument_type: IType = "hatpro",
     uuid: str | None = None,
     date: str | None = None,
 ) -> tuple[str, list]:
@@ -154,6 +166,7 @@ def hatpro2nc(
             - `latitude` (optional).
             - `longitude` (optional).
 
+        instrument_type: Specific type of the RPG microwave radiometer.
         uuid: Set specific UUID for the file.
         date: Expected date in the input files. If not set,
             all files will be used. This might cause unexpected behavior if
@@ -183,7 +196,7 @@ def hatpro2nc(
     if is_iwv_files:
         _add_missing_variables(hatpro_objects, ("lwp", "iwv"))
     one_day_of_data = rpg.create_one_day_data_record(hatpro_objects)
-    hatpro = rpg.Hatpro(one_day_of_data, site_meta)
+    hatpro = rpg.Hatpro(one_day_of_data, site_meta, ITYPE_MAP[instrument_type])
     hatpro.add_site_geolocation()
     hatpro.convert_time_to_fraction_hour("float64")
     hatpro.sort_timestamps()

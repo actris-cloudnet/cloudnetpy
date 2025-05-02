@@ -3,7 +3,6 @@
 import logging
 import math
 from collections.abc import Sequence
-from typing import TYPE_CHECKING
 
 import numpy as np
 from numpy import ma
@@ -15,11 +14,9 @@ from cloudnetpy.constants import G_TO_KG, HPA_TO_PA, KM_H_TO_M_S, MM_H_TO_M_S
 from cloudnetpy.exceptions import InconsistentDataError, ValidTimeStampError
 from cloudnetpy.instruments import instruments
 from cloudnetpy.instruments.cloudnet_instrument import CloudnetInstrument
+from cloudnetpy.instruments.instruments import Instrument
 from cloudnetpy.instruments.rpg_reader import Fmcw94Bin, HatproBinCombined
 from cloudnetpy.metadata import MetaData
-
-if TYPE_CHECKING:
-    from cloudnetpy.instruments.instruments import Instrument
 
 
 def rpg2nc(
@@ -331,9 +328,9 @@ class Fmcw(Rpg):
 class Hatpro(Rpg):
     """Class for RPG HATPRO mwr."""
 
-    def __init__(self, raw_data: dict, site_properties: dict):
+    def __init__(self, raw_data: dict, site_properties: dict, instrument: Instrument):
         super().__init__(raw_data, site_properties)
-        self.instrument = instruments.HATPRO
+        self.instrument = instrument
 
 
 def _filter_zenith_angle(zenith: ma.MaskedArray) -> np.ndarray:
