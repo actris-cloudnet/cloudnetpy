@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.75.0 – 2025-05-02
+
+- Support LHATPRO and LHUMPRO
+
 ## 1.74.4 – 2025-04-25
 
 - Fix mask-ignore warnings
