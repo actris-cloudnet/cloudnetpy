@@ -965,7 +965,8 @@ def get_files_with_common_range(filenames: list) -> list:
         with netCDF4.Dataset(file) as nc:
             n_range.append(len(nc.variables["range"]))
     most_common = np.bincount(n_range).argmax()
-    if n_removed := len(filenames) - n_range.count(int(most_common)) > 0:
+    n_removed = len(filenames) - n_range.count(int(most_common))
+    if n_removed > 0:
         logging.warning(
             "Removing %s files due to inconsistent height vector", n_removed
         )
