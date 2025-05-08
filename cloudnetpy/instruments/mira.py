@@ -247,15 +247,15 @@ def _get_keymap(filetype: str) -> dict:
     keymaps = {
         "znc": OrderedDict(
             [
-                ("Zg", "Zh"),
+                ("Zg", "Zh"),  # fallback
                 ("Zh2l", "Zh"),
-                ("VELg", "v"),
+                ("VELg", "v"),  # fallback
                 ("VELh2l", "v"),
-                ("RMSg", "width"),
+                ("RMSg", "width"),  # fallback
                 ("RMSh2l", "width"),
-                ("LDRg", "ldr"),
+                ("LDRg", "ldr"),  # fallback
                 ("LDRh2l", "ldr"),
-                ("SNRg", "SNR"),
+                ("SNRg", "SNR"),  # fallback
                 ("SNRh2l", "SNR"),
                 ("elv", "elevation"),
                 ("azi", "azimuth_angle"),
@@ -265,20 +265,23 @@ def _get_keymap(filetype: str) -> dict:
                 ("rg0", "rg0"),
             ],
         ),
-        "mmclx": {
-            "Zg": "Zh",
-            "VELg": "v",
-            "RMSg": "width",
-            "LDRg": "ldr",
-            "SNRg": "SNR",
-            "elv": "elevation",
-            "azi": "azimuth_angle",
-            "nfft": "nfft",
-            "nave": "nave",
-            "prf": "prf",
-            "rg0": "rg0",
-            "NyquistVelocity": "NyquistVelocity",  # variable in some mmclx files
-        },
+        "mmclx": OrderedDict(
+            [
+                ("Ze", "Zh"),  # fallback for old mmclx files
+                ("Zg", "Zh"),
+                ("VELg", "v"),
+                ("RMSg", "width"),
+                ("LDRg", "ldr"),
+                ("SNRg", "SNR"),
+                ("elv", "elevation"),
+                ("azi", "azimuth_angle"),
+                ("nfft", "nfft"),
+                ("nave", "nave"),
+                ("prf", "prf"),
+                ("rg0", "rg0"),
+                ("NyquistVelocity", "NyquistVelocity"),  # variable in some mmclx files
+            ]
+        ),
     }
 
     return keymaps.get(filetype.lower(), keymaps["mmclx"])
