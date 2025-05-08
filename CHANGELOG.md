@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.75.1 – 2025-05-08
+
+- Use Ze as a fallback for old mmclx files
+
 ## 1.75.0 – 2025-05-02
 
 - Support LHATPRO and LHUMPRO
