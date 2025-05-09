@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.76.0 – 2025-05-09
+
+- Add support for Radiometrics WVR-1100
+- Skip non-zenith measurements from Radiometrics MWR
+
 ## 1.75.1 – 2025-05-08
 
 - Use Ze as a fallback for old mmclx files
