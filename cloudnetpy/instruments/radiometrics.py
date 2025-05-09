@@ -6,6 +6,7 @@ import logging
 import os
 import re
 from operator import attrgetter
+from pathlib import Path
 from typing import Any, NamedTuple
 
 import numpy as np
@@ -18,8 +19,8 @@ from cloudnetpy.metadata import MetaData
 
 
 def radiometrics2nc(
-    full_path: str,
-    output_file: str,
+    full_path: str | os.PathLike,
+    output_file: str | os.PathLike,
     site_meta: dict,
     uuid: str | None = None,
     date: str | datetime.date | None = None,
@@ -46,19 +47,11 @@ def radiometrics2nc(
     """
     if isinstance(date, str):
         date = datetime.date.fromisoformat(date)
-
     if os.path.isdir(full_path):
-        valid_filenames = utils.get_sorted_filenames(full_path, ".csv")
+        valid_filenames = list(Path(full_path).iterdir())
     else:
-        valid_filenames = [full_path]
-
-    objs = []
-    for filename in valid_filenames:
-        obj = Radiometrics(filename)
-        obj.read_raw_data()
-        obj.read_data()
-        objs.append(obj)
-
+        valid_filenames = [Path(full_path)]
+    objs = [_read_file(filename) for filename in valid_filenames]
     radiometrics = RadiometricsCombined(objs, site_meta)
     radiometrics.screen_time(date)
     radiometrics.sort_timestamps()
@@ -81,15 +74,16 @@ class Record(NamedTuple):
     values: dict[str, Any]
 
 
-class Radiometrics:
-    """Reader for level 2 files of Radiometrics microwave radiometers.
+class RadiometricsMP:
+    """Reader for level 2 files (*.csv) from Radiometrics MP-3000A and similar
+    microwave radiometers.
 
     References:
         Radiometrics (2008). Profiler Operator's Manual: MP-3000A, MP-2500A,
         MP-1500A, MP-183A.
     """
 
-    def __init__(self, filename: str):
+    def __init__(self, filename: Path):
         self.filename = filename
         self.raw_data: list[Record] = []
         self.data: dict = {}
@@ -224,13 +218,69 @@ class Radiometrics:
         )
 
 
+class RadiometricsWVR:
+    """Reader for *.los files from Radiometrics WVR-1100 microwave
+    radiometer.
+    """
+
+    def __init__(self, filename: Path):
+        self.filename = filename
+        self.raw_data: dict = {}
+        self.data: dict = {}
+        self.instrument = instruments.RADIOMETRICS
+        self.ranges: list[str] = []
+
+    def read_raw_data(self) -> None:
+        with open(self.filename, encoding="utf8") as infile:
+            for line in infile:
+                columns = line.split()
+                if columns[:2] == ["date", "time"]:
+                    headers = columns
+                    break
+            else:
+                msg = "No headers found"
+                raise RuntimeError(msg)
+            for key in headers:
+                self.raw_data[key] = []
+            for line in infile:
+                for key, value in zip(headers, line.split(), strict=False):
+                    parsed_value: Any
+                    if key == "date":
+                        month, day, year = map(int, value.split("/"))
+                        if year < 100:
+                            year += 2000
+                        parsed_value = datetime.date(year, month, day)
+                    elif key == "time":
+                        hour, minute, second = map(int, value.split(":"))
+                        parsed_value = datetime.time(hour, minute, second)
+                    else:
+                        parsed_value = float(value)
+                    self.raw_data[key].append(parsed_value)
+
+    def read_data(self) -> None:
+        self.data["time"] = np.array(
+            [
+                datetime.datetime.combine(date, time)
+                for date, time in zip(
+                    self.raw_data["date"], self.raw_data["time"], strict=False
+                )
+            ],
+            dtype="datetime64[s]",
+        )
+        self.data["lwp"] = np.array(self.raw_data["LiqCM"]) * 10  # cm => kg m-2
+        self.data["iwv"] = np.array(self.raw_data["VapCM"]) * 10  # cm => kg m-2
+        is_zenith = np.abs(np.array(self.raw_data["ELact"]) - 90.0) < 1.0
+        for key in self.data:
+            self.data[key] = self.data[key][is_zenith]
+
+
 class RadiometricsCombined:
     site_meta: dict
     data: dict
     date: datetime.date | None
     instrument: instruments.Instrument
 
-    def __init__(self, objs: list[Radiometrics], site_meta: dict):
+    def __init__(self, objs: list[RadiometricsMP | RadiometricsWVR], site_meta: dict):
         self.site_meta = site_meta
         self.data = {}
         self.date = None
@@ -240,9 +290,10 @@ class RadiometricsCombined:
                 raise InconsistentDataError(msg)
             for key in obj.data:
                 self.data = utils.append_data(self.data, key, obj.data[key])
-        ranges = [float(x) for x in objs[0].ranges]
-        self.data["range"] = np.array(ranges) * 1000  # m => km
-        self.data["height"] = self.data["range"] + self.site_meta["altitude"]
+        if objs[0].ranges:
+            ranges = [float(x) for x in objs[0].ranges]
+            self.data["range"] = np.array(ranges) * 1000  # m => km
+            self.data["height"] = self.data["range"] + self.site_meta["altitude"]
         self.instrument = instruments.RADIOMETRICS
 
     def screen_time(self, expected_date: datetime.date | None) -> None:
@@ -287,6 +338,19 @@ class RadiometricsCombined:
             name = key.lower()
             if name in valid_keys:
                 self.data[name] = CloudnetArray(float(value), key)
+
+
+def _read_file(filename: Path) -> RadiometricsMP | RadiometricsWVR:
+    with open(filename) as f:
+        first_line = f.readline()
+    obj = (
+        RadiometricsWVR(filename)
+        if "RETRIEVAL COEFFICIENTS" in first_line
+        else RadiometricsMP(filename)
+    )
+    obj.read_raw_data()
+    obj.read_data()
+    return obj
 
 
 def _parse_datetime(text: str) -> datetime.datetime:
