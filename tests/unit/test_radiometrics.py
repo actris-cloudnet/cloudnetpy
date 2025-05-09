@@ -108,6 +108,29 @@ class TestRadiometrics2ncAgain(Check):
             )
 
 
+class TestRadiometrics2ncSkipNonZenith(Check):
+    test_input = f"{SCRIPT_PATH}/data/radiometrics/2024-01-22_00-04-09_lv2.csv"
+    site_meta = {
+        "name": "the_station",
+        "altitude": 50,
+        "latitude": 23.0,
+        "longitude": 123,
+    }
+    date = "2024-01-22"
+    temp_dir = TemporaryDirectory()
+    temp_path = temp_dir.name + "/radiometrics.nc"
+    uuid = radiometrics2nc(test_input, temp_path, site_meta, date=date)
+
+    def test_time(self):
+        assert_allclose(self.nc.variables["time"][:], [5 / 60 + 23 / 60 / 60])
+
+    def test_lwp(self):
+        assert_allclose(self.nc.variables["lwp"][:], [0.007])
+
+    def test_iwv(self):
+        assert_allclose(self.nc.variables["iwv"][:], [12.64])
+
+
 class TestRadiometrics2ncWVR(Check):
     test_input = f"{SCRIPT_PATH}/data/radiometrics/20140106_1126.los"
     site_meta = {

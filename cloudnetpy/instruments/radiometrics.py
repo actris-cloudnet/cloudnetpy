@@ -146,12 +146,19 @@ class RadiometricsMP:
         ahs = []
         ah_times = []
         block_titles = {}
+        skip_procs = set()
         for record in self.raw_data:
             if record.block_type == 100:
                 block_type = int(record.values["Record Type"]) - 1
                 title = record.values["Title"]
                 block_titles[block_type] = title
             if title := block_titles.get(record.block_type + record.block_index):
+                # "LV2 Processor" values "Zenith" and "0.00:90.00" should be OK
+                # but "Angle20(N)" and similar should be skipped.
+                proc = record.values["LV2 Processor"]
+                if proc.startswith("Angle"):
+                    skip_procs.add(proc)
+                    continue
                 if title == "Temperature (K)":
                     temp_times.append(record.timestamp)
                     temps.append(
@@ -188,6 +195,9 @@ class RadiometricsMP:
                 irt = record.values["Tir(K)"]
                 irts.append([float(irt)])
             elif record.block_type == 300:
+                if skip_procs:
+                    skip_procs.pop()
+                    continue
                 lwp = record.values["Int. Liquid(mm)"]
                 iwv = record.values["Int. Vapor(cm)"]
                 times.append(record.timestamp)
