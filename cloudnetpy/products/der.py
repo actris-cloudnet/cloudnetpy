@@ -302,32 +302,38 @@ REFF_ATTRIBUTES = {
         units="m",
         ancillary_variables="der_error",
         comment=COMMENTS["der"],
+        dimensions=("time", "height"),
     ),
     "der_error": MetaData(
         long_name="Absolute error in droplet effective radius",
         units="m",
         comment="",
+        dimensions=("time", "height"),
     ),
     "der_scaled": MetaData(
         long_name="Droplet effective radius (scaled to LWP)",
         units="m",
         ancillary_variables="der_scaled_error",
         comment=COMMENTS["der_scaled"],
+        dimensions=("time", "height"),
     ),
     "der_scaled_error": MetaData(
         long_name="Absolute error in droplet effective radius (scaled to LWP)",
         units="m",
         comment=COMMENTS["der_scaled_error"],
+        dimensions=("time", "height"),
     ),
     "N_scaled": MetaData(
         long_name="Cloud droplet number concentration",
         units="1",
         ancillary_variables="der_error der_scaled der_scaled_error",
         comment=COMMENTS["N_scaled"],
+        dimensions=("time", "height"),
     ),
     "der_retrieval_status": MetaData(
         long_name="Droplet effective radius retrieval status",
         definition=DEFINITIONS["der_retrieval_status"],
         units="1",
+        dimensions=("time", "height"),
     ),
 }

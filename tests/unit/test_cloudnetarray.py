@@ -115,7 +115,7 @@ class TestCloudnetArrayWithNc:
 
     def test_set_attributes(self):
         obj = CloudnetArray(self.time, "test_name")
-        meta = MetaData(long_name="the long name", units="g m-3")
+        meta = MetaData(long_name="the long name", units="g m-3", dimensions=("time",))
         obj.set_attributes(meta)
         for key, value in zip(["long_name", "units"], ["the long name", "g m-3"]):
             assert hasattr(obj, key)
