@@ -179,3 +179,85 @@ class TestRadiometrics2ncWVR(Check):
                 self.site_meta,
                 date="2014-01-07",
             )
+
+
+class TestRadiometrics2ncMissing(Check):
+    test_input = f"{SCRIPT_PATH}/data/radiometrics/20100926_0005.los"
+    site_meta = {
+        "name": "the_station",
+        "altitude": 50,
+        "latitude": 23.0,
+        "longitude": 123,
+    }
+    date = "2010-09-26"
+    temp_dir = TemporaryDirectory()
+    temp_path = temp_dir.name + "/radiometrics.nc"
+    uuid = radiometrics2nc(test_input, temp_path, site_meta, date=date)
+
+    def test_time(self):
+        assert_allclose(
+            self.nc.variables["time"][:],
+            [
+                6 / 60 + 18 / 60 / 60,
+                7 / 60 + 44 / 60 / 60,
+            ],
+        )
+
+    def test_default_processing(self, tmp_path):
+        test_path = tmp_path / "default.nc"
+        radiometrics2nc(self.test_input, test_path, self.site_meta)
+
+    def test_processing_of_one_file(self, tmp_path):
+        test_path = tmp_path / "one.nc"
+        radiometrics2nc(self.test_input, test_path, self.site_meta, date=self.date)
+
+    def test_processing_of_no_files(self, tmp_path):
+        test_path = tmp_path / "no.nc"
+        with pytest.raises(ValidTimeStampError):
+            radiometrics2nc(
+                self.test_input,
+                test_path,
+                self.site_meta,
+                date="2014-01-07",
+            )
+
+
+class TestRadiometrics2ncInvalid(Check):
+    test_input = f"{SCRIPT_PATH}/data/radiometrics/20131220_1319.los"
+    site_meta = {
+        "name": "the_station",
+        "altitude": 50,
+        "latitude": 23.0,
+        "longitude": 123,
+    }
+    date = "2013-12-20"
+    temp_dir = TemporaryDirectory()
+    temp_path = temp_dir.name + "/radiometrics.nc"
+    uuid = radiometrics2nc(test_input, temp_path, site_meta, date=date)
+
+    def test_time(self):
+        assert_allclose(
+            self.nc.variables["time"][:],
+            [
+                23 + 16 / 60 + 31 / 60 / 60,
+                23 + 17 / 60 + 29 / 60 / 60,
+            ],
+        )
+
+    def test_default_processing(self, tmp_path):
+        test_path = tmp_path / "default.nc"
+        radiometrics2nc(self.test_input, test_path, self.site_meta)
+
+    def test_processing_of_one_file(self, tmp_path):
+        test_path = tmp_path / "one.nc"
+        radiometrics2nc(self.test_input, test_path, self.site_meta, date=self.date)
+
+    def test_processing_of_no_files(self, tmp_path):
+        test_path = tmp_path / "no.nc"
+        with pytest.raises(ValidTimeStampError):
+            radiometrics2nc(
+                self.test_input,
+                test_path,
+                self.site_meta,
+                date="2014-01-07",
+            )

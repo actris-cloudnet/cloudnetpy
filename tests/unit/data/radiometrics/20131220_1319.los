@@ -1,0 +1,12 @@
+ RETRIEVAL COEFFICIENTS:
+Vapor  c0 =    .006 c1 =  21.424 c2 = -12.668
+Liquid c0 =   -.003 c1 =   -.387 c2 =    .668
+Mean atm temp vapor = 264.740 liquid = 260.960
+Cosmic background temp = 2.730
+Vapor to path delay conversion factor =  6.50
+Radio phase delay c0 =    .055 c1 = 144.304 c2 =  -84.868
+  
+  date    time   TbSky23 TbSky31    TkBB    VapCM    LiqCM   DelCM   AZact  ELact Tau23  Tau31  Tamb   Rh  Pres  Rain           
+12/20/13 23:16:31   20.95   14.28  284.97     .970    .0002    6.57     .0   90.0  .0721  .0458 276.1 100.45 1024.0  .23
+12/20/13 23:17:00   21.21 -669.66  284.96   17.813    .0000  119.41     .0   90.0  .0731-1.2820 276.1 100.47 1024.0  .23
+12/20/13 23:17:29   21.39   13.69  284.96    1.040    .0000    7.04     .0   90.0  .0739  .0434 276.1 100.45 1024.0  .23

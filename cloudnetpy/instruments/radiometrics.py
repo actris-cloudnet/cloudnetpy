@@ -3,6 +3,7 @@
 import csv
 import datetime
 import logging
+import math
 import os
 import re
 from operator import attrgetter
@@ -241,8 +242,8 @@ class RadiometricsWVR:
         self.ranges: list[str] = []
 
     def read_raw_data(self) -> None:
-        with open(self.filename, encoding="utf8") as infile:
-            for line in infile:
+        with open(self.filename, encoding="utf8") as file:
+            for line in file:
                 columns = line.split()
                 if columns[:2] == ["date", "time"]:
                     headers = columns
@@ -250,29 +251,28 @@ class RadiometricsWVR:
             else:
                 msg = "No headers found"
                 raise RuntimeError(msg)
-            for key in headers:
-                self.raw_data[key] = []
-            for line in infile:
-                for key, value in zip(headers, line.split(), strict=False):
-                    parsed_value: Any
-                    if key == "date":
-                        month, day, year = map(int, value.split("/"))
-                        if year < 100:
-                            year += 2000
-                        parsed_value = datetime.date(year, month, day)
-                    elif key == "time":
-                        hour, minute, second = map(int, value.split(":"))
-                        parsed_value = datetime.time(hour, minute, second)
+            for header in headers:
+                self.raw_data[header] = []
+            for line in file:
+                columns = line.split()
+                if len(columns) != len(headers):
+                    continue
+                for header, column in zip(headers, columns, strict=True):
+                    value: datetime.date | datetime.time | float
+                    if header == "date":
+                        value = _parse_date(column)
+                    elif header == "time":
+                        value = _parse_time(column)
                     else:
-                        parsed_value = float(value)
-                    self.raw_data[key].append(parsed_value)
+                        value = _parse_value(column)
+                    self.raw_data[header].append(value)
 
     def read_data(self) -> None:
         self.data["time"] = np.array(
             [
                 datetime.datetime.combine(date, time)
                 for date, time in zip(
-                    self.raw_data["date"], self.raw_data["time"], strict=False
+                    self.raw_data["date"], self.raw_data["time"], strict=True
                 )
             ],
             dtype="datetime64[s]",
@@ -280,8 +280,11 @@ class RadiometricsWVR:
         self.data["lwp"] = np.array(self.raw_data["LiqCM"]) * 10  # cm => kg m-2
         self.data["iwv"] = np.array(self.raw_data["VapCM"]) * 10  # cm => kg m-2
         is_zenith = np.abs(np.array(self.raw_data["ELact"]) - 90.0) < 1.0
+        tb23_valid = np.array(self.raw_data["TbSky23"]) > 0
+        tb31_valid = np.array(self.raw_data["TbSky31"]) > 0
+        is_valid = is_zenith & tb23_valid & tb31_valid
         for key in self.data:
-            self.data[key] = self.data[key][is_zenith]
+            self.data[key] = self.data[key][is_valid]
 
 
 class RadiometricsCombined:
@@ -361,6 +364,22 @@ def _read_file(filename: Path) -> RadiometricsMP | RadiometricsWVR:
     obj.read_raw_data()
     obj.read_data()
     return obj
+
+
+def _parse_value(text: str) -> float:
+    return math.nan if "*" in text else float(text)
+
+
+def _parse_date(text: str) -> datetime.date:
+    month, day, year = map(int, text.split("/"))
+    if year < 100:
+        year += 2000
+    return datetime.date(year, month, day)
+
+
+def _parse_time(text: str) -> datetime.time:
+    hour, minute, second = map(int, text.split(":"))
+    return datetime.time(hour, minute, second)
 
 
 def _parse_datetime(text: str) -> datetime.datetime:
