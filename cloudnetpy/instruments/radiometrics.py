@@ -207,26 +207,30 @@ class RadiometricsMP:
         self.data["time"] = np.array(times, dtype="datetime64[s]")
         self.data["lwp"] = np.array(lwps)  # mm => kg m-2
         self.data["iwv"] = np.array(iwvs) * 10  # cm => kg m-2
-        self.data["irt"] = _find_closest(
-            np.array(irt_times, dtype="datetime64[s]"),
-            np.array(irts),
-            self.data["time"],
-        )
-        self.data["temperature"] = _find_closest(
-            np.array(temp_times, dtype="datetime64[s]"),
-            np.array(temps),
-            self.data["time"],
-        )
-        self.data["relative_humidity"] = _find_closest(
-            np.array(rh_times, dtype="datetime64[s]"),
-            np.array(rhs) / 100,  # % => 1
-            self.data["time"],
-        )
-        self.data["absolute_humidity"] = _find_closest(
-            np.array(ah_times, dtype="datetime64[s]"),
-            np.array(ahs) / 1000,  # g m-3 => kg m-3
-            self.data["time"],
-        )
+        if irt_times:
+            self.data["irt"] = _find_closest(
+                np.array(irt_times, dtype="datetime64[s]"),
+                np.array(irts),
+                self.data["time"],
+            )
+        if temp_times:
+            self.data["temperature"] = _find_closest(
+                np.array(temp_times, dtype="datetime64[s]"),
+                np.array(temps),
+                self.data["time"],
+            )
+        if rh_times:
+            self.data["relative_humidity"] = _find_closest(
+                np.array(rh_times, dtype="datetime64[s]"),
+                np.array(rhs) / 100,  # % => 1
+                self.data["time"],
+            )
+        if ah_times:
+            self.data["absolute_humidity"] = _find_closest(
+                np.array(ah_times, dtype="datetime64[s]"),
+                np.array(ahs) / 1000,  # g m-3 => kg m-3
+                self.data["time"],
+            )
 
 
 class RadiometricsWVR:
