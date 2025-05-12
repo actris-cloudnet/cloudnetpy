@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.76.1 – 2025-05-12
+
+- Handle and screen invalid data from WVR-1100
+- Handle missing data in Radiometrics reader
+
 ## 1.76.0 – 2025-05-09
 
 - Add support for Radiometrics WVR-1100
