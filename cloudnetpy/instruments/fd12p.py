@@ -1,5 +1,7 @@
 import datetime
+import logging
 import math
+import re
 from os import PathLike
 from uuid import UUID
 
@@ -78,20 +80,31 @@ class FD12P(CSVFile):
         # In Lindenberg, format is date and time followed by Message 2 without
         # non-printable characters.
         with open(filename) as file:
+            invalid_lines = 0
             for line in file:
-                columns = line.split()
-                date = _parse_date(columns[0])
-                time = _parse_time(columns[1])
-                self._data["time"].append(datetime.datetime.combine(date, time))
-                self._data["visibility"].append(_parse_int(columns[4]))
-                self._data["synop_WaWa"].append(_parse_int(columns[7]))
-                self._data["precipitation_rate"].append(
-                    _parse_float(columns[10])
-                )  # mm/h
-                self._data["precipitation_amount"].append(
-                    _parse_float(columns[11])
-                )  # mm
-                self._data["snowfall_amount"].append(_parse_int(columns[12]))  # mm
+                try:
+                    columns = line.split()
+                    if len(columns) != 13:
+                        msg = "Invalid column count"
+                        raise ValueError(msg)  # noqa: TRY301
+                    date = _parse_date(columns[0])
+                    time = _parse_time(columns[1])
+                    visibility = _parse_int(columns[4])
+                    synop = _parse_int(columns[7])
+                    p_rate = _parse_float(columns[10])  # mm/h
+                    p_amount = _parse_float(columns[11])  # mm
+                    s_amount = _parse_int(columns[12])  # mm
+                    self._data["time"].append(datetime.datetime.combine(date, time))
+                    self._data["visibility"].append(visibility)
+                    self._data["synop_WaWa"].append(synop)
+                    self._data["precipitation_rate"].append(p_rate)
+                    self._data["precipitation_amount"].append(p_amount)
+                    self._data["snowfall_amount"].append(s_amount)
+                except ValueError:
+                    invalid_lines += 1
+                    continue
+        if invalid_lines:
+            logging.info("Skipped %d lines", invalid_lines)
         for key in ("visibility", "synop_WaWa", "snowfall_amount"):
             values = np.array(
                 [0 if x is math.nan else x for x in self._data[key]], dtype=np.int32
@@ -124,14 +137,25 @@ class FD12P(CSVFile):
 
 
 def _parse_date(date: str) -> datetime.date:
-    day, month, year = map(int, date.split("."))
-    return datetime.date(year, month, day)
+    match = re.fullmatch(r"(?P<day>\d{2})\.(?P<month>\d{2})\.(?P<year>\d{4})", date)
+    if match is None:
+        msg = f"Invalid date: {date}"
+        raise ValueError(msg)
+    return datetime.date(int(match["year"]), int(match["month"]), int(match["day"]))
 
 
 def _parse_time(time: str) -> datetime.time:
-    hour, minute, *rest = [int(x) for x in time.split(":")]
-    second = rest[0] if rest else 0
-    return datetime.time(hour, minute, second)
+    match = re.fullmatch(
+        r"(?P<hour>\d{2}):(?P<minute>\d{2})(:(?P<second>\d{2}))?", time
+    )
+    if match is None:
+        msg = f"Invalid time: {time}"
+        raise ValueError(msg)
+    return datetime.time(
+        int(match["hour"]),
+        int(match["minute"]),
+        int(match["second"]) if match["second"] is not None else 0,
+    )
 
 
 def _parse_int(value: str) -> float:
