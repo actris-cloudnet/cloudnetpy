@@ -273,5 +273,5 @@ def test_normalize_rainfall_amount(original, expected):
     original = np.array(original)
     expected = np.array(expected)
     a.data["rainfall_amount"] = CloudnetArray(original, "rainfall_amount")
-    a.normalize_rainfall_amount()
+    a.normalize_cumulative_amount("rainfall_amount")
     assert np.array_equal(a.data["rainfall_amount"].data, expected)

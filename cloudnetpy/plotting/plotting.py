@@ -361,9 +361,12 @@ class Plot:
         units_conversion = {
             "rainfall_rate": (multiply, 3600000, "mm h$^{-1}$"),
             "snowfall_rate": (multiply, 3600000, "mm h$^{-1}$"),
+            "precipitation_rate": (multiply, 3600000, "mm h$^{-1}$"),
             "air_pressure": (multiply, 0.01, "hPa"),
             "relative_humidity": (multiply, 100, "%"),
             "rainfall_amount": (multiply, 1000, "mm"),
+            "snowfall_amount": (multiply, 1000, "mm"),
+            "precipitation_amount": (multiply, 1000, "mm"),
             "air_temperature": (add, -273.15, "\u00b0C"),
             "r_accum_RT": (multiply, 1000, "mm"),
             "r_accum_NRT": (multiply, 1000, "mm"),

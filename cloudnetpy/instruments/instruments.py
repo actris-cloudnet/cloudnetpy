@@ -246,3 +246,10 @@ MRR_PRO = Instrument(
     model="MRR-PRO",
     frequency=24.23,
 )
+
+FD12P = Instrument(
+    manufacturer="Vaisala",
+    domain="weather-station",
+    category="present weather sensor",
+    model="FD12P",
+)

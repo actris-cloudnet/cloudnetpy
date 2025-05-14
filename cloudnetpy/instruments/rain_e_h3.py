@@ -40,7 +40,7 @@ def rain_e_h32nc(
     rain.add_data()
     rain.add_date()
     rain.convert_units()
-    rain.normalize_rainfall_amount()
+    rain.normalize_cumulative_amount("rainfall_amount")
     rain.add_site_geolocation()
     rain.sort_timestamps()
     rain.remove_duplicate_timestamps()

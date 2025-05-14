@@ -77,7 +77,7 @@ def ws2nc(
     ws.convert_pressure()
     ws.convert_rainfall_rate()
     ws.convert_rainfall_amount()
-    ws.normalize_rainfall_amount()
+    ws.normalize_cumulative_amount("rainfall_amount")
     ws.calculate_rainfall_amount()
     attributes = output.add_time_attribute({}, ws.date)
     output.update_attributes(ws.data, attributes)

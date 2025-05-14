@@ -109,17 +109,22 @@ class CSVFile(CloudnetInstrument):
             parsed = (
                 utils.datetime2decimal_hours(value)
                 if key == "time"
-                else ma.array(value)
+                else ma.masked_invalid(value)
             )
             self.data[key] = CloudnetArray(parsed, key)
 
-    def normalize_rainfall_amount(self) -> None:
-        if "rainfall_amount" in self.data:
-            amount = self.data["rainfall_amount"][:]
-            offset = 0
-            for i in range(1, len(amount)):
-                if amount[i] + offset < amount[i - 1]:
-                    offset += amount[i - 1]
-                amount[i] += offset
-            amount -= amount[0]
-            self.data["rainfall_amount"].data = amount
+    def normalize_cumulative_amount(self, key: str) -> None:
+        if key not in self.data:
+            return
+        amount = self.data[key][:]
+        offset = 0
+        last_valid = 0
+        for i in range(1, len(amount)):
+            if amount[i] is ma.masked:
+                continue
+            if amount[i] + offset < amount[last_valid]:
+                offset += amount[last_valid]
+            amount[i] += offset
+            last_valid = i
+        amount -= amount[0]
+        self.data[key].data = amount
