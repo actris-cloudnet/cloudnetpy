@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.77.0 – 2025-05-14
+
+- Add support for FD12P present weather sensor
+
 ## 1.76.1 – 2025-05-12
 
 - Handle and screen invalid data from WVR-1100
