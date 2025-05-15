@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.77.1 – 2025-05-15
+
+- Skip invalid lines in FD12P files
+
 ## 1.77.0 – 2025-05-14
 
 - Add support for FD12P present weather sensor
