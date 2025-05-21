@@ -1,5 +1,7 @@
 from os import PathLike
 
+import numpy as np
+
 from cloudnetpy import output
 from cloudnetpy.constants import G_TO_KG, MM_H_TO_M_S
 from cloudnetpy.exceptions import ValidTimeStampError
@@ -59,6 +61,7 @@ def bowtie2nc(
         bowtie.add_site_geolocation()
         bowtie.add_height()
         bowtie.convert_units()
+        bowtie.fix_chirp_start_indices()
         bowtie.test_if_all_masked()
     attributes = output.add_time_attribute(ATTRIBUTES, bowtie.date)
     output.update_attributes(bowtie.data, attributes)
@@ -75,6 +78,11 @@ class Bowtie(NcRadar):
         self.data["lwp"].data *= G_TO_KG
         self.data["rainfall_rate"].data *= MM_H_TO_M_S
         self.data["relative_humidity"].data /= 100
+
+    def fix_chirp_start_indices(self) -> None:
+        ind = self.data["chirp_start_indices"].data
+        self.data["chirp_start_indices"].data = np.array([int(i) for i in ind])
+        self.data["chirp_start_indices"].data_type = "int32"
 
     def check_date(self, date: str):
         if "-".join(self.date) != date:
