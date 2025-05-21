@@ -826,6 +826,8 @@ def get_epoch(units: str) -> Epoch:
     except IndexError:
         return fallback
     date = date.replace(",", "")
+    if "T" in date:
+        date = date[: date.index("T")]
     try:
         date_components = [int(x) for x in date.split("-")]
     except ValueError:
