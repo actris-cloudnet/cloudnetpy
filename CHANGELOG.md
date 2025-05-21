@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.77.2 – 2025-05-21
+
+- Fix data type in BOWTIE radar netCDF
+- Improve epoch handling
+
 ## 1.77.1 – 2025-05-15
 
 - Skip invalid lines in FD12P files
