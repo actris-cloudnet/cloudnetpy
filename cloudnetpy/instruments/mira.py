@@ -193,7 +193,6 @@ def _parse_input_files(input_files: str | list[str], temp_dir: str) -> tuple:
                 )
                 raise FileNotFoundError(msg)
 
-            valid_files = utils.get_files_with_common_range(valid_files)
             filetypes = list({f.split(".")[-1].lower() for f in valid_files})
 
             if len(filetypes) > 1:
@@ -208,15 +207,6 @@ def _parse_input_files(input_files: str | list[str], temp_dir: str) -> tuple:
                 input_filename,
                 variables=variables,
                 ignore=_get_ignored_variables(filetypes[0]),
-                # It's somewhat risky to use varying nfft values as the velocity
-                # resolution may differ, but this enables concatenation when switching
-                # between different nfft configurations. Spectral data is ignored
-                # anyway for now.
-                allow_difference=[
-                    "nave",
-                    "ovl",
-                    "nfft",
-                ],
             )
     else:
         input_filename = input_files

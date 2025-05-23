@@ -57,7 +57,11 @@ def _get_netcdf_dimensions(obj) -> dict:
     }
     # RPG cloud radar
     if "chirp_start_indices" in obj.data:
-        dimensions["chirp_sequence"] = len(obj.data["chirp_start_indices"][:])
+        if obj.data["chirp_start_indices"][:].ndim == 1:
+            dimensions["chirp_start_indices"] = len(obj.data["chirp_start_indices"][:])
+        else:
+            dimensions["chirp"] = obj.data["chirp_start_indices"][:].shape[1]
+
     # disdrometer
     if hasattr(obj, "n_diameter") and hasattr(obj, "n_velocity"):
         dimensions["diameter"] = obj.n_diameter
