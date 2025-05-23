@@ -80,8 +80,8 @@ class Bowtie(NcRadar):
         self.data["relative_humidity"].data /= 100
 
     def fix_chirp_start_indices(self) -> None:
-        ind = self.data["chirp_start_indices"].data
-        self.data["chirp_start_indices"].data = np.array([int(i) for i in ind])
+        array = self.data["chirp_start_indices"].data
+        self.data["chirp_start_indices"].data = np.array(array, dtype=np.int32)
         self.data["chirp_start_indices"].data_type = "int32"
 
     def check_date(self, date: str):

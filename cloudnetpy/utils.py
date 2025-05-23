@@ -960,21 +960,6 @@ def get_file_type(filename: str) -> str:
     raise ValueError(msg)
 
 
-def get_files_with_common_range(filenames: list) -> list:
-    """Returns files with the same (most common) number of range gates."""
-    n_range = []
-    for file in filenames:
-        with netCDF4.Dataset(file) as nc:
-            n_range.append(len(nc.variables["range"]))
-    most_common = np.bincount(n_range).argmax()
-    n_removed = len(filenames) - n_range.count(int(most_common))
-    if n_removed > 0:
-        logging.warning(
-            "Removing %s files due to inconsistent height vector", n_removed
-        )
-    return [file for i, file in enumerate(filenames) if n_range[i] == most_common]
-
-
 def get_files_with_variables(filenames: list, variables: list[str]) -> list:
     """Returns files where all variables exist."""
     valid_files = []

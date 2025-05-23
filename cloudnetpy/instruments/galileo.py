@@ -68,7 +68,6 @@ def galileo2nc(
                 valid_filenames = utils.get_files_with_variables(
                     valid_filenames, ["time", "ZED_HC"]
                 )
-                valid_filenames = utils.get_files_with_common_range(valid_filenames)
                 variables = list(keymap.keys())
                 concat_lib.concatenate_files(
                     valid_filenames,

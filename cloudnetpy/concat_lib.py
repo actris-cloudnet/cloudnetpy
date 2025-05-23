@@ -9,9 +9,9 @@ from typing import Literal
 
 import netCDF4
 import numpy as np
+from numpy import ma
 
 from cloudnetpy import utils
-from cloudnetpy.exceptions import InconsistentDataError
 
 
 def truncate_netcdf_file(
@@ -89,7 +89,7 @@ def concatenate_files(
     variables: list | None = None,
     new_attributes: dict | None = None,
     ignore: list | None = None,
-    allow_difference: list | None = None,
+    interp_dimension: str = "range",
 ) -> list:
     """Concatenate netCDF files in one dimension.
 
@@ -101,22 +101,21 @@ def concatenate_files(
             Default is None when all variables with 'concat_dimension' will be saved.
         new_attributes: Optional new global attributes as {'attribute_name': value}.
         ignore: List of variables to be ignored.
-        allow_difference: Names of scalar variables that can differ from one file to
-            another (value from the first file is saved).
+        interp_dimension: Dimension name for interpolation if the dimensions
+            are not the same.
 
     Returns:
         List of filenames that were successfully concatenated.
 
     Notes:
-        Arrays without 'concat_dimension', scalars, and global attributes will be taken
-        from the first file. Groups, possibly present in a NETCDF4 formatted file,
-        are ignored.
+        Arrays without 'concat_dimension' and scalars are expanded to the
+        concat_dimension. Global attributes are taken from the first file.
+        Groups, possibly present in a NETCDF4 formatted file, are ignored.
 
     """
-    with _Concat(filenames, output_file, concat_dimension) as concat:
-        concat.get_common_variables()
+    with _Concat(filenames, output_file, concat_dimension, interp_dimension) as concat:
         concat.create_global_attributes(new_attributes)
-        return concat.concat_data(variables, ignore, allow_difference)
+        return concat.concat_data(variables, ignore)
 
 
 class _Concat:
@@ -127,19 +126,14 @@ class _Concat:
         filenames: Iterable[PathLike | str],
         output_file: str,
         concat_dimension: str = "time",
+        interp_dim: str = "range",
     ):
         self.filenames = sorted(map(Path, filenames), key=lambda f: f.name)
         self.concat_dimension = concat_dimension
+        self.interp_dim = interp_dim
         self.first_filename = self.filenames[0]
         self.first_file = netCDF4.Dataset(self.first_filename)
         self.concatenated_file = self._init_output_file(output_file)
-        self.common_variables = set()
-
-    def get_common_variables(self) -> None:
-        """Finds variables which should have the same values in all files."""
-        for key, value in self.first_file.variables.items():
-            if self.concat_dimension not in value.dimensions:
-                self.common_variables.add(key)
 
     def create_global_attributes(self, new_attributes: dict | None) -> None:
         """Copies global attributes from one of the source files."""
@@ -150,17 +144,16 @@ class _Concat:
 
     def concat_data(
         self,
-        variables: list | None,
-        ignore: list | None,
-        allow_vary: list | None,
+        keep: list | None = None,
+        ignore: list | None = None,
     ) -> list:
         """Concatenates data arrays."""
-        self._write_initial_data(variables, ignore)
+        self._write_initial_data(keep, ignore)
         output = [self.first_filename]
         if len(self.filenames) > 1:
             for filename in self.filenames[1:]:
                 try:
-                    self._append_data(filename, allow_vary)
+                    self._append_data(filename)
                 except RuntimeError as e:
                     if "NetCDF: HDF error" in str(e):
                         msg = f"Caught a NetCDF HDF error. Skipping file '{filename}'."
@@ -170,24 +163,28 @@ class _Concat:
                 output.append(filename)
         return output
 
-    def _write_initial_data(self, variables: list | None, ignore: list | None) -> None:
-        for key in self.first_file.variables:
+    def _write_initial_data(self, keep: list | None, ignore: list | None) -> None:
+        len_concat_dim = self.first_file[self.concat_dimension].size
+        auto_scale = False
+
+        for key, var in self.first_file.variables.items():
             if (
-                variables is not None
-                and key not in variables
-                and key not in self.common_variables
+                # This filtering only affects variables having the concat_dimension
+                keep is not None
+                and key not in keep
                 and key != self.concat_dimension
+                and self.concat_dimension in var.dimensions
             ):
                 continue
             if ignore and key in ignore:
                 continue
 
-            auto_scale = False
-            self.first_file[key].set_auto_scale(auto_scale)
-            array = self.first_file[key][:]
-            dimensions = self.first_file[key].dimensions
-            fill_value = getattr(self.first_file[key], "_FillValue", None)
-            var = self.concatenated_file.createVariable(
+            var.set_auto_scale(auto_scale)
+            array, dimensions = self._expand_array(var, len_concat_dim)
+
+            fill_value = var.get_fill_value()
+
+            var_new = self.concatenated_file.createVariable(
                 key,
                 array.dtype,
                 dimensions,
@@ -196,37 +193,49 @@ class _Concat:
                 shuffle=False,
                 fill_value=fill_value,
             )
-            auto_scale = False
-            var.set_auto_scale(auto_scale)
-            var[:] = array
-            _copy_attributes(self.first_file[key], var)
+            var_new.set_auto_scale(auto_scale)
+            var_new[:] = array
+            _copy_attributes(var, var_new)
 
-    def _append_data(self, filename: str | PathLike, allow_vary: list | None) -> None:
+    def _expand_array(
+        self, var: netCDF4.Variable, n_data: int
+    ) -> tuple[ma.MaskedArray, tuple[str, ...]]:
+        dimensions = var.dimensions
+        arr = var[:]
+        if self.concat_dimension not in dimensions and var.name != self.interp_dim:
+            dimensions = (self.concat_dimension, *dimensions)
+            arr = np.repeat(arr[np.newaxis, ...], n_data, axis=0)
+
+        return arr, dimensions
+
+    def _append_data(self, filename: str | PathLike) -> None:
         with netCDF4.Dataset(filename) as file:
             auto_scale = False
             file.set_auto_scale(auto_scale)
             ind0 = len(self.concatenated_file.variables[self.concat_dimension])
             ind1 = ind0 + len(file.variables[self.concat_dimension])
+            n_points = ind1 - ind0
+
             for key in self.concatenated_file.variables:
-                if key not in file.variables:
+                if key not in file.variables or key == self.interp_dim:
                     continue
-                array = file[key][:]
-                if key in self.common_variables:
-                    if allow_vary is not None and key in allow_vary:
-                        continue
-                    if not np.array_equal(self.first_file[key][:], array):
-                        msg = (
-                            f"Inconsistent values in variable '{key}' between "
-                            f"files '{self.first_filename}' and '{filename}'"
-                        )
-                        raise InconsistentDataError(msg)
-                    continue
-                if array.ndim == 0:
-                    continue
-                if array.ndim == 1:
-                    self.concatenated_file.variables[key][ind0:ind1] = array
-                else:
-                    self.concatenated_file.variables[key][ind0:ind1, :] = array
+
+                array, dimensions = self._expand_array(file[key], n_points)
+
+                # Nearest neighbour interpolation in the interp_dim dimension
+                # if the dimensions are not the same between the files
+                if self.interp_dim in dimensions and (
+                    self.first_file[self.interp_dim].size != file[self.interp_dim].size
+                ):
+                    x = file.variables[self.interp_dim][:]
+                    x_target = self.first_file.variables[self.interp_dim][:]
+                    idx = np.abs(x[:, None] - x_target[None, :]).argmin(axis=0)
+                    array = array[:, idx]
+                    out_of_bounds = (x_target < x.min()) | (x_target > x.max())
+                    fill_value = self.first_file.variables[key].get_fill_value()
+                    array[:, out_of_bounds] = fill_value
+
+                self.concatenated_file.variables[key][ind0:ind1, ...] = array
 
     def _init_output_file(self, output_file: str) -> netCDF4.Dataset:
         data_model: Literal["NETCDF4", "NETCDF4_CLASSIC"] = (
