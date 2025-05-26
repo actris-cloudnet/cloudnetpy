@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.78.0 – 2025-05-26
+
+- Improve netCDF concatenation
+
 ## 1.77.2 – 2025-05-21
 
 - Fix data type in BOWTIE radar netCDF
