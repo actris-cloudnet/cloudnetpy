@@ -1,11 +1,11 @@
 """CloudnetArray class."""
 
-import math
 from collections.abc import Sequence
 
 import netCDF4
 import numpy as np
 from numpy import ma
+from scipy.interpolate import interp1d
 
 from cloudnetpy import utils
 from cloudnetpy.metadata import MetaData
@@ -173,39 +173,30 @@ class CloudnetArray:
         self,
         time: np.ndarray,
         time_new: np.ndarray,
-        folding_velocity: float | np.ndarray,
-        sequence_indices: list,
+        folding_velocity: np.ndarray,
     ) -> None:
-        """Rebins Doppler velocity in polar coordinates.
+        """Rebins data (Doppler velocity) in polar coordinates.
 
         Args:
             time: 1D time array.
             time_new: 1D new time array.
-            folding_velocity: Folding velocity (m/s). Can be a float when
-                it's the same for all altitudes, or np.ndarray when it
-                matches difference altitude regions (defined in `sequence_indices`).
-            sequence_indices: List containing indices of different folding regions,
-                e.g. [[0, 1, 2, 3], [4, 5, 6, 7], [8, 9, 10]].
-
+            folding_velocity: Folding velocity (m/s).
         """
-
-        def _get_scaled_vfold() -> np.ndarray:
-            vfold_scaled = math.pi / folding_velocity
-            if isinstance(vfold_scaled, float):
-                vfold_scaled = np.array([float(vfold_scaled)])
-            return vfold_scaled
-
-        def _scale_by_vfold(data_in: np.ndarray, fun) -> np.ndarray:
-            data_out = ma.copy(data_in)
-            for i, ind in enumerate(sequence_indices):
-                data_out[:, ind] = fun(data_in[:, ind], folding_velocity_scaled[i])
-            return data_out
-
-        folding_velocity_scaled = _get_scaled_vfold()
-        data_scaled = _scale_by_vfold(self.data, np.multiply)
+        folding_scaled = ma.array(np.pi / folding_velocity)
+        data_scaled = self.data * folding_scaled
         vel_x = ma.cos(data_scaled)
         vel_y = ma.sin(data_scaled)
         vel_x_mean, _ = utils.rebin_2d(time, vel_x, time_new)
         vel_y_mean, _ = utils.rebin_2d(time, vel_y, time_new)
-        mean_vel_scaled = np.arctan2(vel_y_mean, vel_x_mean)
-        self.data = _scale_by_vfold(mean_vel_scaled, np.divide)
+        # Nearest neighbour interpolation for folding velocity.
+        f = interp1d(
+            time,
+            folding_scaled,
+            fill_value=np.nan,
+            axis=0,
+            kind="nearest",
+            bounds_error=False,
+        )
+        folding_scaled_nearest = f(time_new)
+        vel_scaled = np.arctan2(vel_y_mean, vel_x_mean)
+        self.data = vel_scaled / folding_scaled_nearest

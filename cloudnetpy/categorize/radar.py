@@ -24,8 +24,6 @@ class Radar(DataSource):
         folding_velocity (float): Radar's folding velocity (m/s).
         location (str): Location of the radar, copied from the global attribute
             `location` of the input file.
-        sequence_indices (list): Indices denoting the different altitude
-            regimes of the radar.
         source_type (str): Type of the radar, copied from the global attribute
             `source` of the *radar_file*. Can be free form string but must
             include either 'rpg' or 'mira' denoting one of the two supported
@@ -39,15 +37,13 @@ class Radar(DataSource):
     def __init__(self, full_path: str):
         super().__init__(full_path, radar=True)
         self.radar_frequency = float(self.getvar("radar_frequency"))
-        self.folding_velocity = self._get_folding_velocity()
-        self.sequence_indices = self._get_sequence_indices()
+        self.folding_velocity = self._get_expanded_folding_velocity()
         self.location = getattr(self.dataset, "location", "")
         self.source_type = getattr(self.dataset, "source", "")
         self.height: np.ndarray
         self.altitude: float
         self._init_data()
         self._init_sigma_v()
-        self._get_folding_velocity_full()
 
     def rebin_to_grid(self, time_new: np.ndarray) -> list:
         """Rebins radar data in time using mean.
@@ -68,7 +64,6 @@ class Radar(DataSource):
                         self.time,
                         time_new,
                         self.folding_velocity,
-                        self.sequence_indices,
                     )
                 case "v_sigma":
                     array.calc_linear_std(self.time, time_new)
@@ -349,51 +344,52 @@ class Radar(DataSource):
         """
         self.append_data(self.getvar("v"), "v_sigma")
 
-    def _get_sequence_indices(self) -> list:
-        """Mira has only one sequence and one folding velocity. RPG has
-        several sequences with different folding velocities.
-        """
-        if self.height is None:
-            msg = "Height not found in the input file"
-            raise RuntimeError(msg)
-        all_indices = np.arange(len(self.height))
-        if not utils.isscalar(self.folding_velocity):
-            starting_indices = self.getvar("chirp_start_indices")
-            return np.split(all_indices, starting_indices[1:])
-        return [all_indices]
-
-    def _get_folding_velocity(self) -> np.ndarray | float:
+    def _get_expanded_folding_velocity(self) -> np.ndarray:
         if "nyquist_velocity" in self.dataset.variables:
-            return self.getvar("nyquist_velocity")
-        if "prf" in self.dataset.variables:
+            fvel = self.getvar("nyquist_velocity")
+        elif "prf" in self.dataset.variables:
             prf = self.getvar("prf")
-            return _prf_to_folding_velocity(prf, self.radar_frequency)
-        msg = "Unable to determine folding velocity"
-        raise RuntimeError(msg)
-
-    def _get_folding_velocity_full(self) -> None:
-        folding_velocity: list | np.ndarray = []
-        if utils.isscalar(self.folding_velocity):
-            folding_velocity = np.repeat(
-                self.folding_velocity,
-                len(self.sequence_indices[0]),
-            )
+            fvel = _prf_to_folding_velocity(prf, self.radar_frequency)
         else:
-            folding_velocity = list(folding_velocity)
-            self.folding_velocity = np.array(self.folding_velocity)
-            for indices, velocity in zip(
-                self.sequence_indices,
-                self.folding_velocity,
-                strict=True,
-            ):
-                folding_velocity.append(np.repeat(velocity, len(indices)))
-            folding_velocity = np.hstack(folding_velocity)
-        self.append_data(folding_velocity, "nyquist_velocity")
+            msg = "Unable to determine folding velocity"
+            raise RuntimeError(msg)
+
+        n_time = self.getvar("time").size
+        n_height = self.height.size
+
+        if fvel.shape == (n_time, n_height):
+            # Folding velocity is already expanded in radar file
+            # Not yet in current files
+            return fvel
+        if utils.isscalar(fvel):
+            # e.g. MIRA
+            return np.broadcast_to(fvel, (n_time, n_height))
+
+        # RPG radars have chirp segments
+        starts = self.getvar("chirp_start_indices")
+        n_seg = starts.size if starts.ndim == 1 else starts.shape[1]
+
+        starts = np.broadcast_to(starts, (n_time, n_seg))
+        fvel = np.broadcast_to(fvel, (n_time, n_seg))
+
+        # Indices should start from zero (first range gate)
+        # In pre-processed RV Meteor files the first index is 1, so normalize:
+        # Normalize starts so indices begin from zero
+        first_values = starts[:, [0]]
+        if not np.all(np.isin(first_values, [0, 1])):
+            msg = "First value of chirp_start_indices must be 0 or 1"
+            raise ValueError(msg)
+        starts = starts - first_values
+
+        chirp_size = np.diff(starts, append=n_height)
+        out = np.repeat(fvel.ravel(), chirp_size.ravel()).reshape((n_time, n_height))
+        self.append_data(out[0, :], "nyquist_velocity")
+        return out
 
 
-def _prf_to_folding_velocity(prf: np.ndarray, radar_frequency: float) -> float:
+def _prf_to_folding_velocity(prf: np.ndarray, radar_frequency: float) -> np.ndarray:
     ghz_to_hz = 1e9
     if len(prf) != 1:
         msg = "Unable to determine folding velocity"
         raise RuntimeError(msg)
-    return float(prf[0] * constants.c / (4 * radar_frequency * ghz_to_hz))
+    return prf[0] * constants.c / (4 * radar_frequency * ghz_to_hz)
