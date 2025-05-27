@@ -1,5 +1,4 @@
 import os
-import warnings
 from tempfile import TemporaryDirectory
 
 import netCDF4

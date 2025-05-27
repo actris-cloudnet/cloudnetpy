@@ -97,7 +97,7 @@ def read_data_characters(nc_file: str, name: str, model: str) -> tuple:
     try:
         mask = y.mask
         if mask.any():
-            x, y, data = change2one_dim_axes(x, y, data)
+            x, y, data = change2one_dim_axes(ma.array(x), y, data)
     except AttributeError:
         return data, x, y
     return data, x, y

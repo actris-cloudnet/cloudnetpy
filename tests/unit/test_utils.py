@@ -91,40 +91,6 @@ def test_l2_norm(a, b, result):
     assert_array_almost_equal(utils.l2norm(a, b), result)
 
 
-class TestRebin2D:
-    x = np.array([1.01, 2, 2.99, 4.01, 4.99, 6.01, 7])
-    xnew = np.array([2, 4, 6])
-    data = ma.array([range(1, 8), range(1, 8)]).T
-
-    def test_rebin_2d(self):
-        data_i, empty_ind = utils.rebin_2d(self.x, self.data, self.xnew)
-        expected_data = np.array([[2, 4.5, 6.5], [2, 4.5, 6.5]]).T
-        assert_array_almost_equal(data_i.data, expected_data)
-        assert not ma.getmaskarray(data_i.mask).any()
-        assert empty_ind == []
-
-    def test_rebin_2d_n_min(self):
-        data_i, empty_ind = utils.rebin_2d(self.x, self.data, self.xnew, n_min=2)
-        expected_data = np.array([[2, 4.5, 6.5], [2, 4.5, 6.5]]).T
-        assert_array_almost_equal(data_i.data, expected_data)
-        assert empty_ind == []
-
-    def test_rebin_2d_n_min_2(self):
-        data_i, empty_ind = utils.rebin_2d(self.x, self.data, self.xnew, n_min=3)
-        expected_data = np.array([[2, 4.5, 6.5], [2, 4.5, 6.5]]).T
-        expected_mask = np.array([[0, 1, 1], [0, 1, 1]]).T
-        assert_array_almost_equal(data_i.data, expected_data)
-        assert_array_almost_equal(data_i.mask, expected_mask)
-        assert empty_ind == [1, 2]
-
-    def test_rebin_2d_std(self):
-        data_i, empty_ind = utils.rebin_2d(self.x, self.data, self.xnew, "std")
-        result = np.array([np.std([1, 2, 3]), np.std([4, 5]), np.std([6, 7])])
-        result = np.array([result, result]).T
-        assert_array_almost_equal(data_i, result)
-        assert empty_ind == []
-
-
 def test_filter_isolated_pixels():
     x = np.array([[0, 0, 1, 1, 1], [0, 0, 0, 0, 0], [1, 0, 1, 0, 0], [0, 0, 0, 0, 1]])
     x2 = np.array([[0, 0, 1, 1, 1], [0, 0, 0, 0, 0], [0, 0, 0, 0, 0], [0, 0, 0, 0, 0]])

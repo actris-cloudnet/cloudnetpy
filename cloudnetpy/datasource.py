@@ -182,53 +182,6 @@ class DataSource:
             return np.array(range_instrument + self.altitude)
         return None
 
-    def _variables_to_cloudnet_arrays(self, keys: tuple) -> None:
-        """Transforms netCDF4-variables into CloudnetArrays.
-
-        Args:
-            keys: netCDF4-variables to be converted. The results
-                are saved in *self.data* dictionary with *fields*
-                strings as keys.
-
-        Notes:
-            The attributes of the variables are not copied. Just the data.
-
-        """
-        for key in keys:
-            self.append_data(self.dataset.variables[key], key)
-
-    def _unknown_variable_to_cloudnet_array(
-        self,
-        possible_names: tuple,
-        key: str,
-        units: str | None = None,
-        *,
-        ignore_mask: bool = False,
-    ) -> None:
-        """Transforms single netCDF4 variable into CloudnetArray.
-
-        Args:
-            possible_names: Tuple of strings containing the possible
-                names of the variable in the input NetCDF file.
-            key: Key for self.data dictionary and name-attribute
-                for the saved CloudnetArray object.
-            units: Units attribute for the CloudnetArray object.
-            ignore_mask: If true, always writes an ordinary numpy array.
-
-        Raises:
-            RuntimeError: No variable found.
-
-        """
-        for name in possible_names:
-            if name in self.dataset.variables:
-                array: netCDF4.Variable | np.ndarray = self.dataset.variables[name]
-                if ignore_mask is True:
-                    array = np.array(array)
-                self.append_data(array, key, units=units)
-                return
-        msg = f"Missing variable {possible_names[0]} in the input file."
-        raise RuntimeError(msg)
-
     def __enter__(self):
         return self
 

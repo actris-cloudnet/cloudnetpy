@@ -65,7 +65,7 @@ def test_fit_z_sensitivity(obs_file, model_file) -> None:
     model = ModelManager(str(model_file), MODEL, OUTPUT_FILE, PRODUCT)
     adv_pro = AdvanceProductMethods(model, str(model_file), obs)
     h = np.array([[5000, 9000, 13000], [10000, 15000, 20000], [8000, 12000, 16000]])
-    compare = np.array([[0, 0.15, 0.5], [0.1, 1, 0], [0.15, 0, 1]])
+    compare = ma.masked_invalid([[np.nan, 0.15, 0.5], [0.1, 1, np.nan], [0.15, 0, 1]])
     x = adv_pro.fit_z_sensitivity(h)
     testing.assert_array_almost_equal(x, compare)
 
