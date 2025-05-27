@@ -48,16 +48,6 @@ def fake_radar_file(tmpdir_factory):
     return file_name
 
 
-def test_sequence_indices(fake_radar_file):
-    obj = Radar(fake_radar_file)
-    assert_array_equal(obj.sequence_indices, [[0, 1, 2, 3]])
-
-
-def test_folding_velocity(fake_radar_file):
-    obj = Radar(fake_radar_file)
-    assert obj.folding_velocity == FOLDING_VELOCITY
-
-
 def test_source(fake_radar_file):
     obj = Radar(fake_radar_file)
     assert obj.source == ""

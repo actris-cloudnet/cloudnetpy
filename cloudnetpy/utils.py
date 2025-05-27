@@ -3,7 +3,6 @@
 import base64
 import datetime
 import hashlib
-import logging
 import os
 import re
 import textwrap
@@ -11,7 +10,7 @@ import uuid
 import warnings
 from collections.abc import Iterator
 from datetime import timezone
-from typing import Literal, TypeVar
+from typing import Any, Literal, TypeVar
 
 import netCDF4
 import numpy as np
@@ -142,54 +141,42 @@ def binvec(x: np.ndarray | list) -> np.ndarray:
 
 def rebin_2d(
     x_in: np.ndarray,
-    array: ma.MaskedArray,
+    array: np.ndarray,
     x_new: np.ndarray,
-    statistic: Literal["mean", "std"] = "mean",
+    statistic: Literal["mean", "std", "max"] = "mean",
     n_min: int = 1,
     *,
-    mask_zeros: bool = True,
-) -> tuple[ma.MaskedArray, list]:
-    """Rebins 2-D data in one dimension.
-
-    Args:
-        x_in: 1-D array with shape (n,).
-        array: 2-D input data with shape (n, m).
-        x_new: 1-D target vector (center points) with shape (N,).
-        statistic: Statistic to be calculated. Possible statistics are 'mean', 'std'.
-            Default is 'mean'.
-        n_min: Minimum number of points to have good statistics in a bin. Default is 1.
-        mask_zeros: Whether to mask 0 values in the returned array. Default is True.
-
-    Returns:
-        tuple: Rebinned data with shape (N, m) and indices of bins without enough data.
-    """
+    keepdim: bool = False,
+    mask_zeros: bool = False,
+) -> tuple[ma.MaskedArray, np.ndarray]:
     edges = binvec(x_new)
-    result = np.zeros((len(x_new), array.shape[1]))
-    array_screened = ma.masked_invalid(array, copy=True)  # data may contain nan-values
-    for ind, values in enumerate(array_screened.T):
-        mask = ~values.mask
-        if ma.any(values[mask]):
-            result[:, ind], _, _ = stats.binned_statistic(
-                x_in[mask],
-                values[mask],
-                statistic=statistic,
-                bins=edges,
-            )
-    result[~np.isfinite(result)] = 0
-    if mask_zeros is True:
-        masked_result = ma.masked_equal(result, 0)
-    else:
-        masked_result = ma.array(result)
+    binn = np.digitize(x_in, edges) - 1
+    n_bins = len(x_new)
+    counts = np.bincount(binn[binn >= 0], minlength=n_bins)
 
-    # Fill bins with not enough profiles
-    x_hist, _ = np.histogram(x_in, bins=edges)
-    empty_mask = x_hist < n_min
-    masked_result[empty_mask, :] = ma.masked
-    empty_indices = list(np.nonzero(empty_mask)[0])
-    if len(empty_indices) > 0:
-        logging.debug("No data in %s bins", len(empty_indices))
+    stat_fn: Any = {
+        "mean": ma.mean,
+        "std": ma.std,
+        "max": ma.max,
+    }[statistic]
 
-    return masked_result, empty_indices
+    shape = array.shape if keepdim else (n_bins, array.shape[1])
+    result: ma.MaskedArray = ma.masked_array(np.ones(shape, dtype="float32"), mask=True)
+
+    for bin_ind in range(n_bins):
+        if counts[bin_ind] < n_min:
+            continue
+        mask = binn == bin_ind
+        block = array[mask, :]
+        x_ind = mask if keepdim else bin_ind
+        result[x_ind, :] = stat_fn(block, axis=0)
+
+    empty_bins = np.where(counts < n_min)[0]
+
+    if mask_zeros:
+        result[result == 0] = ma.masked
+
+    return result, empty_bins
 
 
 def rebin_1d(
@@ -197,8 +184,6 @@ def rebin_1d(
     array: np.ndarray | ma.MaskedArray,
     x_new: np.ndarray,
     statistic: str = "mean",
-    *,
-    mask_zeros: bool = True,
 ) -> ma.MaskedArray:
     """Rebins 1D array.
 
@@ -208,14 +193,13 @@ def rebin_1d(
         x_new: 1-D target vector (center points) with shape (N,).
         statistic: Statistic to be calculated. Possible statistics are 'mean', 'std'.
             Default is 'mean'.
-        mask_zeros: Whether to mask 0 values in the returned array. Default is True.
 
     Returns:
         Re-binned data with shape (N,).
 
     """
     edges = binvec(x_new)
-    result = np.zeros(len(x_new))
+    result = ma.zeros(len(x_new))
     array_screened = ma.masked_invalid(array, copy=True)  # data may contain nan-values
     mask = ~array_screened.mask
     if ma.any(array_screened[mask]):
@@ -225,10 +209,7 @@ def rebin_1d(
             statistic=statistic,
             bins=edges,
         )
-    result[~np.isfinite(result)] = 0
-    if mask_zeros:
-        return ma.masked_equal(result, 0)
-    return ma.array(result)
+    return ma.masked_invalid(result, copy=True)
 
 
 def filter_isolated_pixels(array: np.ndarray) -> np.ndarray:
