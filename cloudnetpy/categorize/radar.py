@@ -383,7 +383,7 @@ class Radar(DataSource):
 
         chirp_size = np.diff(starts, append=n_height)
         out = np.repeat(fvel.ravel(), chirp_size.ravel()).reshape((n_time, n_height))
-        self.append_data(out[0, :], "nyquist_velocity")
+        self.append_data(out, "nyquist_velocity")
         return out
 
 
