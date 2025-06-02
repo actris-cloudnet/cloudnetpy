@@ -83,7 +83,7 @@ def _get_smoothed_v(
     obs: ClassData,
     sigma: tuple[float, float] = (5, 5),
 ) -> ma.MaskedArray:
-    smoothed_v = gaussian_filter(obs.v, sigma)
+    smoothed_v = gaussian_filter(obs.v.filled(0), sigma)
     return ma.masked_where(obs.v.mask, smoothed_v)
 
 
