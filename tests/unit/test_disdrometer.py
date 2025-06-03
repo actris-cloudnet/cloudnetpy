@@ -392,6 +392,25 @@ class TestThies5(Check):
         )
 
 
+class TestThies6(Check):
+    date = "2025-06-02"
+    temp_dir = TemporaryDirectory()
+    temp_path = temp_dir.name + "/test.nc"
+    filename = f"{SCRIPT_PATH}/data/thies-lnm/2025060200.txt"
+    site_meta = SITE_META
+    uuid = disdrometer.thies2nc(filename, temp_path, site_meta, date=date)
+
+    def test_processing(self):
+        assert self.nc.title == f'LNM disdrometer from {self.site_meta["name"]}'
+        assert self.nc.year == "2025"
+        assert self.nc.month == "06"
+        assert self.nc.day == "02"
+        assert self.nc.location == "Kumpula"
+        assert self.nc.cloudnet_file_type == "disdrometer"
+        assert self.nc.serial_number == "3778"
+        assert np.allclose(self.nc["time"][:], [0, 1 / 60, 2 / 60])
+
+
 class TestInvalidCharacters(Check):
     temp_dir = TemporaryDirectory()
     temp_path = temp_dir.name + "/test.nc"

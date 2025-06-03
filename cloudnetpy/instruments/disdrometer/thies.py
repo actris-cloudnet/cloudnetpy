@@ -206,10 +206,11 @@ class Thies(Disdrometer):
         self.serial_number = first_id
 
     def _read_line(self, line: str, timestamp: datetime.datetime | None = None):
-        raw_values = line.split(";")
+        raw_values = line.strip().strip(";").split(";")
         # Support custom truncated format used in Leipzig LIM.
-        expected_columns = self.site_meta.get("truncate_columns", 521)
-        if len(raw_values) != expected_columns:
+        expected_columns = self.site_meta.get("truncate_columns", 521) - 1
+        # Length matches telegram 4 or 5 (has 4 additional columns).
+        if len(raw_values) not in (expected_columns, expected_columns + 4):
             return
         for i, key in TELEGRAM4:
             if i >= expected_columns - 1:
@@ -246,7 +247,7 @@ class Thies(Disdrometer):
             self.raw_data[key].append(value)
         if expected_columns > 79:
             self.raw_data["spectrum"].append(
-                np.array(list(map(int, raw_values[79:-2])), dtype="i2").reshape(
+                np.array(list(map(int, raw_values[79:519])), dtype="i2").reshape(
                     self.n_diameter, self.n_velocity
                 )
             )
