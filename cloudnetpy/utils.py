@@ -8,9 +8,9 @@ import re
 import textwrap
 import uuid
 import warnings
-from collections.abc import Iterator
+from collections.abc import Callable, Iterator
 from datetime import timezone
-from typing import Any, Literal, TypeVar
+from typing import Literal, TypeVar
 
 import netCDF4
 import numpy as np
@@ -139,11 +139,19 @@ def binvec(x: np.ndarray | list) -> np.ndarray:
     return np.linspace(edge1, edge2, len(x) + 1)
 
 
+REBIN_STAT = Literal["mean", "std", "max"]
+REBIN_STAT_FN: dict[REBIN_STAT, Callable] = {
+    "mean": ma.mean,
+    "std": ma.std,
+    "max": ma.max,
+}
+
+
 def rebin_2d(
     x_in: np.ndarray,
     array: np.ndarray,
     x_new: np.ndarray,
-    statistic: Literal["mean", "std", "max"] = "mean",
+    statistic: REBIN_STAT = "mean",
     n_min: int = 1,
     *,
     keepdim: bool = False,
@@ -154,11 +162,7 @@ def rebin_2d(
     n_bins = len(x_new)
     counts = np.bincount(binn[binn >= 0], minlength=n_bins)
 
-    stat_fn: Any = {
-        "mean": ma.mean,
-        "std": ma.std,
-        "max": ma.max,
-    }[statistic]
+    stat_fn = REBIN_STAT_FN[statistic]
 
     shape = array.shape if keepdim else (n_bins, array.shape[1])
     result: ma.MaskedArray = ma.masked_array(np.ones(shape, dtype="float32"), mask=True)
@@ -183,7 +187,7 @@ def rebin_1d(
     x_in: np.ndarray,
     array: np.ndarray | ma.MaskedArray,
     x_new: np.ndarray,
-    statistic: str = "mean",
+    statistic: REBIN_STAT = "mean",
 ) -> ma.MaskedArray:
     """Rebins 1D array.
 
