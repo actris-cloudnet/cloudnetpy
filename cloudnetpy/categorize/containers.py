@@ -89,7 +89,9 @@ class ClassData:
         rain_from_disdrometer = self._find_rain_from_disdrometer()
         ind = ~rain_from_disdrometer.mask
         is_rain[ind] = rain_from_disdrometer[ind]
-        is_positive_temp = self.tw[:, 0] > T0 + 5  # Filter snowfall
+        mask = ma.getmaskarray(self.tw)
+        first_valid_ind = np.nonzero(np.all(~mask, axis=0))[0][0]
+        is_positive_temp = self.tw[:, first_valid_ind] > T0 + 5  # Filter snowfall
         return is_rain & is_positive_temp
 
     def _find_rain_from_radar_echo(self) -> np.ndarray:

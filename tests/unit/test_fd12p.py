@@ -86,4 +86,3 @@ class TestFD12P_3(FD12P):
                 SITE_META,
                 date="2022-01-05",
             )
-            breakpoint()
