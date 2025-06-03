@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.78.2 – 2025-06-03
+
+- Use simple binning for v if already dealiased
+
 ## 1.78.1 – 2025-06-03
 
 - Revise 2D data averaging
