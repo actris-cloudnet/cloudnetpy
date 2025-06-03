@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.78.3 – 2025-06-03
+
+- Make sure to use unmasked wet bulb values
+
 ## 1.78.2 – 2025-06-03
 
 - Use simple binning for v if already dealiased
