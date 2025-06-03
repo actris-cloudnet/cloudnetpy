@@ -357,6 +357,16 @@ class Radar(DataSource):
         )
         # store this in the file
         self.append_data(max_folding_binned, "nyquist_velocity")
+
+        if "correction_bits" in self.dataset.variables:
+            bits = self.dataset.variables["correction_bits"][:]
+            dealiasing_bit = utils.isbit(bits, 0)
+            if ma.all(dealiasing_bit):
+                return utils.rebin_2d(self.time, data, time_new, "mean")[0]
+            if ma.any(dealiasing_bit):
+                msg = "Data are only party dealiased. Deal with this later."
+                raise NotImplementedError(msg)
+
         # with original shape (repeat maximum value for each point in every bin)
         max_folding_full, _ = utils.rebin_2d(
             self.time,
@@ -365,6 +375,7 @@ class Radar(DataSource):
             "max",
             keepdim=True,
         )
+
         data_scaled = data * (np.pi / max_folding_full)
         vel_x = ma.cos(data_scaled)
         vel_y = ma.sin(data_scaled)

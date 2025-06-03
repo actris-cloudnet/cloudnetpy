@@ -1,6 +1,7 @@
 from os import PathLike
 
 import numpy as np
+from numpy import ma
 
 from cloudnetpy import output
 from cloudnetpy.constants import G_TO_KG, MM_H_TO_M_S
@@ -8,6 +9,7 @@ from cloudnetpy.exceptions import ValidTimeStampError
 from cloudnetpy.instruments.instruments import FMCW94
 from cloudnetpy.instruments.nc_radar import NcRadar
 from cloudnetpy.metadata import MetaData
+from cloudnetpy.utils import bit_field_definition
 
 
 def bowtie2nc(
@@ -63,6 +65,7 @@ def bowtie2nc(
         bowtie.convert_units()
         bowtie.fix_chirp_start_indices()
         bowtie.test_if_all_masked()
+        bowtie.add_correction_bits()
     attributes = output.add_time_attribute(ATTRIBUTES, bowtie.date)
     output.update_attributes(bowtie.data, attributes)
     return output.save_level1b(bowtie, output_file, uuid)
@@ -84,6 +87,11 @@ class Bowtie(NcRadar):
         self.data["chirp_start_indices"].data = np.array(array, dtype=np.int32)
         self.data["chirp_start_indices"].data_type = "int32"
 
+    def add_correction_bits(self):
+        bits = ma.ones(self.data["v"].data.shape, dtype=np.uint32)
+        bits.mask = self.data["v"].data.mask
+        self.append_data(bits, "correction_bits")
+
     def check_date(self, date: str):
         if "-".join(self.date) != date:
             raise ValidTimeStampError
@@ -98,6 +106,15 @@ ATTRIBUTES: dict = {
             "velocities are away from the radar. It was corrected for the heave\n"
             "motion of the ship. A rolling average over 3 time steps has been\n"
             "applied to it."
+        ),
+    ),
+    "correction_bits": MetaData(
+        long_name="Correction bits",
+        units="1",
+        definition=bit_field_definition({0: """Doppler velocity is dealiased."""}),
+        comment=(
+            "This parameter is a bit field that indicates which corrections have\n"
+            "been applied to radar measurements."
         ),
     ),
 }
