@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.78.4 – 2025-06-03
+
+- Support telegram 5 from Thies LPM
+
 ## 1.78.3 – 2025-06-03
 
 - Make sure to use unmasked wet bulb values
