@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.78.1 – 2025-06-03
+
+- Revise 2D data averaging
+- Fill mask with zeros before gaussian filter
+
 ## 1.78.0 – 2025-05-26
 
 - Improve netCDF concatenation
