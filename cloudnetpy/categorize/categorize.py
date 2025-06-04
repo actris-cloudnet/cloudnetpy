@@ -405,7 +405,7 @@ CATEGORIZE_ATTRIBUTES = {
         long_name="Bias in radar reflectivity factor",
         units="dB",
         comment=COMMENTS["bias"],
-        dimensions=("time", "height"),
+        dimensions=None,
     ),
     "Z_sensitivity": MetaData(
         long_name="Minimum detectable radar reflectivity",
@@ -436,12 +436,12 @@ CATEGORIZE_ATTRIBUTES = {
     "beta_error": MetaData(
         long_name="Error in attenuated backscatter coefficient",
         units="dB",
-        dimensions=("time", "height"),
+        dimensions=None,
     ),
     "beta_bias": MetaData(
         long_name="Bias in attenuated backscatter coefficient",
         units="dB",
-        dimensions=("time", "height"),
+        dimensions=None,
     ),
     "lidar_wavelength": MetaData(
         long_name="Laser wavelength", units="nm", dimensions=None
