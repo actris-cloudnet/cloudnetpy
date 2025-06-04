@@ -173,12 +173,12 @@ ATTRIBUTES = {
         dimensions=None,
     ),
     "antenna_diameter": MetaData(
-        long_name="Antenna diameter", units="m", dimensions=None
+        long_name="Antenna diameter", units="m", dimensions=("time",)
     ),
     "beamwidthV": MetaData(
-        long_name="Vertical angular beamwidth", units="degree", dimensions=None
+        long_name="Vertical angular beamwidth", units="degree", dimensions=("time",)
     ),
     "beamwidthH": MetaData(
-        long_name="Horizontal angular beamwidth", units="degree", dimensions=None
+        long_name="Horizontal angular beamwidth", units="degree", dimensions=("time",)
     ),
 }

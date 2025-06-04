@@ -117,7 +117,9 @@ COMMON_ATTRIBUTES = {
         dimensions=("time", "range"),
     ),
     "nyquist_velocity": MetaData(
-        long_name="Nyquist velocity", units="m s-1", dimensions=None
+        long_name="Nyquist velocity",
+        units="m s-1",
+        dimensions=("time", "range"),
     ),
     "radar_frequency": MetaData(
         long_name="Radar transmit frequency", units="GHz", dimensions=None
