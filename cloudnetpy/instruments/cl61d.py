@@ -4,6 +4,8 @@ import logging
 
 import netCDF4
 
+from cloudnetpy import utils
+from cloudnetpy.exceptions import LidarDataError
 from cloudnetpy.instruments import instruments
 from cloudnetpy.instruments.nc_lidar import NcLidar
 
@@ -39,6 +41,9 @@ class Cl61d(NcLidar):
             msg = "No dataset found"
             raise RuntimeError(msg)
         beta_raw = self.dataset.variables["beta_att"][:]
+        if utils.is_all_masked(beta_raw):
+            msg = "All beta_raw values are masked. Check the input file(s)."
+            raise LidarDataError(msg)
         if calibration_factor is None:
             logging.warning("Using default calibration factor")
             calibration_factor = 1

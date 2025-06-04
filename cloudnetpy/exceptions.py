@@ -23,6 +23,13 @@ class RadarDataError(CloudnetException):
         super().__init__(msg)
 
 
+class LidarDataError(CloudnetException):
+    """Internal exception class."""
+
+    def __init__(self, msg: str):
+        super().__init__(msg)
+
+
 class PlottingError(CloudnetException):
     """Internal exception class."""
 
