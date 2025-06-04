@@ -118,5 +118,6 @@ ATTRIBUTES = RPG_ATTRIBUTES | {
             "This parameter is a bit field that indicates which corrections have\n"
             "been applied to radar measurements."
         ),
+        dimensions=("time", "range"),
     ),
 }
