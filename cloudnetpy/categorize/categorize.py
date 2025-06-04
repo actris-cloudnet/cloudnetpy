@@ -423,7 +423,7 @@ CATEGORIZE_ATTRIBUTES = {
     ),
     "zdr": RPG_ATTRIBUTES["zdr"]._replace(dimensions=("time", "height")),
     "nyquist_velocity": COMMON_ATTRIBUTES["nyquist_velocity"]._replace(
-        dimensions=("height",)
+        dimensions=("time", "height")
     ),
     # Lidar variables
     "beta": MetaData(

@@ -56,10 +56,8 @@ def _get_netcdf_dimensions(obj) -> dict:
     }
     # RPG cloud radar
     if "chirp_start_indices" in obj.data:
-        if obj.data["chirp_start_indices"][:].ndim == 1:
-            dimensions["chirp_start_indices"] = len(obj.data["chirp_start_indices"][:])
-        else:
-            dimensions["chirp"] = obj.data["chirp_start_indices"][:].shape[1]
+        ind = obj.data["chirp_start_indices"][:]
+        dimensions["chirp_sequence"] = ind.shape[1] if ind.ndim > 1 else len(ind)
 
     # disdrometer
     if hasattr(obj, "n_diameter") and hasattr(obj, "n_velocity"):
@@ -401,6 +399,7 @@ def _write_vars2nc(nc: netCDF4.Dataset, cloudnet_variables: dict) -> None:
         else:
             fill_value = False
         size = obj.dimensions if obj.dimensions is not None else ()
+
         nc_variable = nc.createVariable(
             obj.name,
             obj.data_type,
