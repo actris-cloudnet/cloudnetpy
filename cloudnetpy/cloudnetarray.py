@@ -97,7 +97,7 @@ class CloudnetArray:
         """Overwrites existing instance attributes."""
         for key in attributes._fields:  # To iterate namedtuple fields.
             data = getattr(attributes, key)
-            if data:
+            if key == "dimensions" or data:
                 setattr(self, key, data)
 
     def filter_isolated_pixels(self) -> None:

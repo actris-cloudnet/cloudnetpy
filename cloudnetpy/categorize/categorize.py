@@ -17,7 +17,8 @@ from cloudnetpy.categorize.mwr import Mwr
 from cloudnetpy.categorize.radar import Radar
 from cloudnetpy.datasource import DataSource
 from cloudnetpy.exceptions import DisdrometerDataError, ValidTimeStampError
-from cloudnetpy.metadata import MetaData
+from cloudnetpy.instruments.rpg import RPG_ATTRIBUTES
+from cloudnetpy.metadata import COMMON_ATTRIBUTES, MetaData
 from cloudnetpy.products.product_tools import CategoryBits, QualityBits
 
 
@@ -385,31 +386,45 @@ DEFINITIONS = {
 }
 
 CATEGORIZE_ATTRIBUTES = {
+    "height": COMMON_ATTRIBUTES["height"]._replace(dimensions=("height",)),
     # Radar variables
     "Z": MetaData(
         long_name="Radar reflectivity factor",
         units="dBZ",
         comment=COMMENTS["Z"],
         ancillary_variables="Z_error Z_bias Z_sensitivity",
+        dimensions=("time", "height"),
     ),
     "Z_error": MetaData(
         long_name="Error in radar reflectivity factor",
         units="dB",
         comment=COMMENTS["Z_error"],
+        dimensions=("time", "height"),
     ),
     "Z_bias": MetaData(
         long_name="Bias in radar reflectivity factor",
         units="dB",
         comment=COMMENTS["bias"],
+        dimensions=None,
     ),
     "Z_sensitivity": MetaData(
         long_name="Minimum detectable radar reflectivity",
         units="dBZ",
         comment=COMMENTS["Z_sensitivity"],
+        dimensions=("time", "height"),
     ),
+    "v": COMMON_ATTRIBUTES["v"]._replace(dimensions=("time", "height")),
+    "width": COMMON_ATTRIBUTES["width"]._replace(dimensions=("time", "height")),
+    "ldr": COMMON_ATTRIBUTES["ldr"]._replace(dimensions=("time", "height")),
+    "sldr": COMMON_ATTRIBUTES["sldr"]._replace(dimensions=("time", "height")),
     "v_sigma": MetaData(
         long_name="Standard deviation of mean Doppler velocity",
         units="m s-1",
+        dimensions=("time", "height"),
+    ),
+    "zdr": RPG_ATTRIBUTES["zdr"]._replace(dimensions=("time", "height")),
+    "nyquist_velocity": COMMON_ATTRIBUTES["nyquist_velocity"]._replace(
+        dimensions=("time", "height")
     ),
     # Lidar variables
     "beta": MetaData(
@@ -417,89 +432,128 @@ CATEGORIZE_ATTRIBUTES = {
         units="sr-1 m-1",
         comment="SNR-screened attenuated backscatter coefficient.",
         ancillary_variables="beta_error beta_bias",
+        dimensions=("time", "height"),
     ),
     "beta_error": MetaData(
         long_name="Error in attenuated backscatter coefficient",
         units="dB",
+        dimensions=None,
     ),
     "beta_bias": MetaData(
         long_name="Bias in attenuated backscatter coefficient",
         units="dB",
+        dimensions=None,
     ),
-    "lidar_wavelength": MetaData(long_name="Laser wavelength", units="nm"),
+    "lidar_wavelength": MetaData(
+        long_name="Laser wavelength", units="nm", dimensions=None
+    ),
     # MWR variables
     "lwp_error": MetaData(
         long_name="Error in liquid water path",
         units="kg m-2",
+        dimensions=("time",),
     ),
-    "lwp": MetaData(ancillary_variables="lwp_error"),
+    "lwp": COMMON_ATTRIBUTES["lwp"]._replace(
+        ancillary_variables="lwp_error", dimensions=("time",)
+    ),
     # Model variables
-    "Tw": MetaData(long_name="Wet-bulb temperature", units="K", comment=COMMENTS["Tw"]),
-    "model_time": MetaData(long_name="Model time UTC", calendar="standard"),
+    "Tw": MetaData(
+        long_name="Wet-bulb temperature",
+        units="K",
+        comment=COMMENTS["Tw"],
+        dimensions=("time", "height"),
+    ),
+    "model_time": MetaData(
+        long_name="Model time UTC",
+        calendar="standard",
+        dimensions=("model_time",),
+    ),
     "model_height": MetaData(
         long_name="Height of model variables above mean sea level",
         units="m",
         axis="Z",
+        dimensions=("model_height",),
+    ),
+    "temperature": MetaData(
+        long_name="Temperature", units="K", dimensions=("model_time", "model_height")
+    ),
+    "pressure": MetaData(
+        long_name="Pressure", units="Pa", dimensions=("model_time", "model_height")
     ),
     "vwind": MetaData(
         long_name="Meridional wind",
         units="m s-1",
+        dimensions=("model_time", "model_height"),
     ),
     "uwind": MetaData(
         long_name="Zonal wind",
         units="m s-1",
+        dimensions=("model_time", "model_height"),
     ),
-    "q": MetaData(long_name="Specific humidity", units="1"),
+    "q": MetaData(
+        long_name="Specific humidity",
+        units="1",
+        dimensions=("model_time", "model_height"),
+    ),
     # MISC
     "category_bits": MetaData(
         long_name="Target categorization bits",
         comment=COMMENTS["category_bits"],
         definition=DEFINITIONS["category_bits"],
         units="1",
+        dimensions=("time", "height"),
     ),
     "quality_bits": MetaData(
         long_name="Data quality bits",
         comment=COMMENTS["quality_bits"],
         definition=DEFINITIONS["quality_bits"],
         units="1",
+        dimensions=("time", "height"),
     ),
     "radar_liquid_atten": MetaData(
         long_name="Two-way radar attenuation due to liquid water",
         units="dB",
         comment=COMMENTS["radar_liquid_atten"],
         references="ITU-R P.840-9",
+        dimensions=("time", "height"),
     ),
     "radar_rain_atten": MetaData(
         long_name="Two-way radar attenuation due to rain",
         units="dB",
         references="Crane, R. (1980)",
         comment=COMMENTS["radar_rain_atten"],
+        dimensions=("time", "height"),
     ),
     "radar_melting_atten": MetaData(
         long_name="Two-way radar attenuation due to melting ice",
         units="dB",
         references="Li, H., & Moisseev, D. (2019)",
         comment=COMMENTS["radar_melting_atten"],
+        dimensions=("time", "height"),
     ),
     "radar_gas_atten": MetaData(
         long_name="Two-way radar attenuation due to atmospheric gases",
         units="dB",
         comment=COMMENTS["radar_gas_atten"],
         references="ITU-R P.676-13",
+        dimensions=("time", "height"),
     ),
     "insect_prob": MetaData(
         long_name="Insect probability",
         units="1",
         comment=COMMENTS["insect_prob"],
+        dimensions=("time", "height"),
     ),
     "liquid_prob": MetaData(
         long_name="Liquid probability",
         units="1",
         comment=COMMENTS["liquid_prob"],
+        dimensions=("time", "height"),
     ),
     "rain_detected": MetaData(
         long_name="Rain detected",
         units="1",
         comment="1 = rain detected, 0 = no rain detected",
+        dimensions=("time",),
     ),
 }
