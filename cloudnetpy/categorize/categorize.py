@@ -416,6 +416,7 @@ CATEGORIZE_ATTRIBUTES = {
     "v": COMMON_ATTRIBUTES["v"]._replace(dimensions=("time", "height")),
     "width": COMMON_ATTRIBUTES["width"]._replace(dimensions=("time", "height")),
     "ldr": COMMON_ATTRIBUTES["ldr"]._replace(dimensions=("time", "height")),
+    "sldr": COMMON_ATTRIBUTES["sldr"]._replace(dimensions=("time", "height")),
     "v_sigma": MetaData(
         long_name="Standard deviation of mean Doppler velocity",
         units="m s-1",

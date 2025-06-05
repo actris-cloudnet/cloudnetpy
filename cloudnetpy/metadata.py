@@ -43,19 +43,19 @@ COMMON_ATTRIBUTES = {
         long_name="Latitude of site",
         units="degree_north",
         standard_name="latitude",
-        dimensions=None,
+        dimensions=("time",),
     ),
     "longitude": MetaData(
         long_name="Longitude of site",
         units="degree_east",
         standard_name="longitude",
-        dimensions=None,
+        dimensions=("time",),
     ),
     "altitude": MetaData(
         long_name="Altitude of site",
         standard_name="altitude",
         units="m",
-        dimensions=None,
+        dimensions=("time",),
     ),
     "Zh": MetaData(
         long_name="Radar reflectivity factor",
