@@ -117,11 +117,10 @@ def _get_n_negatives(ceilo_obj: ClCeilo | Ct25k | LufftCeilo | Cl61d | Cs135) ->
     is_old_chm_version = (
         hasattr(ceilo_obj, "is_old_version") and ceilo_obj.is_old_version
     )
-    is_ct25k = (
-        ceilo_obj.instrument is not None
-        and getattr(ceilo_obj.instrument, "model", "").lower() == "ct25k"
-    )
-    if is_old_chm_version or is_ct25k:
+    is_old_vaisala_model = ceilo_obj.instrument is not None and getattr(
+        ceilo_obj.instrument, "model", ""
+    ).lower() in ("ct25k", "cl31")
+    if is_old_chm_version or is_old_vaisala_model:
         return 20
     return 5
 
