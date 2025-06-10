@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.79.0 – 2025-06-10
+
+- Check if all cl61d data are masked
+- Adjust CL31 filtering
+
 ## 1.78.4 – 2025-06-03
 
 - Support telegram 5 from Thies LPM
