@@ -175,23 +175,29 @@ ATTRIBUTES = {
         long_name="Meteorological optical range (MOR) visibility",
         units="m",
         standard_name="visibility_in_air",
+        dimensions=("time",),
     ),
     "precipitation_rate": MetaData(
         long_name="Precipitation rate",
         standard_name="lwe_precipitation_rate",
         units="m s-1",
+        dimensions=("time",),
     ),
     "precipitation_amount": MetaData(
         long_name="Precipitation amount",
         standard_name="lwe_thickness_of_precipitation_amount",
         units="m",
         comment="Cumulated precipitation since 00:00 UTC",
+        dimensions=("time",),
     ),
     "snowfall_amount": MetaData(
         long_name="Snowfall amount",
         units="m",
         standard_name="thickness_of_snowfall_amount",
         comment="Cumulated snow since 00:00 UTC",
+        dimensions=("time",),
     ),
-    "synop_WaWa": MetaData(long_name="Synop code WaWa", units="1"),
+    "synop_WaWa": MetaData(
+        long_name="Synop code WaWa", units="1", dimensions=("time",)
+    ),
 }
