@@ -1,5 +1,5 @@
 import logging
-from typing import TYPE_CHECKING, NamedTuple
+from typing import NamedTuple
 
 import numpy as np
 from numpy import ma
@@ -8,10 +8,8 @@ from scipy.ndimage import gaussian_filter
 from cloudnetpy import utils
 from cloudnetpy.cloudnetarray import CloudnetArray
 from cloudnetpy.exceptions import ValidTimeStampError
+from cloudnetpy.instruments.instruments import Instrument
 from cloudnetpy.utils import Epoch
-
-if TYPE_CHECKING:
-    from cloudnetpy.instruments.instruments import Instrument
 
 
 class NoiseParam(NamedTuple):
@@ -47,6 +45,7 @@ class Ceilometer:
             self.data,
             self.noise_param,
             range_corrected=range_corrected,
+            instrument=self.instrument,
         )
         return noisy_data.screen_data(
             array,
@@ -66,6 +65,7 @@ class Ceilometer:
             self.data,
             self.noise_param,
             range_corrected=range_corrected,
+            instrument=self.instrument,
         )
         beta_raw = ma.copy(self.data["beta_raw"])
         cloud_ind, cloud_values, cloud_limit = _estimate_clouds_from_beta(beta)
@@ -145,10 +145,12 @@ class NoisyData:
         noise_param: NoiseParam,
         *,
         range_corrected: bool = True,
+        instrument: Instrument | None = None,
     ):
         self.data = data
         self.noise_param = noise_param
         self.range_corrected = range_corrected
+        self.instrument = instrument
 
     def screen_data(
         self,
@@ -268,14 +270,17 @@ class NoisyData:
         data[:, ind] = data[:, ind] * self._get_range_squared()[ind]
 
     def _get_altitude_ind(self) -> tuple:
-        if self.range_corrected is False:
-            alt_limit = 2400.0
-            logging.warning(
-                "Raw data not range-corrected, correcting below %s m",
-                alt_limit,
-            )
-        else:
-            alt_limit = 1e12
+        alt_limit = 1e12  # All altitudes
+        if (
+            self.range_corrected is False
+            and self.instrument is not None
+            and self.instrument.model is not None
+        ):
+            model = self.instrument.model.lower()
+            if model == "ct25k":
+                alt_limit = 0.0
+            elif model in ("cl31", "cl51"):
+                alt_limit = 2400.0
         return np.where(self.data["range"] < alt_limit)
 
     def _get_range_squared(self) -> np.ndarray:

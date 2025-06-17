@@ -1,5 +1,6 @@
 """Module for reading and processing Vaisala / Lufft ceilometers."""
 
+import logging
 from itertools import islice
 
 import netCDF4
@@ -71,6 +72,8 @@ def ceilo2nc(
     ceilo_obj = _initialize_ceilo(full_path, site_meta, date)
     calibration_factor = site_meta.get("calibration_factor")
     range_corrected = site_meta.get("range_corrected", True)
+    if range_corrected is False:
+        logging.warning("Raw data not range-corrected.")
     ceilo_obj.read_ceilometer_file(calibration_factor)
     ceilo_obj.check_beta_raw_shape()
     n_negatives = _get_n_negatives(ceilo_obj)
