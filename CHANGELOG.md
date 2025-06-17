@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.79.1 – 2025-06-17
+
+- Improve range-uncorrected ct25k data processing
+
 ## 1.79.0 – 2025-06-10
 
 - Check if all cl61d data are masked
