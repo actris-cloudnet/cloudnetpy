@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.80.0 – 2025-06-18
+
+- Use `ceilopyter` for CT25K processing
+
 ## 1.79.1 – 2025-06-17
 
 - Improve range-uncorrected ct25k data processing
