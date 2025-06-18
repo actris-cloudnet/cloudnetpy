@@ -46,18 +46,18 @@ class VaisalaCeilo(Ceilometer):
         self.data["calibration_factor"] = calibration_factor or 1.0
         self.data["beta_raw"] *= self.data["calibration_factor"]
         self.data["zenith_angle"] = np.median([d.tilt_angle for d in data])
-        self._sort_time()
-        self._screen_date()
-        self._convert_to_fraction_hour()
+        self.sort_time()
+        self.screen_date()
+        self.convert_to_fraction_hour()
         self._store_ceilometer_info()
 
-    def _sort_time(self):
+    def sort_time(self):
         """Sorts timestamps and removes duplicates."""
         time = self.data["time"]
         _time, ind = np.unique(time, return_index=True)
         self._screen_time_indices(ind)
 
-    def _screen_date(self):
+    def screen_date(self):
         time = self.data["time"]
         if self.sane_date is None:
             self.sane_date = time[0].date()
@@ -79,7 +79,7 @@ class VaisalaCeilo(Ceilometer):
             if hasattr(array, "shape") and array.shape[:1] == (n_time,):
                 self.data[key] = self.data[key][valid_indices]
 
-    def _convert_to_fraction_hour(self):
+    def convert_to_fraction_hour(self):
         time = self.data["time"]
         midnight = time[0].replace(hour=0, minute=0, second=0, microsecond=0)
         hour = datetime.timedelta(hours=1)
@@ -113,6 +113,7 @@ class Ct25k(VaisalaCeilo):
 
     def __init__(self, full_path, site_meta, expected_date=None):
         super().__init__(read_ct_file, full_path, site_meta, expected_date)
+        self._store_ceilometer_info()
 
     def _store_ceilometer_info(self):
         self.instrument = instruments.CT25K

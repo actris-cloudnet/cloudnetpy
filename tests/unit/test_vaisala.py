@@ -195,7 +195,6 @@ class TestCT25k(Check):
         keys = {
             "beta",
             "beta_raw",
-            "beta_smooth",
             "calibration_factor",
             "range",
             "height",
@@ -219,8 +218,7 @@ class TestCT25k(Check):
         assert self.nc.variables["zenith_angle"][:] == 15
 
     def test_comments(self):
-        for key in ("beta", "beta_smooth"):
-            assert "SNR threshold applied: 5" in self.nc.variables[key].comment
+        assert "SNR threshold applied: 5" in self.nc.variables["beta"].comment
 
     def test_global_attributes(self):
         assert self.nc.source == "Vaisala CT25k"

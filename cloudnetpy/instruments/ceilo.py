@@ -4,6 +4,8 @@ import logging
 from itertools import islice
 
 import netCDF4
+import numpy as np
+from ceilopyter import read_ct25k
 from numpy import ma
 
 from cloudnetpy import output, utils
@@ -74,36 +76,49 @@ def ceilo2nc(
     range_corrected = site_meta.get("range_corrected", True)
     if range_corrected is False:
         logging.warning("Raw data not range-corrected.")
-    ceilo_obj.read_ceilometer_file(calibration_factor)
-    ceilo_obj.check_beta_raw_shape()
-    n_negatives = _get_n_negatives(ceilo_obj)
-    ceilo_obj.data["beta"] = ceilo_obj.calc_screened_product(
-        ceilo_obj.data["beta_raw"],
-        snr_limit,
-        range_corrected=range_corrected,
-        n_negatives=n_negatives,
-    )
-    ceilo_obj.data["beta_smooth"] = ceilo_obj.calc_beta_smooth(
-        ceilo_obj.data["beta"],
-        snr_limit,
-        range_corrected=range_corrected,
-        n_negatives=n_negatives,
-    )
-    if ceilo_obj.instrument is None or ceilo_obj.instrument.model is None:
-        msg = "Failed to read ceilometer model"
-        raise RuntimeError(msg)
-    if (
-        any(
-            model in ceilo_obj.instrument.model.lower()
-            for model in ("cl61", "chm15k", "chm15kx", "cl51", "cl31")
+    if isinstance(ceilo_obj, Ct25k):
+        c_obj = read_ct25k(full_path, calibration_factor, range_corrected)
+        ceilo_obj.data["beta"] = c_obj.beta
+        ceilo_obj.data["beta_raw"] = c_obj.beta_raw
+        ceilo_obj.data["time"] = c_obj.time
+        ceilo_obj.data["range"] = c_obj.range
+        if c_obj.zenith_angle is not None:
+            ceilo_obj.data["zenith_angle"] = np.median(c_obj.zenith_angle)
+        ceilo_obj.data["calibration_factor"] = c_obj.calibration_factor
+        ceilo_obj.sort_time()
+        ceilo_obj.screen_date()
+        ceilo_obj.convert_to_fraction_hour()
+    else:
+        ceilo_obj.read_ceilometer_file(calibration_factor)
+        ceilo_obj.check_beta_raw_shape()
+        n_negatives = _get_n_negatives(ceilo_obj)
+        ceilo_obj.data["beta"] = ceilo_obj.calc_screened_product(
+            ceilo_obj.data["beta_raw"],
+            snr_limit,
+            range_corrected=range_corrected,
+            n_negatives=n_negatives,
         )
-        and range_corrected
-    ):
-        mask = ceilo_obj.data["beta_smooth"].mask
-        ceilo_obj.data["beta"] = ma.masked_where(mask, ceilo_obj.data["beta_raw"])
-        ceilo_obj.data["beta"][ceilo_obj.data["beta"] <= 0] = ma.masked
-        if "depolarisation" in ceilo_obj.data:
-            ceilo_obj.data["depolarisation"].mask = ceilo_obj.data["beta"].mask
+        ceilo_obj.data["beta_smooth"] = ceilo_obj.calc_beta_smooth(
+            ceilo_obj.data["beta"],
+            snr_limit,
+            range_corrected=range_corrected,
+            n_negatives=n_negatives,
+        )
+        if ceilo_obj.instrument is None or ceilo_obj.instrument.model is None:
+            msg = "Failed to read ceilometer model"
+            raise RuntimeError(msg)
+        if (
+            any(
+                model in ceilo_obj.instrument.model.lower()
+                for model in ("cl61", "chm15k", "chm15kx", "cl51", "cl31")
+            )
+            and range_corrected
+        ):
+            mask = ceilo_obj.data["beta_smooth"].mask
+            ceilo_obj.data["beta"] = ma.masked_where(mask, ceilo_obj.data["beta_raw"])
+            ceilo_obj.data["beta"][ceilo_obj.data["beta"] <= 0] = ma.masked
+            if "depolarisation" in ceilo_obj.data:
+                ceilo_obj.data["depolarisation"].mask = ceilo_obj.data["beta"].mask
     ceilo_obj.screen_depol()
     ceilo_obj.screen_invalid_values()
     ceilo_obj.prepare_data()
