@@ -137,6 +137,24 @@ class Ceilometer:
             msg = f"Invalid beta_raw shape: {beta_raw.shape}"
             raise ValidTimeStampError(msg)
 
+    def screen_sunbeam(self) -> None:
+        high_alt_mask = self.data["range"] > 10000
+        if not np.any(high_alt_mask):
+            return
+
+        is_data = ~self.data["beta"][:, high_alt_mask].mask
+        n_bins = 20
+
+        n_profiles, n_heights = is_data.shape
+        bin_size = n_heights // n_bins
+        reshaped = is_data[:, : bin_size * n_bins].reshape(n_profiles, n_bins, bin_size)
+
+        valid_profiles = np.any(reshaped, axis=2).sum(axis=1) < 15
+
+        for key, value in self.data.items():
+            if key == "time" or (isinstance(value, np.ndarray) and value.ndim == 2):
+                self.data[key] = value[valid_profiles]
+
 
 class NoisyData:
     def __init__(

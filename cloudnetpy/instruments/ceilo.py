@@ -121,6 +121,7 @@ def ceilo2nc(
                 ceilo_obj.data["depolarisation"].mask = ceilo_obj.data["beta"].mask
     ceilo_obj.screen_depol()
     ceilo_obj.screen_invalid_values()
+    ceilo_obj.screen_sunbeam()
     ceilo_obj.prepare_data()
     ceilo_obj.data_to_cloudnet_arrays()
     ceilo_obj.add_site_geolocation()
