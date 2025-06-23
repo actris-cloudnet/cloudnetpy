@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.80.1 – 2025-06-23
+
+- Remove profiles affected by sunbeam artifacts in ceilometer backscatter
+
 ## 1.80.0 – 2025-06-18
 
 - Use `ceilopyter` for CT25K processing
