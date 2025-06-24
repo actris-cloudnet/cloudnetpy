@@ -145,10 +145,11 @@ def generate_categorize(
         return utils.time_grid(), data.radar.height
 
     def _close_all() -> None:
-        for field in fields(data):
-            obj = getattr(data, field.name)
-            if isinstance(obj, DataSource):
-                obj.close()
+        if "data" in locals():
+            for field in fields(data):
+                obj = getattr(data, field.name)
+                if isinstance(obj, DataSource):
+                    obj.close()
 
     try:
         radar = Radar(input_files["radar"])
