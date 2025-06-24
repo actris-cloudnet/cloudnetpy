@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.80.2 – 2025-06-24
+
+- Improve error message when reading corrupted files
+- Add support for old Lindenberg radiometrics file format
+
 ## 1.80.1 – 2025-06-23
 
 - Remove profiles affected by sunbeam artifacts in ceilometer backscatter
