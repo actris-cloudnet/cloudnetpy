@@ -11,6 +11,7 @@ from pathlib import Path
 from typing import Any, NamedTuple
 
 import numpy as np
+from numpy import ma
 
 from cloudnetpy import output, utils
 from cloudnetpy.cloudnetarray import CloudnetArray
@@ -151,6 +152,15 @@ class RadiometricsMP:
         ah_times = []
         block_titles = {}
         skip_procs = set()
+
+        def _parse_floats() -> list[float]:
+            return [
+                float(record.values[column])
+                if record.values[column].replace(".", "", 1).isdigit()
+                else math.nan
+                for column in self.ranges
+            ]
+
         for record in self.raw_data:
             if record.block_type == 100:
                 block_type = int(record.values["Record Type"]) - 1
@@ -165,15 +175,13 @@ class RadiometricsMP:
                     continue
                 if title == "Temperature (K)":
                     temp_times.append(record.timestamp)
-                    temps.append(
-                        [float(record.values[column]) for column in self.ranges]
-                    )
+                    temps.append(_parse_floats())
                 elif title == "Relative Humidity (%)":
                     rh_times.append(record.timestamp)
-                    rhs.append([float(record.values[column]) for column in self.ranges])
+                    rhs.append(_parse_floats())
                 elif title == "Vapor Density (g/m^3)":
                     ah_times.append(record.timestamp)
-                    ahs.append([float(record.values[column]) for column in self.ranges])
+                    ahs.append(_parse_floats())
             elif record.block_type == 10:
                 if record.block_index == 0:
                     lwp = record.values["Lqint(mm)"]
@@ -185,15 +193,13 @@ class RadiometricsMP:
                     irt_times.append(record.timestamp)
                     irts.append([float(irt)])
                     temp_times.append(record.timestamp)
-                    temps.append(
-                        [float(record.values[column]) for column in self.ranges]
-                    )
+                    temps.append(_parse_floats())
                 elif record.block_index == 1:
                     ah_times.append(record.timestamp)
-                    ahs.append([float(record.values[column]) for column in self.ranges])
+                    ahs.append(_parse_floats())
                 elif record.block_index == 2:
                     rh_times.append(record.timestamp)
-                    rhs.append([float(record.values[column]) for column in self.ranges])
+                    rhs.append(_parse_floats())
             elif record.block_type == 200:
                 irt_times.append(record.timestamp)
                 irt = record.values["Tir(K)"]
@@ -350,7 +356,8 @@ class RadiometricsCombined:
                 if key in ("temperature", "relative_humidity", "absolute_humidity")
                 else None
             )
-            self.data[key] = CloudnetArray(array, key, dimensions=dimensions)
+            array_masked = ma.masked_invalid(array) if np.isnan(array).any() else array
+            self.data[key] = CloudnetArray(array_masked, key, dimensions=dimensions)
 
     def add_meta(self) -> None:
         """Adds some metadata."""

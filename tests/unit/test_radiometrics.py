@@ -256,3 +256,7 @@ class TestOldDWDMP3039AFileFormat(Check):
     def test_time(self):
         time = self.nc.variables["time"][:]
         assert len(time) == 4
+
+    def test_masking(self):
+        temp = self.nc.variables["temperature"][:]
+        assert temp.mask.sum() == 1
