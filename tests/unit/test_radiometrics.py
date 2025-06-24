@@ -2,7 +2,7 @@ from os import path
 from tempfile import TemporaryDirectory
 
 import pytest
-from numpy.testing import assert_allclose, assert_array_equal
+from numpy.testing import assert_allclose
 
 from cloudnetpy.exceptions import ValidTimeStampError
 from cloudnetpy.instruments import radiometrics2nc
@@ -11,17 +11,20 @@ from tests.unit.all_products_fun import Check
 SCRIPT_PATH = path.dirname(path.realpath(__file__))
 
 
+SITE_META = {
+    "name": "the_station",
+    "altitude": 50,
+    "latitude": 23.0,
+    "longitude": 123,
+}
+
+
 class TestRadiometrics2nc(Check):
     test_input = f"{SCRIPT_PATH}/data/radiometrics/2021-07-18_00-00-00_lv2.csv"
-    site_meta = {
-        "name": "the_station",
-        "altitude": 50,
-        "latitude": 23.0,
-        "longitude": 123,
-    }
     date = "2021-07-18"
     temp_dir = TemporaryDirectory()
     temp_path = temp_dir.name + "/radiometrics.nc"
+    site_meta = SITE_META
     uuid = radiometrics2nc(test_input, temp_path, site_meta, date=date)
 
     def test_time(self):
@@ -55,19 +58,14 @@ class TestRadiometrics2nc(Check):
             radiometrics2nc(
                 self.test_input,
                 test_path,
-                self.site_meta,
+                SITE_META,
                 date="2021-07-19",
             )
 
 
 class TestRadiometrics2ncAgain(Check):
     test_input = f"{SCRIPT_PATH}/data/radiometrics/2021-10-06_00-04-08_lv2.csv"
-    site_meta = {
-        "name": "the_station",
-        "altitude": 50,
-        "latitude": 23.0,
-        "longitude": 123,
-    }
+    site_meta = SITE_META
     date = "2021-10-06"
     temp_dir = TemporaryDirectory()
     temp_path = temp_dir.name + "/radiometrics.nc"
@@ -110,12 +108,7 @@ class TestRadiometrics2ncAgain(Check):
 
 class TestRadiometrics2ncSkipNonZenith(Check):
     test_input = f"{SCRIPT_PATH}/data/radiometrics/2024-01-22_00-04-09_lv2.csv"
-    site_meta = {
-        "name": "the_station",
-        "altitude": 50,
-        "latitude": 23.0,
-        "longitude": 123,
-    }
+    site_meta = SITE_META
     date = "2024-01-22"
     temp_dir = TemporaryDirectory()
     temp_path = temp_dir.name + "/radiometrics.nc"
@@ -133,12 +126,7 @@ class TestRadiometrics2ncSkipNonZenith(Check):
 
 class TestRadiometrics2ncWVR(Check):
     test_input = f"{SCRIPT_PATH}/data/radiometrics/20140106_1126.los"
-    site_meta = {
-        "name": "the_station",
-        "altitude": 50,
-        "latitude": 23.0,
-        "longitude": 123,
-    }
+    site_meta = SITE_META
     date = "2014-01-06"
     temp_dir = TemporaryDirectory()
     temp_path = temp_dir.name + "/radiometrics.nc"
@@ -183,12 +171,7 @@ class TestRadiometrics2ncWVR(Check):
 
 class TestRadiometrics2ncMissing(Check):
     test_input = f"{SCRIPT_PATH}/data/radiometrics/20100926_0005.los"
-    site_meta = {
-        "name": "the_station",
-        "altitude": 50,
-        "latitude": 23.0,
-        "longitude": 123,
-    }
+    site_meta = SITE_META
     date = "2010-09-26"
     temp_dir = TemporaryDirectory()
     temp_path = temp_dir.name + "/radiometrics.nc"
@@ -224,12 +207,7 @@ class TestRadiometrics2ncMissing(Check):
 
 class TestRadiometrics2ncInvalid(Check):
     test_input = f"{SCRIPT_PATH}/data/radiometrics/20131220_1319.los"
-    site_meta = {
-        "name": "the_station",
-        "altitude": 50,
-        "latitude": 23.0,
-        "longitude": 123,
-    }
+    site_meta = SITE_META
     date = "2013-12-20"
     temp_dir = TemporaryDirectory()
     temp_path = temp_dir.name + "/radiometrics.nc"
@@ -261,3 +239,20 @@ class TestRadiometrics2ncInvalid(Check):
                 self.site_meta,
                 date="2014-01-07",
             )
+
+
+class TestOldDWDMP3039AFileFormat(Check):
+    test_input = f"{SCRIPT_PATH}/data/radiometrics/2010-10-01_00-00-09_lv2.csv"
+    date = "2010-10-01"
+    temp_dir = TemporaryDirectory()
+    temp_path = temp_dir.name + "/radiometrics.nc"
+    site_meta = SITE_META
+    uuid = radiometrics2nc(test_input, temp_path, site_meta, date=date)
+
+    def test_default_processing(self, tmp_path):
+        test_path = tmp_path / "default.nc"
+        radiometrics2nc(self.test_input, test_path, self.site_meta)
+
+    def test_time(self):
+        time = self.nc.variables["time"][:]
+        assert len(time) == 4

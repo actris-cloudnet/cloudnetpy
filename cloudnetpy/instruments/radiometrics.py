@@ -122,12 +122,15 @@ class RadiometricsMP:
                             logging.info("Skipping unknown record type %d", record_type)
                             unknown_record_types.add(record_type)
                         continue
+
+                    row_trimmed = [value for value in row if value != ""]
+
                     record = Record(
                         row_number=int(row[0]),
                         timestamp=_parse_datetime(row[1]),
                         block_type=block_type,
                         block_index=block_index,
-                        values=dict(zip(column_names, row[3:], strict=True)),
+                        values=dict(zip(column_names, row_trimmed[3:], strict=True)),
                     )
                     rows.append(record)
 
@@ -157,7 +160,7 @@ class RadiometricsMP:
                 # "LV2 Processor" values "Zenith" and "0.00:90.00" should be OK
                 # but "Angle20(N)" and similar should be skipped.
                 proc = record.values["LV2 Processor"]
-                if proc.startswith("Angle"):
+                if proc.startswith(("Angle", "Zenith26")):
                     skip_procs.add(proc)
                     continue
                 if title == "Temperature (K)":
@@ -204,6 +207,7 @@ class RadiometricsMP:
                 times.append(record.timestamp)
                 lwps.append(float(lwp))
                 iwvs.append(float(iwv))
+
         self.data["time"] = np.array(times, dtype="datetime64[s]")
         self.data["lwp"] = np.array(lwps)  # mm => kg m-2
         self.data["iwv"] = np.array(iwvs) * 10  # cm => kg m-2
