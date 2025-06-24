@@ -421,5 +421,15 @@ ATTRIBUTES = {
     "irt": MetaData(
         long_name="Infrared brightness temperatures",
         units="K",
+        dimensions=("time", "ir_channel"),
+    ),
+    "temperature": MetaData(
+        long_name="Temperature", units="K", dimensions=("time", "range")
+    ),
+    "relative_humidity": MetaData(
+        long_name="Relative humidity",
+        standard_name="relative_humidity",
+        units="1",
+        dimensions=("time", "range"),
     ),
 }

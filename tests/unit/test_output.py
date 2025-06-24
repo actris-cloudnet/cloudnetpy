@@ -118,7 +118,7 @@ def test_add_standard_global_attributes(tmpdir_factory):
 
 
 def test_add_time_attribute():
-    attr = MetaData(long_name="Some name", units="xy")
+    attr = MetaData(long_name="Some name", units="xy", dimensions=None)
     attributes = {"kissa": attr}
     date = ["2020", "01", "12"]
     new_attributes = output.add_time_attribute(attributes, date)
