@@ -3,7 +3,7 @@ import datetime
 import math
 import re
 from collections import defaultdict
-from collections.abc import Iterable
+from collections.abc import Iterable, Sequence
 from os import PathLike
 
 import numpy as np
@@ -21,11 +21,11 @@ from cloudnetpy.utils import datetime2decimal_hours
 
 
 def ws2nc(
-    weather_station_file: str | list[str],
+    weather_station_file: str | PathLike | Sequence[str | PathLike],
     output_file: str,
     site_meta: dict,
     uuid: str | None = None,
-    date: str | None = None,
+    date: str | datetime.date | None = None,
 ) -> str:
     """Converts weather station data into Cloudnet Level 1b netCDF file.
 
@@ -43,8 +43,10 @@ def ws2nc(
     Raises:
         ValidTimeStampError: No valid timestamps found.
     """
-    if not isinstance(weather_station_file, list):
+    if isinstance(weather_station_file, str | PathLike):
         weather_station_file = [weather_station_file]
+    if isinstance(date, str):
+        date = datetime.date.fromisoformat(date)
     ws: WS
     if site_meta["name"] == "Palaiseau":
         ws = PalaiseauWS(weather_station_file, site_meta)
@@ -64,6 +66,8 @@ def ws2nc(
         ws = LampedusaWS(weather_station_file, site_meta)
     elif site_meta["name"] == "Limassol":
         ws = LimassolWS(weather_station_file, site_meta)
+    elif site_meta["name"] == "L'Aquila":
+        ws = LAquilaWS(weather_station_file, site_meta)
     else:
         msg = "Unsupported site"
         raise ValueError(msg)
@@ -98,8 +102,8 @@ class WS(CSVFile):
         rainfall_amount = ma.cumsum(self.data["rainfall_rate"].data * resolution)
         self.data["rainfall_amount"] = CloudnetArray(rainfall_amount, "rainfall_amount")
 
-    def screen_timestamps(self, date: str) -> None:
-        dates = np.array([str(d.date()) for d in self._data["time"]])
+    def screen_timestamps(self, date: datetime.date) -> None:
+        dates = np.array([d.date() for d in self._data["time"]])
         valid_mask = dates == date
         if not valid_mask.any():
             raise ValidTimeStampError
@@ -139,7 +143,7 @@ class WS(CSVFile):
 
 
 class PalaiseauWS(WS):
-    def __init__(self, filenames: list[str], site_meta: dict):
+    def __init__(self, filenames: Sequence[str | PathLike], site_meta: dict):
         super().__init__(site_meta)
         self.filenames = filenames
         self._data = self._read_data()
@@ -170,8 +174,8 @@ class PalaiseauWS(WS):
         decimal_hours = datetime2decimal_hours(self._data["time"])
         self.data["time"] = CloudnetArray(decimal_hours, "time")
 
-    def screen_timestamps(self, date: str) -> None:
-        dates = [str(d.date()) for d in self._data["time"]]
+    def screen_timestamps(self, date: datetime.date) -> None:
+        dates = [d.date() for d in self._data["time"]]
         valid_ind = [ind for ind, d in enumerate(dates) if d == date]
         if not valid_ind:
             raise ValidTimeStampError
@@ -228,7 +232,7 @@ class BucharestWS(PalaiseauWS):
 
 
 class GranadaWS(WS):
-    def __init__(self, filenames: list[str], site_meta: dict):
+    def __init__(self, filenames: Sequence[str | PathLike], site_meta: dict):
         if len(filenames) != 1:
             raise ValueError
         super().__init__(site_meta)
@@ -278,7 +282,7 @@ class GranadaWS(WS):
 
 
 class KenttarovaWS(WS):
-    def __init__(self, filenames: list[str], site_meta: dict):
+    def __init__(self, filenames: Sequence[str | PathLike], site_meta: dict):
         super().__init__(site_meta)
         self.filenames = filenames
         self._data = self._read_data()
@@ -334,7 +338,7 @@ class HyytialaWS(WS):
     - BbRT/mm = Bucket content in real-time (Pluvio200) [mm].
     """
 
-    def __init__(self, filenames: list[str], site_meta: dict):
+    def __init__(self, filenames: Sequence[str | PathLike], site_meta: dict):
         super().__init__(site_meta)
         self.filename = filenames[0]
         self._data = self._read_data()
@@ -395,7 +399,7 @@ class HyytialaWS(WS):
 
 
 class GalatiWS(WS):
-    def __init__(self, filenames: list[str], site_meta: dict):
+    def __init__(self, filenames: Sequence[str | PathLike], site_meta: dict):
         super().__init__(site_meta)
         self.filename = filenames[0]
         self._data = self._read_data()
@@ -450,7 +454,7 @@ class GalatiWS(WS):
 
 
 class JuelichWS(WS):
-    def __init__(self, filenames: list[str], site_meta: dict):
+    def __init__(self, filenames: Sequence[str | PathLike], site_meta: dict):
         super().__init__(site_meta)
         self.filename = filenames[0]
         self._data = self._read_data()
@@ -496,7 +500,7 @@ class JuelichWS(WS):
 class LampedusaWS(WS):
     """Read Lampedusa weather station data in ICOS format."""
 
-    def __init__(self, filenames: list[str], site_meta: dict):
+    def __init__(self, filenames: Sequence[str | PathLike], site_meta: dict):
         super().__init__(site_meta)
         self.filename = filenames[0]
         self._data = self._read_data()
@@ -549,7 +553,7 @@ class LampedusaWS(WS):
 
 
 class LimassolWS(WS):
-    def __init__(self, filenames: list[str], site_meta: dict):
+    def __init__(self, filenames: Sequence[str | PathLike], site_meta: dict):
         super().__init__(site_meta)
         self.filenames = filenames
         self._data = defaultdict(list)
@@ -562,8 +566,8 @@ class LimassolWS(WS):
         decimal_hours = datetime2decimal_hours(self._data["time"])
         self.data["time"] = CloudnetArray(decimal_hours, "time")
 
-    def screen_timestamps(self, date: str) -> None:
-        dates = [str(d.date()) for d in self._data["time"]]
+    def screen_timestamps(self, date: datetime.date) -> None:
+        dates = [d.date() for d in self._data["time"]]
         valid_ind = [ind for ind, d in enumerate(dates) if d == date]
         if not valid_ind:
             raise ValidTimeStampError
@@ -646,3 +650,51 @@ def _parse_sirta(filename: str | PathLike):
                 parsed = float(value)
             output[column].append(parsed)
     return output
+
+
+class LAquilaWS(WS):
+    def __init__(self, filenames: Sequence[str | PathLike], site_meta: dict):
+        super().__init__(site_meta)
+        self.filenames = filenames
+        self._data = self._read_data()
+
+    def _read_data(self) -> dict:
+        data: dict[str, list] = {
+            key: []
+            for key in [
+                "time",
+                "air_temperature",
+                "air_pressure",
+                "relative_humidity",
+                "rainfall_rate",
+                "wind_speed",
+                "wind_direction",
+            ]
+        }
+        for filename in self.filenames:
+            with open(filename) as f:
+                for row in f:
+                    if row.startswith("#"):
+                        continue
+                    columns = row.split(",")
+                    if len(columns) != 7:
+                        continue
+                    timestamp = datetime.datetime.strptime(
+                        columns[0], "%Y-%m-%dT%H:%M:%SZ"
+                    ).replace(tzinfo=datetime.timezone.utc)
+                    data["time"].append(timestamp)
+                    data["air_temperature"].append(self._parse_value(columns[1]))
+                    data["air_pressure"].append(self._parse_value(columns[2]))
+                    data["relative_humidity"].append(self._parse_value(columns[3]))
+                    data["rainfall_rate"].append(self._parse_value(columns[4]))
+                    data["wind_speed"].append(self._parse_value(columns[5]))
+                    data["wind_direction"].append(self._parse_value(columns[6]))
+        output = self.format_data(data)
+        _, time_ind = np.unique(output["time"], return_index=True)
+        for key in output:
+            output[key] = output[key][time_ind]
+        return output
+
+    def _parse_value(self, value: str) -> float:
+        value = value.strip()
+        return float(value) if value else math.nan

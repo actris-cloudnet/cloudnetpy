@@ -257,6 +257,18 @@ class TestWeatherStationLimassol2(WS):
         assert self.nc.dimensions["time"].size == 5
 
 
+class TestWeatherStationLAquila(WS):
+    date = "2025-06-30"
+    temp_dir = TemporaryDirectory()
+    temp_path = temp_dir.name + "/test.nc"
+    site_meta = {**SITE_META, "name": "L'Aquila"}
+    filename = f"{SCRIPT_PATH}/data/ws/2025063009_weather-station.csv"
+    uuid = weather_station.ws2nc(filename, temp_path, site_meta, date=date)
+
+    def test_dimensions(self):
+        assert self.nc.dimensions["time"].size == 3
+
+
 @pytest.mark.parametrize(
     "original, expected",
     [
