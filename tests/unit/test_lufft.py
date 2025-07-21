@@ -126,7 +126,7 @@ class TestWithRealData(Check):
     def test_global_attributes(self):
         assert self.nc.source == "Lufft CHM15k"
         assert self.nc.serial_number == "CHM170137"
-        assert self.nc.title == f'CHM15k ceilometer from {self.site_meta["name"]}'
+        assert self.nc.title == f"CHM15k ceilometer from {self.site_meta['name']}"
 
     def test_date_argument(self, tmp_path):
         test_path = tmp_path / "date.nc"

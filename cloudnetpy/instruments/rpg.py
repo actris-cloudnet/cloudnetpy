@@ -156,10 +156,8 @@ def _mask_invalid_data(data_in: dict) -> dict:
     fill_values = (-999, 1e-10)
     extra_keys = ("air_temperature", "air_pressure")
     for name in data:
-        if (
-            np.issubdtype(data[name].dtype, np.integer)
-            or data[name].ndim < 2
-            and name not in extra_keys
+        if np.issubdtype(data[name].dtype, np.integer) or (
+            data[name].ndim < 2 and name not in extra_keys
         ):
             continue
         data[name] = ma.masked_equal(data[name], 0)

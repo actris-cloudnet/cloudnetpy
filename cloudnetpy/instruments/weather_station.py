@@ -626,7 +626,7 @@ def _parse_sirta(filename: str | PathLike):
         if m is None:
             continue
         if m[1] != str(len(columns) + 1):
-            msg = f"Expected column {m[1]}, found {len(columns)+1}"
+            msg = f"Expected column {m[1]}, found {len(columns) + 1}"
             raise ValueError(msg)
         columns.append(m[2])
         output[m[2]] = []

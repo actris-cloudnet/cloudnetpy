@@ -100,10 +100,10 @@ class Dimensions:
             .translated(-tightbbox.x0, -tightbbox.y0)
             .extents
         )
-        self.margin_top = int(self.height - round(y1))
-        self.margin_right = int(self.width - round(x1) - 1)
-        self.margin_bottom = int(round(y0) - 1)
-        self.margin_left = int(round(x0))
+        self.margin_top = self.height - round(y1)
+        self.margin_right = self.width - round(x1) - 1
+        self.margin_bottom = round(y0) - 1
+        self.margin_left = round(x0)
 
 
 class FigureData:

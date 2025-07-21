@@ -78,7 +78,7 @@ class TestCopernicus2nc(Check):
 
     def test_global_attributes(self):
         assert self.nc.source == "RAL Space Copernicus"
-        assert self.nc.title == f'Copernicus cloud radar from {self.site_meta["name"]}'
+        assert self.nc.title == f"Copernicus cloud radar from {self.site_meta['name']}"
 
     def test_range(self):
         for key in ("range", "height"):

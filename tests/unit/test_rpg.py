@@ -111,7 +111,7 @@ class TestRPG2nc94GHz(Check):
 
     def test_global_attributes(self):
         assert self.nc.source == "RPG-Radiometer Physics RPG-FMCW-94"
-        assert self.nc.title == f'RPG-FMCW-94 cloud radar from {self.site_meta["name"]}'
+        assert self.nc.title == f"RPG-FMCW-94 cloud radar from {self.site_meta['name']}"
 
     def test_common_radar(self):
         radar_fun = RadarFun(self.nc, self.site_meta, self.date, self.uuid)
@@ -276,7 +276,7 @@ class TestRPG2ncSTSR35GHz(Check):
 
     def test_global_attributes(self):
         assert self.nc.source == "RPG-Radiometer Physics RPG-FMCW-35"
-        assert self.nc.title == f'RPG-FMCW-35 cloud radar from {self.site_meta["name"]}'
+        assert self.nc.title == f"RPG-FMCW-35 cloud radar from {self.site_meta['name']}"
 
 
 @pytest.mark.parametrize(

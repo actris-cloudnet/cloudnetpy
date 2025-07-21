@@ -64,10 +64,9 @@ def classify_measurements(data: Observations) -> ClassificationResult:
         if "rpg-fmcw-94" not in obs.radar_type.lower():
             msg = "VoodooNet is only implemented for RPG-FMCW-94 radar."
             raise NotImplementedError(msg)
-        import voodoonet
-        from voodoonet.utils import VoodooOptions
+        import voodoonet  # noqa: PLC0415
 
-        options = VoodooOptions(progress_bar=False)
+        options = voodoonet.VoodooOptions(progress_bar=False)
         target_time = voodoonet.utils.decimal_hour2unix(obs.date, obs.time)
         liquid_prob = voodoonet.infer(
             obs.lv0_files, target_time=target_time, options=options

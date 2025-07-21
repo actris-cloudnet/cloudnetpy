@@ -77,7 +77,7 @@ class TestGalileo2nc(Check):
 
     def test_global_attributes(self):
         assert self.nc.source == "RAL Space Galileo"
-        assert self.nc.title == f'Galileo cloud radar from {self.site_meta["name"]}'
+        assert self.nc.title == f"Galileo cloud radar from {self.site_meta['name']}"
 
     def test_filename_argument(self, tmp_path):
         test_path = tmp_path / "date.nc"

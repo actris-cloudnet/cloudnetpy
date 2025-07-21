@@ -151,7 +151,7 @@ def _find_melting_layer_from_v(
             v_prof[base] < -2,
         ]
     if all(conditions):
-        base = int(round(top - (top - base) / 2))
+        base = round(top - (top - base) / 2)
         return np.arange(base, top)
     return None
 

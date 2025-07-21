@@ -519,7 +519,7 @@ def _process_mwrpy_product(
     filename = f"{args.date}_{args.site}_{product}.nc"
     output_file = _create_output_folder("geophysical", args) / filename
     module = importlib.import_module("cloudnetpy.products")
-    getattr(module, f"generate_{product.replace('-','_')}")(mwr_l1c_file, output_file)
+    getattr(module, f"generate_{product.replace('-', '_')}")(mwr_l1c_file, output_file)
     logging.info("Processed %s: %s", product, output_file)
     return str(output_file)
 

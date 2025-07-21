@@ -45,6 +45,6 @@ class Mwr(DataSource):
         self.data["lwp_error"].comment = (
             "This variable is a rough estimate of the one-standard-deviation\n"
             f"error in liquid water path, calculated as a combination of\n"
-            f"a {bias} g m-2 linear error and a {round(random_error*100)} %\n"
+            f"a {bias} g m-2 linear error and a {round(random_error * 100)} %\n"
             "fractional error."
         )

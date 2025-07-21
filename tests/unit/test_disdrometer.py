@@ -44,7 +44,7 @@ class TestParsivel(Check):
     def test_global_attributes(self):
         assert "Parsivel" in self.nc.source
         assert self.nc.cloudnet_file_type == "disdrometer"
-        assert self.nc.title == f'Parsivel2 disdrometer from {self.site_meta["name"]}'
+        assert self.nc.title == f"Parsivel2 disdrometer from {self.site_meta['name']}"
         assert self.nc.year == "2021"
         assert self.nc.month == "03"
         assert self.nc.day == "18"
@@ -76,7 +76,7 @@ class TestParsivelUnknownValue(Check):
     def test_global_attributes(self):
         assert "Parsivel" in self.nc.source
         assert self.nc.cloudnet_file_type == "disdrometer"
-        assert self.nc.title == f'Parsivel2 disdrometer from {self.site_meta["name"]}'
+        assert self.nc.title == f"Parsivel2 disdrometer from {self.site_meta['name']}"
         assert self.nc.year == "2021"
         assert self.nc.month == "03"
         assert self.nc.day == "18"
@@ -277,7 +277,7 @@ class TestThies(Check):
     uuid = disdrometer.thies2nc(filename, temp_path, site_meta, date=date)
 
     def test_processing(self):
-        assert self.nc.title == f'LNM disdrometer from {self.site_meta["name"]}'
+        assert self.nc.title == f"LNM disdrometer from {self.site_meta['name']}"
         assert self.nc.year == "2021"
         assert self.nc.month == "09"
         assert self.nc.day == "15"
@@ -295,7 +295,7 @@ class TestThies2(Check):
     uuid = disdrometer.thies2nc(filename, temp_path, site_meta, date=date)
 
     def test_processing(self):
-        assert self.nc.title == f'LNM disdrometer from {self.site_meta["name"]}'
+        assert self.nc.title == f"LNM disdrometer from {self.site_meta['name']}"
         assert self.nc.year == "2024"
         assert self.nc.month == "04"
         assert self.nc.day == "14"
@@ -323,7 +323,7 @@ class TestThies3(Check):
     )
 
     def test_processing(self):
-        assert self.nc.title == f'LNM disdrometer from {self.site_meta["name"]}'
+        assert self.nc.title == f"LNM disdrometer from {self.site_meta['name']}"
         assert self.nc.year == "2024"
         assert self.nc.month == "04"
         assert self.nc.day == "17"
@@ -349,7 +349,7 @@ class TestThies4(Check):
     uuid = disdrometer.thies2nc(filename, temp_path, site_meta, date=date)
 
     def test_processing(self):
-        assert self.nc.title == f'LNM disdrometer from {self.site_meta["name"]}'
+        assert self.nc.title == f"LNM disdrometer from {self.site_meta['name']}"
         assert self.nc.year == "2024"
         assert self.nc.month == "07"
         assert self.nc.day == "02"
@@ -375,7 +375,7 @@ class TestThies5(Check):
     uuid = disdrometer.thies2nc(filename, temp_path, site_meta, date=date)
 
     def test_processing(self):
-        assert self.nc.title == f'LNM disdrometer from {self.site_meta["name"]}'
+        assert self.nc.title == f"LNM disdrometer from {self.site_meta['name']}"
         assert self.nc.year == "2024"
         assert self.nc.month == "10"
         assert self.nc.day == "03"
@@ -401,7 +401,7 @@ class TestThies6(Check):
     uuid = disdrometer.thies2nc(filename, temp_path, site_meta, date=date)
 
     def test_processing(self):
-        assert self.nc.title == f'LNM disdrometer from {self.site_meta["name"]}'
+        assert self.nc.title == f"LNM disdrometer from {self.site_meta['name']}"
         assert self.nc.year == "2025"
         assert self.nc.month == "06"
         assert self.nc.day == "02"

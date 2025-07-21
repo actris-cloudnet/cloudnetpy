@@ -107,9 +107,9 @@ class FD12P(CSVFile):
             logging.info("Skipped %d lines", invalid_lines)
         for key in ("visibility", "synop_WaWa", "snowfall_amount"):
             values = np.array(
-                [0 if x is math.nan else x for x in self._data[key]], dtype=np.int32
+                [0 if math.isnan(x) else x for x in self._data[key]], dtype=np.int32
             )
-            mask = np.array([x is math.nan for x in self._data[key]])
+            mask = np.array([math.isnan(x) for x in self._data[key]])
             self._data[key] = ma.array(values, mask=mask)
         self._data["snowfall_amount"] = self._data["snowfall_amount"].astype(np.float32)
         if expected_date:

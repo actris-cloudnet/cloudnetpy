@@ -102,7 +102,7 @@ class TestMIRA2nc(Check):
 
     def test_global_attributes(self):
         assert self.nc.source == "METEK MIRA-35"
-        assert self.nc.title == f'MIRA-35 cloud radar from {self.site_meta["name"]}'
+        assert self.nc.title == f"MIRA-35 cloud radar from {self.site_meta['name']}"
 
     def test_processing_of_several_nc_files(self, tmp_path):
         test_path = tmp_path / "several.nc"

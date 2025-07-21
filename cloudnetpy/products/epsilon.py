@@ -174,7 +174,7 @@ def _infer_pulse_repetition_frequency(range_: npt.NDArray[np.float64]):
         return 15e3
     if round_trip_time / T_LOW < 1:
         return 10e3
-    msg = f"Suspiciously large range ({dist}m). " "Cannot infer pulse repetition rate"
+    msg = f"Suspiciously large range ({dist}m). Cannot infer pulse repetition rate"
     raise ValueError(msg)
 
 

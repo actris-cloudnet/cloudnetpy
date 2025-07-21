@@ -39,7 +39,7 @@ class TestBowtie2nc(Check):
 
     def test_global_attributes(self):
         assert self.nc.source == "RPG-Radiometer Physics RPG-FMCW-94"
-        assert self.nc.title == f'RPG-FMCW-94 cloud radar from {self.site_meta["name"]}'
+        assert self.nc.title == f"RPG-FMCW-94 cloud radar from {self.site_meta['name']}"
 
     def test_range(self):
         for key in ("range", "height"):

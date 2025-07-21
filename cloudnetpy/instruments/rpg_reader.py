@@ -242,7 +242,7 @@ class HatproBinLwp(HatproBin):
         elif self.header["file_code"] == 934501000:
             self.version = 2
         else:
-            msg = f'Unknown HATPRO version. {self.header["file_code"]}'
+            msg = f"Unknown HATPRO version. {self.header['file_code']}"
             raise ValueError(msg)
 
     def _read_data(self, file) -> None:
@@ -281,7 +281,7 @@ class HatproBinIwv(HatproBin):
         elif self.header["file_code"] == 594811000:
             self.version = 2
         else:
-            msg = f'Unknown HATPRO version. {self.header["file_code"]}'
+            msg = f"Unknown HATPRO version. {self.header['file_code']}"
             raise ValueError(msg)
 
     def _read_data(self, file) -> None:

@@ -63,7 +63,7 @@ class TestCL51(Check):
 
     def test_global_attributes(self):
         assert self.nc.source == "Vaisala CL51"
-        assert self.nc.title == f'CL51 ceilometer from {self.site_meta["name"]}'
+        assert self.nc.title == f"CL51 ceilometer from {self.site_meta['name']}"
         assert len(self.nc.ceilopyter_version) > 0
 
     def test_date_argument(self, tmp_path):
@@ -156,7 +156,7 @@ class TestCL31(Check):
 
     def test_global_attributes(self):
         assert self.nc.source == "Vaisala CL31"
-        assert self.nc.title == f'CL31 ceilometer from {self.site_meta["name"]}'
+        assert self.nc.title == f"CL31 ceilometer from {self.site_meta['name']}"
         assert len(self.nc.ceilopyter_version) > 0
 
     def test_date_argument(self, tmp_path):
@@ -222,7 +222,7 @@ class TestCT25k(Check):
 
     def test_global_attributes(self):
         assert self.nc.source == "Vaisala CT25k"
-        assert self.nc.title == f'CT25k ceilometer from {self.site_meta["name"]}'
+        assert self.nc.title == f"CT25k ceilometer from {self.site_meta['name']}"
         assert len(self.nc.ceilopyter_version) > 0
 
     def test_date_argument(self, tmp_path):

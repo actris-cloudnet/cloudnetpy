@@ -240,7 +240,7 @@ def _save_cat(
             extra=extra_references,
         )
         if is_voodoo:
-            import voodoonet.version
+            import voodoonet.version  # noqa: PLC0415
 
             nc.voodoonet_version = voodoonet.version.__version__
         output.add_source_instruments(nc, data_obs)
@@ -325,8 +325,7 @@ COMMENTS = {
         "have\n a reflectivity of 0 dBZ at all frequencies."
     ),
     "bias": (
-        "This variable is an estimate of the one-standard-deviation\n"
-        "calibration error."
+        "This variable is an estimate of the one-standard-deviation\ncalibration error."
     ),
     "insect_prob": (
         "Ad-hoc estimation of the probability that the pixel contains insects."
