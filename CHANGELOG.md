@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.80.3 – 2025-07-21
+
+- Add L'Aquila weather station
+- Handle missing values in Radiometrics reader
+
 ## 1.80.2 – 2025-06-24
 
 - Improve error message when reading corrupted files
