@@ -29,6 +29,7 @@ def calc_melting_attenuation(
         )
 
     rainfall_rate = data.disdrometer.data["rainfall_rate"][:]
+    rainfall_rate[is_rain == 0] = ma.masked
     frequency = data.radar.radar_frequency
 
     attenuation_array = _calc_melting_attenuation(rainfall_rate, frequency)
