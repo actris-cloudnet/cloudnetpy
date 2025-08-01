@@ -30,7 +30,7 @@ class WS(Check):
         assert self.nc.variables["air_pressure"].units == "Pa"
         min_pressure = ma.min(self.nc.variables["air_pressure"][:])
         max_pressure = ma.max(self.nc.variables["air_pressure"][:])
-        assert min_pressure > 90000
+        assert min_pressure > 78900
         assert max_pressure < 110000
 
     def test_wind_speed_values(self):
@@ -270,6 +270,18 @@ class TestWeatherStationLAquila(WS):
 
     def test_dimensions(self):
         assert self.nc.dimensions["time"].size == 3
+
+
+class TestWeatherStationMaido(WS):
+    date = "2025-09-29"
+    temp_dir = TemporaryDirectory()
+    temp_path = temp_dir.name + "/test.nc"
+    site_meta = {**SITE_META, "name": "Maïdo Observatory"}
+    filename = f"{SCRIPT_PATH}/data/ws/meteo_maido_20250929.asc"
+    uuid = weather_station.ws2nc(filename, temp_path, site_meta, date=date)
+
+    def test_dimensions(self):
+        assert self.nc.dimensions["time"].size == 4
 
 
 @pytest.mark.parametrize(

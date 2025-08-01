@@ -70,6 +70,8 @@ def ws2nc(
         ws = LimassolWS(weather_station_file, site_meta)
     elif site_meta["name"] == "L'Aquila":
         ws = LAquilaWS(weather_station_file, site_meta)
+    elif site_meta["name"] == "Maïdo Observatory":
+        ws = MaidoWS(weather_station_file, site_meta)
     else:
         msg = "Unsupported site"
         raise ValueError(msg)
@@ -162,6 +164,26 @@ class WS(CSVFile):
 
 
 class PalaiseauWS(WS):
+    expected_header_identifiers: tuple[str, ...] = (
+        "DateTime(yyyy-mm-ddThh:mm:ssZ)",
+        "Windspeed(m/s)",
+        "Winddirection(deg",
+        "Airtemperature",
+        "Relativehumidity(%)",
+        "Pressure(hPa)",
+        "Precipitationrate(mm/min)",
+        "precipitation",
+    )
+    keys: tuple[str, ...] = (
+        "wind_speed",
+        "wind_direction",
+        "air_temperature",
+        "relative_humidity",
+        "air_pressure",
+        "rainfall_rate",
+        "rainfall_amount",
+    )
+
     def __init__(self, filenames: Sequence[str | PathLike], site_meta: dict) -> None:
         super().__init__(site_meta)
         self.filenames = filenames
@@ -175,16 +197,16 @@ class PalaiseauWS(WS):
             for row in data:
                 if not (columns := row.split()):
                     continue
-                if row.startswith("#"):
-                    header_row = "".join(columns)
-                    if header_row not in header:
-                        header.append(header_row)
-                else:
+                if re.match(r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z", columns[0]):
                     timestamp = datetime.datetime.strptime(
                         columns[0], "%Y-%m-%dT%H:%M:%SZ"
                     ).replace(tzinfo=datetime.timezone.utc)
                     values.append([timestamp] + [float(x) for x in columns[1:]])
                     timestamps.append(timestamp)
+                else:
+                    header_row = "".join(columns)
+                    if header_row not in header:
+                        header.append(header_row)
 
         self._validate_header(header)
         return {"time": timestamps, "values": values}
@@ -204,16 +226,9 @@ class PalaiseauWS(WS):
             ]
 
     def add_data(self) -> None:
-        keys = (
-            "wind_speed",
-            "wind_direction",
-            "air_temperature",
-            "relative_humidity",
-            "air_pressure",
-            "rainfall_rate",
-            "rainfall_amount",
-        )
-        for ind, key in enumerate(keys):
+        for ind, key in enumerate(self.keys):
+            if key.startswith("_"):
+                continue
             array = [row[ind + 1] for row in self._data["values"]]
             array_masked = ma.masked_invalid(array)
             self.data[key] = CloudnetArray(array_masked, key)
@@ -223,25 +238,44 @@ class PalaiseauWS(WS):
             self.data["rainfall_amount"][:] / 1000
         )  # mm -> m
 
-    @staticmethod
-    def _validate_header(header: list[str]) -> None:
-        expected_identifiers = [
-            "DateTime(yyyy-mm-ddThh:mm:ssZ)",
-            "Windspeed(m/s)",
-            "Winddirection(deg",
-            "Airtemperature",
-            "Relativehumidity(%)",
-            "Pressure(hPa)",
-            "Precipitationrate(mm/min)",
-            "precipitation",
-        ]
+    def _validate_header(self, header: list[str]) -> None:
         column_titles = [row for row in header if "Col." in row]
         error_msg = "Unexpected weather station file format"
-        if len(column_titles) != len(expected_identifiers):
+        if len(column_titles) != len(self.expected_header_identifiers):
             raise ValueError(error_msg)
-        for title, identifier in zip(column_titles, expected_identifiers, strict=True):
+        for title, identifier in zip(
+            column_titles, self.expected_header_identifiers, strict=True
+        ):
             if identifier not in title:
                 raise ValueError(error_msg)
+
+
+class MaidoWS(PalaiseauWS):
+    expected_header_identifiers = (
+        "DateTimeyyyy-mm-ddThh:mm:ssZ",
+        "Winddirection-average",
+        "Windspeed-maximumvalue(m/s)",
+        "Windspeed-average(m/s)",
+        "Pressure-average(hPa)",
+        "Relativehumidity-maximumvalue(%)",
+        "Relativehumidity-average(%)",
+        "Airtemperature-minimumvalue",
+        "Airtemperature-average",
+    )
+
+    keys = (
+        "wind_direction",
+        "_wind_speed_max",
+        "wind_speed",
+        "air_pressure",
+        "_relative_humidity_max",
+        "relative_humidity",
+        "_air_temperature_min",
+        "air_temperature",
+    )
+
+    def convert_rainfall_amount(self) -> None:
+        pass
 
 
 class BucharestWS(PalaiseauWS):
