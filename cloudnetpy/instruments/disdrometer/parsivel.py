@@ -205,6 +205,7 @@ TOA5_HEADERS = {
     "precipitation": "_rain_accum",
     "rain accum [mm]": "_rain_accum",
     "weatherCodeWaWa": "synop_WaWa",
+    "wawa": "synop_WaWa",
     "weather_code_wawa": "synop_WaWa",
     "radarReflectivity": "radar_reflectivity",
     "radar_reflectivity": "radar_reflectivity",
