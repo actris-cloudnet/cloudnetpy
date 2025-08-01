@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.80.4 – 2025-08-01
+
+- Fix incorrect melting attenuation in non-rain cases
+
 ## 1.80.3 – 2025-07-21
 
 - Add L'Aquila weather station
