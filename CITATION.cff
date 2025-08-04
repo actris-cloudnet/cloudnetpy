@@ -11,12 +11,12 @@ authors:
     given-names: Simo
     orcid: "https://orcid.org/0000-0002-0651-4622"
     affiliation: Finnish Meteorological Institute
-  - given-names: Tuomas
-    family-names: Siipola
+  - family-names: Siipola
+    given-names: Tuomas
     affiliation: Finnish Meteorological Institute
     orcid: "https://orcid.org/0009-0004-7757-0893"
-  - family-names: Anniina
-    given-names: Korpinen
+  - family-names: Korpinen
+    given-names: Anniina
     affiliation: Finnish Meteorological Institute
   - family-names: O'Connor
     given-names: Ewan
