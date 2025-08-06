@@ -550,6 +550,7 @@ class Plot2D(Plot):
         else:
             vmin, vmax = self._plot_meta.plot_range
         if self._is_log:
+            self._data = np.maximum(self._data, vmin)
             self._data, vmin, vmax = lin2log(self._data, vmin, vmax)
 
         alt = self._screen_data_by_max_y(figure_data)
