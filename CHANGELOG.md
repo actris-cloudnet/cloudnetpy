@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.80.5 – 2025-08-11
+
+- Plot non-positive values in log scale as minimum value
+
 ## 1.80.4 – 2025-08-01
 
 - Fix incorrect melting attenuation in non-rain cases
