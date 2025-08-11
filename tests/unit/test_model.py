@@ -134,9 +134,9 @@ def test_calculate_attenuations(fake_model_file):
         (
             ma.array(
                 [[1, 2], [1, 2], [1, 2], [1, 2]],
-                mask=[[1, 1, 1, 0, 0, 0, 0, 1]],
+                mask=[[1, 1], [1, 0], [0, 0], [0, 1]],
             ),
-            1,
+            3,
         ),
         (ma.array([[1, 2], [1, 2], [1, 2], [1, 2]], mask=False), 4),
         (ma.array([[1, 2], [1, 2], [1, 2], [1, 2]], mask=False), 4),

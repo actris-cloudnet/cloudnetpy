@@ -173,8 +173,6 @@ def _find_model_type(file_name: str) -> str:
 
 
 def _find_number_of_valid_profiles(array: np.ndarray) -> int:
-    n_good = 0
-    for row in array:
-        if not hasattr(row, "mask") or np.sum(row.mask.astype(int)) == 0:
-            n_good += 1
-    return n_good
+    mask = ma.getmaskarray(array)
+    all_masked_profiles = np.all(mask, axis=1)
+    return np.count_nonzero(~all_masked_profiles)
