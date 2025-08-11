@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.80.6 – 2025-08-11
+
+- Allow some masked values in model profile
+
 ## 1.80.5 – 2025-08-11
 
 - Plot non-positive values in log scale as minimum value
