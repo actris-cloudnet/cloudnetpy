@@ -1,6 +1,7 @@
 import importlib
 from pathlib import Path
 from uuid import UUID
+import numpy as np
 
 import netCDF4
 from cloudnetpy_qc import quality
@@ -119,7 +120,7 @@ def _check_is_valid_uuid(uuid):
 
 def _check_attributes(full_path: str, metadata: dict):
     with netCDF4.Dataset(full_path) as nc:
-        assert nc.variables["altitude"][:] == metadata["altitude"]
+        assert np.all(nc.variables["altitude"][:] == metadata["altitude"])
 
 
 def _get_uuids(data: dict) -> tuple:
