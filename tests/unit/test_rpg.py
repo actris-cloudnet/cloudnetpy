@@ -178,7 +178,7 @@ class TestRPG2nc94GHz(Check):
         with netCDF4.Dataset(test_path) as nc:
             for key in ("latitude", "longitude"):
                 assert key in nc.variables
-                assert nc.variables[key][:] > 0
+                assert np.all(nc.variables[key][:] > 0)
 
 
 class TestRPG2ncSTSR35GHz(Check):
