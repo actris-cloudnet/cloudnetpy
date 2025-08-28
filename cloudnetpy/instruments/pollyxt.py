@@ -13,7 +13,7 @@ from cloudnetpy import output, utils
 from cloudnetpy.exceptions import InconsistentDataError, ValidTimeStampError
 from cloudnetpy.instruments import instruments
 from cloudnetpy.instruments.ceilometer import Ceilometer
-from cloudnetpy.metadata import MetaData
+from cloudnetpy.metadata import COMMON_ATTRIBUTES, MetaData
 from cloudnetpy.utils import Epoch
 
 
@@ -247,15 +247,19 @@ ATTRIBUTES = {
         long_name="Lidar volume linear depolarisation ratio",
         units="1",
         comment="SNR-screened lidar volume linear depolarisation ratio at 532 nm.",
+        dimensions=("time", "range"),
     ),
     "depolarisation_raw": MetaData(
         long_name="Lidar volume linear depolarisation ratio",
         units="1",
         comment="Non-screened lidar volume linear depolarisation ratio at 532 nm.",
+        dimensions=("time", "range"),
     ),
     "calibration_factor": MetaData(
         long_name="Attenuated backscatter calibration factor",
         units="1",
         comment="Calibration factor applied.",
+        dimensions=("time",),
     ),
+    "zenith_angle": COMMON_ATTRIBUTES["zenith_angle"]._replace(dimensions=None),
 }

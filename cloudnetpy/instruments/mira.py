@@ -285,27 +285,28 @@ def _check_file_type(filetype: str) -> None:
 
 
 ATTRIBUTES = {
-    "nfft": MetaData(
-        long_name="Number of FFT points",
-        units="1",
-    ),
+    "nfft": MetaData(long_name="Number of FFT points", units="1", dimensions=("time",)),
     "nave": MetaData(
         long_name="Number of spectral averages (not accounting for overlapping FFTs)",
         units="1",
+        dimensions=("time",),
     ),
-    "rg0": MetaData(long_name="Number of lowest range gates", units="1"),
+    "rg0": MetaData(
+        long_name="Number of lowest range gates", units="1", dimensions=("time",)
+    ),
     "prf": MetaData(
-        long_name="Pulse Repetition Frequency",
-        units="Hz",
+        long_name="Pulse Repetition Frequency", units="Hz", dimensions=("time",)
     ),
     "zenith_offset": MetaData(
         long_name="Zenith offset of the instrument",
         units="degrees",
         comment="Zenith offset applied.",
+        dimensions=None,
     ),
     "azimuth_offset": MetaData(
         long_name="Azimuth offset of the instrument (positive clockwise from north)",
         units="degrees",
         comment="Azimuth offset applied.",
+        dimensions=None,
     ),
 }

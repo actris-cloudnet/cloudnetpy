@@ -107,15 +107,18 @@ ATTRIBUTES = {
         long_name="Radar pitch angle",
         units="degree",
         standard_name="platform_roll",
+        dimensions=("time",),
     ),
     "radar_yaw": MetaData(
         long_name="Radar yaw angle",
         units="degree",
         standard_name="platform_yaw",
+        dimensions=("time",),
     ),
     "radar_roll": MetaData(
         long_name="Radar roll angle",
         units="degree",
         standard_name="platform_roll",
+        dimensions=("time",),
     ),
 }

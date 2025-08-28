@@ -8,6 +8,7 @@ from cloudnetpy.constants import G_TO_KG, MM_H_TO_M_S
 from cloudnetpy.exceptions import ValidTimeStampError
 from cloudnetpy.instruments.instruments import FMCW94
 from cloudnetpy.instruments.nc_radar import NcRadar
+from cloudnetpy.instruments.rpg import RPG_ATTRIBUTES
 from cloudnetpy.metadata import MetaData
 from cloudnetpy.utils import bit_field_definition
 
@@ -97,7 +98,7 @@ class Bowtie(NcRadar):
             raise ValidTimeStampError
 
 
-ATTRIBUTES: dict = {
+ATTRIBUTES = RPG_ATTRIBUTES | {
     "v": MetaData(
         long_name="Doppler velocity",
         units="m s-1",
@@ -107,6 +108,7 @@ ATTRIBUTES: dict = {
             "motion of the ship. A rolling average over 3 time steps has been\n"
             "applied to it."
         ),
+        dimensions=("time", "range"),
     ),
     "correction_bits": MetaData(
         long_name="Correction bits",
@@ -116,5 +118,6 @@ ATTRIBUTES: dict = {
             "This parameter is a bit field that indicates which corrections have\n"
             "been applied to radar measurements."
         ),
+        dimensions=("time", "range"),
     ),
 }

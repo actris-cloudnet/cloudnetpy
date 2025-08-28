@@ -445,16 +445,19 @@ LWC_ATTRIBUTES = {
         comment=COMMENTS["lwc"],
         ancillary_variables="lwc_error",
         standard_name="mass_concentration_of_liquid_water_in_air",
+        dimensions=("time", "height"),
     ),
     "lwc_error": MetaData(
         long_name="Random error in liquid water content, one standard deviation",
         comment=COMMENTS["lwc_error"],
         units="dB",
+        dimensions=("time", "height"),
     ),
     "lwc_retrieval_status": MetaData(
         long_name="Liquid water content retrieval status",
         comment=COMMENTS["lwc_retrieval_status"],
         definition=DEFINITIONS["lwc_retrieval_status"],
         units="1",
+        dimensions=("time", "height"),
     ),
 }

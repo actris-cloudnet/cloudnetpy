@@ -189,25 +189,30 @@ IWC_ATTRIBUTES = {
         long_name="Ice water content",
         units="kg m-3",
         ancillary_variables="iwc_error iwc_sensitivity iwc_bias",
+        dimensions=("time", "height"),
     ),
     "iwc_error": MetaData(
         long_name="Random error in ice water content",
         units="dB",
+        dimensions=("time", "height"),
     ),
     "iwc_bias": MetaData(
         long_name="Possible bias in ice water content",
         units="dB",
         comment=COMMENTS["iwc_bias"],
+        dimensions=("time", "height"),
     ),
     "iwc_sensitivity": MetaData(
         long_name="Minimum detectable ice water content",
         units="kg m-3",
         comment=COMMENTS["iwc_sensitivity"],
+        dimensions=("time", "height"),
     ),
     "iwc_retrieval_status": MetaData(
         long_name="Ice water content retrieval status",
         comment=COMMENTS["iwc_retrieval_status"],
         definition=DEFINITIONS["iwc_retrieval_status"],
         units="1",
+        dimensions=("time", "height"),
     ),
 }

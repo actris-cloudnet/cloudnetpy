@@ -7,7 +7,6 @@ from os import PathLike
 from uuid import UUID
 
 import netCDF4
-import numpy as np
 from numpy import ma
 
 from cloudnetpy import utils, version
@@ -15,7 +14,7 @@ from cloudnetpy.categorize.containers import Observations
 from cloudnetpy.categorize.model import Model
 from cloudnetpy.datasource import DataSource
 from cloudnetpy.instruments.instruments import Instrument
-from cloudnetpy.metadata import COMMON_ATTRIBUTES, MetaData
+from cloudnetpy.metadata import COMMON_ATTRIBUTES
 
 
 def save_level1b(
@@ -57,10 +56,8 @@ def _get_netcdf_dimensions(obj) -> dict:
     }
     # RPG cloud radar
     if "chirp_start_indices" in obj.data:
-        if obj.data["chirp_start_indices"][:].ndim == 1:
-            dimensions["chirp_start_indices"] = len(obj.data["chirp_start_indices"][:])
-        else:
-            dimensions["chirp"] = obj.data["chirp_start_indices"][:].shape[1]
+        ind = obj.data["chirp_start_indices"][:]
+        dimensions["chirp_sequence"] = ind.shape[1] if ind.ndim > 1 else len(ind)
 
     # disdrometer
     if hasattr(obj, "n_diameter") and hasattr(obj, "n_velocity"):
@@ -340,9 +337,8 @@ def add_time_attribute(
         raise TypeError
     units = f"hours since {date_str} 00:00:00 +00:00"
     if key not in attributes:
-        attributes[key] = MetaData(units=units)
-    else:
-        attributes[key] = attributes[key]._replace(units=units)
+        attributes[key] = COMMON_ATTRIBUTES[key]
+    attributes[key] = attributes[key]._replace(units=units)
     return attributes
 
 
@@ -371,10 +367,9 @@ def add_source_attribute(attributes: dict, data: Observations) -> dict:
             continue
         source = getattr(data, instrument).dataset.source
         for key in keys:
-            if key in attributes:
-                attributes[key] = attributes[key]._replace(source=source)
-            else:
-                attributes[key] = MetaData(source=source)
+            if key not in attributes:
+                attributes[key] = COMMON_ATTRIBUTES[key]
+            attributes[key] = attributes[key]._replace(source=source)
     return attributes
 
 
@@ -403,8 +398,7 @@ def _write_vars2nc(nc: netCDF4.Dataset, cloudnet_variables: dict) -> None:
             fill_value = netCDF4.default_fillvals[obj.data_type]
         else:
             fill_value = False
-
-        size = obj.dimensions or _get_dimensions(nc, obj.data)
+        size = obj.dimensions if obj.dimensions is not None else ()
 
         nc_variable = nc.createVariable(
             obj.name,
@@ -416,19 +410,6 @@ def _write_vars2nc(nc: netCDF4.Dataset, cloudnet_variables: dict) -> None:
         nc_variable[:] = obj.data
         for attr in obj.fetch_attributes():
             setattr(nc_variable, attr, getattr(obj, attr))
-
-
-def _get_dimensions(nc: netCDF4.Dataset, data: np.ndarray) -> tuple:
-    """Finds correct dimensions for a variable."""
-    if utils.isscalar(data):
-        return ()
-    variable_size: list = []
-    file_dims = nc.dimensions
-    array_dims = data.shape
-    for length in array_dims:
-        dim = [key for key in file_dims if file_dims[key].size == length][0]  # noqa: RUF015
-        variable_size = [*variable_size, dim]
-    return tuple(variable_size)
 
 
 def _get_identifier(short_id: str) -> str:

@@ -2,6 +2,7 @@ from os import path
 from tempfile import TemporaryDirectory
 
 import netCDF4
+import numpy as np
 import pytest
 
 from cloudnetpy.exceptions import ValidTimeStampError
@@ -60,7 +61,7 @@ class TestBASTA(Check):
         with netCDF4.Dataset(test_path) as nc:
             for key in ("latitude", "longitude", "altitude"):
                 assert key in nc.variables
-                assert nc.variables[key][:] > 0
+                assert np.all(nc.variables[key][:] > 0)
 
     def test_global_attributes(self):
         assert self.nc.source == "BASTA"

@@ -153,7 +153,7 @@ class TestMIRA2nc(Check):
         with netCDF4.Dataset(test_path) as nc:
             for key in ("latitude", "longitude", "altitude"):
                 assert key in nc.variables
-                assert nc.variables[key][:] > 0
+                assert np.all(nc.variables[key][:] > 0)
 
 
 def test_allow_vary_option():

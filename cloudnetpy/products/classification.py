@@ -190,27 +190,33 @@ CLASSIFICATION_ATTRIBUTES = {
         comment=COMMENTS["target_classification"],
         definition=DEFINITIONS["target_classification"],
         units="1",
+        dimensions=("time", "height"),
     ),
     "detection_status": MetaData(
         long_name="Radar and lidar detection status",
         comment=COMMENTS["detection_status"],
         definition=DEFINITIONS["detection_status"],
         units="1",
+        dimensions=("time", "height"),
     ),
     "cloud_top_height_amsl": MetaData(
         long_name="Height of cloud top above mean sea level",
         units="m",
+        dimensions=("time",),
     ),
     "cloud_base_height_amsl": MetaData(
         long_name="Height of cloud base above mean sea level",
         units="m",
+        dimensions=("time",),
     ),
     "cloud_top_height_agl": MetaData(
         long_name="Height of cloud top above ground level",
         units="m",
+        dimensions=("time",),
     ),
     "cloud_base_height_agl": MetaData(
         long_name="Height of cloud base above ground level",
         units="m",
+        dimensions=("time",),
     ),
 }

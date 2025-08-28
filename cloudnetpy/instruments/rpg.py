@@ -385,135 +385,154 @@ DEFINITIONS = {
 
 RPG_ATTRIBUTES = {
     # LDR-mode radars:
-    "ldr": MetaData(long_name="Linear depolarisation ratio", units="dB"),
-    "rho_cx": MetaData(long_name="Co-cross-channel correlation coefficient", units="1"),
-    "phi_cx": MetaData(long_name="Co-cross-channel differential phase", units="rad"),
+    "ldr": MetaData(
+        long_name="Linear depolarisation ratio",
+        units="dB",
+        dimensions=("time", "range"),
+    ),
+    "rho_cx": MetaData(
+        long_name="Co-cross-channel correlation coefficient",
+        units="1",
+        dimensions=("time", "range"),
+    ),
+    "phi_cx": MetaData(
+        long_name="Co-cross-channel differential phase",
+        units="rad",
+        dimensions=("time", "range"),
+    ),
     # STSR-mode radars
-    "zdr": MetaData(long_name="Differential reflectivity", units="dB"),
-    "rho_hv": MetaData(long_name="Correlation coefficient", units="1"),
-    "phi_dp": MetaData(long_name="Differential phase", units="rad"),
-    "srho_hv": MetaData(long_name="Slanted correlation coefficient", units="1"),
-    "kdp": MetaData(long_name="Specific differential phase shift", units="rad km-1"),
+    "zdr": MetaData(
+        long_name="Differential reflectivity", units="dB", dimensions=("time", "range")
+    ),
+    "rho_hv": MetaData(
+        long_name="Correlation coefficient", units="1", dimensions=("time", "range")
+    ),
+    "phi_dp": MetaData(
+        long_name="Differential phase", units="rad", dimensions=("time", "range")
+    ),
+    "srho_hv": MetaData(
+        long_name="Slanted correlation coefficient",
+        units="1",
+        dimensions=("time", "range"),
+    ),
+    "kdp": MetaData(
+        long_name="Specific differential phase shift",
+        units="rad km-1",
+        dimensions=("time", "range"),
+    ),
     "differential_attenuation": MetaData(
         long_name="Differential attenuation",
         units="dB km-1",
+        dimensions=("time", "range"),
     ),
     # All radars
     "file_code": MetaData(
         long_name="File code",
         units="1",
         comment="Indicates the RPG software version.",
+        dimensions=None,
     ),
-    "program_number": MetaData(long_name="Program number", units="1"),
+    "program_number": MetaData(long_name="Program number", units="1", dimensions=None),
     "model_number": MetaData(
         long_name="Model number",
         units="1",
         definition=DEFINITIONS["model_number"],
+        dimensions=None,
     ),
     "antenna_separation": MetaData(
-        long_name="Antenna separation",
-        units="m",
+        long_name="Antenna separation", units="m", dimensions=None
     ),
     "antenna_diameter": MetaData(
-        long_name="Antenna diameter",
-        units="m",
+        long_name="Antenna diameter", units="m", dimensions=None
     ),
-    "antenna_gain": MetaData(
-        long_name="Antenna gain",
-        units="dB",
-    ),
+    "antenna_gain": MetaData(long_name="Antenna gain", units="dB", dimensions=None),
     "half_power_beam_width": MetaData(
-        long_name="Half power beam width",
-        units="degree",
+        long_name="Half power beam width", units="degree", dimensions=None
     ),
     "dual_polarization": MetaData(
         long_name="Dual polarisation type",
         units="1",
         definition=DEFINITIONS["dual_polarization"],
+        dimensions=None,
     ),
-    "sample_duration": MetaData(long_name="Sample duration", units="s"),
+    "sample_duration": MetaData(
+        long_name="Sample duration", units="s", dimensions=None
+    ),
     "calibration_interval": MetaData(
-        long_name="Calibration interval in samples",
-        units="1",
+        long_name="Calibration interval in samples", units="1", dimensions=None
     ),
     "number_of_spectral_samples": MetaData(
         long_name="Number of spectral samples in each chirp sequence",
         units="1",
+        dimensions=("chirp_sequence",),
+    ),
+    "nyquist_velocity": MetaData(
+        long_name="Nyquist velocity", units="m s-1", dimensions=("chirp_sequence",)
     ),
     "number_of_averaged_chirps": MetaData(
         long_name="Number of averaged chirps in sequence",
         units="1",
+        dimensions=("chirp_sequence",),
+    ),
+    "chirp_start_indices": MetaData(
+        long_name="Chirp sequences start indices",
+        units="1",
+        dimensions=("chirp_sequence",),
     ),
     "integration_time": MetaData(
         long_name="Integration time",
         units="s",
         comment="Effective integration time of chirp sequence",
+        dimensions=("chirp_sequence",),
     ),
     "range_resolution": MetaData(
         long_name="Vertical resolution of range",
         units="m",
+        dimensions=("chirp_sequence",),
     ),
     "FFT_window": MetaData(
         long_name="FFT window type",
         units="1",
         definition=DEFINITIONS["FFT_window"],
+        dimensions=None,
     ),
     "input_voltage_range": MetaData(
-        long_name="ADC input voltage range (+/-)",
-        units="mV",
+        long_name="ADC input voltage range (+/-)", units="mV", dimensions=None
     ),
     "noise_threshold": MetaData(
         long_name="Noise filter threshold factor",
         units="1",
         comment="Multiple of the standard deviation of Doppler spectra.",
+        dimensions=None,
     ),
-    "time_ms": MetaData(
-        long_name="Time ms",
-        units="ms",
-    ),
+    "time_ms": MetaData(long_name="Time ms", units="ms", dimensions=("time",)),
     "quality_flag": MetaData(
         long_name="Quality flag",
         definition=DEFINITIONS["quality_flag"],
         units="1",
+        dimensions=("time",),
     ),
-    "voltage": MetaData(
-        long_name="Voltage",
-        units="V",
-    ),
+    "voltage": MetaData(long_name="Voltage", units="V", dimensions=("time",)),
     "brightness_temperature": MetaData(
-        long_name="Brightness temperature",
-        units="K",
+        long_name="Brightness temperature", units="K", dimensions=("time",)
     ),
-    "if_power": MetaData(
-        long_name="IF power at ACD",
-        units="uW",
-    ),
+    "if_power": MetaData(long_name="IF power at ACD", units="uW", dimensions=("time",)),
     "status_flag": MetaData(
-        long_name="Status flag for heater and blower",
-        units="1",
+        long_name="Status flag for heater and blower", units="1", dimensions=("time",)
     ),
     "transmitted_power": MetaData(
-        long_name="Transmitted power",
-        units="W",
+        long_name="Transmitted power", units="W", dimensions=("time",)
     ),
     "transmitter_temperature": MetaData(
-        long_name="Transmitter temperature",
-        units="K",
+        long_name="Transmitter temperature", units="K", dimensions=("time",)
     ),
     "receiver_temperature": MetaData(
-        long_name="Receiver temperature",
-        units="K",
+        long_name="Receiver temperature", units="K", dimensions=("time",)
     ),
     "pc_temperature": MetaData(
-        long_name="PC temperature",
-        units="K",
-    ),
-    "kurtosis": MetaData(
-        long_name="Kurtosis of spectra",
-        units="1",
+        long_name="PC temperature", units="K", dimensions=("time",)
     ),
     "correlation_coefficient": MetaData(
-        long_name="Correlation coefficient",
-        units="1",
+        long_name="Correlation coefficient", units="1", dimensions=None
     ),
 }

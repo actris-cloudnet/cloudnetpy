@@ -127,16 +127,19 @@ IER_ATTRIBUTES = {
         long_name="Ice effective radius",
         units="m",
         ancillary_variables="ier_error",
+        dimensions=("time", "height"),
     ),
     "ier_error": MetaData(
         long_name="Random error in ice effective radius",
         units="m",
         comment=COMMENTS["ier_error"],
+        dimensions=("time", "height"),
     ),
     "ier_retrieval_status": MetaData(
         long_name="Ice effective radius retrieval status",
         comment=COMMENTS["ier_retrieval_status"],
         definition=DEFINITIONS["ier_retrieval_status"],
         units="1",
+        dimensions=("time", "height"),
     ),
 }
