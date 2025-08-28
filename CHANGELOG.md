@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.80.8 – 2025-08-28
+
+- Fix cpr-simulation plotting when altitude is vector
+
 ## 1.80.7 – 2025-08-28
 
 - Specify dimensions explicitly for each output variable. For example,
