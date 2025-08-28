@@ -3,6 +3,7 @@
 import logging
 
 import numpy as np
+import numpy.typing as npt
 from numpy import ma
 from scipy.interpolate import interp1d
 
@@ -11,7 +12,7 @@ from cloudnetpy.categorize.containers import ClassData
 from cloudnetpy.constants import T0
 
 
-def find_freezing_region(obs: ClassData, melting_layer: np.ndarray) -> np.ndarray:
+def find_freezing_region(obs: ClassData, melting_layer: npt.NDArray) -> npt.NDArray:
     """Finds freezing region using the model temperature and melting layer.
 
     Every profile that contains melting layer, subzero region starts from
@@ -60,16 +61,18 @@ def find_freezing_region(obs: ClassData, melting_layer: np.ndarray) -> np.ndarra
 
 
 def _is_all_freezing(
-    mean_melting_alt: np.ndarray,
-    t0_alt: np.ndarray,
-    height: np.ndarray,
+    mean_melting_alt: npt.NDArray,
+    t0_alt: npt.NDArray,
+    height: npt.NDArray,
 ) -> bool:
     no_detected_melting = mean_melting_alt.all() is ma.masked
     all_temperatures_below_freezing = (t0_alt <= height[0]).all()
     return no_detected_melting and all_temperatures_below_freezing
 
 
-def _find_mean_melting_alt(obs: ClassData, melting_layer: np.ndarray) -> ma.MaskedArray:
+def _find_mean_melting_alt(
+    obs: ClassData, melting_layer: npt.NDArray
+) -> ma.MaskedArray:
     if melting_layer.dtype != bool:
         msg = "melting_layer data type should be boolean"
         raise ValueError(msg)
@@ -78,7 +81,7 @@ def _find_mean_melting_alt(obs: ClassData, melting_layer: np.ndarray) -> ma.Mask
     return ma.median(melting_alts, axis=1)
 
 
-def find_t0_alt(temperature: np.ndarray, height: np.ndarray) -> np.ndarray:
+def find_t0_alt(temperature: npt.NDArray, height: npt.NDArray) -> npt.NDArray:
     """Interpolates altitudes where temperature goes below freezing.
 
     Args:
@@ -89,7 +92,7 @@ def find_t0_alt(temperature: np.ndarray, height: np.ndarray) -> np.ndarray:
         1-D array denoting altitudes where the temperature drops below 0 deg C.
 
     """
-    alt: np.ndarray = np.array([])
+    alt: npt.NDArray = np.array([])
     for prof in temperature:
         ind = np.where(prof < T0)[0][0]
         if ind == 0:

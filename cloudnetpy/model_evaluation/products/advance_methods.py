@@ -2,6 +2,7 @@ import importlib
 import logging
 
 import numpy as np
+import numpy.typing as npt
 import scipy.special
 import scipy.stats
 from numpy import ma
@@ -27,7 +28,7 @@ class AdvanceProductMethods(DataSource):
         model_obj: ModelManager,
         model_file: str,
         obs_obj: ObservationManager,
-    ):
+    ) -> None:
         super().__init__(model_file)
         self._obs_obj = obs_obj
         self.product = obs_obj.obs
@@ -96,12 +97,12 @@ class AdvanceProductMethods(DataSource):
             f"{self._model_obj.model}{self._model_obj.cycle}_cf_cirrus",
         )
 
-    def getvar_from_object(self, arg: str) -> np.ndarray:
+    def getvar_from_object(self, arg: str) -> npt.NDArray:
         v_name = arg if arg == "cf" else self._model_obj.get_model_var_names((arg,))[0]
         key = f"{self._model_obj.model}{self._model_obj.cycle}_{v_name}"
         return self._model_obj.data[key][:]
 
-    def remove_extra_levels(self, arg: np.ndarray) -> np.ndarray:
+    def remove_extra_levels(self, arg: npt.NDArray) -> npt.NDArray:
         return self._model_obj.cut_off_extra_levels(arg)
 
     def set_frequency_parameters(self) -> tuple:
@@ -114,7 +115,7 @@ class AdvanceProductMethods(DataSource):
             return 0.00058, -0.00706, 0.0923, -0.992
         raise ValueError
 
-    def fit_z_sensitivity(self, h: np.ndarray) -> np.ndarray:
+    def fit_z_sensitivity(self, h: npt.NDArray) -> npt.NDArray:
         if self._obs_obj.z_sensitivity is None:
             msg = "No z_sensitivity in observation file"
             raise ValueError(msg)
@@ -129,10 +130,10 @@ class AdvanceProductMethods(DataSource):
 
     def filter_high_iwc_low_cf(
         self,
-        cf: np.ndarray,
-        iwc: np.ndarray,
-        lwc: np.ndarray,
-    ) -> np.ndarray:
+        cf: npt.NDArray,
+        iwc: npt.NDArray,
+        lwc: npt.NDArray,
+    ) -> npt.NDArray:
         cf_filtered = self.mask_weird_indices(cf, iwc, lwc)
         if np.sum((iwc > 0) & (lwc < iwc / 10) & (cf_filtered > 0)) == 0:
             msg = "No ice clouds in a input data"
@@ -141,10 +142,10 @@ class AdvanceProductMethods(DataSource):
 
     @staticmethod
     def mask_weird_indices(
-        cf: np.ndarray,
-        iwc: np.ndarray,
-        lwc: np.ndarray,
-    ) -> np.ndarray:
+        cf: npt.NDArray,
+        iwc: npt.NDArray,
+        lwc: npt.NDArray,
+    ) -> npt.NDArray:
         cf_filtered = ma.copy(cf)
         weird_ind = (iwc / cf > 0.5e-3) & (cf < 0.001)
         weird_ind = weird_ind | (iwc == 0) & (lwc == 0) & (cf == 0)
@@ -153,23 +154,23 @@ class AdvanceProductMethods(DataSource):
 
     def find_ice_in_clouds(
         self,
-        cf_filtered: np.ndarray,
-        iwc: np.ndarray,
-        lwc: np.ndarray,
-    ) -> tuple[np.ndarray, tuple]:
+        cf_filtered: npt.NDArray,
+        iwc: npt.NDArray,
+        lwc: npt.NDArray,
+    ) -> tuple[npt.NDArray, tuple]:
         ice_ind = self.get_ice_indices(cf_filtered, iwc, lwc)
         cloud_iwc = iwc[ice_ind] / cf_filtered[ice_ind] * 1e3
         return cloud_iwc, ice_ind
 
     @staticmethod
     def get_ice_indices(
-        cf_filtered: np.ndarray,
-        iwc: np.ndarray,
-        lwc: np.ndarray,
+        cf_filtered: npt.NDArray,
+        iwc: npt.NDArray,
+        lwc: npt.NDArray,
     ) -> tuple:
         return tuple(np.where((cf_filtered > 0) & (iwc > 0) & (lwc < iwc / 10)))
 
-    def iwc_variance(self, height: np.ndarray, ice_ind: tuple) -> np.ndarray:
+    def iwc_variance(self, height: npt.NDArray, ice_ind: tuple) -> npt.NDArray:
         u = self.getvar("uwind")
         v = self.getvar("vwind")
         u = self.remove_extra_levels(u)
@@ -177,7 +178,9 @@ class AdvanceProductMethods(DataSource):
         w_shear = self.calculate_wind_shear(self._model_obj.wind, u, v, height)
         return self.calculate_variance_iwc(w_shear, ice_ind)
 
-    def calculate_variance_iwc(self, w_shear: np.ndarray, ice_ind: tuple) -> np.ndarray:
+    def calculate_variance_iwc(
+        self, w_shear: npt.NDArray, ice_ind: tuple
+    ) -> npt.NDArray:
         return 10 ** (
             0.3 * np.log10(self._model_obj.resolution_h)
             - 0.04 * w_shear[ice_ind]
@@ -186,11 +189,11 @@ class AdvanceProductMethods(DataSource):
 
     @staticmethod
     def calculate_wind_shear(
-        wind,
-        u: np.ndarray,
-        v: np.ndarray,
-        height: np.ndarray,
-    ) -> np.ndarray:
+        wind: npt.NDArray,
+        u: npt.NDArray,
+        v: npt.NDArray,
+        height: npt.NDArray,
+    ) -> npt.NDArray:
         grand_winds = []
         for w in (wind, u, v):
             grad_w = np.zeros(w.shape)
@@ -211,7 +214,7 @@ class AdvanceProductMethods(DataSource):
         f_variance_iwc: float,
         n_std: int = 5,
         n_dist: int = 250,
-    ) -> np.ndarray:
+    ) -> npt.NDArray:
         finish = cloud_iwc + n_std * (ma.sqrt(f_variance_iwc) * cloud_iwc)
         if isinstance(finish, ma.MaskedArray) and finish.mask.all():
             raise ValueError
@@ -223,16 +226,16 @@ class AdvanceProductMethods(DataSource):
 
     @staticmethod
     def gamma_distribution(
-        iwc_dist: np.ndarray, f_variance_iwc: float, cloud_iwc: float
-    ) -> np.ndarray:
+        iwc_dist: npt.NDArray, f_variance_iwc: float, cloud_iwc: float
+    ) -> npt.NDArray:
         alpha = 1 / f_variance_iwc
         theta = cloud_iwc / alpha
         return scipy.stats.gamma.pdf(iwc_dist, a=alpha, scale=theta)
 
     @staticmethod
     def filter_cirrus(
-        p_iwc: np.ndarray,
-        obs_index: np.ndarray,
-        cf_filtered: np.ndarray,
-    ) -> np.ndarray:
+        p_iwc: npt.NDArray,
+        obs_index: npt.NDArray,
+        cf_filtered: npt.NDArray,
+    ) -> npt.NDArray:
         return (ma.sum(p_iwc * obs_index) / ma.sum(p_iwc)) * cf_filtered

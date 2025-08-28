@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 
 import numpy as np
+import numpy.typing as npt
 from numpy import ma
 
 from cloudnetpy import utils
@@ -27,10 +28,10 @@ class Observations:
 @dataclass
 class ClassificationResult:
     category_bits: CategoryBits
-    is_rain: np.ndarray
-    is_clutter: np.ndarray
-    insect_prob: np.ndarray
-    liquid_prob: np.ndarray | None
+    is_rain: npt.NDArray
+    is_clutter: npt.NDArray
+    insect_prob: npt.NDArray
+    liquid_prob: npt.NDArray | None
 
 
 class ClassData:
@@ -59,7 +60,7 @@ class ClassData:
 
     """
 
-    def __init__(self, data: Observations):
+    def __init__(self, data: Observations) -> None:
         self.data = data
         self.z = data.radar.data["Z"][:]
         self.v = data.radar.data["v"][:]
@@ -84,7 +85,7 @@ class ClassData:
         self.lv0_files = data.lv0_files
         self.date = data.radar.get_date()
 
-    def _find_profiles_with_rain(self) -> np.ndarray:
+    def _find_profiles_with_rain(self) -> npt.NDArray:
         is_rain = self._find_rain_from_radar_echo()
         rain_from_disdrometer = self._find_rain_from_disdrometer()
         ind = ~rain_from_disdrometer.mask
@@ -94,7 +95,7 @@ class ClassData:
         is_positive_temp = self.tw[:, first_valid_ind] > T0 + 5  # Filter snowfall
         return is_rain & is_positive_temp
 
-    def _find_rain_from_radar_echo(self) -> np.ndarray:
+    def _find_rain_from_radar_echo(self) -> npt.NDArray:
         first_gate_with_data = np.argmin(self.z.mask.all(axis=0))
         gate_number = first_gate_with_data + 3
         threshold = {"z": 3, "v": 0, "ldr": -15}
@@ -132,10 +133,10 @@ class ClassData:
 
 def _find_clutter(
     v: np.ma.MaskedArray,
-    is_rain: np.ndarray,
+    is_rain: npt.NDArray,
     n_gates: int = 10,
     v_lim: float = 0.05,
-) -> np.ndarray:
+) -> npt.NDArray:
     """Estimates clutter from doppler velocity.
 
     Args:

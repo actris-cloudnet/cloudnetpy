@@ -19,7 +19,7 @@ class LufftCeilo(NcLidar):
         file_name: str,
         site_meta: dict,
         expected_date: str | None = None,
-    ):
+    ) -> None:
         super().__init__()
         self.file_name = file_name
         self.site_meta = site_meta
@@ -89,7 +89,7 @@ class LufftCeilo(NcLidar):
             return 1
         return step_factor ** (-(nn1 - reference) / scale)
 
-    def _getvar(self, *args) -> float | ma.MaskedArray:
+    def _getvar(self, *args: str) -> float | ma.MaskedArray:
         if self.dataset is None:
             msg = "No dataset found"
             raise RuntimeError(msg)

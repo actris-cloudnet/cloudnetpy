@@ -18,7 +18,7 @@ class Cl61d(NcLidar):
         file_name: str,
         site_meta: dict,
         expected_date: str | None = None,
-    ):
+    ) -> None:
         super().__init__()
         self.file_name = file_name
         self.site_meta = site_meta

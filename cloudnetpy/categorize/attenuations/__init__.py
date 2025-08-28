@@ -2,8 +2,8 @@ from dataclasses import dataclass
 from typing import Annotated
 
 import numpy as np
+import numpy.typing as npt
 from numpy import ma
-from numpy.typing import NDArray
 
 from cloudnetpy import constants as con
 from cloudnetpy.utils import path_lengths_from_ground
@@ -13,8 +13,8 @@ from cloudnetpy.utils import path_lengths_from_ground
 class Attenuation:
     amount: Annotated[ma.MaskedArray, "float32"]
     error: Annotated[ma.MaskedArray, "float32"]
-    attenuated: NDArray[np.bool_]
-    uncorrected: NDArray[np.bool_]
+    attenuated: npt.NDArray[np.bool_]
+    uncorrected: npt.NDArray[np.bool_]
 
 
 @dataclass
@@ -26,7 +26,7 @@ class RadarAttenuation:
 
 
 def calc_two_way_attenuation(
-    height: np.ndarray, specific_attenuation: ma.MaskedArray
+    height: npt.NDArray, specific_attenuation: ma.MaskedArray
 ) -> ma.MaskedArray:
     """Calculates two-way attenuation (dB) for given specific attenuation
     (dB km-1) and height (m).

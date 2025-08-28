@@ -89,7 +89,7 @@ def ws2nc(
 
 
 class WS(CSVFile):
-    def __init__(self, site_meta: dict):
+    def __init__(self, site_meta: dict) -> None:
         super().__init__(site_meta)
         self.instrument = instruments.GENERIC_WEATHER_STATION
 
@@ -143,7 +143,7 @@ class WS(CSVFile):
 
 
 class PalaiseauWS(WS):
-    def __init__(self, filenames: Sequence[str | PathLike], site_meta: dict):
+    def __init__(self, filenames: Sequence[str | PathLike], site_meta: dict) -> None:
         super().__init__(site_meta)
         self.filenames = filenames
         self._data = self._read_data()
@@ -232,7 +232,7 @@ class BucharestWS(PalaiseauWS):
 
 
 class GranadaWS(WS):
-    def __init__(self, filenames: Sequence[str | PathLike], site_meta: dict):
+    def __init__(self, filenames: Sequence[str | PathLike], site_meta: dict) -> None:
         if len(filenames) != 1:
             raise ValueError
         super().__init__(site_meta)
@@ -282,7 +282,7 @@ class GranadaWS(WS):
 
 
 class KenttarovaWS(WS):
-    def __init__(self, filenames: Sequence[str | PathLike], site_meta: dict):
+    def __init__(self, filenames: Sequence[str | PathLike], site_meta: dict) -> None:
         super().__init__(site_meta)
         self.filenames = filenames
         self._data = self._read_data()
@@ -338,7 +338,7 @@ class HyytialaWS(WS):
     - BbRT/mm = Bucket content in real-time (Pluvio200) [mm].
     """
 
-    def __init__(self, filenames: Sequence[str | PathLike], site_meta: dict):
+    def __init__(self, filenames: Sequence[str | PathLike], site_meta: dict) -> None:
         super().__init__(site_meta)
         self.filename = filenames[0]
         self._data = self._read_data()
@@ -399,7 +399,7 @@ class HyytialaWS(WS):
 
 
 class GalatiWS(WS):
-    def __init__(self, filenames: Sequence[str | PathLike], site_meta: dict):
+    def __init__(self, filenames: Sequence[str | PathLike], site_meta: dict) -> None:
         super().__init__(site_meta)
         self.filename = filenames[0]
         self._data = self._read_data()
@@ -422,7 +422,7 @@ class GalatiWS(WS):
                             parsed_value = math.nan
                     raw_data[key].append(parsed_value)
 
-        def read_value(keys: Iterable[str]):
+        def read_value(keys: Iterable[str]) -> list:
             for key in keys:
                 if key in raw_data:
                     return raw_data[key]
@@ -454,7 +454,7 @@ class GalatiWS(WS):
 
 
 class JuelichWS(WS):
-    def __init__(self, filenames: Sequence[str | PathLike], site_meta: dict):
+    def __init__(self, filenames: Sequence[str | PathLike], site_meta: dict) -> None:
         super().__init__(site_meta)
         self.filename = filenames[0]
         self._data = self._read_data()
@@ -500,7 +500,7 @@ class JuelichWS(WS):
 class LampedusaWS(WS):
     """Read Lampedusa weather station data in ICOS format."""
 
-    def __init__(self, filenames: Sequence[str | PathLike], site_meta: dict):
+    def __init__(self, filenames: Sequence[str | PathLike], site_meta: dict) -> None:
         super().__init__(site_meta)
         self.filename = filenames[0]
         self._data = self._read_data()
@@ -553,7 +553,7 @@ class LampedusaWS(WS):
 
 
 class LimassolWS(WS):
-    def __init__(self, filenames: Sequence[str | PathLike], site_meta: dict):
+    def __init__(self, filenames: Sequence[str | PathLike], site_meta: dict) -> None:
         super().__init__(site_meta)
         self.filenames = filenames
         self._data = defaultdict(list)
@@ -610,7 +610,7 @@ class LimassolWS(WS):
         )  # mm/(10 min) -> m/s
 
 
-def _parse_sirta(filename: str | PathLike):
+def _parse_sirta(filename: str | PathLike) -> dict:
     """Parse SIRTA-style weather station file."""
     with open(filename, "rb") as f:
         raw_content = f.read()
@@ -653,7 +653,7 @@ def _parse_sirta(filename: str | PathLike):
 
 
 class LAquilaWS(WS):
-    def __init__(self, filenames: Sequence[str | PathLike], site_meta: dict):
+    def __init__(self, filenames: Sequence[str | PathLike], site_meta: dict) -> None:
         super().__init__(site_meta)
         self.filenames = filenames
         self._data = self._read_data()

@@ -10,9 +10,11 @@ from typing import Any
 import matplotlib.pyplot as plt
 import netCDF4
 import numpy as np
+import numpy.typing as npt
 from matplotlib import rcParams
 from matplotlib.axes import Axes
 from matplotlib.colorbar import Colorbar
+from matplotlib.colorizer import ColorizingArtist
 from matplotlib.colors import ListedColormap
 from matplotlib.pyplot import Figure
 from matplotlib.ticker import AutoMinorLocator
@@ -83,12 +85,15 @@ class Dimensions:
         margin_left (int): Space between left edge of image and plotted data in pixels.
     """
 
-    def __init__(self, fig, axes, pad_inches: float | None = None):
+    def __init__(
+        self, fig: Figure, axes: list[Axes], pad_inches: float | None = None
+    ) -> None:
         if pad_inches is None:
             pad_inches = rcParams["savefig.pad_inches"]
 
+        renderer = fig.canvas.get_renderer()  # type: ignore[attr-defined]
         tightbbox = (
-            fig.get_tightbbox(fig.canvas.get_renderer())
+            fig.get_tightbbox(renderer)
             .padded(pad_inches)
             .transformed(Affine2D().scale(fig.dpi))
         )
@@ -112,7 +117,7 @@ class FigureData:
         file: netCDF4.Dataset,
         requested_variables: list[str],
         options: PlotParameters,
-    ):
+    ) -> None:
         self.file = file
         self.variables, self.indices = self._get_valid_variables_and_indices(
             requested_variables
@@ -231,7 +236,7 @@ class SubPlot:
         variable: netCDF4.Variable,
         options: PlotParameters,
         file_type: str | None,
-    ):
+    ) -> None:
         self.ax = ax
         self.variable = variable
         self.options = options
@@ -348,7 +353,7 @@ class SubPlot:
 
 
 class Plot:
-    def __init__(self, sub_plot: SubPlot):
+    def __init__(self, sub_plot: SubPlot) -> None:
         self.sub_plot = sub_plot
         self._data = sub_plot.variable[:]
         self._data_orig = self._data.copy()
@@ -389,7 +394,7 @@ class Plot:
     def _get_y_limits(self) -> tuple[float, float]:
         return 0, self.sub_plot.options.max_y
 
-    def _init_colorbar(self, plot) -> Colorbar:
+    def _init_colorbar(self, plot: ColorizingArtist) -> Colorbar:
         divider = make_axes_locatable(self._ax)
         cax = divider.append_axes("right", size="1%", pad=0.25)
         return plt.colorbar(plot, fraction=1.0, ax=self._ax, cax=cax)
@@ -476,7 +481,7 @@ class Plot:
 
 
 class Plot2D(Plot):
-    def plot(self, figure_data: FigureData):
+    def plot(self, figure_data: FigureData) -> None:
         self._convert_units()
         if figure_data.file_type == "cpr-simulation":
             min_x, max_x = 0, EARTHCARE_MAX_X
@@ -616,7 +621,12 @@ class Plot2D(Plot):
                 linestyles="dashed",
             )
 
-    def _plot_contour(self, figure_data: FigureData, alt: np.ndarray, **options):
+    def _plot_contour(
+        self,
+        figure_data: FigureData,
+        alt: npt.NDArray,
+        **options,  # noqa: ANN003
+    ) -> None:
         time_length = len(figure_data.time_including_gaps)
         step = max(1, time_length // 200)
         ind_time = np.arange(0, time_length, step)
@@ -960,7 +970,7 @@ def generate_figure(
             plt.close(fig)
 
 
-def lin2log(*args) -> list:
+def lin2log(*args: npt.ArrayLike) -> list[ma.MaskedArray]:
     return [ma.log10(x) for x in args]
 
 

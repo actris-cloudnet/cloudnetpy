@@ -1,4 +1,4 @@
-import numpy as np
+import numpy.typing as npt
 from numpy import ma
 
 import cloudnetpy.constants as con
@@ -16,7 +16,9 @@ class LiquidAttenuation:
         algorithms: the Cloudnet Instrument Synergy/Target Categorization product.
     """
 
-    def __init__(self, data: Observations, classification: ClassificationResult):
+    def __init__(
+        self, data: Observations, classification: ClassificationResult
+    ) -> None:
         self._model = data.model.data_dense
         self._liquid_in_pixel = classification.category_bits.droplet
         self._height = data.radar.height
@@ -50,7 +52,7 @@ class LiquidAttenuation:
         )
 
     def _calc_liquid_atten(
-        self, lwp: ma.MaskedArray, lwc_dz: np.ndarray
+        self, lwp: ma.MaskedArray, lwc_dz: npt.NDArray
     ) -> ma.MaskedArray:
         """Finds radar liquid attenuation."""
         lwp = lwp.copy()
@@ -60,7 +62,7 @@ class LiquidAttenuation:
         return self._calc_two_way_attenuation(lwc_scaled)
 
     def _calc_liquid_atten_err(
-        self, lwp_error: ma.MaskedArray, lwc_dz: np.ndarray
+        self, lwp_error: ma.MaskedArray, lwc_dz: npt.NDArray
     ) -> ma.MaskedArray:
         """Finds radar liquid attenuation error."""
         lwc_err_scaled = atmos_utils.normalize_lwc_by_lwp(
@@ -68,7 +70,7 @@ class LiquidAttenuation:
         )
         return self._calc_two_way_attenuation(lwc_err_scaled)
 
-    def _calc_two_way_attenuation(self, lwc_scaled: np.ndarray) -> ma.MaskedArray:
+    def _calc_two_way_attenuation(self, lwc_scaled: npt.NDArray) -> ma.MaskedArray:
         """Calculates liquid attenuation (dB).
 
         Args:

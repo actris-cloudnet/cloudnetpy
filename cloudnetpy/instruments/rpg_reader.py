@@ -1,7 +1,9 @@
 import logging
+from os import PathLike
 from typing import BinaryIO, Literal
 
 import numpy as np
+import numpy.typing as npt
 from numpy import ma
 from numpy.lib import recfunctions as rfn
 from rpgpy import read_rpg
@@ -13,7 +15,7 @@ from cloudnetpy.exceptions import ValidTimeStampError
 class Fmcw94Bin:
     """RPG Cloud Radar Level 1 data reader."""
 
-    def __init__(self, filename):
+    def __init__(self, filename: str | PathLike) -> None:
         self.filename = filename
         self.header, self.data = read_rpg(filename)
 
@@ -101,7 +103,7 @@ class Fmcw94Bin:
         self.replace_keys(self.data, data_keymap)
 
     @staticmethod
-    def replace_keys(d: dict, keymap: dict):
+    def replace_keys(d: dict, keymap: dict) -> None:
         for key in d.copy():
             if key in keymap:
                 new_key = keymap[key]
@@ -121,9 +123,9 @@ def _read_from_file(
 
 
 def _decode_angles(
-    x: np.ndarray,
+    x: npt.NDArray,
     version: Literal[1, 2],
-) -> tuple[np.ndarray, np.ndarray]:
+) -> tuple[npt.NDArray, npt.NDArray]:
     """Decode elevation and azimuth angles.
 
     >>> _decode_angles(np.array([1267438.5]), version=1)
@@ -181,7 +183,7 @@ class HatproBin:
     QUALITY_MEDIUM = 2
     QUALITY_LOW = 3
 
-    def __init__(self, filename):
+    def __init__(self, filename: str | PathLike) -> None:
         self.filename = filename
         with open(self.filename, "rb") as file:
             self._read_header(file)
@@ -225,7 +227,7 @@ class HatproBinLwp(HatproBin):
 
     variable = "lwp"
 
-    def _read_header(self, file) -> None:
+    def _read_header(self, file: BinaryIO) -> None:
         self.header = _read_from_file(
             file,
             [
@@ -245,7 +247,7 @@ class HatproBinLwp(HatproBin):
             msg = f"Unknown HATPRO version. {self.header['file_code']}"
             raise ValueError(msg)
 
-    def _read_data(self, file) -> None:
+    def _read_data(self, file: BinaryIO) -> None:
         self.data = _read_from_file(
             file,
             [
@@ -264,7 +266,7 @@ class HatproBinIwv(HatproBin):
 
     variable = "iwv"
 
-    def _read_header(self, file) -> None:
+    def _read_header(self, file: BinaryIO) -> None:
         self.header = _read_from_file(
             file,
             [
@@ -284,7 +286,7 @@ class HatproBinIwv(HatproBin):
             msg = f"Unknown HATPRO version. {self.header['file_code']}"
             raise ValueError(msg)
 
-    def _read_data(self, file) -> None:
+    def _read_data(self, file: BinaryIO) -> None:
         self.data = _read_from_file(
             file,
             [
@@ -300,10 +302,10 @@ class HatproBinIwv(HatproBin):
 class HatproBinCombined:
     """Combine HATPRO objects that share values of the given dimensions."""
 
-    header: dict[str, np.ndarray]
-    data: dict[str, np.ndarray]
+    header: dict[str, npt.NDArray]
+    data: dict[str, npt.NDArray]
 
-    def __init__(self, files: list[HatproBin]):
+    def __init__(self, files: list[HatproBin]) -> None:
         self.header = {}
         if len(files) == 1:
             arr = files[0].data

@@ -3,6 +3,7 @@ import numpy as np
 import pytest
 from numpy import ma
 from numpy.testing import assert_array_equal
+import numpy.typing as npt
 
 from cloudnetpy.categorize.lidar import Lidar, get_gap_ind
 
@@ -68,9 +69,9 @@ def test_rebin(fake_lidar_file):
     ],
 )
 def test_get_gap_ind(
-    original_grid: np.ndarray,
-    new_grid: np.ndarray,
+    original_grid: npt.NDArray,
+    new_grid: npt.NDArray,
     threshold: float,
-    expected: np.ndarray,
+    expected: npt.NDArray,
 ):
     assert get_gap_ind(original_grid, new_grid, threshold) == expected

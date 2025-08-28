@@ -3,9 +3,10 @@ from numpy import ma
 from numpy.testing import assert_array_equal
 
 from cloudnetpy.categorize import insects
+from cloudnetpy.categorize.containers import ClassData
 
 
-class Obs:
+class Obs(ClassData):
     def __init__(self):
         self.time = np.array([1, 2, 3, 4])
         self.radar_type = "MIRA-35"

@@ -1,7 +1,7 @@
 """Mwr module, containing the :class:`Mwr` class."""
 
-import numpy as np
 import numpy.ma as ma
+import numpy.typing as npt
 
 from cloudnetpy import utils
 from cloudnetpy.constants import G_TO_KG
@@ -16,12 +16,12 @@ class Mwr(DataSource):
 
     """
 
-    def __init__(self, full_path: str):
+    def __init__(self, full_path: str) -> None:
         super().__init__(full_path)
         self._init_lwp_data()
         self._init_lwp_error()
 
-    def rebin_to_grid(self, time_grid: np.ndarray) -> None:
+    def rebin_to_grid(self, time_grid: npt.NDArray) -> None:
         """Approximates lwp and its error in a grid using mean.
 
         Args:

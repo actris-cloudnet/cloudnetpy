@@ -23,6 +23,7 @@ dependencies = [
   "rpgpy>=0.14.5",
   "scikit-image",
   "scipy",
+  "typing-extensions",
 ]
 dynamic = ["version"]
 
@@ -63,7 +64,6 @@ changelog = "CHANGELOG.md"
 exclude = ["cloudnetpy/model_evaluation/tests/*", "tests/*"]
 select = ["ALL"]
 ignore = [
-  "ANN", # missing types, use mypy for this
   "C9", # too complex, fix me later
   "COM812", # Formatting
   "D100", # allow missing documentation

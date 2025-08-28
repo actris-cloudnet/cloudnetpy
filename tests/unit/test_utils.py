@@ -8,6 +8,7 @@ import numpy as np
 import pytest
 from numpy import ma
 from numpy.testing import assert_array_almost_equal, assert_array_equal
+import numpy.typing as npt
 
 from cloudnetpy import utils
 
@@ -501,7 +502,7 @@ def test_lin2db(input, result):
         ),
     ],
 )
-def test_lin2db_arrays(input_array: np.ndarray, expected: ma.MaskedArray):
+def test_lin2db_arrays(input_array: npt.NDArray, expected: ma.MaskedArray):
     converted = utils.lin2db(input_array)
     assert_array_equal(converted, expected)
     if ma.isMaskedArray(input_array):
@@ -530,7 +531,7 @@ def test_db2lin(data, result):
         ),
     ],
 )
-def test_db2lin_arrays(data: np.ndarray, expected: ma.MaskedArray):
+def test_db2lin_arrays(data: npt.NDArray, expected: ma.MaskedArray):
     converted = utils.db2lin(data)
     assert_array_almost_equal(converted, expected)
     if ma.isMaskedArray(data):
@@ -752,7 +753,7 @@ def test_time2decimal_hours(data, result):
         ([1, 2, 3], False),
     ],
 )
-def test_is_all_masked(data: np.ndarray | ma.MaskedArray, result: bool):
+def test_is_all_masked(data: npt.NDArray | ma.MaskedArray, result: bool):
     assert utils.is_all_masked(data) == result
 
 

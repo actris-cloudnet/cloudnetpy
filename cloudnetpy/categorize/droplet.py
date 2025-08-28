@@ -1,6 +1,7 @@
 """This module has functions for liquid layer detection."""
 
 import numpy as np
+import numpy.typing as npt
 import scipy.signal
 from numpy import ma
 
@@ -11,10 +12,10 @@ from cloudnetpy.categorize.containers import ClassData
 
 def correct_liquid_top(
     obs: ClassData,
-    is_liquid: np.ndarray,
-    is_freezing: np.ndarray,
+    is_liquid: npt.NDArray,
+    is_freezing: npt.NDArray,
     limit: float = 200,
-) -> np.ndarray:
+) -> npt.NDArray:
     """Corrects lidar detected liquid cloud top using radar data.
 
     Args:
@@ -43,7 +44,7 @@ def correct_liquid_top(
     return is_liquid_corrected
 
 
-def _find_ind_above_top(is_freezing_from_peak: np.ndarray, top_above: int) -> int:
+def _find_ind_above_top(is_freezing_from_peak: npt.NDArray, top_above: int) -> int:
     first_point_below_zero = np.where(is_freezing_from_peak)[0][0]
     ind = first_point_below_zero + top_above
     return min(len(is_freezing_from_peak) - 1, ind)
@@ -57,7 +58,7 @@ def find_liquid(
     min_top_der: float = 1e-7,
     min_lwp: float = 0,
     min_alt: float = 100,
-) -> np.ndarray:
+) -> npt.NDArray:
     """Estimate liquid layers from SNR-screened attenuated backscatter.
 
     Args:
@@ -121,7 +122,7 @@ def find_liquid(
     return is_liquid
 
 
-def ind_base(dprof: np.ndarray, ind_peak: int, dist: int, lim: float) -> int:
+def ind_base(dprof: npt.NDArray, ind_peak: int, dist: int, lim: float) -> int:
     """Finds base index of a peak in profile.
 
     Return the lowermost index of profile where 1st order differences
@@ -186,7 +187,9 @@ def ind_base(dprof: np.ndarray, ind_peak: int, dist: int, lim: float) -> int:
     return start + np.where(diffs > diffs[mind] / lim)[0][0]
 
 
-def ind_top(dprof: np.ndarray, ind_peak: int, nprof: int, dist: int, lim: float) -> int:
+def ind_top(
+    dprof: npt.NDArray, ind_peak: int, nprof: int, dist: int, lim: float
+) -> int:
     """Finds top index of a peak in profile.
 
     Return the uppermost index of profile where 1st order differences
@@ -222,7 +225,7 @@ def ind_top(dprof: np.ndarray, ind_peak: int, nprof: int, dist: int, lim: float)
     return ind_peak + np.where(diffs < diffs[mind] / lim)[0][-1] + 1
 
 
-def interpolate_lwp(obs: ClassData) -> np.ndarray:
+def interpolate_lwp(obs: ClassData) -> npt.NDArray:
     """Linear interpolation of liquid water path to fill masked values.
 
     Args:
@@ -238,7 +241,7 @@ def interpolate_lwp(obs: ClassData) -> np.ndarray:
     return np.interp(obs.time, obs.time[ind], obs.lwp[ind])
 
 
-def _find_strong_peaks(data: np.ndarray, threshold: float) -> tuple:
+def _find_strong_peaks(data: npt.NDArray, threshold: float) -> tuple:
     """Finds local maximums from data (greater than *threshold*)."""
     peaks = scipy.signal.argrelextrema(data, np.greater, order=4, axis=1)
     strong_peaks = np.where(data[peaks] > threshold)

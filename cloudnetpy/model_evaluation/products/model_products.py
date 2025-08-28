@@ -2,6 +2,7 @@ import importlib
 import logging
 
 import numpy as np
+import numpy.typing as npt
 from numpy import ma
 
 from cloudnetpy.datasource import DataSource
@@ -38,7 +39,7 @@ class ModelManager(DataSource):
         product: str,
         *,
         check_file: bool = True,
-    ):
+    ) -> None:
         super().__init__(model_file)
         self.model = model
         self.model_info = MODELS[model]
@@ -106,7 +107,7 @@ class ModelManager(DataSource):
             var.append(VARIABLES[arg].long_name)
         return var
 
-    def get_water_content(self, var: str) -> np.ndarray:
+    def get_water_content(self, var: str) -> npt.NDArray:
         p_name = self.get_model_var_names(("p",))[0]
         t_name = self.get_model_var_names(("T",))[0]
         lwc_name = self.get_model_var_names((var,))[0]
@@ -119,7 +120,9 @@ class ModelManager(DataSource):
         return wc
 
     @staticmethod
-    def _calc_water_content(q: np.ndarray, p: np.ndarray, t: np.ndarray) -> np.ndarray:
+    def _calc_water_content(
+        q: npt.NDArray, p: npt.NDArray, t: npt.NDArray
+    ) -> npt.NDArray:
         return q * p / (287 * t)
 
     def _add_variables(self) -> None:
@@ -159,7 +162,7 @@ class ModelManager(DataSource):
             _add_common_variables()
         _add_cycle_variables()
 
-    def cut_off_extra_levels(self, data: np.ndarray) -> np.ndarray:
+    def cut_off_extra_levels(self, data: npt.NDArray) -> npt.NDArray:
         """Remove unused levels (over 22km) from model data."""
         try:
             level = self.model_info.level
@@ -168,7 +171,7 @@ class ModelManager(DataSource):
 
         return data[:, :level] if data.ndim > 1 else data[:level]
 
-    def _calculate_wind_speed(self) -> np.ndarray:
+    def _calculate_wind_speed(self) -> npt.NDArray:
         """Real wind from x- and y-components."""
         u = self.getvar("uwind")
         v = self.getvar("vwind")

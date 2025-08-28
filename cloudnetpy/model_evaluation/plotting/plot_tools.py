@@ -1,5 +1,7 @@
 import netCDF4
 import numpy as np
+import numpy.typing as npt
+from matplotlib.axes import Axes
 from numpy import ma
 
 from cloudnetpy.model_evaluation.model_metadata import MODELS
@@ -109,14 +111,14 @@ def mask_small_values(data: ma.MaskedArray, name: str) -> ma.MaskedArray:
     return data
 
 
-def reshape_1d2nd(one_d: np.ndarray, two_d: np.ndarray) -> np.ndarray:
+def reshape_1d2nd(one_d: npt.NDArray, two_d: npt.NDArray) -> npt.NDArray:
     new_arr = np.zeros(two_d.shape)
     for i in range(len(two_d[0])):
         new_arr[:, i] = one_d
     return new_arr
 
 
-def create_segment_values(model: ma.MaskedArray, obs: ma.MaskedArray) -> np.ndarray:
+def create_segment_values(model: ma.MaskedArray, obs: ma.MaskedArray) -> npt.NDArray:
     new_array = np.zeros(model.shape, dtype=int)
     new_array[model.mask & obs.mask] = 0  # No data
     new_array[~model.mask & obs.mask] = 1  # Only model
@@ -125,12 +127,12 @@ def create_segment_values(model: ma.MaskedArray, obs: ma.MaskedArray) -> np.ndar
     return new_array
 
 
-def set_yaxis(ax, max_y: float, min_y: float = 0.0) -> None:
+def set_yaxis(ax: Axes, max_y: float, min_y: float = 0.0) -> None:
     ax.set_ylim(min_y, max_y)
     ax.set_ylabel("Height (km)", fontsize=13)
 
 
-def rolling_mean(data: ma.MaskedArray, n: int = 4) -> np.ndarray:
+def rolling_mean(data: ma.MaskedArray, n: int = 4) -> npt.NDArray:
     mmr = []
     for i in range(len(data)):
         if not data[i : i + n].mask.all():
@@ -143,7 +145,7 @@ def rolling_mean(data: ma.MaskedArray, n: int = 4) -> np.ndarray:
 def change2one_dim_axes(
     x: ma.MaskedArray,
     y: ma.MaskedArray,
-    data: np.ndarray,
+    data: npt.NDArray,
 ) -> tuple:
     # If any mask in x or y, change 2d to 1d axes values
     # Common shape need to match 2d data.

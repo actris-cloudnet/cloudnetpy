@@ -5,6 +5,7 @@ from typing import NamedTuple
 
 import netCDF4
 import numpy as np
+import numpy.typing as npt
 from numpy import ma
 from numpy.typing import NDArray
 
@@ -48,7 +49,7 @@ class QualityBits:
 
 
 class CategorizeBits:
-    def __init__(self, categorize_file: str):
+    def __init__(self, categorize_file: str) -> None:
         self._categorize_file = categorize_file
         self.category_bits = self._read_category_bits()
         self.quality_bits = self._read_quality_bits()
@@ -94,7 +95,7 @@ class ProductClassification(CategorizeBits):
 
     """
 
-    def __init__(self, categorize_file: str):
+    def __init__(self, categorize_file: str) -> None:
         super().__init__(categorize_file)
         self.is_rain = get_is_rain(categorize_file)
 
@@ -104,7 +105,7 @@ class IceClassification(ProductClassification):
     Child of ProductClassification().
     """
 
-    def __init__(self, categorize_file: str):
+    def __init__(self, categorize_file: str) -> None:
         super().__init__(categorize_file)
         self._is_attenuated = self._find_attenuated()
         self._is_corrected = self._find_corrected()
@@ -115,28 +116,28 @@ class IceClassification(ProductClassification):
         self.ice_above_rain = self._find_ice_above_rain()
         self.clear_above_rain = self._find_clear_above_rain()
 
-    def _find_clear_above_rain(self) -> np.ndarray:
+    def _find_clear_above_rain(self) -> npt.NDArray:
         return (
             utils.transpose(self.is_rain) * ~self.is_ice
             & self.category_bits.freezing
             & ~self.category_bits.melting
         )
 
-    def _find_attenuated(self) -> np.ndarray:
+    def _find_attenuated(self) -> npt.NDArray:
         return (
             self.quality_bits.attenuated_liquid
             | self.quality_bits.attenuated_rain
             | self.quality_bits.attenuated_melting
         )
 
-    def _find_corrected(self) -> np.ndarray:
+    def _find_corrected(self) -> npt.NDArray:
         return (
             self.quality_bits.corrected_liquid
             | self.quality_bits.corrected_rain
             | self.quality_bits.corrected_melting
         )
 
-    def _find_ice(self) -> np.ndarray:
+    def _find_ice(self) -> npt.NDArray:
         return (
             self.category_bits.falling
             & self.category_bits.freezing
@@ -144,7 +145,7 @@ class IceClassification(ProductClassification):
             & ~self.category_bits.insect
         )
 
-    def _find_would_be_ice(self) -> np.ndarray:
+    def _find_would_be_ice(self) -> npt.NDArray:
         warm_falling = (
             self.category_bits.falling
             & ~self.category_bits.freezing
@@ -152,10 +153,10 @@ class IceClassification(ProductClassification):
         )
         return warm_falling | self.category_bits.melting
 
-    def _find_corrected_ice(self) -> np.ndarray:
+    def _find_corrected_ice(self) -> npt.NDArray:
         return self.is_ice & self._is_attenuated & self._is_corrected
 
-    def _find_uncorrected_ice(self) -> np.ndarray:
+    def _find_uncorrected_ice(self) -> npt.NDArray:
         uncorrected_melting = (
             self.quality_bits.attenuated_melting & ~self.quality_bits.corrected_melting
         )
@@ -171,7 +172,7 @@ class IceClassification(ProductClassification):
             & (uncorrected_melting | uncorrected_rain | uncorrected_liquid)
         )
 
-    def _find_ice_above_rain(self) -> np.ndarray:
+    def _find_ice_above_rain(self) -> npt.NDArray:
         is_rain = utils.transpose(self.is_rain)
         return (self.is_ice * is_rain) == 1
 
@@ -179,7 +180,7 @@ class IceClassification(ProductClassification):
 class IceSource(DataSource):
     """Base class for different ice products."""
 
-    def __init__(self, categorize_file: str, product: str):
+    def __init__(self, categorize_file: str, product: str) -> None:
         super().__init__(categorize_file)
         self.radar_frequency = float(self.getvar("radar_frequency"))
         self.wl_band = utils.get_wl_band(self.radar_frequency)
@@ -230,7 +231,7 @@ class IceSource(DataSource):
             return IceCoefficients(0.669, 0.000580, -0.00706, 0.0923, -0.992)
         raise ValueError(msg)
 
-    def _convert_z(self, z_variable: str = "Z") -> np.ndarray:
+    def _convert_z(self, z_variable: str = "Z") -> npt.NDArray:
         """Calculates temperature weighted z, i.e. ice effective radius [m]."""
         if self.product not in ("iwc", "ier"):
             msg = f"Invalid product: {self.product}"
@@ -264,7 +265,7 @@ class IceSource(DataSource):
         return float(utils.lin2db(k2))
 
 
-def get_is_rain(filename: str) -> np.ndarray:
+def get_is_rain(filename: str) -> npt.NDArray:
     # TODO: Check that this is correct
     with netCDF4.Dataset(filename) as nc:
         for name in ["rain_detected", "rainfall_rate", "rain_rate"]:
@@ -282,7 +283,7 @@ def read_nc_field(nc_file: str, name: str) -> ma.MaskedArray:
         return nc.variables[name][:]
 
 
-def interpolate_model(cat_file: str, names: str | list) -> dict[str, np.ndarray]:
+def interpolate_model(cat_file: str, names: str | list) -> dict[str, npt.NDArray]:
     """Interpolates 2D model field into dense Cloudnet grid.
 
     Args:
@@ -295,7 +296,7 @@ def interpolate_model(cat_file: str, names: str | list) -> dict[str, np.ndarray]
 
     """
 
-    def _interp_field(var_name: str) -> np.ndarray:
+    def _interp_field(var_name: str) -> npt.NDArray:
         values = _read_nc_fields(
             cat_file,
             ["model_time", "model_height", var_name, "time", "height"],
@@ -311,7 +312,7 @@ def _read_nc_fields(nc_file: str, names: list[str]) -> list[ma.MaskedArray]:
         return [nc.variables[name][:] for name in names]
 
 
-def _get_temperature(categorize_file: str) -> np.ndarray:
+def _get_temperature(categorize_file: str) -> npt.NDArray:
     """Returns interpolated temperatures in Celsius."""
     atmosphere = interpolate_model(categorize_file, "temperature")
     return atmos_utils.k2c(atmosphere["temperature"])

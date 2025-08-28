@@ -73,12 +73,12 @@ def bowtie2nc(
 
 
 class Bowtie(NcRadar):
-    def __init__(self, full_path: str | PathLike, site_meta: dict):
+    def __init__(self, full_path: str | PathLike, site_meta: dict) -> None:
         super().__init__(full_path, site_meta)
         self.instrument = FMCW94
         self.date = self.get_date()
 
-    def convert_units(self):
+    def convert_units(self) -> None:
         self.data["lwp"].data *= G_TO_KG
         self.data["rainfall_rate"].data *= MM_H_TO_M_S
         self.data["relative_humidity"].data /= 100
@@ -88,12 +88,12 @@ class Bowtie(NcRadar):
         self.data["chirp_start_indices"].data = np.array(array, dtype=np.int32)
         self.data["chirp_start_indices"].data_type = "int32"
 
-    def add_correction_bits(self):
+    def add_correction_bits(self) -> None:
         bits = ma.ones(self.data["v"].data.shape, dtype=np.uint32)
         bits.mask = self.data["v"].data.mask
         self.append_data(bits, "correction_bits")
 
-    def check_date(self, date: str):
+    def check_date(self, date: str) -> None:
         if "-".join(self.date) != date:
             raise ValidTimeStampError
 

@@ -3,6 +3,7 @@ import os
 import sys
 
 import numpy as np
+import numpy.typing as npt
 from numpy import ma
 
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
@@ -20,8 +21,8 @@ class DayStatistics:
             done with. A list includes observed product name (str), model variable (str)
             name and a name of observation variable (str). Example: ['cf', 'ECMWF',
             'Cloud fraction by volume']
-        model (np.ndarray): Ndarray of model simulation of product
-        observation (np.ndarray): Ndrray of Downsampled observation of product
+        model (npt.NDArray): Ndarray of model simulation of product
+        observation (npt.NDArray): Ndrray of Downsampled observation of product
 
     Raises:
         RuntimeError: A function of given method not found
@@ -44,9 +45,9 @@ class DayStatistics:
         self,
         method: str,
         product_info: list,
-        model: np.ndarray,
-        observation: np.ndarray,
-    ):
+        model: npt.NDArray,
+        observation: npt.NDArray,
+    ) -> None:
         self.method = method
         self.product = product_info
         self.model_data = model

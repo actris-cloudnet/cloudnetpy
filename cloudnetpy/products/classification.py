@@ -1,6 +1,7 @@
 """Module for creating classification file."""
 
 import numpy as np
+import numpy.typing as npt
 from numpy import ma
 
 from cloudnetpy import output, utils
@@ -86,7 +87,7 @@ def _get_target_classification(
     return classification
 
 
-def _get_detection_status(categorize_bits: CategorizeBits) -> np.ndarray:
+def _get_detection_status(categorize_bits: CategorizeBits) -> npt.NDArray:
     bits = categorize_bits.quality_bits
 
     is_attenuated = (
@@ -113,9 +114,9 @@ def _get_detection_status(categorize_bits: CategorizeBits) -> np.ndarray:
 
 
 def _get_cloud_base_and_top_heights(
-    classification: np.ndarray,
+    classification: npt.NDArray,
     product_container: DataSource,
-) -> tuple[np.ndarray, np.ndarray]:
+) -> tuple[npt.NDArray, npt.NDArray]:
     height = product_container.getvar("height")
     cloud_mask = _find_cloud_mask(classification)
     if not cloud_mask.any():
@@ -128,7 +129,7 @@ def _get_cloud_base_and_top_heights(
     return lowest_bases, highest_tops
 
 
-def _find_cloud_mask(classification: np.ndarray) -> np.ndarray:
+def _find_cloud_mask(classification: npt.NDArray) -> npt.NDArray:
     cloud_mask = np.zeros(classification.shape, dtype=int)
     for value in [1, 3, 4, 5]:
         cloud_mask[classification == value] = 1

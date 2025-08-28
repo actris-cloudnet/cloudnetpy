@@ -1,6 +1,7 @@
 """Module to find falling hydrometeors from data."""
 
 import numpy as np
+import numpy.typing as npt
 from numpy import ma
 
 from cloudnetpy.categorize import atmos_utils
@@ -10,9 +11,9 @@ from cloudnetpy.constants import T0
 
 def find_falling_hydrometeors(
     obs: ClassData,
-    is_liquid: np.ndarray,
-    is_insects: np.ndarray,
-) -> np.ndarray:
+    is_liquid: npt.NDArray,
+    is_insects: npt.NDArray,
+) -> npt.NDArray:
     """Finds falling hydrometeors.
 
     Falling hydrometeors are radar signals that are
@@ -43,14 +44,14 @@ def find_falling_hydrometeors(
     return falling_from_radar_fixed | cold_aerosols
 
 
-def _find_falling_from_radar(obs: ClassData, is_insects: np.ndarray) -> np.ndarray:
+def _find_falling_from_radar(obs: ClassData, is_insects: npt.NDArray) -> npt.NDArray:
     is_z = ~obs.z.mask
     no_clutter = ~obs.is_clutter
     no_insects = ~is_insects
     return is_z & no_clutter & no_insects
 
 
-def _find_cold_aerosols(obs: ClassData, is_liquid: np.ndarray) -> np.ndarray:
+def _find_cold_aerosols(obs: ClassData, is_liquid: npt.NDArray) -> npt.NDArray:
     """Lidar signals which are in colder than the threshold temperature
     and threshold altitude from the ground are assumed ice.
 
@@ -90,9 +91,9 @@ def _find_cold_aerosols(obs: ClassData, is_liquid: np.ndarray) -> np.ndarray:
 
 def _fix_liquid_dominated_radar(
     obs: ClassData,
-    falling_from_radar: np.ndarray,
-    is_liquid: np.ndarray,
-) -> np.ndarray:
+    falling_from_radar: npt.NDArray,
+    is_liquid: npt.NDArray,
+) -> npt.NDArray:
     """Radar signals inside liquid clouds are NOT ice if Z is
     increasing in height inside the cloud.
     """

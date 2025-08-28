@@ -5,6 +5,7 @@ using the Frisch et al. 2002 method.
 from typing import NamedTuple
 
 import numpy as np
+import numpy.typing as npt
 from numpy import ma
 
 from cloudnetpy import output, utils
@@ -87,19 +88,19 @@ class DropletClassification(ProductClassification):
     Child of ProductClassification().
     """
 
-    def __init__(self, categorize_file: str):
+    def __init__(self, categorize_file: str) -> None:
         super().__init__(categorize_file)
         self.is_mixed = self._find_mixed()
         self.is_droplet = self._find_droplet()
         self.is_ice = self._find_ice()
 
-    def _find_droplet(self) -> np.ndarray:
+    def _find_droplet(self) -> npt.NDArray:
         return self.category_bits.droplet
 
-    def _find_mixed(self) -> np.ndarray:
+    def _find_mixed(self) -> npt.NDArray:
         return self.category_bits.falling & self.category_bits.droplet
 
-    def _find_ice(self) -> np.ndarray:
+    def _find_ice(self) -> npt.NDArray:
         return (
             self.category_bits.falling
             & self.category_bits.freezing
@@ -112,7 +113,9 @@ class DropletClassification(ProductClassification):
 class DerSource(DataSource):
     """Data container for effective radius calculations."""
 
-    def __init__(self, categorize_file: str, parameters: Parameters | None = None):
+    def __init__(
+        self, categorize_file: str, parameters: Parameters | None = None
+    ) -> None:
         super().__init__(categorize_file)
         if "lwp" not in self.dataset.variables:
             msg = "Liquid water path missing from the categorize file."

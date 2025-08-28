@@ -117,7 +117,7 @@ class Copernicus(ChilboltonRadar):
 
     """
 
-    def __init__(self, full_path: str, site_meta: dict):
+    def __init__(self, full_path: str, site_meta: dict) -> None:
         super().__init__(full_path, site_meta)
         self.instrument = COPERNICUS
 

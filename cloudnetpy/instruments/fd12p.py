@@ -21,7 +21,7 @@ def fd12p2nc(
     site_meta: dict,
     uuid: str | UUID | None = None,
     date: str | datetime.date | None = None,
-):
+) -> str:
     """Converts Vaisala FD12P into Cloudnet Level 1b netCDF file.
 
     Args:
@@ -59,7 +59,7 @@ def fd12p2nc(
 
 
 class FD12P(CSVFile):
-    def __init__(self, site_meta: dict):
+    def __init__(self, site_meta: dict) -> None:
         super().__init__(site_meta)
         self.instrument = instruments.FD12P
         self._data = {
@@ -76,7 +76,7 @@ class FD12P(CSVFile):
 
     def parse_input_file(
         self, filename: str | PathLike, expected_date: datetime.date | None = None
-    ):
+    ) -> None:
         # In Lindenberg, format is date and time followed by Message 2 without
         # non-printable characters.
         with open(filename) as file:

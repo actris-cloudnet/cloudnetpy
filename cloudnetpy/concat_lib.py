@@ -5,11 +5,14 @@ import shutil
 from collections.abc import Iterable
 from os import PathLike
 from pathlib import Path
+from types import TracebackType
 from typing import Literal
 
 import netCDF4
 import numpy as np
+import numpy.typing as npt
 from numpy import ma
+from typing_extensions import Self
 
 from cloudnetpy import utils
 
@@ -127,7 +130,7 @@ class _Concat:
         output_file: str,
         concat_dimension: str = "time",
         interp_dim: str = "range",
-    ):
+    ) -> None:
         self.filenames = sorted(map(Path, filenames), key=lambda f: f.name)
         self.concat_dimension = concat_dimension
         self.interp_dim = interp_dim
@@ -255,10 +258,15 @@ class _Concat:
         self.first_file.close()
         self.concatenated_file.close()
 
-    def __enter__(self):
+    def __enter__(self) -> Self:
         return self
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
+    def __exit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc_val: BaseException | None,
+        exc_tb: TracebackType | None,
+    ) -> None:
         self._close()
 
 
@@ -275,14 +283,14 @@ def _copy_attributes(
 def _find_valid_time_indices(
     nc_old: netCDF4.Dataset,
     nc_new: netCDF4.Dataset,
-) -> np.ndarray:
+) -> npt.NDArray:
     return np.where(nc_new.variables["time"][:] > nc_old.variables["time"][-1])[0]
 
 
 def _update_fields(
     nc_old: netCDF4.Dataset,
     nc_new: netCDF4.Dataset,
-    valid_ind: np.ndarray,
+    valid_ind: npt.NDArray,
 ) -> None:
     ind0 = len(nc_old.variables["time"])
     idx = [ind0 + x for x in valid_ind]

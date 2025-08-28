@@ -1,4 +1,5 @@
 import numpy as np
+import numpy.typing as npt
 from numpy import ma
 
 from cloudnetpy import utils
@@ -19,7 +20,7 @@ class ProductGrid:
         object which is used for nc-file creation and writing
     """
 
-    def __init__(self, model_obj: ModelManager, obs_obj: ObservationManager):
+    def __init__(self, model_obj: ModelManager, obs_obj: ObservationManager) -> None:
         self._obs_obj = obs_obj
         self._date = obs_obj.date
         self._obs_time = tl.time2datetime(obs_obj.time, self._date)
@@ -150,10 +151,10 @@ class ProductGrid:
 
     def _reshape_data_to_window(
         self,
-        ind: np.ndarray,
-        x_ind: np.ndarray,
-        y_ind: np.ndarray,
-    ) -> np.ndarray | None:
+        ind: npt.NDArray,
+        x_ind: npt.NDArray,
+        y_ind: npt.NDArray,
+    ) -> npt.NDArray | None:
         """Reshapes True observation values to windows shape."""
         window_size = tl.get_obs_window_size(x_ind, y_ind)
         if window_size is not None:
@@ -161,7 +162,7 @@ class ProductGrid:
         return None
 
     @staticmethod
-    def _regrid_cf(storage: dict, i: int, j: int, data: np.ndarray) -> dict:
+    def _regrid_cf(storage: dict, i: int, j: int, data: npt.NDArray) -> dict:
         """Calculates average cloud fraction value to grid point."""
         data_ma = ma.array(data) if not isinstance(data, ma.MaskedArray) else data
         for key, downsample in storage.items():
@@ -176,8 +177,8 @@ class ProductGrid:
         storage: dict,
         i: int,
         j: int,
-        ind_rain: np.ndarray,
-        ind_no_rain: np.ndarray,
+        ind_rain: npt.NDArray,
+        ind_no_rain: npt.NDArray,
     ) -> dict:
         """Calculates average iwc value for each grid point."""
         for key, down_sample in storage.items():
@@ -197,7 +198,7 @@ class ProductGrid:
             storage[key] = down_sample
         return storage
 
-    def _regrid_product(self, storage: dict, i: int, j: int, ind: np.ndarray) -> dict:
+    def _regrid_product(self, storage: dict, i: int, j: int, ind: npt.NDArray) -> dict:
         """Calculates average of standard product value for each grid point."""
         for key, down_sample in storage.items():
             obs_data_selected = ma.masked_invalid(self._obs_data[ind])

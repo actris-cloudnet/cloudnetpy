@@ -4,6 +4,7 @@ import logging
 import math
 
 import numpy as np
+import numpy.typing as npt
 from numpy import ma
 from scipy import constants
 
@@ -34,16 +35,16 @@ class Radar(DataSource):
 
     """
 
-    def __init__(self, full_path: str):
+    def __init__(self, full_path: str) -> None:
         super().__init__(full_path, radar=True)
         self.radar_frequency = float(self.getvar("radar_frequency"))
         self.location = getattr(self.dataset, "location", "")
         self.source_type = getattr(self.dataset, "source", "")
-        self.height: np.ndarray
+        self.height: npt.NDArray
         self.altitude: float
         self._init_data()
 
-    def rebin_to_grid(self, time_new: np.ndarray) -> list:
+    def rebin_to_grid(self, time_new: npt.NDArray) -> list:
         """Rebins radar data in time.
 
         Args:
@@ -151,7 +152,7 @@ class Radar(DataSource):
 
     def _filter(
         self,
-        data: np.ndarray,
+        data: npt.NDArray,
         axis: int,
         min_coverage: float,
         z_limit: float,
@@ -224,7 +225,7 @@ class Radar(DataSource):
     def calc_errors(
         self,
         attenuations: RadarAttenuation,
-        is_clutter: np.ndarray,
+        is_clutter: npt.NDArray,
     ) -> None:
         """Calculates uncertainties of radar echo.
 
@@ -241,7 +242,7 @@ class Radar(DataSource):
 
         """
 
-        def _calc_sensitivity() -> np.ndarray:
+        def _calc_sensitivity() -> npt.NDArray:
             """Returns sensitivity of radar as function of altitude."""
             mean_gas_atten = ma.mean(attenuations.gas.amount, axis=0)
             z_sensitivity = z_power_min + log_range + mean_gas_atten
@@ -250,7 +251,7 @@ class Radar(DataSource):
             z_sensitivity[valid_values] = zc[valid_values]
             return z_sensitivity
 
-        def _calc_error() -> np.ndarray | float:
+        def _calc_error() -> npt.NDArray | float:
             """Returns error of radar as function of altitude.
 
             References:
@@ -317,7 +318,7 @@ class Radar(DataSource):
         for key in ("time", "height", "radar_frequency"):
             self.append_data(np.array(getattr(self, key)), key)
 
-    def add_location(self, time_new: np.ndarray):
+    def add_location(self, time_new: npt.NDArray) -> None:
         """Add latitude, longitude and altitude from nearest timestamp."""
         idx = np.searchsorted(self.time, time_new)
         idx_left = np.clip(idx - 1, 0, len(self.time) - 1)
@@ -343,9 +344,9 @@ class Radar(DataSource):
 
     def _rebin_velocity(
         self,
-        data: np.ndarray,
-        time_new: np.ndarray,
-    ) -> np.ndarray:
+        data: npt.NDArray,
+        time_new: npt.NDArray,
+    ) -> npt.NDArray:
         """Rebins Doppler velocity in polar coordinates."""
         folding_velocity = self._get_expanded_folding_velocity()
         # with the new shape (maximum value in every bin)
@@ -384,7 +385,7 @@ class Radar(DataSource):
         vel_scaled = ma.arctan2(vel_y_mean, vel_x_mean)
         return vel_scaled / (np.pi / max_folding_binned)
 
-    def _get_expanded_folding_velocity(self) -> np.ndarray:
+    def _get_expanded_folding_velocity(self) -> npt.NDArray:
         if "nyquist_velocity" in self.dataset.variables:
             fvel = self.getvar("nyquist_velocity")
         elif "prf" in self.dataset.variables:
@@ -425,7 +426,7 @@ class Radar(DataSource):
         return np.repeat(fvel.ravel(), chirp_size.ravel()).reshape((n_time, n_height))
 
 
-def _prf_to_folding_velocity(prf: np.ndarray, radar_frequency: float) -> np.ndarray:
+def _prf_to_folding_velocity(prf: npt.NDArray, radar_frequency: float) -> npt.NDArray:
     ghz_to_hz = 1e9
     if len(prf) != 1:
         msg = "Unable to determine folding velocity"

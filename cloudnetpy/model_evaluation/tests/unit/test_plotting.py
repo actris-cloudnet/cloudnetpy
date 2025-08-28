@@ -1,34 +1,35 @@
 import pytest
 
 from cloudnetpy.model_evaluation.plotting import plotting as pl
+from cloudnetpy.model_evaluation.plotting.plot_meta import PlotMeta
 
 MODEL = "ecmwf"
-
-
-class VariableInfo:
-    def __init__(self):
-        self.name = "Product"
+VARIABLE_INFO = PlotMeta(
+    name="Product",
+    cbar="rainbow",
+    plot_range=(0, 1),
+    plot_scale="linear",
+    plot_type="mesh",
+)
 
 
 @pytest.mark.parametrize("key", ["cf_V", "cf_A", "cf_V_adv", "cf_A_adv"])
 def test_get_cf_title(key) -> None:
-    var = VariableInfo()
     field_name = key + "_" + MODEL
     value = "Product, Volume"
     if "A" in key:
         value = "Product, Area"
-    x = pl._get_cf_title(field_name, var)
+    x = pl._get_cf_title(field_name, VARIABLE_INFO)
     assert x == value
 
 
 @pytest.mark.parametrize("key", ["cf_V", "cf_A", "cf_V_adv", "cf_A_adv"])
 def test_get_cf_title_cycle(key) -> None:
-    var = VariableInfo()
     field_name = key + "_" + MODEL + "_001"
     value = "Product, Volume"
     if "A" in key:
         value = "Product, Area"
-    x = pl._get_cf_title(field_name, var)
+    x = pl._get_cf_title(field_name, VARIABLE_INFO)
     assert x == value
 
 
@@ -44,9 +45,8 @@ def test_get_cf_title_cycle(key) -> None:
     ],
 )
 def test_get_iwc_title(key, value) -> None:
-    var = VariableInfo()
     field_name = key + "_" + MODEL
-    x = pl._get_iwc_title(field_name, var)
+    x = pl._get_iwc_title(field_name, VARIABLE_INFO)
     assert x == value
 
 
@@ -62,23 +62,20 @@ def test_get_iwc_title(key, value) -> None:
     ],
 )
 def test_get_iwc_title_cycle(key, value) -> None:
-    var = VariableInfo()
     field_name = key + "_" + MODEL + "_001"
-    x = pl._get_iwc_title(field_name, var)
+    x = pl._get_iwc_title(field_name, VARIABLE_INFO)
     assert x == value
 
 
 def test_get_product_title() -> None:
-    var = VariableInfo()
     value = "Product"
-    x = pl._get_product_title(var)
+    x = pl._get_product_title(VARIABLE_INFO)
     assert x == value
 
 
 def test_get_product_title_cycle() -> None:
-    var = VariableInfo()
     value = "Product"
-    x = pl._get_product_title(var)
+    x = pl._get_product_title(VARIABLE_INFO)
     assert x == value
 
 
@@ -88,16 +85,14 @@ def test_get_product_title_cycle() -> None:
 )
 def test_get_stat_titles(key, title) -> None:
     field_name = key + "_" + MODEL
-    var = VariableInfo()
-    x = pl._get_stat_titles(field_name, key, var)
+    x = pl._get_stat_titles(field_name, key, VARIABLE_INFO)
     assert x == title
 
 
 @pytest.mark.parametrize("key", ["cf_V", "cf_A", "cf_V_adv", "cf_A_adv"])
 def test_get_cf_title_stat(key) -> None:
     field_name = key + "_" + MODEL
-    var = VariableInfo()
-    x = pl._get_cf_title_stat(field_name, var)
+    x = pl._get_cf_title_stat(field_name, VARIABLE_INFO)
     value = "Product volume"
     if "A" in key:
         value = "Product area"
@@ -114,13 +109,11 @@ def test_get_cf_title_stat(key) -> None:
 )
 def test_get_iwc_title_stat(key, value) -> None:
     field_name = key + "_" + MODEL
-    var = VariableInfo()
-    x = pl._get_iwc_title_stat(field_name, var)
+    x = pl._get_iwc_title_stat(field_name, VARIABLE_INFO)
     assert x == value
 
 
 @pytest.mark.parametrize("key", ["lwc"])
 def test_get_product_title_stat(key) -> None:
-    var = VariableInfo()
-    x = pl._get_product_title_stat(var)
+    x = pl._get_product_title_stat(VARIABLE_INFO)
     assert x == "Product"

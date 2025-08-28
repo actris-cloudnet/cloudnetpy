@@ -4,6 +4,7 @@ import logging
 from typing import Literal
 
 import numpy as np
+import numpy.typing as npt
 from numpy import ma
 
 from cloudnetpy.datasource import DataSource
@@ -18,13 +19,13 @@ class Lidar(DataSource):
 
     """
 
-    def __init__(self, full_path: str):
+    def __init__(self, full_path: str) -> None:
         super().__init__(full_path)
         self.append_data(self.getvar("beta"), "beta")
         self._add_meta()
 
     def interpolate_to_grid(
-        self, time_new: np.ndarray, height_new: np.ndarray
+        self, time_new: npt.NDArray, height_new: npt.NDArray
     ) -> list[int]:
         """Interpolate beta using nearest neighbor."""
         max_height = 100  # m
@@ -70,7 +71,9 @@ class Lidar(DataSource):
         self.append_data(3.0, "beta_bias")
 
 
-def get_gap_ind(grid: np.ndarray, new_grid: np.ndarray, threshold: float) -> list[int]:
+def get_gap_ind(
+    grid: npt.NDArray, new_grid: npt.NDArray, threshold: float
+) -> list[int]:
     return [
         ind
         for ind, value in enumerate(new_grid)

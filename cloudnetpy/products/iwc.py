@@ -1,6 +1,6 @@
 """Module for creating Cloudnet ice water content file using Z-T method."""
 
-import numpy as np
+import numpy.typing as npt
 from numpy import ma
 
 from cloudnetpy import output, utils
@@ -69,10 +69,12 @@ class IwcSource(IceSource):
         bias = self.getvar("Z_bias") * self.coefficients.Z * 10
         self.append_data(bias, f"{self.product}_bias")
 
-    def append_error(self, ice_classification: IceClassification) -> tuple:
+    def append_error(
+        self, ice_classification: IceClassification
+    ) -> tuple[float, float]:
         """Estimates error of ice water content."""
 
-        def _calc_random_error() -> np.ndarray:
+        def _calc_random_error() -> npt.NDArray:
             scaled_temperature = self.coefficients.ZT * self.temperature
             scaled_temperature += self.coefficients.Z
             return self.getvar("Z_error") * scaled_temperature * 10
@@ -98,7 +100,9 @@ class IwcSource(IceSource):
         return lwp_prior, retrieval_uncertainty
 
 
-def _add_iwc_error_comment(attributes: dict, lwp_prior, uncertainty: float) -> dict:
+def _add_iwc_error_comment(
+    attributes: dict, lwp_prior: float, uncertainty: float
+) -> dict:
     attributes["iwc_error"] = attributes["iwc_error"]._replace(
         comment="This variable is an estimate of the one-standard-deviation random\n"
         "error in ice water content due to both the uncertainty of the retrieval\n"

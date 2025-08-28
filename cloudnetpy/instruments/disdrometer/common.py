@@ -3,6 +3,7 @@
 from typing import Literal
 
 import numpy as np
+import numpy.typing as npt
 
 from cloudnetpy.cloudnetarray import CloudnetArray
 from cloudnetpy.instruments.cloudnet_instrument import CloudnetInstrument
@@ -42,7 +43,7 @@ class Disdrometer(CloudnetInstrument):
         spreads: list,
         name: str,
         start: float = 0.0,
-    ):
+    ) -> None:
         mid, bounds, spread = self._create_vectors(n_values, spreads, start)
         self.data[name] = CloudnetArray(mid, name, dimensions=(name,))
         key = f"{name}_spread"
@@ -56,9 +57,9 @@ class Disdrometer(CloudnetInstrument):
         spreads: list[float],
         start: float,
     ) -> tuple:
-        mid_value: np.ndarray = np.array([])
-        lower_limit: np.ndarray = np.array([])
-        upper_limit: np.ndarray = np.array([])
+        mid_value: npt.NDArray = np.array([])
+        lower_limit: npt.NDArray = np.array([])
+        upper_limit: npt.NDArray = np.array([])
         for spread, n in zip(spreads, n_values, strict=True):
             lower = np.linspace(start, start + (n - 1) * spread, n)
             upper = lower + spread

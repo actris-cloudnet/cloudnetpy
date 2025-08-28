@@ -7,8 +7,10 @@ import matplotlib as mpl
 import matplotlib.pyplot as plt
 import netCDF4
 import numpy as np
+import numpy.typing as npt
 from matplotlib.axes import Axes
 from matplotlib.colorbar import Colorbar
+from matplotlib.colorizer import ColorizingArtist
 from matplotlib.colors import ListedColormap
 from matplotlib.patches import Patch
 from matplotlib.pyplot import Figure
@@ -17,7 +19,7 @@ from numpy import ma
 
 import cloudnetpy.model_evaluation.plotting.plot_tools as p_tools
 from cloudnetpy.model_evaluation.model_metadata import MODELS
-from cloudnetpy.model_evaluation.plotting.plot_meta import ATTRIBUTES
+from cloudnetpy.model_evaluation.plotting.plot_meta import ATTRIBUTES, PlotMeta
 from cloudnetpy.model_evaluation.statistics.statistical_methods import DayStatistics
 from cloudnetpy.plotting.plotting import Dimensions, get_log_cbar_tick_labels, lin2log
 
@@ -87,7 +89,7 @@ def generate_L3_day_plots(
         >>>                       fig_type='statistic', stats=['error'])
     """
 
-    def _check_cycle_names():
+    def _check_cycle_names() -> None:
         if not c_names:
             raise AttributeError
 
@@ -342,7 +344,9 @@ def get_single_plots(
     return figs, axes
 
 
-def plot_colormesh(ax, data: np.ndarray, axes: tuple, variable_info) -> None:
+def plot_colormesh(
+    ax: Axes, data: npt.NDArray, axes: tuple, variable_info: PlotMeta
+) -> None:
     vmin, vmax = variable_info.plot_range
     if variable_info.plot_scale == "logarithmic":
         data, vmin, vmax = lin2log(data, vmin, vmax)
@@ -355,7 +359,8 @@ def plot_colormesh(ax, data: np.ndarray, axes: tuple, variable_info) -> None:
         colorbar.set_ticks(np.arange(vmin, vmax + 1).tolist())  # type: ignore[arg-type]
         colorbar.ax.set_yticklabels(tick_labels)
     ax.set_facecolor("white")
-    colorbar.set_label(variable_info.clabel, fontsize=13)
+    if variable_info.clabel is not None:
+        colorbar.set_label(variable_info.clabel, fontsize=13)
 
 
 def get_statistic_plots(
@@ -398,15 +403,15 @@ def get_statistic_plots(
     name = ""
     j = 0
 
-    def _check_data():
+    def _check_data() -> None:
         if model_missing and obs_missing:
             _raise()
 
-    def _check_data2():
+    def _check_data2() -> None:
         if "error" in stat and np.all(day_stat.model_stat.mask is True):
             _raise()
 
-    def _raise():
+    def _raise() -> None:
         err_msg = f"No data in {model_name} or observation"
         raise ValueError(err_msg)
 
@@ -476,13 +481,13 @@ def get_statistic_plots(
 def initialize_statistic_plots(
     j: int,
     max_len: int,
-    ax,
+    ax: Axes,
     method: str,
     day_stat: DayStatistics,
     model: ma.MaskedArray,
     obs: ma.MaskedArray,
     args: tuple,
-    variable_info,
+    variable_info: PlotMeta,
     *,
     title: bool = True,
     include_xlimits: bool = False,
@@ -542,7 +547,9 @@ def initialize_statistic_plots(
             )
 
 
-def plot_relative_error(ax, error: ma.MaskedArray, axes: tuple, method: str) -> None:
+def plot_relative_error(
+    ax: Axes, error: ma.MaskedArray, axes: tuple, method: str
+) -> None:
     pl = ax.pcolormesh(*axes, error[:-1, :-1].T, cmap="RdBu_r", vmin=-50, vmax=50)
     colorbar = init_colorbar(pl, ax)
     colorbar.set_label("%", fontsize=13)
@@ -569,7 +576,7 @@ def plot_relative_error(ax, error: ma.MaskedArray, axes: tuple, method: str) -> 
 
 
 def plot_data_area(
-    ax,
+    ax: Axes,
     day_stat: DayStatistics,
     model: ma.MaskedArray,
     obs: ma.MaskedArray,
@@ -612,13 +619,13 @@ def plot_data_area(
     )
 
 
-def plot_histogram(ax, day_stat: DayStatistics, variable_info) -> None:
+def plot_histogram(ax: Axes, day_stat: DayStatistics, variable_info: PlotMeta) -> None:
     weights = np.ones_like(day_stat.model_stat) / float(len(day_stat.model_stat))
     hist_bins = np.histogram(day_stat.observation_stat, density=True)[-1]
     ax.hist(
         day_stat.model_stat,
         weights=weights,
-        bins=hist_bins,
+        bins=list(hist_bins),
         alpha=0.7,
         facecolor="khaki",
         edgecolor="k",
@@ -631,13 +638,14 @@ def plot_histogram(ax, day_stat: DayStatistics, variable_info) -> None:
     ax.hist(
         day_stat.observation_stat,
         weights=weights,
-        bins=hist_bins,
+        bins=list(hist_bins),
         alpha=0.7,
         facecolor="steelblue",
         edgecolor="k",
         label="Observation",
     )
-    ax.set_xlabel(variable_info.x_title, fontsize=13)
+    if variable_info.x_title is not None:
+        ax.set_xlabel(variable_info.x_title, fontsize=13)
     if variable_info.plot_scale == "logarithmic":
         ax.ticklabel_format(axis="x", style="sci", scilimits=(0, 0))
     ax.set_ylabel("Relative frequency %", fontsize=13)
@@ -646,10 +654,10 @@ def plot_histogram(ax, day_stat: DayStatistics, variable_info) -> None:
 
 
 def plot_vertical_profile(
-    ax,
+    ax: Axes,
     day_stat: DayStatistics,
     axes: tuple,
-    variable_info,
+    variable_info: PlotMeta,
 ) -> None:
     mrm = p_tools.rolling_mean(day_stat.model_stat)
     orm = p_tools.rolling_mean(day_stat.observation_stat)
@@ -686,7 +694,8 @@ def plot_vertical_profile(
     ax.plot(orm, axes, "-", color="green", lw=2, label="Mean of observation")
 
     ax.set_title(f"{day_stat.title[-1]}", fontsize=14)
-    ax.set_xlabel(variable_info.x_title, fontsize=13)
+    if variable_info.x_title is not None:
+        ax.set_xlabel(variable_info.x_title, fontsize=13)
     if variable_info.plot_scale == "logarithmic":
         ax.ticklabel_format(axis="x", style="sci", scilimits=(0, 0))
     ax.yaxis.grid(which="major")
@@ -740,17 +749,17 @@ def initialize_figure(n_subplots: int, stat: str = "") -> tuple[Figure, list[Axe
     return fig, axes_list
 
 
-def init_colorbar(plot, axis) -> Colorbar:
+def init_colorbar(plot: ColorizingArtist, axis: Axes) -> Colorbar:
     divider = make_axes_locatable(axis)
     cax = divider.append_axes("right", size="1%", pad=0.25)
     return plt.colorbar(plot, fraction=1.0, ax=axis, cax=cax)
 
 
 def _set_title(
-    ax,
+    ax: Axes,
     field_name: str,
     product: str,
-    variable_info,
+    variable_info: PlotMeta,
     model_name: str = "",
 ) -> None:
     """Generates subtitles for different product types."""
@@ -773,14 +782,14 @@ def _set_title(
             ax.set_title(f"Simulated {name}")
 
 
-def _get_cf_title(field_name: str, variable_info) -> str:
+def _get_cf_title(field_name: str, variable_info: PlotMeta) -> str:
     title = f"{variable_info.name}, Area"
     if "V" in field_name:
         title = f"{variable_info.name}, Volume"
     return title
 
 
-def _get_iwc_title(field_name: str, variable_info) -> str:
+def _get_iwc_title(field_name: str, variable_info: PlotMeta) -> str:
     name = variable_info.name
     if "att" in field_name:
         title = f"{name} with good attenuation"
@@ -791,11 +800,11 @@ def _get_iwc_title(field_name: str, variable_info) -> str:
     return title
 
 
-def _get_product_title(variable_info) -> str:
+def _get_product_title(variable_info: PlotMeta) -> str:
     return f"{variable_info.name}"
 
 
-def _get_stat_titles(field_name: str, product: str, variable_info) -> str:
+def _get_stat_titles(field_name: str, product: str, variable_info: PlotMeta) -> str:
     title = _get_product_title_stat(variable_info)
     if product == "cf":
         title = _get_cf_title_stat(field_name, variable_info)
@@ -807,7 +816,7 @@ def _get_stat_titles(field_name: str, product: str, variable_info) -> str:
     return title
 
 
-def _get_cf_title_stat(field_name: str, variable_info) -> str:
+def _get_cf_title_stat(field_name: str, variable_info: PlotMeta) -> str:
     name = variable_info.name
     title = f"{name} area"
     if "V" in field_name:
@@ -815,7 +824,7 @@ def _get_cf_title_stat(field_name: str, variable_info) -> str:
     return title
 
 
-def _get_iwc_title_stat(field_name: str, variable_info) -> str:
+def _get_iwc_title_stat(field_name: str, variable_info: PlotMeta) -> str:
     name = variable_info.name
     if "att" in field_name:
         title = f"{name} with good attenuation"
@@ -826,12 +835,12 @@ def _get_iwc_title_stat(field_name: str, variable_info) -> str:
     return title
 
 
-def _get_product_title_stat(variable_info) -> str:
+def _get_product_title_stat(variable_info: PlotMeta) -> str:
     name = variable_info.name
     return f"{name}"
 
 
-def set_yax(ax, max_y: float, ylabel: str | None, min_y: float = 0.0) -> None:
+def set_yax(ax: Axes, max_y: float, ylabel: str | None, min_y: float = 0.0) -> None:
     """Sets yticks, ylim and ylabel for yaxis of axis."""
     ax.set_ylim(min_y, max_y)
     ax.set_ylabel("Height (km)", fontsize=13)
@@ -839,7 +848,7 @@ def set_yax(ax, max_y: float, ylabel: str | None, min_y: float = 0.0) -> None:
         ax.set_ylabel(ylabel, fontsize=13)
 
 
-def set_xax(ax, *, include_xlimits: bool = False) -> None:
+def set_xax(ax: Axes, *, include_xlimits: bool = False) -> None:
     """Sets xticks and xtick labels for plt.imshow()."""
     ticks_x_labels = _get_standard_time_ticks(include_xlimits=include_xlimits)
     ax.set_xticks(np.arange(0, 25, 4, dtype=int))
@@ -864,7 +873,7 @@ def _get_standard_time_ticks(
     ]
 
 
-def set_labels(fig, ax, nc_file: str, *, sub_title: bool = True) -> date:
+def set_labels(fig: Figure, ax: Axes, nc_file: str, *, sub_title: bool = True) -> date:
     ax.set_xlabel("Time (UTC)", fontsize=13)
     case_date = read_date(nc_file)
     site_name = read_location(nc_file)
@@ -885,7 +894,7 @@ def read_date(nc_file: str) -> date:
         return date(int(nc.year), int(nc.month), int(nc.day))
 
 
-def add_subtitle(fig, case_date: date, site_name: str) -> None:
+def add_subtitle(fig: Figure, case_date: date, site_name: str) -> None:
     """Adds subtitle into figure."""
     text = _get_subtitle_text(case_date, site_name)
     fig.suptitle(

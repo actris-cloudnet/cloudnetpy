@@ -3,6 +3,7 @@ method.
 """
 
 import numpy as np
+import numpy.typing as npt
 from numpy import ma
 
 from cloudnetpy import output, utils
@@ -87,7 +88,7 @@ class LwcSource(DataSource):
 
     """
 
-    def __init__(self, categorize_file: str):
+    def __init__(self, categorize_file: str) -> None:
         super().__init__(categorize_file)
         if "lwp" not in self.dataset.variables:
             msg = "Liquid water path missing from the categorize file."
@@ -102,16 +103,16 @@ class LwcSource(DataSource):
 
     def append_results(
         self,
-        lwc: np.ndarray,
-        status: np.ndarray,
-        error: np.ndarray,
+        lwc: npt.NDArray,
+        status: npt.NDArray,
+        error: npt.NDArray,
     ) -> None:
         self.append_data(lwc, "lwc", units="kg m-3")
         self.append_data(status, "lwc_retrieval_status")
         self.append_data(error, "lwc_error", units="dB")
 
     @staticmethod
-    def _get_atmosphere(categorize_file: str) -> tuple[np.ndarray, np.ndarray]:
+    def _get_atmosphere(categorize_file: str) -> tuple[npt.NDArray, npt.NDArray]:
         fields = ["temperature", "pressure"]
         atmosphere = p_tools.interpolate_model(categorize_file, fields)
         return atmosphere["temperature"], atmosphere["pressure"]
@@ -131,7 +132,7 @@ class Lwc:
 
     """
 
-    def __init__(self, lwc_source: LwcSource):
+    def __init__(self, lwc_source: LwcSource) -> None:
         self.lwc_source = lwc_source
         self.height = lwc_source.getvar("height")
         self.is_liquid = self._get_liquid()
@@ -139,11 +140,11 @@ class Lwc:
         self.lwc = self._adiabatic_lwc_to_lwc()
         self._mask_rain()
 
-    def _get_liquid(self) -> np.ndarray:
+    def _get_liquid(self) -> npt.NDArray:
         category_bits = self.lwc_source.categorize_bits.category_bits
         return category_bits.droplet
 
-    def _init_lwc_adiabatic(self) -> np.ndarray:
+    def _init_lwc_adiabatic(self) -> npt.NDArray:
         """Returns theoretical adiabatic lwc in liquid clouds (kg/m3)."""
         lwc_dz = atmos_utils.fill_clouds_with_lwc_dz(
             *self.lwc_source.atmosphere,
@@ -151,7 +152,7 @@ class Lwc:
         )
         return atmos_utils.calc_adiabatic_lwc(lwc_dz, self.height)
 
-    def _adiabatic_lwc_to_lwc(self) -> np.ndarray:
+    def _adiabatic_lwc_to_lwc(self) -> npt.NDArray:
         """Initialises liquid water content (kg/m3).
 
         Calculates LWC for ALL profiles (rain, lwp > theoretical, etc.),
@@ -184,7 +185,7 @@ class CloudAdjustor:
 
     """
 
-    def __init__(self, lwc_source: LwcSource, lwc: Lwc):
+    def __init__(self, lwc_source: LwcSource, lwc: Lwc) -> None:
         self.lwc_source = lwc_source
         self.lwc = lwc.lwc
         self.is_liquid = lwc.is_liquid
@@ -204,7 +205,7 @@ class CloudAdjustor:
         status[self.is_liquid] = 1
         return status
 
-    def _adjust_cloud_tops(self, adjustable_clouds: np.ndarray) -> None:
+    def _adjust_cloud_tops(self, adjustable_clouds: npt.NDArray) -> None:
         """Adjusts cloud top index so that measured lwc corresponds to theoretical
         value.
         """
@@ -213,7 +214,7 @@ class CloudAdjustor:
             self._update_status(time_index)
             self._adjust_lwc(time_index, base_index)
 
-    def _update_status(self, time_ind: np.ndarray) -> None:
+    def _update_status(self, time_ind: npt.NDArray) -> None:
         alt_indices = np.where(self.is_liquid[time_ind, :])[0]
         self.status[time_ind, alt_indices] = 2
 
@@ -237,7 +238,7 @@ class CloudAdjustor:
     def _out_of_bound(self, ind: int) -> bool:
         return ind >= self.lwc.shape[1] - 1
 
-    def _find_adjustable_clouds(self) -> np.ndarray:
+    def _find_adjustable_clouds(self) -> npt.NDArray:
         top_clouds = self._find_topmost_clouds()
         detection_type = self._find_echo_combinations_in_liquid()
         detection_type[~top_clouds] = 0
@@ -245,7 +246,7 @@ class CloudAdjustor:
         top_clouds[~lidar_only_clouds, :] = 0
         return self._remove_good_profiles(top_clouds)
 
-    def _find_topmost_clouds(self) -> np.ndarray:
+    def _find_topmost_clouds(self) -> npt.NDArray:
         top_clouds = np.copy(self.is_liquid)
         cloud_edges = top_clouds[:, :-1][:, ::-1] < top_clouds[:, 1:][:, ::-1]
         topmost_bases = self.is_liquid.shape[1] - 1 - np.argmax(cloud_edges, axis=1)
@@ -253,14 +254,14 @@ class CloudAdjustor:
             top_clouds[n, :base] = 0
         return top_clouds
 
-    def _find_echo_combinations_in_liquid(self) -> np.ndarray:
+    def _find_echo_combinations_in_liquid(self) -> npt.NDArray:
         """Classifies liquid clouds by detection type: 1=lidar, 2=radar, 3=both."""
         lidar_detected = (self.is_liquid & self.echo["lidar"]).astype(int)
         radar_detected = (self.is_liquid & self.echo["radar"]).astype(int) * 2
         return lidar_detected + radar_detected
 
     @staticmethod
-    def _find_lidar_only_clouds(detection: np.ndarray) -> np.ndarray:
+    def _find_lidar_only_clouds(detection: npt.NDArray) -> npt.NDArray:
         """Finds top clouds that contain only lidar-detected pixels.
 
         Args:
@@ -274,14 +275,14 @@ class CloudAdjustor:
         sum_of_detection_type = ma.sum(detection, axis=1)
         return sum_of_cloud_pixels / sum_of_detection_type == 1
 
-    def _remove_good_profiles(self, top_clouds: np.ndarray) -> np.ndarray:
+    def _remove_good_profiles(self, top_clouds: npt.NDArray) -> npt.NDArray:
         no_rain = ~self.lwc_source.is_rain.astype(bool)
         lwp_difference = self._find_lwp_difference()
         dubious_profiles = (lwp_difference < 0) & no_rain
         top_clouds[~dubious_profiles, :] = 0
         return top_clouds
 
-    def _find_lwp_difference(self) -> np.ndarray:
+    def _find_lwp_difference(self) -> npt.NDArray:
         """Returns difference of theoretical LWP and measured LWP (g/m2).
 
         In theory, this difference should be always positive. Negative values
@@ -313,13 +314,13 @@ class LwcError:
 
     """
 
-    def __init__(self, lwc_source: LwcSource, lwc: Lwc):
+    def __init__(self, lwc_source: LwcSource, lwc: Lwc) -> None:
         self.lwc = lwc.lwc
         self.lwc_source = lwc_source
         self.error = self._calculate_lwc_error()
         self._mask_rain()
 
-    def _calculate_lwc_error(self) -> np.ndarray:
+    def _calculate_lwc_error(self) -> npt.NDArray:
         lwc_relative_error = self._calc_lwc_relative_error()
         lwp_relative_error = self._calc_lwp_relative_error()
         combined_error = self._calc_combined_error(
@@ -328,34 +329,36 @@ class LwcError:
         )
         return self._fill_error_array(combined_error)
 
-    def _calc_lwc_relative_error(self) -> np.ndarray:
+    def _calc_lwc_relative_error(self) -> npt.NDArray:
         lwc_gradient = self._calc_lwc_gradient()
         error = lwc_gradient / self.lwc / 2
         return self._limit_error(error, 5)
 
-    def _calc_lwc_gradient(self) -> np.ndarray:
+    def _calc_lwc_gradient(self) -> npt.NDArray:
         if not isinstance(self.lwc, ma.MaskedArray):
             self.lwc = ma.masked_array(self.lwc)
         gradient_elements = np.gradient(self.lwc.filled(0))
         return utils.l2norm(*gradient_elements)
 
-    def _calc_lwp_relative_error(self) -> np.ndarray:
+    def _calc_lwp_relative_error(self) -> npt.NDArray:
         err = self.lwc_source.lwp_error
         value = self.lwc_source.lwp
         error = np.divide(err, value, out=np.zeros_like(err), where=value != 0)
         return self._limit_error(error, 10)
 
     @staticmethod
-    def _limit_error(error: np.ndarray, max_value: float) -> np.ndarray:
+    def _limit_error(error: npt.NDArray, max_value: float) -> npt.NDArray:
         error[error > max_value] = max_value
         return error
 
     @staticmethod
-    def _calc_combined_error(error_2d: np.ndarray, error_1d: np.ndarray) -> np.ndarray:
+    def _calc_combined_error(
+        error_2d: npt.NDArray, error_1d: npt.NDArray
+    ) -> npt.NDArray:
         error_1d_transposed = utils.transpose(error_1d)
         return utils.l2norm(error_2d, error_1d_transposed)
 
-    def _fill_error_array(self, error_in: np.ndarray) -> ma.MaskedArray:
+    def _fill_error_array(self, error_in: npt.NDArray) -> ma.MaskedArray:
         lwc_error = ma.masked_all(self.lwc.shape)
         ind = ma.where(self.lwc)
         lwc_error[ind] = error_in[ind]

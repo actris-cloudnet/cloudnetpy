@@ -27,7 +27,7 @@ Epoch = tuple[int, int, int]
 Date = tuple[str, str, str]
 
 
-def seconds2hours(time_in_seconds: np.ndarray) -> np.ndarray:
+def seconds2hours(time_in_seconds: npt.NDArray) -> npt.NDArray:
     """Converts seconds since some epoch to fraction hour.
 
     Args:
@@ -87,7 +87,7 @@ def seconds2date(time_in_seconds: float, epoch: Epoch = (2001, 1, 1)) -> list:
     )
 
 
-def datetime2decimal_hours(data: np.ndarray | list) -> np.ndarray:
+def datetime2decimal_hours(data: npt.NDArray | list) -> npt.NDArray:
     """Converts array of datetime to decimal_hours."""
     output = []
     for timestamp in data:
@@ -97,7 +97,7 @@ def datetime2decimal_hours(data: np.ndarray | list) -> np.ndarray:
     return np.array(output)
 
 
-def time_grid(time_step: int = 30) -> np.ndarray:
+def time_grid(time_step: int = 30) -> npt.NDArray:
     """Returns decimal hour array between 0 and 24.
 
     Computes fraction hour time vector 0-24 with user-given
@@ -120,7 +120,7 @@ def time_grid(time_step: int = 30) -> np.ndarray:
     return np.arange(half_step, 24 + half_step, half_step * 2)
 
 
-def binvec(x: np.ndarray | list) -> np.ndarray:
+def binvec(x: npt.NDArray | list) -> npt.NDArray:
     """Converts 1-D center points to bins with even spacing.
 
     Args:
@@ -148,15 +148,15 @@ REBIN_STAT_FN: dict[REBIN_STAT, Callable] = {
 
 
 def rebin_2d(
-    x_in: np.ndarray,
-    array: np.ndarray,
-    x_new: np.ndarray,
+    x_in: npt.NDArray,
+    array: npt.NDArray,
+    x_new: npt.NDArray,
     statistic: REBIN_STAT = "mean",
     n_min: int = 1,
     *,
     keepdim: bool = False,
     mask_zeros: bool = False,
-) -> tuple[ma.MaskedArray, np.ndarray]:
+) -> tuple[ma.MaskedArray, npt.NDArray]:
     edges = binvec(x_new)
     binn = np.digitize(x_in, edges) - 1
     n_bins = len(x_new)
@@ -184,9 +184,9 @@ def rebin_2d(
 
 
 def rebin_1d(
-    x_in: np.ndarray,
-    array: np.ndarray | ma.MaskedArray,
-    x_new: np.ndarray,
+    x_in: npt.NDArray,
+    array: npt.NDArray | ma.MaskedArray,
+    x_new: npt.NDArray,
     statistic: REBIN_STAT = "mean",
 ) -> ma.MaskedArray:
     """Rebins 1D array.
@@ -216,7 +216,7 @@ def rebin_1d(
     return ma.masked_invalid(result, copy=True)
 
 
-def filter_isolated_pixels(array: np.ndarray) -> np.ndarray:
+def filter_isolated_pixels(array: npt.NDArray) -> npt.NDArray:
     """From a 2D boolean array, remove completely isolated single cells.
 
     Args:
@@ -236,7 +236,7 @@ def filter_isolated_pixels(array: np.ndarray) -> np.ndarray:
     return _filter(array, structure)
 
 
-def filter_x_pixels(array: np.ndarray) -> np.ndarray:
+def filter_x_pixels(array: npt.NDArray) -> npt.NDArray:
     """From a 2D boolean array, remove cells isolated in x-direction.
 
     Args:
@@ -259,7 +259,7 @@ def filter_x_pixels(array: np.ndarray) -> np.ndarray:
     return _filter(array, structure)
 
 
-def _filter(array: np.ndarray, structure: np.ndarray) -> np.ndarray:
+def _filter(array: npt.NDArray, structure: npt.NDArray) -> npt.NDArray:
     filtered_array = np.copy(array)
     id_regions, num_ids = ndimage.label(filtered_array, structure=structure)
     id_sizes = np.array(ndimage.sum(array, id_regions, range(num_ids + 1))).astype(int)
@@ -268,7 +268,7 @@ def _filter(array: np.ndarray, structure: np.ndarray) -> np.ndarray:
     return filtered_array
 
 
-def isbit(array: np.ndarray, nth_bit: int) -> np.ndarray:
+def isbit(array: npt.NDArray, nth_bit: int) -> npt.NDArray:
     """Tests if nth bit (0,1,2,...) is set.
 
     Args:
@@ -298,7 +298,7 @@ def isbit(array: np.ndarray, nth_bit: int) -> np.ndarray:
     return array & mask > 0
 
 
-def setbit(array: np.ndarray, nth_bit: int) -> np.ndarray:
+def setbit(array: npt.NDArray, nth_bit: int) -> npt.NDArray:
     """Sets nth bit (0, 1, 2, ...) on number.
 
     Args:
@@ -330,12 +330,12 @@ def setbit(array: np.ndarray, nth_bit: int) -> np.ndarray:
 
 
 def interpolate_2d(
-    x: np.ndarray,
-    y: np.ndarray,
-    z: np.ndarray,
-    x_new: np.ndarray,
-    y_new: np.ndarray,
-) -> np.ndarray:
+    x: npt.NDArray,
+    y: npt.NDArray,
+    z: npt.NDArray,
+    x_new: npt.NDArray,
+    y_new: npt.NDArray,
+) -> npt.NDArray:
     """Linear interpolation of gridded 2d data.
 
     Args:
@@ -357,11 +357,11 @@ def interpolate_2d(
 
 
 def interpolate_2d_mask(
-    x: np.ndarray,
-    y: np.ndarray,
+    x: npt.NDArray,
+    y: npt.NDArray,
     z: ma.MaskedArray,
-    x_new: np.ndarray,
-    y_new: np.ndarray,
+    x_new: npt.NDArray,
+    y_new: npt.NDArray,
 ) -> ma.MaskedArray:
     """2D linear interpolation preserving the mask.
 
@@ -403,11 +403,11 @@ def interpolate_2d_mask(
 
 
 def interpolate_2d_nearest(
-    x: np.ndarray,
-    y: np.ndarray,
-    z: np.ndarray,
-    x_new: np.ndarray,
-    y_new: np.ndarray,
+    x: npt.NDArray,
+    y: npt.NDArray,
+    z: npt.NDArray,
+    x_new: npt.NDArray,
+    y_new: npt.NDArray,
 ) -> ma.MaskedArray:
     """2D nearest neighbor interpolation preserving mask.
 
@@ -437,12 +437,12 @@ def interpolate_2d_nearest(
     return fun((xx, yy)).T
 
 
-def calc_relative_error(reference: np.ndarray, array: np.ndarray) -> np.ndarray:
+def calc_relative_error(reference: npt.NDArray, array: npt.NDArray) -> npt.NDArray:
     """Calculates relative error (%)."""
     return ((array - reference) / reference) * 100
 
 
-def db2lin(array: float | np.ndarray, scale: int = 10) -> np.ndarray:
+def db2lin(array: float | npt.NDArray, scale: int = 10) -> npt.NDArray:
     """DB to linear conversion."""
     data = array / scale
     with warnings.catch_warnings():
@@ -452,19 +452,19 @@ def db2lin(array: float | np.ndarray, scale: int = 10) -> np.ndarray:
         return np.power(10, data)
 
 
-def lin2db(array: np.ndarray, scale: int = 10) -> np.ndarray:
+def lin2db(array: npt.NDArray, scale: int = 10) -> npt.NDArray:
     """Linear to dB conversion."""
     if ma.isMaskedArray(array):
         return scale * ma.log10(array)
     return scale * np.log10(array)
 
 
-def mdiff(array: np.ndarray) -> float:
+def mdiff(array: npt.NDArray) -> float:
     """Returns median difference of 1-D array."""
     return float(ma.median(ma.diff(array)))
 
 
-def l2norm(*args) -> ma.MaskedArray:
+def l2norm(*args: npt.NDArray | float) -> ma.MaskedArray:
     """Returns l2 norm.
 
     Args:
@@ -514,7 +514,7 @@ def l2norm_weighted(
     return overall_scale * l2norm(*weighted_values)
 
 
-def cumsumr(array: np.ndarray, axis: int = 0) -> np.ndarray:
+def cumsumr(array: npt.NDArray, axis: int = 0) -> npt.NDArray:
     """Finds cumulative sum that resets on 0.
 
     Args:
@@ -534,7 +534,7 @@ def cumsumr(array: np.ndarray, axis: int = 0) -> np.ndarray:
     return cums - np.maximum.accumulate(cums * (array == 0), axis=axis)
 
 
-def ffill(array: np.ndarray, value: int = 0) -> np.ndarray:
+def ffill(array: npt.NDArray, value: int = 0) -> npt.NDArray:
     """Forward fills an array.
 
     Args:
@@ -568,7 +568,7 @@ def init(
     dtype: type = float,
     *,
     masked: bool = True,
-) -> Iterator[np.ndarray | ma.MaskedArray]:
+) -> Iterator[npt.NDArray | ma.MaskedArray]:
     """Initializes several numpy arrays.
 
     Args:
@@ -598,7 +598,7 @@ def init(
             yield np.zeros(shape, dtype=dtype)
 
 
-def n_elements(array: np.ndarray, dist: float, var: str | None = None) -> int:
+def n_elements(array: npt.NDArray, dist: float, var: str | None = None) -> int:
     """Returns the number of elements that cover certain distance.
 
     Args:
@@ -637,7 +637,7 @@ def n_elements(array: np.ndarray, dist: float, var: str | None = None) -> int:
     return int(np.round(n))
 
 
-def isscalar(array: np.ndarray | float | list | netCDF4.Variable) -> bool:
+def isscalar(array: npt.NDArray | float | list | netCDF4.Variable) -> bool:
     """Tests if input is scalar.
 
     By "scalar" we mean that array has a single value.
@@ -698,7 +698,7 @@ def get_wl_band(radar_frequency: float) -> Literal["X", "Ka", "W"]:
     raise ValueError(msg)
 
 
-def transpose(data: np.ndarray) -> np.ndarray:
+def transpose(data: npt.NDArray) -> npt.NDArray:
     """Transposes numpy array of (n, ) to (n, 1)."""
     if data.ndim != 1 or len(data) <= 1:
         msg = "Invalid input array shape"
@@ -725,12 +725,12 @@ def del_dict_keys(data: dict, keys: tuple | list) -> dict:
 
 
 def array_to_probability(
-    array: np.ndarray,
+    array: npt.NDArray,
     loc: float,
     scale: float,
     *,
     invert: bool = False,
-) -> np.ndarray:
+) -> npt.NDArray:
     """Converts continuous variable into 0-1 probability.
 
     Args:
@@ -756,7 +756,7 @@ def array_to_probability(
     return prob
 
 
-def range_to_height(range_los: np.ndarray, tilt_angle: float) -> np.ndarray:
+def range_to_height(range_los: npt.NDArray, tilt_angle: float) -> npt.NDArray:
     """Converts distances from a tilted instrument to height above the ground.
 
     Args:
@@ -864,7 +864,9 @@ def screen_by_time(data_in: dict, epoch: Epoch, expected_date: str) -> dict:
     return data
 
 
-def find_valid_time_indices(time: np.ndarray, epoch: Epoch, expected_date: str) -> list:
+def find_valid_time_indices(
+    time: npt.NDArray, epoch: Epoch, expected_date: str
+) -> list:
     """Finds valid time array indices for the given date.
 
     Args:
@@ -895,7 +897,7 @@ def find_valid_time_indices(time: np.ndarray, epoch: Epoch, expected_date: str) 
     return ind_valid
 
 
-def append_data(data_in: dict, key: str, array: np.ndarray) -> dict:
+def append_data(data_in: dict, key: str, array: npt.NDArray) -> dict:
     """Appends data to a dictionary field (creates the field if not yet present).
 
     Args:
@@ -912,7 +914,7 @@ def append_data(data_in: dict, key: str, array: np.ndarray) -> dict:
     return data
 
 
-def edges2mid(data: np.ndarray, reference: Literal["upper", "lower"]) -> np.ndarray:
+def edges2mid(data: npt.NDArray, reference: Literal["upper", "lower"]) -> npt.NDArray:
     """Shifts values half bin towards up or down.
 
     Args:
@@ -958,7 +960,7 @@ def get_files_with_variables(filenames: list, variables: list[str]) -> list:
     return valid_files
 
 
-def is_all_masked(array: np.ndarray) -> bool:
+def is_all_masked(array: npt.NDArray) -> bool:
     """Tests if all values are masked."""
     return ma.isMaskedArray(array) and hasattr(array, "mask") and array.mask.all()
 
@@ -992,11 +994,11 @@ def bit_field_definition(definitions: dict[T, str]) -> str:
     return _format_definition("Bit", definitions)
 
 
-def path_lengths_from_ground(height: np.ndarray) -> np.ndarray:
+def path_lengths_from_ground(height: npt.NDArray) -> npt.NDArray:
     return np.diff(height, prepend=0)
 
 
-def remove_masked_blocks(array: ma.MaskedArray, limit: int = 50) -> np.ndarray:
+def remove_masked_blocks(array: ma.MaskedArray, limit: int = 50) -> npt.NDArray:
     """Filters out large blocks of completely masked profiles."""
     if array.ndim == 1:
         return np.array(not ma.all(array.mask))
@@ -1017,7 +1019,9 @@ def md5sum(filename: str | os.PathLike, *, is_base64: bool = False) -> str:
     return _calc_hash_sum(filename, "md5", is_base64=is_base64)
 
 
-def _calc_hash_sum(filename, method, *, is_base64: bool) -> str:
+def _calc_hash_sum(
+    filename: str | os.PathLike, method: Literal["sha256", "md5"], *, is_base64: bool
+) -> str:
     hash_sum = getattr(hashlib, method)()
     with open(filename, "rb") as f:
         for byte_block in iter(lambda: f.read(4096), b""):
@@ -1033,7 +1037,7 @@ def add_site_geolocation(
     gps: bool,
     site_meta: dict | None = None,
     dataset: netCDF4.Dataset | None = None,
-):
+) -> None:
     tmp_data = {}
     tmp_source = {}
 

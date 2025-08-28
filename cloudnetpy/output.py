@@ -18,7 +18,7 @@ from cloudnetpy.metadata import COMMON_ATTRIBUTES
 
 
 def save_level1b(
-    obj,
+    obj,  # noqa: ANN001
     output_file: PathLike | str,
     uuid: UUID | str | None = None,
 ) -> str:
@@ -50,7 +50,7 @@ def save_level1b(
     return file_uuid
 
 
-def _get_netcdf_dimensions(obj) -> dict:
+def _get_netcdf_dimensions(obj) -> dict:  # noqa: ANN001
     dimensions = {
         key: len(obj.data[key][:]) for key in ("time", "range") if key in obj.data
     }

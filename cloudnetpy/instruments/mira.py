@@ -115,7 +115,7 @@ class Mira(NcRadar):
 
     epoch = (1970, 1, 1)
 
-    def __init__(self, full_path: str, site_meta: dict):
+    def __init__(self, full_path: str, site_meta: dict) -> None:
         super().__init__(full_path, site_meta)
         self.date = self._init_mira_date()
         if "model" not in site_meta or site_meta["model"] == "mira-35":

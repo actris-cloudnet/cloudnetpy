@@ -9,6 +9,7 @@ from os import PathLike
 from typing import Any
 
 import numpy as np
+import numpy.typing as npt
 from numpy import ma
 
 from cloudnetpy import output
@@ -85,7 +86,7 @@ class Parsivel(Disdrometer):
         telegram: Sequence[int | None] | None = None,
         expected_date: datetime.date | None = None,
         timestamps: Sequence[datetime.datetime] | None = None,
-    ):
+    ) -> None:
         super().__init__()
         self.site_meta = site_meta
         self.raw_data = _read_parsivel(filenames, telegram, timestamps)
@@ -337,11 +338,11 @@ def _parse_datetime(tokens: Iterator[str]) -> datetime.datetime:
     )
 
 
-def _parse_vector(tokens: Iterator[str]) -> np.ndarray:
+def _parse_vector(tokens: Iterator[str]) -> npt.NDArray:
     return np.array([_parse_float(tokens) for _i in range(32)])
 
 
-def _parse_spectrum(tokens: Iterator[str]) -> np.ndarray:
+def _parse_spectrum(tokens: Iterator[str]) -> npt.NDArray:
     first = next(tokens)
     if first == "<SPECTRUM>ZERO</SPECTRUM>":
         return np.zeros((32, 32), dtype="i2")
@@ -615,7 +616,7 @@ def _read_typ_op4a(lines: list[str]) -> dict[str, Any]:
     return data
 
 
-def _read_fmi(content: str):
+def _read_fmi(content: str) -> dict[str, list]:
     r"""Read format used by Finnish Meteorological Institute and University of
     Helsinki.
 
@@ -661,7 +662,7 @@ def _read_parsivel(
     filenames: Iterable[str | PathLike],
     telegram: Sequence[int | None] | None = None,
     timestamps: Sequence[datetime.datetime] | None = None,
-) -> dict[str, np.ndarray]:
+) -> dict[str, npt.NDArray]:
     combined_data = defaultdict(list)
     for filename in filenames:
         with open(filename, encoding="latin1", errors="ignore") as file:

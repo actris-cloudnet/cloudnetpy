@@ -4,6 +4,7 @@ from bisect import bisect_left
 
 import netCDF4
 import numpy as np
+import numpy.typing as npt
 from numpy import ma
 from scipy.special import gamma
 
@@ -27,7 +28,7 @@ class DrizzleSource(DataSource):
 
     """
 
-    def __init__(self, categorize_file: str):
+    def __init__(self, categorize_file: str) -> None:
         super().__init__(categorize_file)
         self.mie = self._read_mie_lut()
         self.height_vector = self.getvar("height")
@@ -35,7 +36,7 @@ class DrizzleSource(DataSource):
         self.beta = self.getvar("beta")
         self.v = self.getvar("v")
 
-    def _convert_z_units(self) -> np.ndarray:
+    def _convert_z_units(self) -> npt.NDArray:
         """Converts reflectivity factor to SI units."""
         z = self.getvar("Z") - 180
         z[z > 0.0] = 0.0
@@ -96,7 +97,7 @@ class DrizzleClassification(ProductClassification):
 
     """
 
-    def __init__(self, categorize_file: str):
+    def __init__(self, categorize_file: str) -> None:
         super().__init__(categorize_file)
         self.is_v_sigma = self._find_v_sigma(categorize_file)
         self.warm_liquid = self._find_warm_liquid()
@@ -105,14 +106,14 @@ class DrizzleClassification(ProductClassification):
         self.cold_rain = self._find_cold_rain()
 
     @staticmethod
-    def _find_v_sigma(cat_file: str) -> np.ndarray:
+    def _find_v_sigma(cat_file: str) -> npt.NDArray:
         v_sigma = product_tools.read_nc_field(cat_file, "v_sigma")
         return np.isfinite(v_sigma)
 
-    def _find_warm_liquid(self) -> np.ndarray:
+    def _find_warm_liquid(self) -> npt.NDArray:
         return self.category_bits.droplet & ~self.category_bits.freezing
 
-    def _find_drizzle(self) -> np.ndarray:
+    def _find_drizzle(self) -> npt.NDArray:
         return (
             ~utils.transpose(self.is_rain)
             & self.category_bits.falling
@@ -129,7 +130,7 @@ class DrizzleClassification(ProductClassification):
             & self.is_v_sigma
         )
 
-    def _find_would_be_drizzle(self) -> np.ndarray:
+    def _find_would_be_drizzle(self) -> npt.NDArray:
         return (
             ~utils.transpose(self.is_rain)
             & self.warm_liquid
@@ -141,7 +142,7 @@ class DrizzleClassification(ProductClassification):
             & ~self.quality_bits.molecular
         )
 
-    def _find_cold_rain(self) -> np.ndarray:
+    def _find_cold_rain(self) -> npt.NDArray:
         return np.any(self.category_bits.melting, axis=1)
 
 
@@ -161,11 +162,11 @@ class SpectralWidth:
 
     """
 
-    def __init__(self, categorize_file: str):
+    def __init__(self, categorize_file: str) -> None:
         self.cat_file = categorize_file
         self.width_ht = self._calculate_spectral_width()
 
-    def _calculate_spectral_width(self) -> np.ndarray:
+    def _calculate_spectral_width(self) -> npt.NDArray:
         v_sigma = product_tools.read_nc_field(self.cat_file, "v_sigma")
         try:
             width = product_tools.read_nc_field(self.cat_file, "width")
@@ -175,19 +176,19 @@ class SpectralWidth:
         sigma_factor = self._calc_v_sigma_factor()
         return width - sigma_factor * v_sigma
 
-    def _calc_v_sigma_factor(self) -> np.ndarray:
+    def _calc_v_sigma_factor(self) -> npt.NDArray:
         beam_divergence = self._calc_beam_divergence()
         wind = self._calc_horizontal_wind()
         actual_wind = (wind + beam_divergence) ** (2 / 3)
         scaled_wind = (30 * wind + beam_divergence) ** (2 / 3)
         return actual_wind / (scaled_wind - actual_wind)
 
-    def _calc_beam_divergence(self) -> np.ndarray:
+    def _calc_beam_divergence(self) -> npt.NDArray:
         beam_width = 0.5
         height = product_tools.read_nc_field(self.cat_file, "height")
         return height * np.deg2rad(beam_width)
 
-    def _calc_horizontal_wind(self) -> np.ndarray:
+    def _calc_horizontal_wind(self) -> npt.NDArray:
         """Calculates magnitude of horizontal wind.
 
         Returns:
@@ -219,7 +220,7 @@ class DrizzleSolver:
         drizzle_source: DrizzleSource,
         drizzle_class: DrizzleClassification,
         spectral_width: SpectralWidth,
-    ):
+    ) -> None:
         self._data = drizzle_source
         self._drizzle_class = drizzle_class
         self._width_ht = spectral_width.width_ht
@@ -228,7 +229,7 @@ class DrizzleSolver:
         self._beta_z_ratio = self._calc_beta_z_ratio()
         self._solve_drizzle(self._dia_init)
 
-    def _init_variables(self) -> tuple[dict, np.ndarray]:
+    def _init_variables(self) -> tuple[dict, npt.NDArray]:
         shape = self._data.z.shape
         res = {
             "Do": np.zeros(shape),
@@ -238,10 +239,12 @@ class DrizzleSolver:
         }
         return res, np.zeros(shape)
 
-    def _calc_beta_z_ratio(self) -> np.ndarray:
+    def _calc_beta_z_ratio(self) -> npt.NDArray:
         return 2 / np.pi * self._data.beta / self._data.z
 
-    def _find_lut_indices(self, ind, dia_init, n_dia, n_widths) -> tuple[int, int]:
+    def _find_lut_indices(
+        self, ind: tuple[int, ...], dia_init: npt.NDArray, n_dia: int, n_widths: int
+    ) -> tuple[int, int]:
         ind_dia = bisect_left(self._data.mie["Do"], dia_init[ind], hi=n_dia - 1)
         ind_width = bisect_left(
             self._width_lut[:, ind_dia],
@@ -250,7 +253,7 @@ class DrizzleSolver:
         )
         return ind_width, ind_dia
 
-    def _solve_drizzle(self, dia_init: np.ndarray) -> None:
+    def _solve_drizzle(self, dia_init: npt.NDArray) -> None:
         drizzle_ind = np.where(self._drizzle_class.drizzle == 1)
         dia_init[drizzle_ind] = self._calc_dia(self._beta_z_ratio[drizzle_ind], k=18.8)
         n_widths, n_dia = self._width_lut.shape[0], len(self._data.mie["Do"])
@@ -277,7 +280,7 @@ class DrizzleSolver:
     def _update_result_tables(
         self,
         ind: tuple,
-        dia: np.ndarray | float,
+        dia: npt.NDArray | float,
         lut_ind: tuple,
     ) -> None:
         self.params["Do"][ind] = dia
@@ -286,11 +289,11 @@ class DrizzleSolver:
 
     @staticmethod
     def _calc_dia(
-        beta_z_ratio: np.ndarray | float,
+        beta_z_ratio: npt.NDArray | float,
         mu: float = 0.0,
         ray: float = 1.0,
         k: float = 1.0,
-    ) -> np.ndarray | float:
+    ) -> npt.NDArray | float:
         """Drizzle diameter calculation.
 
         Args:
@@ -312,8 +315,8 @@ class DrizzleSolver:
     @staticmethod
     def _is_converged(
         ind: tuple,
-        dia: np.ndarray | float,
-        dia_init: np.ndarray,
+        dia: npt.NDArray | float,
+        dia_init: npt.NDArray,
     ) -> bool:
         threshold = 1e-3
         return abs((dia - dia_init[ind]) / dia_init[ind]) < threshold

@@ -1,6 +1,7 @@
 """Module to find insects from data."""
 
 import numpy as np
+import numpy.typing as npt
 from numpy import ma
 from scipy.ndimage import gaussian_filter
 
@@ -11,10 +12,10 @@ from cloudnetpy.categorize.containers import ClassData
 
 def find_insects(
     obs: ClassData,
-    melting_layer: np.ndarray,
-    liquid_layers: np.ndarray,
+    melting_layer: npt.NDArray,
+    liquid_layers: npt.NDArray,
     prob_lim: float = 0.8,
-) -> tuple[np.ndarray, np.ndarray]:
+) -> tuple[npt.NDArray, npt.NDArray]:
     """Returns insect probability and boolean array of insect presence.
 
     Insects are classified by estimating heuristic probability
@@ -52,7 +53,7 @@ def find_insects(
     return is_insects, ma.masked_where(insect_prob == 0, insect_prob)
 
 
-def _insect_probability(obs: ClassData) -> tuple[np.ndarray, np.ndarray]:
+def _insect_probability(obs: ClassData) -> tuple[npt.NDArray, npt.NDArray]:
     prob = _get_probabilities(obs)
     prob_from_ldr = _calc_prob_from_ldr(prob)
     prob_from_others = _calc_prob_from_all(prob)
@@ -87,7 +88,7 @@ def _get_smoothed_v(
     return ma.masked_where(obs.v.mask, smoothed_v)
 
 
-def _calc_prob_from_ldr(prob: dict) -> np.ndarray:
+def _calc_prob_from_ldr(prob: dict) -> npt.NDArray:
     """This is the most reliable proxy for insects."""
     if prob["ldr"] is not None:
         return prob["ldr"] * prob["temp_loose"]
@@ -100,7 +101,7 @@ def _calc_prob_from_ldr(prob: dict) -> np.ndarray:
     return np.zeros(prob["z_strong"].shape)
 
 
-def _calc_prob_from_all(prob: dict) -> np.ndarray:
+def _calc_prob_from_all(prob: dict) -> npt.NDArray:
     """This can be tried when LDR is not available. To detect insects without LDR
     unambiguously is difficult and might result in many false positives and/or false
     negatives.
@@ -111,8 +112,8 @@ def _calc_prob_from_all(prob: dict) -> np.ndarray:
 def _adjust_for_radar(
     obs: ClassData,
     prob: dict,
-    prob_from_others: np.ndarray,
-) -> np.ndarray:
+    prob_from_others: npt.NDArray,
+) -> npt.NDArray:
     """Adds radar-specific weighting to insect probabilities."""
     if "mira" in obs.radar_type.lower():
         prob_from_others *= prob["lwp"]
@@ -120,9 +121,9 @@ def _adjust_for_radar(
 
 
 def _fill_missing_pixels(
-    prob_from_ldr: np.ndarray,
-    prob_from_others: np.ndarray,
-) -> np.ndarray:
+    prob_from_ldr: npt.NDArray,
+    prob_from_others: npt.NDArray,
+) -> npt.NDArray:
     prob_combined = np.copy(prob_from_ldr)
     no_ldr = np.where(prob_from_ldr == 0)
     prob_combined[no_ldr] = prob_from_others[no_ldr]
@@ -130,12 +131,12 @@ def _fill_missing_pixels(
 
 
 def _screen_insects(
-    insect_prob,
-    insect_prob_no_ldr,
-    melting_layer,
-    liquid_layers,
-    obs,
-) -> np.ndarray:
+    insect_prob: npt.NDArray,
+    insect_prob_no_ldr: npt.NDArray,
+    melting_layer: npt.NDArray,
+    liquid_layers: npt.NDArray,
+    obs: ClassData,
+) -> npt.NDArray:
     def _screen_liquid_layers() -> None:
         prob[liquid_layers == 1] = 0
 

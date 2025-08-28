@@ -2,6 +2,7 @@ import os
 from datetime import datetime
 
 import netCDF4
+import numpy.typing as npt
 
 from cloudnetpy import output, utils
 
@@ -111,7 +112,7 @@ def add_var2ncfile(obj: ModelManager, file_name: str) -> None:
 def _write_vars2nc(rootgrp: netCDF4.Dataset, cloudnet_variables: dict) -> None:
     """Iterates over Cloudnet-ME instances and write to given rootgrp."""
 
-    def _get_dimensions(array) -> tuple:
+    def _get_dimensions(array: npt.NDArray) -> tuple:
         """Finds correct dimensions for a variable."""
         if utils.isscalar(array):
             return ()

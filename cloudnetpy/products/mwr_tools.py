@@ -116,7 +116,7 @@ def _generate_product(
 class Mwr:
     def __init__(
         self, nc_l1c: netCDF4.Dataset, nc_l2: netCDF4.Dataset, uuid: str | None
-    ):
+    ) -> None:
         self.nc_l1c = nc_l1c
         self.nc_l2 = nc_l2
         self.uuid = uuid if uuid is not None else utils.get_uuid()
@@ -128,15 +128,15 @@ class Mwr:
         self._write_missing_global_attributes(product)
         return self.uuid
 
-    def _truncate_global_attributes(self):
+    def _truncate_global_attributes(self) -> None:
         for attr in self.nc_l2.ncattrs():
             delattr(self.nc_l2, attr)
 
-    def _copy_global_attributes(self):
+    def _copy_global_attributes(self) -> None:
         keys = ("year", "month", "day", "location", "source")
         output.copy_global(self.nc_l1c, self.nc_l2, keys)
 
-    def _fix_variable_attributes(self):
+    def _fix_variable_attributes(self) -> None:
         output.replace_attribute_with_standard_value(
             self.nc_l2,
             (
@@ -151,7 +151,9 @@ class Mwr:
             ("units", "long_name", "standard_name"),
         )
 
-    def _write_missing_global_attributes(self, product: Literal["multi", "single"]):
+    def _write_missing_global_attributes(
+        self, product: Literal["multi", "single"]
+    ) -> None:
         output.add_standard_global_attributes(self.nc_l2, self.uuid)
         product_type = "multiple-pointing" if product == "multi" else "single-pointing"
         self.nc_l2.title = f"MWR {product_type} from {self.nc_l1c.location}"
@@ -166,7 +168,7 @@ class Mwr:
         self.nc_l2.instrument_pid = self.nc_l1c.instrument_pid
 
 
-def _read_mwrpy_coeffs(mwr_l1c_file, folder: str) -> list:
+def _read_mwrpy_coeffs(mwr_l1c_file: str, folder: str) -> list[str]:
     with netCDF4.Dataset(mwr_l1c_file) as nc:
         links = nc.mwrpy_coefficients.split(", ")
     coeffs = []

@@ -6,6 +6,7 @@ from collections import Counter
 
 import netCDF4
 import numpy as np
+import numpy.typing as npt
 from numpy import ma
 from numpy.testing import assert_almost_equal
 
@@ -68,7 +69,7 @@ def pollyxt2nc(
 
 
 class PollyXt(Ceilometer):
-    def __init__(self, site_meta: dict, expected_date: str | None):
+    def __init__(self, site_meta: dict, expected_date: str | None) -> None:
         super().__init__()
         self.site_meta = site_meta
         self.expected_date = expected_date
@@ -114,7 +115,7 @@ class PollyXt(Ceilometer):
         self._fetch_attributes(bsc_files[0])
         with netCDF4.Dataset(bsc_files[0], "r") as nc:
             self.data["range"] = nc.variables["height"][:]
-        calibration_factors: np.ndarray = np.array([])
+        calibration_factors: npt.NDArray = np.array([])
         beta_channel = self._get_valid_beta_channel(bsc_files)
         bsc_key = f"attenuated_backscatter_{beta_channel}nm"
         for bsc_file, depol_file in zip(bsc_files, depol_files, strict=True):
@@ -197,7 +198,7 @@ class PollyXt(Ceilometer):
 def _fetch_files_with_same_range(
     bsc_files: list[str], depol_files: list[str]
 ) -> tuple[list[str], list[str]]:
-    def get_sum(file: str):
+    def get_sum(file: str) -> float:
         with netCDF4.Dataset(file, "r") as nc:
             return np.sum(np.round(nc.variables["height"][:]))
 
@@ -229,7 +230,7 @@ def _read_array_from_file_pair(
     nc_file1: netCDF4.Dataset,
     nc_file2: netCDF4.Dataset,
     key: str,
-) -> np.ndarray:
+) -> npt.NDArray:
     array1 = nc_file1.variables[key][:]
     array2 = nc_file2.variables[key][:]
     assert_almost_equal(

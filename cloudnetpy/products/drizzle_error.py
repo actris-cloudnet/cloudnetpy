@@ -1,4 +1,5 @@
 import numpy as np
+import numpy.typing as npt
 from numpy import ma
 
 from cloudnetpy import utils
@@ -33,7 +34,7 @@ def get_drizzle_error(
     return _calc_errors(drizzle_indices, error_input, bias_input)
 
 
-def _get_drizzle_indices(diameter: np.ndarray) -> dict:
+def _get_drizzle_indices(diameter: npt.NDArray) -> dict:
     return {
         "drizzle": diameter > 0,
         "small": np.logical_and(diameter <= 1e-4, diameter > 1e-5),
@@ -154,12 +155,12 @@ def _calc_error(
 
 
 def _stack_errors(
-    error_in: np.ndarray,
+    error_in: npt.NDArray,
     drizzle_indices: dict,
-    error_small=None,
-    error_tiny=None,
+    error_small: npt.NDArray | None = None,
+    error_tiny: npt.NDArray | None = None,
 ) -> ma.MaskedArray:
-    def _add_error_component(source: np.ndarray, ind: tuple) -> None:
+    def _add_error_component(source: npt.NDArray, ind: tuple) -> None:
         error[ind] = source[ind]
 
     error = ma.zeros(error_in.shape)
@@ -174,14 +175,14 @@ def _stack_errors(
 COR = 10 / np.log(10)
 
 
-def db2lin(x_in: np.ndarray) -> ma.MaskedArray:
+def db2lin(x_in: npt.NDArray) -> ma.MaskedArray:
     x = ma.copy(x_in)
     threshold = 100
     x[x > threshold] = threshold
     return ma.exp(x / COR) - 1
 
 
-def lin2db(x_in) -> ma.MaskedArray:
+def lin2db(x_in: npt.NDArray) -> ma.MaskedArray:
     x = ma.copy(x_in)
     threshold = -0.9
     x[x < threshold] = threshold

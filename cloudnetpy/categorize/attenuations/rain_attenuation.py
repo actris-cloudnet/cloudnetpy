@@ -1,6 +1,6 @@
 import numpy as np
+import numpy.typing as npt
 from numpy import ma
-from numpy.typing import NDArray
 
 import cloudnetpy.constants as con
 from cloudnetpy import utils
@@ -53,7 +53,7 @@ def calc_rain_attenuation(
 
 def _find_regions(
     classification: ClassificationResult,
-) -> tuple[NDArray[np.bool_], NDArray[np.bool_]]:
+) -> tuple[npt.NDArray[np.bool_], npt.NDArray[np.bool_]]:
     """Finds regions where rain attenuation is present and can be corrected or not."""
     warm_region = ~classification.category_bits.freezing
     is_rain = utils.transpose(classification.is_rain).astype(bool)
@@ -63,8 +63,8 @@ def _find_regions(
 
 
 def _calc_rain_specific_attenuation(
-    rainfall_rate: np.ndarray, frequency: float
-) -> np.ndarray:
+    rainfall_rate: npt.NDArray, frequency: float
+) -> npt.NDArray:
     """Calculates specific attenuation due to rain (dB km-1).
 
     References:

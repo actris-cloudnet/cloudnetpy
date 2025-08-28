@@ -1,6 +1,7 @@
 """Model module, containing the :class:`Model` class."""
 
 import numpy as np
+import numpy.typing as npt
 from numpy import ma
 from scipy.interpolate import interp1d
 
@@ -49,13 +50,15 @@ class Model(DataSource):
         "specific_liquid_atten",
     )
 
-    def __init__(self, model_file: str, alt_site: float, options: dict | None = None):
+    def __init__(
+        self, model_file: str, alt_site: float, options: dict | None = None
+    ) -> None:
         super().__init__(model_file)
         self.options = options
         self.source_type = _find_model_type(model_file)
         self.model_heights = self._get_model_heights(alt_site)
         self.mean_height = _calc_mean_height(self.model_heights)
-        self.height: np.ndarray
+        self.height: npt.NDArray
         self.data_sparse: dict = {}
         self.data_dense: dict = {}
         self._append_grid()
@@ -83,8 +86,8 @@ class Model(DataSource):
 
     def interpolate_to_grid(
         self,
-        time_grid: np.ndarray,
-        height_grid: np.ndarray,
+        time_grid: npt.NDArray,
+        height_grid: npt.NDArray,
     ) -> list:
         """Interpolates model variables to Cloudnet's dense time / height grid.
 
@@ -130,7 +133,7 @@ class Model(DataSource):
         self.append_data(np.array(self.time), "model_time")
         self.append_data(self.mean_height, "model_height")
 
-    def _get_model_heights(self, alt_site: float) -> np.ndarray:
+    def _get_model_heights(self, alt_site: float) -> npt.NDArray:
         """Returns model heights for each time step."""
         try:
             model_heights = self.dataset.variables["height"]
@@ -139,7 +142,7 @@ class Model(DataSource):
             raise ModelDataError(msg) from err
         return self.to_m(model_heights) + alt_site
 
-    def calc_attenuations(self, frequency: float):
+    def calc_attenuations(self, frequency: float) -> None:
         temperature = self.getvar("temperature")
         pressure = self.getvar("pressure")
         specific_humidity = self.getvar("q")
@@ -157,7 +160,7 @@ class Model(DataSource):
         )
 
 
-def _calc_mean_height(model_heights: np.ndarray) -> np.ndarray:
+def _calc_mean_height(model_heights: npt.NDArray) -> npt.NDArray:
     mean_height = ma.mean(model_heights, axis=0)
     return np.array(mean_height)
 
@@ -172,7 +175,7 @@ def _find_model_type(file_name: str) -> str:
     raise ValueError(msg)
 
 
-def _find_number_of_valid_profiles(array: np.ndarray) -> int:
+def _find_number_of_valid_profiles(array: npt.NDArray) -> int:
     mask = ma.getmaskarray(array)
     all_masked_profiles = np.all(mask, axis=1)
     return np.count_nonzero(~all_masked_profiles)

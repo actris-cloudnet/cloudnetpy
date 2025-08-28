@@ -2,6 +2,7 @@ import logging
 from typing import NamedTuple
 
 import numpy as np
+import numpy.typing as npt
 from numpy import ma
 from scipy.ndimage import gaussian_filter
 
@@ -22,7 +23,7 @@ class NoiseParam(NamedTuple):
 class Ceilometer:
     """Base class for all types of ceilometers and pollyxt."""
 
-    def __init__(self, noise_param: NoiseParam | None = None):
+    def __init__(self, noise_param: NoiseParam | None = None) -> None:
         self.noise_param = noise_param or NoiseParam()
         self.data: dict = {}  # Need to contain 'beta_raw', 'range' and 'time'
         self.metadata: dict = {}  # Need to contain 'date' as ('yyyy', 'mm', 'dd')
@@ -34,12 +35,12 @@ class Ceilometer:
 
     def calc_screened_product(
         self,
-        array: np.ndarray,
+        array: npt.NDArray,
         snr_limit: int = 5,
         n_negatives: int = 5,
         *,
         range_corrected: bool = True,
-    ) -> np.ndarray:
+    ) -> npt.NDArray:
         """Screens noise from lidar variable."""
         noisy_data = NoisyData(
             self.data,
@@ -55,12 +56,12 @@ class Ceilometer:
 
     def calc_beta_smooth(
         self,
-        beta: np.ndarray,
+        beta: npt.NDArray,
         snr_limit: int = 5,
         n_negatives: int = 5,
         *,
         range_corrected: bool = True,
-    ) -> np.ndarray:
+    ) -> npt.NDArray:
         noisy_data = NoisyData(
             self.data,
             self.noise_param,
@@ -103,14 +104,14 @@ class Ceilometer:
         self.date = utils.seconds2date(self.data["time"][0], epoch=epoch)[:3]
         self.data["time"] = utils.seconds2hours(self.data["time"])
 
-    def data_to_cloudnet_arrays(self, time_dtype="f4") -> None:
+    def data_to_cloudnet_arrays(self, time_dtype: str = "f4") -> None:
         for key, array in self.data.items():
             if key == "time":
                 self.data[key] = CloudnetArray(array, key, data_type=time_dtype)
             else:
                 self.data[key] = CloudnetArray(array, key)
 
-    def add_site_geolocation(self):
+    def add_site_geolocation(self) -> None:
         utils.add_site_geolocation(self.data, gps=False, site_meta=self.site_meta)
 
     def screen_depol(self) -> None:
@@ -164,7 +165,7 @@ class NoisyData:
         *,
         range_corrected: bool = True,
         instrument: Instrument | None = None,
-    ):
+    ) -> None:
         self.data = data
         self.noise_param = noise_param
         self.range_corrected = range_corrected
@@ -172,7 +173,7 @@ class NoisyData:
 
     def screen_data(
         self,
-        data_in: np.ndarray,
+        data_in: npt.NDArray,
         snr_limit: float = 5,
         n_negatives: int = 5,
         *,
@@ -181,7 +182,7 @@ class NoisyData:
         filter_fog: bool = True,
         filter_negatives: bool = True,
         filter_snr: bool = True,
-    ) -> np.ndarray:
+    ) -> npt.NDArray:
         data = ma.copy(data_in)
         self._calc_range_uncorrected(data)
         noise = _estimate_background_noise(data)
@@ -206,7 +207,7 @@ class NoisyData:
         self._calc_range_corrected(data)
         return data
 
-    def _adjust_noise(self, noise: np.ndarray, *, is_smoothed: bool) -> np.ndarray:
+    def _adjust_noise(self, noise: npt.NDArray, *, is_smoothed: bool) -> npt.NDArray:
         noise_min = (
             self.noise_param.noise_smooth_min
             if is_smoothed is True
@@ -222,12 +223,12 @@ class NoisyData:
 
     @staticmethod
     def _mask_low_values_above_consequent_negatives(
-        data: np.ndarray,
+        data: npt.NDArray,
         n_negatives: int = 5,
         threshold: float = 8e-6,
         n_gates: int = 95,
         n_skip_lowest: int = 5,
-    ) -> np.ndarray:
+    ) -> npt.NDArray:
         negative_data = data[:, n_skip_lowest : n_gates + n_skip_lowest] < 0
         n_consequent_negatives = utils.cumsumr(negative_data, axis=1)
         time_indices, alt_indices = np.where(n_consequent_negatives > n_negatives)
@@ -247,7 +248,7 @@ class NoisyData:
         n_gates_for_signal_sum: int = 20,
         signal_sum_threshold: float = 1e-3,
         variance_threshold: float = 1e-15,
-    ) -> np.ndarray:
+    ) -> npt.NDArray:
         """Finds saturated (usually fog) profiles from beta_raw."""
         signal_sum = ma.sum(
             ma.abs(self.data["beta_raw"][:, :n_gates_for_signal_sum]),
@@ -260,12 +261,12 @@ class NoisyData:
 
     def _remove_noise(
         self,
-        array: np.ndarray,
-        noise: np.ndarray,
+        array: npt.NDArray,
+        noise: npt.NDArray,
         *,
         keep_negative: bool,
         snr_limit: float,
-    ) -> np.ndarray:
+    ) -> npt.NDArray:
         snr = array / utils.transpose(noise)
         if self.range_corrected is False:
             snr_scale_factor = 6
@@ -279,11 +280,11 @@ class NoisyData:
             array[snr < snr_limit] = ma.masked
         return array
 
-    def _calc_range_uncorrected(self, data: np.ndarray) -> None:
+    def _calc_range_uncorrected(self, data: npt.NDArray) -> None:
         ind = self._get_altitude_ind()
         data[:, ind] = data[:, ind] / self._get_range_squared()[ind]
 
-    def _calc_range_corrected(self, data: np.ndarray) -> None:
+    def _calc_range_corrected(self, data: npt.NDArray) -> None:
         ind = self._get_altitude_ind()
         data[:, ind] = data[:, ind] * self._get_range_squared()[ind]
 
@@ -301,15 +302,15 @@ class NoisyData:
                 alt_limit = 2400.0
         return np.where(self.data["range"] < alt_limit)
 
-    def _get_range_squared(self) -> np.ndarray:
+    def _get_range_squared(self) -> npt.NDArray:
         """Returns range (m), squared and converted to km."""
         m2km = 0.001
         return (self.data["range"] * m2km) ** 2
 
     @staticmethod
     def _clean_fog_profiles(
-        data: np.ndarray,
-        is_fog: np.ndarray,
+        data: npt.NDArray,
+        is_fog: npt.NDArray,
         threshold: float = 2e-6,
     ) -> None:
         """Removes values in saturated (e.g. fog) profiles above peak."""
@@ -319,20 +320,20 @@ class NoisyData:
             profile[peak_ind:][profile[peak_ind:] < threshold] = ma.masked
 
 
-def _estimate_background_noise(data: np.ndarray) -> np.ndarray:
+def _estimate_background_noise(data: npt.NDArray) -> npt.NDArray:
     var = _calc_var_from_top_gates(data)
     return np.sqrt(var)
 
 
-def _calc_var_from_top_gates(data: np.ndarray) -> np.ndarray:
+def _calc_var_from_top_gates(data: npt.NDArray) -> npt.NDArray:
     fraction = 0.1
     n_gates = round(data.shape[1] * fraction)
     return ma.var(data[:, -n_gates:], axis=1)
 
 
 def calc_sigma_units(
-    time_vector: np.ndarray,
-    range_los: np.ndarray,
+    time_vector: npt.NDArray,
+    range_los: npt.NDArray,
     sigma_minutes: float = 1,
     sigma_metres: float = 10,
 ) -> tuple[float, float]:
@@ -363,9 +364,7 @@ def calc_sigma_units(
     return x_std, y_std
 
 
-def _estimate_clouds_from_beta(
-    beta: np.ndarray,
-) -> tuple[tuple, np.ndarray, float]:
+def _estimate_clouds_from_beta(beta: npt.NDArray) -> tuple[tuple, npt.NDArray, float]:
     """Naively finds strong clouds from ceilometer backscatter."""
     cloud_limit = 1e-6
     cloud_ind = np.where(beta > cloud_limit)

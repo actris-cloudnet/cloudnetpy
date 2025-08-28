@@ -2,6 +2,7 @@ import logging
 from typing import TYPE_CHECKING
 
 import numpy as np
+import numpy.typing as npt
 from numpy import ma
 
 from cloudnetpy import utils
@@ -14,9 +15,9 @@ if TYPE_CHECKING:
 
 
 class CloudnetInstrument:
-    def __init__(self):
+    def __init__(self) -> None:
         self.dataset: netCDF4.Dataset
-        self.time: np.ndarray = np.array([])
+        self.time: npt.NDArray = np.array([])
         self.site_meta: dict = {}
         self.data: dict = {}
         self.serial_number: str | None = None
@@ -55,7 +56,7 @@ class CloudnetInstrument:
         ind = time.argsort()
         self.screen_time_indices(ind)
 
-    def screen_time_indices(self, valid_indices: list | np.ndarray) -> None:
+    def screen_time_indices(self, valid_indices: list | npt.NDArray) -> None:
         time = self._get_time()
         n_time = len(time)
         if len(valid_indices) == 0 or (
@@ -79,7 +80,7 @@ class CloudnetInstrument:
         if self.time.size > 0:
             self.time = self.time[valid_indices]
 
-    def _get_time(self) -> np.ndarray:
+    def _get_time(self) -> npt.NDArray:
         try:
             return self.data["time"].data[:]
         except KeyError:
@@ -95,7 +96,7 @@ class CloudnetInstrument:
 
 
 class CSVFile(CloudnetInstrument):
-    def __init__(self, site_meta: dict):
+    def __init__(self, site_meta: dict) -> None:
         super().__init__()
         self.site_meta = site_meta
         self._data: dict = {}

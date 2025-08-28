@@ -21,7 +21,7 @@ def generate_epsilon_from_lidar(
     doppler_lidar_wind_file: str | PathLike,
     output_file: str | PathLike,
     uuid: str | None,
-):
+) -> str:
     sliding_window_in_seconds = 3 * 60
     uuid = uuid if uuid is not None else get_uuid()
     opts = _get_options(doppler_lidar_file)
@@ -163,7 +163,7 @@ def _get_options(doppler_lidar_file: str | PathLike) -> Options:
         raise ValueError(msg)
 
 
-def _infer_pulse_repetition_frequency(range_: npt.NDArray[np.float64]):
+def _infer_pulse_repetition_frequency(range_: npt.NDArray[np.float64]) -> float:
     c = scipy.constants.c
     dist = range_.max() - range_.min()
     round_trip_time = 2 * dist / c

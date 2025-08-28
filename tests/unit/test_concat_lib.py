@@ -7,6 +7,7 @@ import numpy as np
 import pytest
 from numpy import ma
 from numpy.testing import assert_array_equal
+import numpy.typing as npt
 
 from cloudnetpy import concat_lib
 
@@ -225,8 +226,8 @@ class TestCommonVariables:
             )
 
     def test_inconsistent_masked_arrays(self):
-        arr1: np.ndarray = ma.masked_array([1, 2, 3], mask=[1, 0, 1])
-        arr2: np.ndarray = ma.masked_array([3, 2, 1], mask=[1, 0, 1])
+        arr1: npt.NDArray = ma.masked_array([1, 2, 3], mask=[1, 0, 1])
+        arr2: npt.NDArray = ma.masked_array([3, 2, 1], mask=[1, 0, 1])
         self._write_array(
             self.file1,
             "kissa",

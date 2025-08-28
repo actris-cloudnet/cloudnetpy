@@ -16,7 +16,7 @@ def rain_e_h32nc(
     site_meta: dict,
     uuid: str | None = None,
     date: str | datetime.date | None = None,
-):
+) -> str:
     """Converts rain_e_h3 rain-gauge into Cloudnet Level 1b netCDF file.
 
     Args:
@@ -50,7 +50,7 @@ def rain_e_h32nc(
 
 
 class RainEH3(CSVFile):
-    def __init__(self, site_meta: dict):
+    def __init__(self, site_meta: dict) -> None:
         super().__init__(site_meta)
         self.instrument = instruments.RAIN_E_H3
         self._data = {

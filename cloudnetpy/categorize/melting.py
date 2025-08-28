@@ -1,6 +1,7 @@
 """Functions to find melting layer from data."""
 
 import numpy as np
+import numpy.typing as npt
 from numpy import ma
 from scipy.ndimage import gaussian_filter
 
@@ -10,7 +11,7 @@ from cloudnetpy.categorize.containers import ClassData
 from cloudnetpy.constants import T0
 
 
-def find_melting_layer(obs: ClassData, *, smooth: bool = True) -> np.ndarray:
+def find_melting_layer(obs: ClassData, *, smooth: bool = True) -> npt.NDArray:
     """Finds melting layer from model temperature, ldr, and velocity.
 
     Melting layer is detected using linear depolarization ratio, *ldr*,
@@ -49,9 +50,9 @@ def find_melting_layer(obs: ClassData, *, smooth: bool = True) -> np.ndarray:
     """
     melting_layer = np.zeros(obs.tw.shape, dtype=bool)
 
-    ldr_prof: np.ndarray | None = None
-    ldr_dprof: np.ndarray | None = None
-    ldr_diff: np.ndarray | None = None
+    ldr_prof: npt.NDArray | None = None
+    ldr_dprof: npt.NDArray | None = None
+    ldr_diff: npt.NDArray | None = None
     width_prof = None
 
     if hasattr(obs, "ldr"):
@@ -102,11 +103,11 @@ def find_melting_layer(obs: ClassData, *, smooth: bool = True) -> np.ndarray:
 
 
 def _find_melting_layer_from_ldr(
-    ldr_prof: np.ndarray,
-    ldr_dprof: np.ndarray,
-    v_prof: np.ndarray,
-    z_prof: np.ndarray,
-) -> np.ndarray | None:
+    ldr_prof: npt.NDArray,
+    ldr_dprof: npt.NDArray,
+    v_prof: npt.NDArray,
+    z_prof: npt.NDArray,
+) -> npt.NDArray | None:
     peak = int(np.argmax(ldr_prof))
     base, top = _basetop(ldr_dprof, peak)
     conditions = (
@@ -123,10 +124,10 @@ def _find_melting_layer_from_ldr(
 
 
 def _find_melting_layer_from_v(
-    v_prof: np.ndarray,
-    width_prof: np.ndarray | None,
-    height: np.ndarray,
-) -> np.ndarray | None:
+    v_prof: npt.NDArray,
+    width_prof: npt.NDArray | None,
+    height: npt.NDArray,
+) -> npt.NDArray | None:
     v = np.copy(v_prof[:-1])
     v_diff = np.diff(v_prof)
     v[v_diff < 0] = 0
@@ -156,14 +157,14 @@ def _find_melting_layer_from_v(
     return None
 
 
-def _basetop(dprof: np.ndarray, pind: int) -> tuple[int, int]:
+def _basetop(dprof: npt.NDArray, pind: int) -> tuple[int, int]:
     """Finds the base and top of ldr peak."""
     top = droplet.ind_top(dprof, pind, len(dprof), 10, 2)
     base = droplet.ind_base(dprof, pind, 10, 2)
     return base, top
 
 
-def _get_temp_indices(t_prof: np.ndarray, t_range: tuple) -> np.ndarray:
+def _get_temp_indices(t_prof: npt.NDArray, t_range: tuple) -> npt.NDArray:
     """Finds indices of temperature profile covering the given range."""
     ind = np.where((t_prof > min(t_range) + T0) & (t_prof < max(t_range) + T0))[0]
     return np.array([]) if len(ind) == 0 else np.arange(np.min(ind), np.max(ind) + 1)

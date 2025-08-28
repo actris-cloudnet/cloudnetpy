@@ -122,7 +122,7 @@ class Thies(Disdrometer):
         filename: str | PathLike,
         site_meta: dict,
         expected_date: datetime.date | None = None,
-    ):
+    ) -> None:
         super().__init__()
         self.instrument = instruments.THIES
         self.n_velocity = 20
@@ -205,7 +205,7 @@ class Thies(Disdrometer):
                 raise DisdrometerDataError(msg)
         self.serial_number = first_id
 
-    def _read_line(self, line: str, timestamp: datetime.datetime | None = None):
+    def _read_line(self, line: str, timestamp: datetime.datetime | None = None) -> None:
         raw_values = line.strip().strip(";").split(";")
         # Support custom truncated format used in Leipzig LIM.
         expected_columns = self.site_meta.get("truncate_columns", 521) - 1

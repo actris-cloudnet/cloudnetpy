@@ -4,9 +4,12 @@ import logging
 import os
 from collections.abc import Callable
 from datetime import datetime, timezone
+from types import TracebackType
 
 import netCDF4
 import numpy as np
+import numpy.typing as npt
+from typing_extensions import Self
 
 from cloudnetpy import utils
 from cloudnetpy.cloudnetarray import CloudnetArray
@@ -47,17 +50,17 @@ class DataSource:
     data_sparse: dict
     source_type: str
 
-    def __init__(self, full_path: os.PathLike | str, *, radar: bool = False):
+    def __init__(self, full_path: os.PathLike | str, *, radar: bool = False) -> None:
         self.filename = os.path.basename(full_path)
         self.dataset = netCDF4.Dataset(full_path)
         self.source = getattr(self.dataset, "source", "")
-        self.time: np.ndarray = self._init_time()
+        self.time: npt.NDArray = self._init_time()
         self.altitude = self._init_altitude()
         self.height = self._init_height()
         self.data: dict = {}
         self._is_radar = radar
 
-    def getvar(self, *args) -> np.ndarray:
+    def getvar(self, *args: str) -> npt.NDArray:
         """Returns data array from the source file variables.
 
         Returns just the data (and no attributes) from the original
@@ -81,7 +84,7 @@ class DataSource:
 
     def append_data(
         self,
-        variable: netCDF4.Variable | np.ndarray | float,
+        variable: netCDF4.Variable | npt.NDArray | float,
         key: str,
         name: str | None = None,
         units: str | None = None,
@@ -128,7 +131,7 @@ class DataSource:
         self.dataset.close()
 
     @staticmethod
-    def to_m(var: netCDF4.Variable) -> np.ndarray:
+    def to_m(var: netCDF4.Variable) -> npt.NDArray:
         """Converts km to m."""
         alt = var[:]
         if var.units == "km":
@@ -139,7 +142,7 @@ class DataSource:
         return alt
 
     @staticmethod
-    def to_km(var: netCDF4.Variable) -> np.ndarray:
+    def to_km(var: netCDF4.Variable) -> npt.NDArray:
         """Converts m to km."""
         alt = var[:]
         if var.units == "m":
@@ -149,7 +152,7 @@ class DataSource:
             raise ValueError(msg)
         return alt
 
-    def _init_time(self) -> np.ndarray:
+    def _init_time(self) -> npt.NDArray:
         time = self.getvar("time")
         if len(time) == 0:
             msg = "Empty time vector"
@@ -173,7 +176,7 @@ class DataSource:
             )
         return None
 
-    def _init_height(self) -> np.ndarray | None:
+    def _init_height(self) -> npt.NDArray | None:
         """Returns height array above mean sea level (m)."""
         if "height" in self.dataset.variables:
             return self.to_m(self.dataset.variables["height"])
@@ -182,8 +185,13 @@ class DataSource:
             return np.array(range_instrument + self.altitude)
         return None
 
-    def __enter__(self):
+    def __enter__(self) -> Self:
         return self
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
+    def __exit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc_val: BaseException | None,
+        exc_tb: TracebackType | None,
+    ) -> None:
         self.close()

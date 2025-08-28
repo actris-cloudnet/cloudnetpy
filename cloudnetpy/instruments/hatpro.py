@@ -6,6 +6,7 @@ from collections import defaultdict
 from pathlib import Path
 from typing import Literal
 
+import mwrpy.rpg_mwr
 import netCDF4
 import numpy as np
 from mwrpy.exceptions import MissingInputData
@@ -134,7 +135,9 @@ def hatpro2l1c(
 
 
 class HatproL1c:
-    def __init__(self, hatpro, site_meta: dict, instrument: Instrument):
+    def __init__(
+        self, hatpro: mwrpy.rpg_mwr.Rpg, site_meta: dict, instrument: Instrument
+    ) -> None:
         self.raw_data = hatpro.raw_data
         self.data = hatpro.data
         self.date = hatpro.date.isoformat().split("-")

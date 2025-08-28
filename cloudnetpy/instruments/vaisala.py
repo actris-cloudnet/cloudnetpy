@@ -22,7 +22,7 @@ class VaisalaCeilo(Ceilometer):
         full_path: str,
         site_meta: dict,
         expected_date: str | None = None,
-    ):
+    ) -> None:
         super().__init__(self.noise_param)
         self.reader = reader
         self.full_path = full_path
@@ -51,13 +51,13 @@ class VaisalaCeilo(Ceilometer):
         self.convert_to_fraction_hour()
         self._store_ceilometer_info()
 
-    def sort_time(self):
+    def sort_time(self) -> None:
         """Sorts timestamps and removes duplicates."""
         time = self.data["time"]
         _time, ind = np.unique(time, return_index=True)
         self._screen_time_indices(ind)
 
-    def screen_date(self):
+    def screen_date(self) -> None:
         time = self.data["time"]
         if self.sane_date is None:
             self.sane_date = time[0].date()
@@ -67,7 +67,7 @@ class VaisalaCeilo(Ceilometer):
 
     def _screen_time_indices(
         self, valid_indices: npt.NDArray[np.intp] | npt.NDArray[np.bool]
-    ):
+    ) -> None:
         time = self.data["time"]
         n_time = len(time)
         if len(valid_indices) == 0 or (
@@ -79,14 +79,14 @@ class VaisalaCeilo(Ceilometer):
             if hasattr(array, "shape") and array.shape[:1] == (n_time,):
                 self.data[key] = self.data[key][valid_indices]
 
-    def convert_to_fraction_hour(self):
+    def convert_to_fraction_hour(self) -> None:
         time = self.data["time"]
         midnight = time[0].replace(hour=0, minute=0, second=0, microsecond=0)
         hour = datetime.timedelta(hours=1)
         self.data["time"] = (time - midnight) / hour
         self.date = self.expected_date.split("-")  # type: ignore[union-attr]
 
-    def _store_ceilometer_info(self):
+    def _store_ceilometer_info(self) -> None:
         raise NotImplementedError
 
 
@@ -95,10 +95,12 @@ class ClCeilo(VaisalaCeilo):
 
     noise_param = NoiseParam(noise_min=3.1e-8, noise_smooth_min=1.1e-8)
 
-    def __init__(self, full_path, site_meta, expected_date=None):
+    def __init__(
+        self, full_path: str, site_meta: dict, expected_date: str | None = None
+    ) -> None:
         super().__init__(read_cl_file, full_path, site_meta, expected_date)
 
-    def _store_ceilometer_info(self):
+    def _store_ceilometer_info(self) -> None:
         n_gates = self.data["beta_raw"].shape[1]
         if n_gates < 1540:
             self.instrument = instruments.CL31
@@ -111,11 +113,13 @@ class Ct25k(VaisalaCeilo):
 
     noise_param = NoiseParam(noise_min=0.7e-7, noise_smooth_min=1.2e-8)
 
-    def __init__(self, full_path, site_meta, expected_date=None):
+    def __init__(
+        self, full_path: str, site_meta: dict, expected_date: str | None = None
+    ) -> None:
         super().__init__(read_ct_file, full_path, site_meta, expected_date)
         self._store_ceilometer_info()
 
-    def _store_ceilometer_info(self):
+    def _store_ceilometer_info(self) -> None:
         self.instrument = instruments.CT25K
 
 
@@ -124,8 +128,10 @@ class Cs135(VaisalaCeilo):
 
     noise_param = NoiseParam()
 
-    def __init__(self, full_path, site_meta, expected_date=None):
+    def __init__(
+        self, full_path: str, site_meta: dict, expected_date: str | None = None
+    ) -> None:
         super().__init__(read_cs_file, full_path, site_meta, expected_date)
 
-    def _store_ceilometer_info(self):
+    def _store_ceilometer_info(self) -> None:
         self.instrument = instruments.CS135

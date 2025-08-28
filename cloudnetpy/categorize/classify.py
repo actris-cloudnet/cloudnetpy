@@ -1,7 +1,7 @@
 import numpy as np
+import numpy.typing as npt
 import skimage
 from numpy import ma
-from numpy.typing import NDArray
 
 from cloudnetpy import utils
 from cloudnetpy.categorize import (
@@ -131,9 +131,9 @@ def _fix_super_cold_liquid(obs: ClassData, bits: CategoryBits) -> None:
 
 
 def _remove_false_radar_liquid(
-    liquid_from_radar: np.ndarray,
-    liquid_from_lidar: np.ndarray,
-) -> NDArray[np.bool_]:
+    liquid_from_radar: npt.NDArray,
+    liquid_from_lidar: npt.NDArray,
+) -> npt.NDArray[np.bool_]:
     """Removes radar-liquid below lidar-detected liquid bases."""
     lidar_liquid_bases = atmos_utils.find_cloud_bases(liquid_from_lidar)
     for prof, base in zip(*np.where(lidar_liquid_bases), strict=True):
@@ -144,7 +144,7 @@ def _remove_false_radar_liquid(
 def _find_aerosols(
     obs: ClassData,
     bits: CategoryBits,
-) -> NDArray[np.bool_]:
+) -> npt.NDArray[np.bool_]:
     """Estimates aerosols from lidar backscattering.
 
     Aerosols are lidar signals that are: a) not falling, b) not liquid droplets.
@@ -167,7 +167,7 @@ def _fix_undetected_melting_layer(bits: CategoryBits) -> None:
     bits.melting[:, 1:][transition] = True
 
 
-def _find_drizzle_and_falling(bits: CategoryBits) -> np.ndarray:
+def _find_drizzle_and_falling(bits: CategoryBits) -> npt.NDArray:
     """Classifies pixels as falling, drizzle and others.
 
     Args:

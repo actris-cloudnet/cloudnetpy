@@ -3,6 +3,7 @@ import logging
 from datetime import timedelta
 
 import numpy as np
+import numpy.typing as npt
 from numpy import ma
 
 from cloudnetpy.model_evaluation.products.model_products import ModelManager
@@ -18,11 +19,11 @@ def check_model_file_list(name: str, models: list) -> None:
             raise AttributeError(msg)
 
 
-def time2datetime(time: np.ndarray, date: datetime.datetime) -> np.ndarray:
+def time2datetime(time: npt.NDArray, date: datetime.datetime) -> npt.NDArray:
     return np.asarray([date + timedelta(hours=float(t)) for t in time])
 
 
-def rebin_edges(arr: np.ndarray) -> np.ndarray:
+def rebin_edges(arr: npt.NDArray) -> npt.NDArray:
     """Rebins array bins by half and adds boundaries."""
     new_arr = [(arr[i] + arr[i + 1]) / 2 for i in range(len(arr) - 1)]
     new_arr.insert(0, arr[0] - ((arr[0] + arr[1]) / 2))
@@ -34,7 +35,7 @@ def calculate_advection_time(
     resolution: int,
     wind: ma.MaskedArray,
     sampling: int,
-) -> np.ndarray:
+) -> npt.NDArray:
     """Calculates time which variable takes to go through the time window.
 
     Notes:
@@ -52,10 +53,10 @@ def calculate_advection_time(
 
 def get_1d_indices(
     window: tuple,
-    data: np.ndarray,
-    mask: np.ndarray | None = None,
-) -> np.ndarray:
-    indices: np.ndarray = np.array((window[0] <= data) & (data < window[-1]))
+    data: npt.NDArray,
+    mask: npt.NDArray | None = None,
+) -> npt.NDArray:
+    indices: npt.NDArray = np.array((window[0] <= data) & (data < window[-1]))
     if mask is not None:
         indices[mask] = ma.masked
     return indices
@@ -64,16 +65,16 @@ def get_1d_indices(
 def get_adv_indices(
     model_t: int,
     adv_t: float,
-    data: np.ndarray,
-    mask: np.ndarray | None = None,
-) -> np.ndarray:
+    data: npt.NDArray,
+    mask: npt.NDArray | None = None,
+) -> npt.NDArray:
     adv_indices = ((model_t - adv_t / 2) <= data) & (data < (model_t + adv_t / 2))
     if mask is not None:
         adv_indices[mask] = ma.masked
     return adv_indices
 
 
-def get_obs_window_size(ind_x: np.ndarray, ind_y: np.ndarray) -> tuple | None:
+def get_obs_window_size(ind_x: npt.NDArray, ind_y: npt.NDArray) -> tuple | None:
     """Returns shape (tuple) of window area, where values are True."""
     x = np.where(ind_x)[0]
     y = np.where(ind_y)[0]
@@ -87,6 +88,6 @@ def add_date(model_obj: ModelManager, obs_obj: ObservationManager) -> None:
         model_obj.date.append(getattr(obs_obj.dataset, a))
 
 
-def average_column_sum(data: np.ndarray) -> np.ndarray:
+def average_column_sum(data: npt.NDArray) -> npt.NDArray:
     """Returns average sum of columns which have any data."""
     return np.nanmean(np.nansum(data, 1) > 0)

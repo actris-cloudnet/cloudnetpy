@@ -16,7 +16,7 @@ if TYPE_CHECKING:
 class NcLidar(Ceilometer):
     """Class for all lidars using netCDF files."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
         self.dataset: netCDF4.Dataset | None = None
 

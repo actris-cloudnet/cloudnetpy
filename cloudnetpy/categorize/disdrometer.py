@@ -3,6 +3,7 @@
 import logging
 
 import numpy as np
+import numpy.typing as npt
 from numpy import ma
 from scipy.interpolate import interp1d
 
@@ -20,11 +21,11 @@ class Disdrometer(DataSource):
 
     """
 
-    def __init__(self, full_path: str):
+    def __init__(self, full_path: str) -> None:
         super().__init__(full_path)
         self._init_rainfall_rate()
 
-    def interpolate_to_grid(self, time_grid: np.ndarray) -> None:
+    def interpolate_to_grid(self, time_grid: npt.NDArray) -> None:
         for key, array in self.data.items():
             self.data[key].data = self._interpolate(array.data, time_grid)
 
@@ -36,7 +37,7 @@ class Disdrometer(DataSource):
                 raise DisdrometerDataError(msg)
             self.append_data(self.dataset.variables[key][:], key)
 
-    def _interpolate(self, y: ma.MaskedArray, x_new: np.ndarray) -> np.ndarray:
+    def _interpolate(self, y: ma.MaskedArray, x_new: npt.NDArray) -> npt.NDArray:
         time = self.time
         mask = ma.getmask(y)
         if mask is not ma.nomask:

@@ -28,7 +28,7 @@ class NcRadar(DataSource, CloudnetInstrument):
         Used with BASTA, MIRA and Copernicus radars.
     """
 
-    def __init__(self, full_path: PathLike | str, site_meta: dict):
+    def __init__(self, full_path: PathLike | str, site_meta: dict) -> None:
         super().__init__(full_path)
         self.site_meta = site_meta
         self.date: list[str]

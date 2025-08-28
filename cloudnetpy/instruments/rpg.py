@@ -2,9 +2,10 @@
 
 import logging
 import math
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 
 import numpy as np
+import numpy.typing as npt
 from numpy import ma
 from rpgpy import RPGFileError
 
@@ -113,7 +114,7 @@ def _stack_rpg_data(rpg_objects: RpgObjects) -> tuple[dict, dict]:
 
     """
 
-    def _stack(source, target, fun) -> None:
+    def _stack(source: dict, target: dict, fun: Callable) -> None:
         for name, value in source.items():
             if not name.startswith("_"):
                 target[name] = fun((target[name], value)) if name in target else value
@@ -211,7 +212,7 @@ def _remove_files_with_bad_height(objects: list, files: list) -> tuple[list, lis
     return objects, files
 
 
-def _validate_date(obj, expected_date: str) -> None:
+def _validate_date(obj: Fmcw94Bin, expected_date: str) -> None:
     for t in obj.data["time"][:]:
         date_str = "-".join(utils.seconds2date(t)[:3])
         if date_str != expected_date:
@@ -222,7 +223,7 @@ def _validate_date(obj, expected_date: str) -> None:
 class Rpg(CloudnetInstrument):
     """Base class for RPG FMCW-94 cloud radar and HATPRO mwr."""
 
-    def __init__(self, raw_data: dict, site_meta: dict):
+    def __init__(self, raw_data: dict, site_meta: dict) -> None:
         super().__init__()
         self.raw_data = raw_data
         self.site_meta = site_meta
@@ -261,7 +262,7 @@ class Rpg(CloudnetInstrument):
 class Fmcw(Rpg):
     """Class for RPG cloud radars."""
 
-    def __init__(self, raw_data: dict, site_properties: dict):
+    def __init__(self, raw_data: dict, site_properties: dict) -> None:
         super().__init__(raw_data, site_properties)
         self.instrument = self._get_instrument(raw_data)
 
@@ -313,7 +314,7 @@ class Fmcw(Rpg):
         self.data["wind_speed"].data *= KM_H_TO_M_S
 
     @staticmethod
-    def _get_instrument(data: dict):
+    def _get_instrument(data: dict) -> Instrument:
         frequency = data["radar_frequency"]
         if math.isclose(frequency, 35, abs_tol=0.1):
             return instruments.FMCW35
@@ -326,12 +327,14 @@ class Fmcw(Rpg):
 class Hatpro(Rpg):
     """Class for RPG HATPRO mwr."""
 
-    def __init__(self, raw_data: dict, site_properties: dict, instrument: Instrument):
+    def __init__(
+        self, raw_data: dict, site_properties: dict, instrument: Instrument
+    ) -> None:
         super().__init__(raw_data, site_properties)
         self.instrument = instrument
 
 
-def _filter_zenith_angle(zenith: ma.MaskedArray) -> np.ndarray:
+def _filter_zenith_angle(zenith: ma.MaskedArray) -> npt.NDArray:
     """Returns indices of profiles with stable zenith angle close to 0 deg."""
     zenith = ma.array(zenith)
     if zenith.mask.all():

@@ -33,7 +33,7 @@ class Instrument:
     name: str
 
 
-def run(args: argparse.Namespace, tmpdir: str):
+def run(args: argparse.Namespace, tmpdir: str) -> None:
     cat_files = {}
 
     # Instrument based products
@@ -225,7 +225,7 @@ def _fetch_coefficient_files(calibration: dict, tmpdir: str) -> list:
     return coefficient_paths
 
 
-def _get_calibration(instrument: Instrument, args) -> dict:
+def _get_calibration(instrument: Instrument, args: argparse.Namespace) -> dict:
     params = {
         "date": args.date,
         "instrumentPid": instrument.pid,
@@ -484,7 +484,9 @@ def _check_input(files: list) -> None:
         raise ValueError(msg)
 
 
-def _plot(filepath: os.PathLike | str | None, product: str, args: argparse.Namespace):
+def _plot(
+    filepath: os.PathLike | str | None, product: str, args: argparse.Namespace
+) -> None:
     if filepath is None or (not args.plot and not args.show):
         return
     res = requests.get(f"{cloudnet_api_url}products/variables", timeout=60)
@@ -543,7 +545,7 @@ def _parse_products(product_argument: str) -> list[str]:
     return valid_products
 
 
-def main():
+def main() -> None:
     parser = argparse.ArgumentParser(
         description="Command line interface for running CloudnetPy."
     )

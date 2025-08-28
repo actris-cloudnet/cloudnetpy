@@ -11,6 +11,7 @@ from pathlib import Path
 from typing import Any, NamedTuple
 
 import numpy as np
+import numpy.typing as npt
 from numpy import ma
 
 from cloudnetpy import output, utils
@@ -85,7 +86,7 @@ class RadiometricsMP:
         MP-1500A, MP-183A.
     """
 
-    def __init__(self, filename: Path):
+    def __init__(self, filename: Path) -> None:
         self.filename = filename
         self.raw_data: list[Record] = []
         self.data: dict = {}
@@ -248,7 +249,7 @@ class RadiometricsWVR:
     radiometer.
     """
 
-    def __init__(self, filename: Path):
+    def __init__(self, filename: Path) -> None:
         self.filename = filename
         self.raw_data: dict = {}
         self.data: dict = {}
@@ -307,7 +308,9 @@ class RadiometricsCombined:
     date: datetime.date | None
     instrument: instruments.Instrument
 
-    def __init__(self, objs: list[RadiometricsMP | RadiometricsWVR], site_meta: dict):
+    def __init__(
+        self, objs: list[RadiometricsMP | RadiometricsWVR], site_meta: dict
+    ) -> None:
         self.site_meta = site_meta
         self.data = {}
         self.date = None
@@ -337,7 +340,7 @@ class RadiometricsCombined:
                 continue
             self.data[key] = self.data[key][valid_mask]
 
-    def sort_timestamps(self):
+    def sort_timestamps(self) -> None:
         ind = np.argsort(self.data["time"])
         for key in self.data:
             if key in ("range", "height"):
@@ -413,7 +416,7 @@ def _parse_datetime(text: str) -> datetime.datetime:
     )
 
 
-def _find_closest(x: np.ndarray, y: np.ndarray, x_new: np.ndarray) -> np.ndarray:
+def _find_closest(x: npt.NDArray, y: npt.NDArray, x_new: npt.NDArray) -> npt.NDArray:
     return y[np.argmin(np.abs(x_new - x[:, np.newaxis]), axis=0)]
 
 

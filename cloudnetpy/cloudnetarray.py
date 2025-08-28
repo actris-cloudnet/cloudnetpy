@@ -1,9 +1,10 @@
 """CloudnetArray class."""
 
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 
 import netCDF4
 import numpy as np
+import numpy.typing as npt
 from numpy import ma
 
 from cloudnetpy import utils
@@ -26,13 +27,13 @@ class CloudnetArray:
 
     def __init__(
         self,
-        variable: netCDF4.Variable | np.ndarray | float,
+        variable: netCDF4.Variable | npt.NDArray | float,
         name: str,
         units_from_user: str | None = None,
         dimensions: Sequence[str] | None = None,
         data_type: str | None = None,
         source: str | None = None,
-    ):
+    ) -> None:
         self.variable = variable
         self.name = name
         self.data = self._init_data()
@@ -57,7 +58,7 @@ class CloudnetArray:
         """Masks data from given indices."""
         self.data[ind] = ma.masked
 
-    def rebin_data(self, time: np.ndarray, time_new: np.ndarray) -> np.ndarray:
+    def rebin_data(self, time: npt.NDArray, time_new: npt.NDArray) -> npt.NDArray:
         """Rebins `data` in time.
 
         Args:
@@ -108,14 +109,14 @@ class CloudnetArray:
         """Filters vertical artifacts from radar data."""
         self._filter(utils.filter_x_pixels)
 
-    def _filter(self, fun) -> None:
+    def _filter(self, fun: Callable[[npt.NDArray], npt.NDArray]) -> None:
         if not isinstance(self.data, ma.MaskedArray):
             self.data = ma.masked_array(self.data)
         is_data = (~self.data.mask).astype(int)
         is_data_filtered = fun(is_data)
         self.data[is_data_filtered == 0] = ma.masked
 
-    def _init_data(self) -> np.ndarray:
+    def _init_data(self) -> npt.NDArray:
         if isinstance(self.variable, netCDF4.Variable):
             return self.variable[:]
         if isinstance(self.variable, np.ndarray):
@@ -144,5 +145,5 @@ class CloudnetArray:
             return "i2"
         return "i4"
 
-    def __getitem__(self, ind: tuple) -> np.ndarray:
+    def __getitem__(self, ind: tuple) -> npt.NDArray:
         return self.data[ind]

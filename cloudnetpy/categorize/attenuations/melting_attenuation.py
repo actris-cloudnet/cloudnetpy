@@ -1,4 +1,4 @@
-import numpy as np
+import numpy.typing as npt
 from numpy import ma
 
 import cloudnetpy.constants as con
@@ -55,8 +55,8 @@ def calc_melting_attenuation(
 
 
 def _calc_melting_attenuation(
-    rainfall_rate: np.ndarray, frequency: float
-) -> np.ndarray:
+    rainfall_rate: npt.NDArray, frequency: float
+) -> npt.NDArray:
     """Calculates total attenuation due to melting layer (dB).
 
     References:

@@ -4,6 +4,7 @@ import netCDF4
 from pathlib import Path
 import pytest
 from numpy.testing import assert_array_equal, assert_allclose
+import numpy.typing as npt
 
 from cloudnetpy.concat_lib import concatenate_files
 
@@ -11,7 +12,7 @@ from cloudnetpy.concat_lib import concatenate_files
 def _create_test_file(
     path: Path,
     times: list[int],
-    ranges: list[float] | np.ndarray = np.array([10.0, 20.0]),
+    ranges: list[float] | npt.NDArray = np.array([10.0, 20.0]),
     scalar: ma.MaskedArray | float | None = None,
     data1: ma.MaskedArray | None = None,
     data2: ma.MaskedArray | None = None,

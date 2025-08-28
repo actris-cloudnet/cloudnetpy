@@ -9,7 +9,7 @@ import cloudnetpy.constants as con
 from cloudnetpy import utils
 
 
-def calc_wet_bulb_temperature(model_data: dict) -> np.ndarray:
+def calc_wet_bulb_temperature(model_data: dict) -> npt.NDArray:
     """Calculate wet-bulb temperature iteratively.
 
     Args:
@@ -30,7 +30,7 @@ def calc_wet_bulb_temperature(model_data: dict) -> np.ndarray:
     W = calc_mixing_ratio(vp, pressure)
     L_v_0 = 2501e3  # Latent heat of vaporization at 0degC (J kg-1)
 
-    def f(tw):
+    def f(tw: npt.NDArray) -> npt.NDArray:
         svp = calc_saturation_vapor_pressure(c2k(tw))
         W_s = calc_mixing_ratio(svp, pressure)
         C_p_w = 0.0265 * tw**2 - 1.7688 * tw + 4205.6  # Eq. 6 (J kg-1 C-1)
@@ -86,17 +86,17 @@ def calc_vapor_pressure(
     )
 
 
-def c2k(temp: np.ndarray) -> np.ndarray:
+def c2k(temp: npt.NDArray) -> npt.NDArray:
     """Converts Celsius to Kelvins."""
     return ma.array(temp) + 273.15
 
 
-def k2c(temp: np.ndarray) -> np.ndarray:
+def k2c(temp: npt.NDArray) -> npt.NDArray:
     """Converts Kelvins to Celsius."""
     return ma.array(temp) - 273.15
 
 
-def find_cloud_bases(array: np.ndarray) -> np.ndarray:
+def find_cloud_bases(array: npt.NDArray) -> npt.NDArray:
     """Finds bases of clouds.
 
     Args:
@@ -111,7 +111,7 @@ def find_cloud_bases(array: np.ndarray) -> np.ndarray:
     return np.diff(array_padded, axis=1) == 1
 
 
-def find_cloud_tops(array: np.ndarray) -> np.ndarray:
+def find_cloud_tops(array: npt.NDArray) -> npt.NDArray:
     """Finds tops of clouds.
 
     Args:
@@ -127,8 +127,8 @@ def find_cloud_tops(array: np.ndarray) -> np.ndarray:
 
 
 def find_lowest_cloud_bases(
-    cloud_mask: np.ndarray,
-    height: np.ndarray,
+    cloud_mask: npt.NDArray,
+    height: npt.NDArray,
 ) -> ma.MaskedArray:
     """Finds altitudes of cloud bases."""
     cloud_heights = cloud_mask * height
@@ -136,8 +136,8 @@ def find_lowest_cloud_bases(
 
 
 def find_highest_cloud_tops(
-    cloud_mask: np.ndarray,
-    height: np.ndarray,
+    cloud_mask: npt.NDArray,
+    height: npt.NDArray,
 ) -> ma.MaskedArray:
     """Finds altitudes of cloud tops."""
     cloud_heights = cloud_mask * height
@@ -145,15 +145,15 @@ def find_highest_cloud_tops(
     return _find_lowest_heights(cloud_heights_flipped)
 
 
-def _find_lowest_heights(cloud_heights: np.ndarray) -> ma.MaskedArray:
+def _find_lowest_heights(cloud_heights: npt.NDArray) -> ma.MaskedArray:
     inds = (cloud_heights != 0).argmax(axis=1)
     heights = np.array([cloud_heights[i, ind] for i, ind in enumerate(inds)])
     return ma.masked_equal(heights, 0.0)
 
 
 def fill_clouds_with_lwc_dz(
-    temperature: np.ndarray, pressure: np.ndarray, is_liquid: np.ndarray
-) -> np.ndarray:
+    temperature: npt.NDArray, pressure: npt.NDArray, is_liquid: npt.NDArray
+) -> npt.NDArray:
     """Fills liquid clouds with lwc change rate at the cloud bases.
 
     Args:
@@ -173,10 +173,10 @@ def fill_clouds_with_lwc_dz(
 
 
 def get_lwc_change_rate_at_bases(
-    temperature: np.ndarray,
-    pressure: np.ndarray,
-    is_liquid: np.ndarray,
-) -> np.ndarray:
+    temperature: npt.NDArray,
+    pressure: npt.NDArray,
+    is_liquid: npt.NDArray,
+) -> npt.NDArray:
     """Finds LWC change rate in liquid cloud bases.
 
     Args:
@@ -198,7 +198,9 @@ def get_lwc_change_rate_at_bases(
     return lwc_dz
 
 
-def calc_lwc_change_rate(temperature: np.ndarray, pressure: np.ndarray) -> np.ndarray:
+def calc_lwc_change_rate(
+    temperature: npt.NDArray, pressure: npt.NDArray
+) -> npt.NDArray:
     """Returns rate of change of condensable water (LWC).
 
     Calculates the theoretical adiabatic rate of increase of LWC
@@ -242,7 +244,7 @@ def calc_lwc_change_rate(temperature: np.ndarray, pressure: np.ndarray) -> np.nd
     return dqs_dz * air_density
 
 
-def calc_saturation_vapor_pressure(temperature: np.ndarray) -> np.ndarray:
+def calc_saturation_vapor_pressure(temperature: npt.NDArray) -> npt.NDArray:
     """Goff-Gratch formula for saturation vapor pressure over water adopted by WMO.
 
     Args:
@@ -266,7 +268,9 @@ def calc_saturation_vapor_pressure(temperature: np.ndarray) -> np.ndarray:
     ) * con.HPA_TO_PA
 
 
-def calc_mixing_ratio(vapor_pressure: np.ndarray, pressure: np.ndarray) -> np.ndarray:
+def calc_mixing_ratio(
+    vapor_pressure: npt.NDArray, pressure: npt.NDArray
+) -> npt.NDArray:
     """Calculates mixing ratio from partial vapor pressure and pressure.
 
     Args:
@@ -281,10 +285,10 @@ def calc_mixing_ratio(vapor_pressure: np.ndarray, pressure: np.ndarray) -> np.nd
 
 
 def calc_air_density(
-    pressure: np.ndarray,
-    temperature: np.ndarray,
-    svp_mixing_ratio: np.ndarray,
-) -> np.ndarray:
+    pressure: npt.NDArray,
+    temperature: npt.NDArray,
+    svp_mixing_ratio: npt.NDArray,
+) -> npt.NDArray:
     """Calculates air density (kg m-3).
 
     Args:
@@ -299,7 +303,7 @@ def calc_air_density(
     return pressure / (con.RS * temperature * (0.6 * svp_mixing_ratio + 1))
 
 
-def calc_adiabatic_lwc(lwc_dz: np.ndarray, height: np.ndarray) -> np.ndarray:
+def calc_adiabatic_lwc(lwc_dz: npt.NDArray, height: npt.NDArray) -> npt.NDArray:
     """Calculates adiabatic liquid water content (kg m-3).
 
     Args:
@@ -319,8 +323,8 @@ def calc_adiabatic_lwc(lwc_dz: np.ndarray, height: np.ndarray) -> np.ndarray:
 
 
 def normalize_lwc_by_lwp(
-    lwc_adiabatic: np.ndarray, lwp: np.ndarray, height: np.ndarray
-) -> np.ndarray:
+    lwc_adiabatic: npt.NDArray, lwp: npt.NDArray, height: npt.NDArray
+) -> npt.NDArray:
     """Finds LWC that would produce measured LWP.
 
     Calculates LWP-weighted, normalized LWC. This is the measured

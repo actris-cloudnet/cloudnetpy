@@ -5,68 +5,70 @@ class CloudnetException(Exception):
 class InconsistentDataError(CloudnetException):
     """Internal exception class."""
 
-    def __init__(self, msg: str):
+    def __init__(self, msg: str) -> None:
         super().__init__(msg)
 
 
 class DisdrometerDataError(CloudnetException):
     """Internal exception class."""
 
-    def __init__(self, msg: str):
+    def __init__(self, msg: str) -> None:
         super().__init__(msg)
 
 
 class RadarDataError(CloudnetException):
     """Internal exception class."""
 
-    def __init__(self, msg: str):
+    def __init__(self, msg: str) -> None:
         super().__init__(msg)
 
 
 class LidarDataError(CloudnetException):
     """Internal exception class."""
 
-    def __init__(self, msg: str):
+    def __init__(self, msg: str) -> None:
         super().__init__(msg)
 
 
 class PlottingError(CloudnetException):
     """Internal exception class."""
 
-    def __init__(self, msg: str):
+    def __init__(self, msg: str) -> None:
         super().__init__(msg)
 
 
 class ModelDataError(CloudnetException):
     """Internal exception class."""
 
-    def __init__(self, msg: str = "Invalid model file: not enough proper profiles"):
+    def __init__(
+        self, msg: str = "Invalid model file: not enough proper profiles"
+    ) -> None:
         super().__init__(msg)
 
 
 class ValidTimeStampError(CloudnetException):
     """Internal exception class."""
 
-    def __init__(self, msg: str = "No valid timestamps found"):
+    def __init__(self, msg: str = "No valid timestamps found") -> None:
         super().__init__(msg)
 
 
 class MissingInputFileError(CloudnetException):
     """Internal exception class."""
 
-    def __init__(self, msg: str = "Missing required input files"):
+    def __init__(self, msg: str = "Missing required input files") -> None:
         super().__init__(msg)
 
 
 class HatproDataError(CloudnetException):
     """Internal exception class."""
 
-    def __init__(self, msg: str = "Invalid HATPRO file"):
+    def __init__(self, msg: str = "Invalid HATPRO file") -> None:
         super().__init__(msg)
 
 
 class InvalidSourceFileError(CloudnetException):
     """Internal exception class."""
 
-    def __init__(self, msg: str = "Invalid source file"):
+    def __init__(self, msg: str = "Invalid source file") -> None:
         super().__init__(msg)

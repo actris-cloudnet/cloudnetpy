@@ -1,6 +1,7 @@
 """Module for creating Cloudnet drizzle product."""
 
 import numpy as np
+import numpy.typing as npt
 from numpy import ma
 from scipy.special import gamma
 
@@ -77,7 +78,9 @@ class DrizzleProducts:
 
     """
 
-    def __init__(self, drizzle_source: DrizzleSource, drizzle_solver: DrizzleSolver):
+    def __init__(
+        self, drizzle_source: DrizzleSource, drizzle_solver: DrizzleSolver
+    ) -> None:
         self._data = drizzle_source
         self._params = drizzle_solver.params
         self._ind_drizzle, self._ind_lut = self._find_indices()
@@ -106,13 +109,13 @@ class DrizzleProducts:
             "v_air": v_air,
         }
 
-    def _calc_density(self) -> np.ndarray:
+    def _calc_density(self) -> npt.NDArray:
         """Calculates drizzle number density (m-3)."""
         a = self._data.z * 3.67**6
         b = self._params["Do"] ** 6
         return np.divide(a, b, out=np.zeros_like(a), where=b != 0)
 
-    def _calc_lwc(self) -> np.ndarray:
+    def _calc_lwc(self) -> npt.NDArray:
         """Calculates drizzle liquid water content (kg m-3)."""
         rho_water = 1000
         dia, mu, s = (self._params.get(key) for key in ("Do", "mu", "S"))
@@ -122,7 +125,7 @@ class DrizzleProducts:
         gamma_ratio = gamma(4 + mu) / gamma(3 + mu) / (3.67 + mu)
         return rho_water / 3 * self._data.beta * s * dia * gamma_ratio
 
-    def _calc_lwf(self, lwc_in) -> np.ndarray:
+    def _calc_lwf(self, lwc_in: npt.NDArray) -> npt.NDArray:
         """Calculates drizzle liquid water flux."""
         flux = ma.copy(lwc_in)
         flux[self._ind_drizzle] *= (
@@ -131,13 +134,13 @@ class DrizzleProducts:
         )
         return flux
 
-    def _calc_fall_velocity(self) -> np.ndarray:
+    def _calc_fall_velocity(self) -> npt.NDArray:
         """Calculates drizzle droplet fall velocity (m s-1)."""
         velocity = np.zeros_like(self._params["Do"])
         velocity[self._ind_drizzle] = -self._data.mie["v"][self._ind_lut]
         return velocity
 
-    def _calc_v_air(self, droplet_velocity) -> np.ndarray:
+    def _calc_v_air(self, droplet_velocity: npt.NDArray) -> npt.NDArray:
         """Calculates vertical air velocity."""
         velocity = -np.copy(droplet_velocity)
         velocity[self._ind_drizzle] += self._data.v[self._ind_drizzle]
@@ -156,9 +159,9 @@ class RetrievalStatus:
             status information.
     """
 
-    def __init__(self, drizzle_class: DrizzleClassification):
+    def __init__(self, drizzle_class: DrizzleClassification) -> None:
         self.drizzle_class = drizzle_class
-        self.retrieval_status: np.ndarray = np.array([])
+        self.retrieval_status: npt.NDArray = np.array([])
         self._get_retrieval_status()
 
     def _get_retrieval_status(self) -> None:

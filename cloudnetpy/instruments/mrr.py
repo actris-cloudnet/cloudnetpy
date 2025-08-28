@@ -127,7 +127,7 @@ class MrrPro(NcRadar):
 
     epoch = (1970, 1, 1)
 
-    def __init__(self, full_path: PathLike | str, site_meta: dict):
+    def __init__(self, full_path: PathLike | str, site_meta: dict) -> None:
         super().__init__(full_path, site_meta)
         self.instrument = instruments.MRR_PRO
         if m := re.search(
