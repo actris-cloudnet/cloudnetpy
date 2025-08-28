@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.80.7 – 2025-08-28
+
+- Specify dimensions explicitly for each output variable. For example,
+  `latitude` and `longitude` will now always have `time` dimensions.
+- Bypass mask check for non-masked NumPy arrays
+
 ## 1.80.6 – 2025-08-11
 
 - Allow some masked values in model profile
