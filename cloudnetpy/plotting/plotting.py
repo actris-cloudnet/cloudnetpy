@@ -185,7 +185,7 @@ class FigureData:
         if self.file_type == "cpr-simulation":
             height = self.file.variables["height_sat"][:]
             if self.options.plot_above_ground:
-                height -= self.file.variables["altitude"][:]
+                height -= ma.median(self.file.variables["altitude"][:])
             return height * con.M_TO_KM
         if self.file_type == "model":
             height = ma.mean(self.file.variables["height"][:], axis=0)  # height AGL
