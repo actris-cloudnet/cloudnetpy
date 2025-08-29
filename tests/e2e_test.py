@@ -41,9 +41,9 @@ def main():
         raw_files["radar"],
         calibrated_files["radar"],
         site_meta,
-        uuid="kissa",
+        uuid="7e7e1d51-daea-4f9b-a1b3-103bd8ea3ce6",
     )
-    assert uuid_radar == "kissa"
+    assert uuid_radar == "7e7e1d51-daea-4f9b-a1b3-103bd8ea3ce6"
     lidar_meta = site_meta.copy()
     uuid_lidar = ceilo2nc(raw_files["lidar"], calibrated_files["lidar"], lidar_meta)
     for _, filename in calibrated_files.items():
