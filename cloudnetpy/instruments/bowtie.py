@@ -1,4 +1,6 @@
+import datetime
 from os import PathLike
+from uuid import UUID
 
 import numpy as np
 from numpy import ma
@@ -15,10 +17,10 @@ from cloudnetpy.utils import bit_field_definition
 
 def bowtie2nc(
     bowtie_file: str | PathLike,
-    output_file: str,
+    output_file: str | PathLike,
     site_meta: dict,
-    uuid: str | None = None,
-    date: str | None = None,
+    uuid: str | UUID | None = None,
+    date: str | datetime.date | None = None,
 ) -> str:
     """Converts data from 'BOW-TIE' campaign cloud radar on RV-Meteor into
        Cloudnet Level 1b netCDF file.
@@ -54,6 +56,11 @@ def bowtie2nc(
         "Nyquist_velocity": "nyquist_velocity",
         "range_offsets": "chirp_start_indices",
     }
+
+    if isinstance(date, str):
+        date = datetime.date.fromisoformat(date)
+    if isinstance(uuid, str):
+        uuid = UUID(uuid)
 
     with Bowtie(bowtie_file, site_meta) as bowtie:
         bowtie.init_data(keymap)
@@ -93,8 +100,8 @@ class Bowtie(NcRadar):
         bits.mask = self.data["v"].data.mask
         self.append_data(bits, "correction_bits")
 
-    def check_date(self, date: str) -> None:
-        if "-".join(self.date) != date:
+    def check_date(self, date: datetime.date) -> None:
+        if self.date != date:
             raise ValidTimeStampError
 
 

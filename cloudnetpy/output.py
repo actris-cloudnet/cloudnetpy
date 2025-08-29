@@ -325,16 +325,11 @@ def copy_global(
 
 def add_time_attribute(
     attributes: dict,
-    date: list[str] | datetime.date,
+    date: datetime.date,
     key: str = "time",
 ) -> dict:
     """Adds time attribute with correct units."""
-    if isinstance(date, list):
-        date_str = "-".join(date)
-    elif isinstance(date, datetime.date):
-        date_str = date.isoformat()
-    else:
-        raise TypeError
+    date_str = date.isoformat()
     units = f"hours since {date_str} 00:00:00 +00:00"
     if key not in attributes:
         attributes[key] = COMMON_ATTRIBUTES[key]

@@ -1,3 +1,4 @@
+import datetime
 import logging
 from typing import NamedTuple
 
@@ -10,7 +11,6 @@ from cloudnetpy import utils
 from cloudnetpy.cloudnetarray import CloudnetArray
 from cloudnetpy.exceptions import ValidTimeStampError
 from cloudnetpy.instruments.instruments import Instrument
-from cloudnetpy.utils import Epoch
 
 
 class NoiseParam(NamedTuple):
@@ -27,9 +27,9 @@ class Ceilometer:
         self.noise_param = noise_param or NoiseParam()
         self.data: dict = {}  # Need to contain 'beta_raw', 'range' and 'time'
         self.metadata: dict = {}  # Need to contain 'date' as ('yyyy', 'mm', 'dd')
-        self.expected_date: str | None = None
+        self.expected_date: datetime.date | None = None
         self.site_meta: dict = {}
-        self.date: list[str] = []
+        self.date: datetime.date
         self.instrument: Instrument | None = None
         self.serial_number: str | None = None
 
@@ -95,13 +95,13 @@ class Ceilometer:
             raise RuntimeError(msg)
         self.data["wavelength"] = float(self.instrument.wavelength)
 
-    def get_date_and_time(self, epoch: Epoch) -> None:
+    def get_date_and_time(self, epoch: datetime.datetime) -> None:
         if "time" not in self.data:
             msg = "Time array missing from data"
             raise ValidTimeStampError(msg)
         if self.expected_date is not None:
             self.data = utils.screen_by_time(self.data, epoch, self.expected_date)
-        self.date = utils.seconds2date(self.data["time"][0], epoch=epoch)[:3]
+        self.date = utils.seconds2date(self.data["time"][0], epoch=epoch).date()
         self.data["time"] = utils.seconds2hours(self.data["time"])
 
     def data_to_cloudnet_arrays(self, time_dtype: str = "f4") -> None:

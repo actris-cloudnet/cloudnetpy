@@ -142,7 +142,7 @@ class TestRPG2nc94GHz(Check):
 
     def test_uuid_from_user(self, tmp_path):
         test_path = tmp_path / "uuid.nc"
-        test_uuid = "abc"
+        test_uuid = "fe45561b-eb08-4d2a-a463-c6b4f7be7055"
         uuid, _ = rpg.rpg2nc(
             FILEPATH,
             test_path,

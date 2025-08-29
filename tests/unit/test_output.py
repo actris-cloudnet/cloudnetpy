@@ -1,3 +1,4 @@
+import datetime
 import netCDF4
 import pytest
 
@@ -120,7 +121,7 @@ def test_add_standard_global_attributes(tmpdir_factory):
 def test_add_time_attribute():
     attr = MetaData(long_name="Some name", units="xy", dimensions=None)
     attributes = {"kissa": attr}
-    date = ["2020", "01", "12"]
+    date = datetime.date(2020, 1, 12)
     new_attributes = output.add_time_attribute(attributes, date)
     assert new_attributes["time"].units == "hours since 2020-01-12 00:00:00 +00:00"
     assert new_attributes["kissa"].units == "xy"

@@ -1,3 +1,4 @@
+import datetime
 import pytest
 from numpy.testing import assert_array_equal
 
@@ -16,7 +17,7 @@ class TestDataSource:
         assert_array_equal(self.obj.getvar("model_height"), test_array)
 
     def test_get_date(self):
-        assert_array_equal(self.obj.get_date(), ["2019", "05", "23"])
+        assert_array_equal(self.obj.get_date(), datetime.date(2019, 5, 23))
 
     def test_getvar_missing(self):
         with pytest.raises(RuntimeError):

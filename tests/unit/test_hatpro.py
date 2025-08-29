@@ -33,7 +33,7 @@ class TestHatpro2nc(Check):
         assert len(uuid) == 36
 
     def test_processing_of_several_lwp_files(self, tmp_path):
-        test_uuid = "abc"
+        test_uuid = "fe45561b-eb08-4d2a-a463-c6b4f7be7055"
         test_path = tmp_path / "several.nc"
         uuid, files = hatpro.hatpro2nc(
             file_path,

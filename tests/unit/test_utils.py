@@ -624,30 +624,57 @@ def test_seconds2time(input, result):
 @pytest.mark.parametrize(
     "input, result, epoch",
     [
-        (0, ["1970", "01", "01", "00", "00", "00"], (1970, 1, 1)),
-        (0, ["2001", "01", "01", "00", "00", "00"], (2001, 1, 1)),
+        (0, datetime.datetime(1970, 1, 1, 0, 0, 0), datetime.datetime(1970, 1, 1)),
+        (0, datetime.datetime(2001, 1, 1, 0, 0, 0), datetime.datetime(2001, 1, 1)),
         (
             24 * 60 * 60 * 10 + 1,
-            ["2001", "01", "11", "00", "00", "01"],
-            (2001, 1, 1),
+            datetime.datetime(2001, 1, 11, 0, 0, 1),
+            datetime.datetime(2001, 1, 1),
         ),
         (
             24 * 60 * 60 - 1,
-            ["2001", "01", "01", "23", "59", "59"],
-            (2001, 1, 1),
+            datetime.datetime(2001, 1, 1, 23, 59, 59),
+            datetime.datetime(2001, 1, 1),
         ),
-        (625107602, ["1989", "10", "23", "01", "00", "02"], (1970, 1, 1)),
-        (625107602, ["1990", "10", "23", "01", "00", "02"], (1971, 1, 1)),
-        (625107602, ["1995", "10", "23", "01", "00", "02"], (1976, 1, 1)),
-        (625107602, ["1996", "10", "23", "01", "00", "02"], (1977, 1, 1)),
-        (1545730073, ["2018", "12", "25", "09", "27", "53"], (1970, 1, 1)),
-        (625107602, ["2020", "10", "23", "01", "00", "02"], (2001, 1, 1)),
-        (1590278403, ["2020", "05", "24", "00", "00", "03"], (1970, 1, 1)),
+        (
+            625107602,
+            datetime.datetime(1989, 10, 23, 1, 0, 2),
+            datetime.datetime(1970, 1, 1),
+        ),
+        (
+            625107602,
+            datetime.datetime(1990, 10, 23, 1, 0, 2),
+            datetime.datetime(1971, 1, 1),
+        ),
+        (
+            625107602,
+            datetime.datetime(1995, 10, 23, 1, 0, 2),
+            datetime.datetime(1976, 1, 1),
+        ),
+        (
+            625107602,
+            datetime.datetime(1996, 10, 23, 1, 0, 2),
+            datetime.datetime(1977, 1, 1),
+        ),
+        (
+            1545730073,
+            datetime.datetime(2018, 12, 25, 9, 27, 53),
+            datetime.datetime(1970, 1, 1),
+        ),
+        (
+            625107602,
+            datetime.datetime(2020, 10, 23, 1, 0, 2),
+            datetime.datetime(2001, 1, 1),
+        ),
+        (
+            1590278403,
+            datetime.datetime(2020, 5, 24, 0, 0, 3),
+            datetime.datetime(1970, 1, 1),
+        ),
     ],
 )
 def test_seconds2date(input, result, epoch):
     assert utils.seconds2date(input, epoch) == result
-    assert result[3:] == utils.seconds2time(input)
 
 
 @pytest.fixture()
@@ -705,20 +732,20 @@ def test_append_data(d, key, array, expected):
     [
         (
             np.array([1, 5, 1e6, 3]),
-            (1970, 1, 1),
-            "1970-01-01",
+            datetime.datetime(1970, 1, 1),
+            datetime.date(1970, 1, 1),
             np.array([0, 3, 1]),
         ),
         (
             np.array([1, 5, 2, 1e6, 3]),
-            (1970, 1, 1),
-            "1970-01-01",
+            datetime.datetime(1970, 1, 1),
+            datetime.date(1970, 1, 1),
             np.array([0, 2, 4, 1]),
         ),
         (
             np.array([1e8, 1.1, 2, 1e6, 3]),
-            (1970, 1, 1),
-            "1970-01-01",
+            datetime.datetime(1970, 1, 1),
+            datetime.date(1970, 1, 1),
             np.array([1, 2, 4]),
         ),
     ],

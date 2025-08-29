@@ -1,6 +1,7 @@
 import csv
 import datetime
 from os import PathLike
+from uuid import UUID
 
 import numpy as np
 
@@ -12,9 +13,9 @@ from cloudnetpy.instruments.cloudnet_instrument import CSVFile
 
 def rain_e_h32nc(
     input_file: str | PathLike,
-    output_file: str,
+    output_file: str | PathLike,
     site_meta: dict,
-    uuid: str | None = None,
+    uuid: str | UUID | None = None,
     date: str | datetime.date | None = None,
 ) -> str:
     """Converts rain_e_h3 rain-gauge into Cloudnet Level 1b netCDF file.
@@ -36,6 +37,8 @@ def rain_e_h32nc(
     rain = RainEH3(site_meta)
     if isinstance(date, str):
         date = datetime.date.fromisoformat(date)
+    if isinstance(uuid, str):
+        uuid = UUID(uuid)
     rain.parse_input_file(input_file, date)
     rain.add_data()
     rain.add_date()

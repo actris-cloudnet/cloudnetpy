@@ -1,5 +1,9 @@
 """Module for reading / converting BASTA radar data."""
 
+import datetime
+from os import PathLike
+from uuid import UUID
+
 import numpy as np
 
 from cloudnetpy import output
@@ -10,11 +14,11 @@ from cloudnetpy.metadata import MetaData
 
 
 def basta2nc(
-    basta_file: str,
-    output_file: str,
+    basta_file: str | PathLike,
+    output_file: str | PathLike,
     site_meta: dict,
-    uuid: str | None = None,
-    date: str | None = None,
+    uuid: str | UUID | None = None,
+    date: str | datetime.date | None = None,
 ) -> str:
     """Converts BASTA cloud radar data into Cloudnet Level 1b netCDF file.
 
@@ -42,6 +46,11 @@ def basta2nc(
           >>> basta2nc('basta_file.nc', 'radar.nc', site_meta)
 
     """
+    if isinstance(date, str):
+        date = datetime.date.fromisoformat(date)
+    if isinstance(uuid, str):
+        uuid = UUID(uuid)
+
     keymap = {
         "reflectivity": "Zh",
         "velocity": "v",
@@ -77,9 +86,9 @@ class Basta(NcRadar):
 
     """
 
-    def __init__(self, full_path: str, site_meta: dict) -> None:
+    def __init__(self, full_path: str | PathLike, site_meta: dict) -> None:
         super().__init__(full_path, site_meta)
-        self.date: list[str] = self.get_date()
+        self.date = self.get_date()
         self.instrument = instruments.BASTA
 
     def screen_data(self, keymap: dict) -> None:
@@ -89,7 +98,7 @@ class Basta(NcRadar):
             if key in self.data and self.data[key].data.ndim == mask.ndim:
                 self.data[key].mask_indices(np.where(mask != 1))
 
-    def validate_date(self, expected_date: str) -> None:
+    def validate_date(self, expected_date: datetime.date) -> None:
         """Validates expected data."""
         date_units = self.dataset.variables["time"].units
         date = date_units.split()[2]

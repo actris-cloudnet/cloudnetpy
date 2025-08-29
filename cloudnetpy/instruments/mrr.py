@@ -19,8 +19,8 @@ def mrr2nc(
     input_file: PathLike | str | Iterable[PathLike | str],
     output_file: PathLike | str,
     site_meta: dict,
-    uuid: UUID | str | None = None,
-    date: datetime.date | str | None = None,
+    uuid: str | UUID | None = None,
+    date: str | datetime.date | None = None,
 ) -> str:
     """Converts METEK MRR-PRO data into Cloudnet Level 1b netCDF file.
 
@@ -125,7 +125,7 @@ class MrrPro(NcRadar):
 
     """
 
-    epoch = (1970, 1, 1)
+    epoch = datetime.datetime(1970, 1, 1, tzinfo=datetime.timezone.utc)
 
     def __init__(self, full_path: PathLike | str, site_meta: dict) -> None:
         super().__init__(full_path, site_meta)
@@ -137,9 +137,9 @@ class MrrPro(NcRadar):
         ):
             self.serial_number = m[1]
 
-    def init_date(self) -> list[str]:
+    def init_date(self) -> datetime.date:
         time_stamps = self.getvar("time")
-        return utils.seconds2date(time_stamps[0], (1970, 1, 1))[:3]
+        return utils.seconds2date(time_stamps[0], self.epoch).date()
 
     def fix_units(self) -> None:
         self.data["v"].data *= -1  # towards -> away from instrument
@@ -156,8 +156,8 @@ class MrrPro(NcRadar):
         time_stamps = self.getvar("time")
         valid_indices = []
         for ind, timestamp in enumerate(time_stamps):
-            date = "-".join(utils.seconds2date(timestamp, self.epoch)[:3])
-            if date == expected_date.isoformat():
+            date = utils.seconds2date(timestamp, self.epoch).date()
+            if date == expected_date:
                 valid_indices.append(ind)
         self.screen_time_indices(valid_indices)
 

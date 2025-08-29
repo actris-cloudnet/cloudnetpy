@@ -1,8 +1,11 @@
 """Module for reading / converting pollyxt data."""
 
+import datetime
 import glob
 import logging
 from collections import Counter
+from os import PathLike
+from uuid import UUID
 
 import netCDF4
 import numpy as np
@@ -15,15 +18,14 @@ from cloudnetpy.exceptions import InconsistentDataError, ValidTimeStampError
 from cloudnetpy.instruments import instruments
 from cloudnetpy.instruments.ceilometer import Ceilometer
 from cloudnetpy.metadata import COMMON_ATTRIBUTES, MetaData
-from cloudnetpy.utils import Epoch
 
 
 def pollyxt2nc(
-    input_folder: str,
-    output_file: str,
+    input_folder: str | PathLike,
+    output_file: str | PathLike,
     site_meta: dict,
-    uuid: str | None = None,
-    date: str | None = None,
+    uuid: str | UUID | None = None,
+    date: str | datetime.date | None = None,
 ) -> str:
     """Converts PollyXT Raman lidar data into Cloudnet Level 1b netCDF file.
 
@@ -51,6 +53,10 @@ def pollyxt2nc(
         >>> pollyxt2nc('/path/to/files/', 'pollyxt.nc', site_meta)
 
     """
+    if isinstance(date, str):
+        date = datetime.date.fromisoformat(date)
+    if isinstance(uuid, str):
+        uuid = UUID(uuid)
     snr_limit = site_meta.get("snr_limit", 2)
     polly = PollyXt(site_meta, date)
     epoch = polly.fetch_data(input_folder)
@@ -69,7 +75,7 @@ def pollyxt2nc(
 
 
 class PollyXt(Ceilometer):
-    def __init__(self, site_meta: dict, expected_date: str | None) -> None:
+    def __init__(self, site_meta: dict, expected_date: datetime.date | None) -> None:
         super().__init__()
         self.site_meta = site_meta
         self.expected_date = expected_date
@@ -96,7 +102,7 @@ class PollyXt(Ceilometer):
         default = 5
         self.data["zenith_angle"] = float(self.metadata.get("zenith_angle", default))
 
-    def fetch_data(self, input_folder: str) -> Epoch:
+    def fetch_data(self, input_folder: str | PathLike) -> datetime.datetime:
         """Read input data."""
         bsc_files = glob.glob(f"{input_folder}/*[0-9]_att*.nc")
         depol_files = glob.glob(f"{input_folder}/*[0-9]_vol*.nc")

@@ -1,8 +1,11 @@
 """Module for reading raw cloud radar data."""
 
+import datetime
 import os
 import tempfile
+from os import PathLike
 from tempfile import TemporaryDirectory
+from uuid import UUID
 
 import numpy as np
 
@@ -13,11 +16,11 @@ from cloudnetpy.metadata import MetaData
 
 
 def copernicus2nc(
-    raw_files: str,
-    output_file: str,
+    raw_files: str | PathLike,
+    output_file: str | PathLike,
     site_meta: dict,
-    uuid: str | None = None,
-    date: str | None = None,
+    uuid: str | UUID | None = None,
+    date: str | datetime.date | None = None,
 ) -> str:
     """Converts 'Copernicus' cloud radar data into Cloudnet Level 1b netCDF file.
 
@@ -43,6 +46,11 @@ def copernicus2nc(
           >>> copernicus2nc('/one/day/of/copernicus/files/', 'radar.nc', site_meta)
 
     """
+    if isinstance(date, str):
+        date = datetime.date.fromisoformat(date)
+    if isinstance(uuid, str):
+        uuid = UUID(uuid)
+
     keymap = {
         "ZED_HC": "Zh",
         "VEL_HC": "v",
@@ -57,6 +65,7 @@ def copernicus2nc(
         "beamwidthH": "beamwidthH",
     }
 
+    nc_filename: str | PathLike
     with TemporaryDirectory() as temp_dir:
         if os.path.isdir(raw_files):
             with tempfile.NamedTemporaryFile(
@@ -117,7 +126,7 @@ class Copernicus(ChilboltonRadar):
 
     """
 
-    def __init__(self, full_path: str, site_meta: dict) -> None:
+    def __init__(self, full_path: str | PathLike, site_meta: dict) -> None:
         super().__init__(full_path, site_meta)
         self.instrument = COPERNICUS
 

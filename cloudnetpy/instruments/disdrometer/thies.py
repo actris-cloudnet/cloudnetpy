@@ -2,6 +2,7 @@ import datetime
 from collections import defaultdict
 from os import PathLike
 from typing import Any
+from uuid import UUID
 
 import numpy as np
 from numpy import ma
@@ -69,10 +70,10 @@ TELEGRAM4 = [
 
 
 def thies2nc(
-    disdrometer_file: str,
-    output_file: str,
+    disdrometer_file: str | PathLike,
+    output_file: str | PathLike,
     site_meta: dict,
-    uuid: str | None = None,
+    uuid: str | UUID | None = None,
     date: str | datetime.date | None = None,
 ) -> str:
     """Converts Thies-LNM disdrometer data into Cloudnet Level 1b netCDF file.
@@ -101,6 +102,8 @@ def thies2nc(
     """
     if isinstance(date, str):
         date = datetime.date.fromisoformat(date)
+    if isinstance(uuid, str):
+        uuid = UUID(uuid)
     try:
         disdrometer = Thies(disdrometer_file, site_meta, date)
     except (ValueError, IndexError) as err:

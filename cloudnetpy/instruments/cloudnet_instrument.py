@@ -102,8 +102,7 @@ class CSVFile(CloudnetInstrument):
         self._data: dict = {}
 
     def add_date(self) -> None:
-        dt = self._data["time"][0]
-        self.date = dt.strftime("%Y %m %d").split()
+        self.date = self._data["time"][0].date()
 
     def add_data(self) -> None:
         for key, value in self._data.items():

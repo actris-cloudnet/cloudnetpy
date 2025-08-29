@@ -3,8 +3,10 @@
 import datetime
 import logging
 from collections import defaultdict
+from os import PathLike
 from pathlib import Path
 from typing import Literal
+from uuid import UUID
 
 import mwrpy.rpg_mwr
 import netCDF4
@@ -36,12 +38,12 @@ ITYPE_MAP: dict[IType, Instrument] = {
 
 
 def hatpro2l1c(
-    mwr_dir: str,
-    output_file: str,
+    mwr_dir: str | PathLike,
+    output_file: str | PathLike,
     site_meta: dict,
     instrument_type: IType = "hatpro",
-    uuid: str | None = None,
-    date: datetime.date | str | None = None,
+    uuid: str | UUID | None = None,
+    date: str | datetime.date | None = None,
 ) -> str:
     """Converts RPG HATPRO microwave radiometer data into Cloudnet Level 1c netCDF file.
 
@@ -58,6 +60,8 @@ def hatpro2l1c(
     """
     if isinstance(date, str):
         date = datetime.date.fromisoformat(date)
+    if isinstance(uuid, str):
+        uuid = UUID(uuid)
 
     coeff_files = site_meta.get("coefficientFiles")
     time_offset = site_meta.get("time_offset")
@@ -65,9 +69,9 @@ def hatpro2l1c(
     try:
         hatpro_raw = lev1_to_nc(
             "1C01",
-            mwr_dir,
+            str(mwr_dir),
             instrument_type=instrument_type,
-            output_file=output_file,
+            output_file=str(output_file),
             coeff_files=coeff_files,
             instrument_config=site_meta,
             date=date,
@@ -140,19 +144,19 @@ class HatproL1c:
     ) -> None:
         self.raw_data = hatpro.raw_data
         self.data = hatpro.data
-        self.date = hatpro.date.isoformat().split("-")
+        self.date = hatpro.date
         self.site_meta = site_meta
         self.instrument = instrument
 
 
 def hatpro2nc(
-    path_to_files: str,
-    output_file: str,
+    path_to_files: str | PathLike,
+    output_file: str | PathLike,
     site_meta: dict,
     instrument_type: IType = "hatpro",
-    uuid: str | None = None,
-    date: str | None = None,
-) -> tuple[str, list]:
+    uuid: str | UUID | None = None,
+    date: str | datetime.date | None = None,
+) -> tuple[str, list[str]]:
     """Converts RPG HATPRO microwave radiometer data into Cloudnet Level 1b
     netCDF file.
 
@@ -191,6 +195,10 @@ def hatpro2nc(
         >>> hatpro2nc('/path/to/files/', 'hatpro.nc', site_meta)
 
     """
+    if isinstance(date, str):
+        date = datetime.date.fromisoformat(date)
+    if isinstance(uuid, str):
+        uuid = UUID(uuid)
     hatpro_objects, valid_files = _get_hatpro_objects(Path(path_to_files), date)
     is_lwp_files = any(f.endswith(".LWP") for f in valid_files)
     is_iwv_files = any(f.endswith(".IWV") for f in valid_files)
@@ -212,7 +220,7 @@ def hatpro2nc(
 
 def _get_hatpro_objects(
     directory: Path,
-    expected_date: str | None,
+    expected_date: datetime.date | None,
 ) -> tuple[list[HatproBinCombined], list[str]]:
     objects = defaultdict(list)
     for filename in directory.iterdir():
@@ -247,13 +255,13 @@ def _get_hatpro_objects(
     return combined_objs, valid_files
 
 
-def _validate_date(obj: HatproBin, expected_date: str) -> HatproBin:
+def _validate_date(obj: HatproBin, expected_date: datetime.date) -> HatproBin:
     if obj.header["_time_reference"] != 1:
         msg = "Can not validate non-UTC dates"
         raise ValueError(msg)
     inds = []
     for ind, timestamp in enumerate(obj.data["time"][:]):
-        date = "-".join(utils.seconds2date(timestamp)[:3])
+        date = utils.seconds2date(timestamp).date()
         if date == expected_date:
             inds.append(ind)
     if not inds:

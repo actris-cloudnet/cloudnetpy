@@ -1,5 +1,6 @@
 """This module contains unit tests for ceilo-module."""
 
+import datetime
 import glob
 import os
 from tempfile import TemporaryDirectory
@@ -51,7 +52,7 @@ def fake_jenoptik_file(tmpdir):
 
 
 class TestCHM15k:
-    date = "2021-02-21"
+    date = datetime.date(2021, 2, 21)
 
     @pytest.fixture(autouse=True)
     def init_tests(self, fake_jenoptik_file):
@@ -70,13 +71,13 @@ class TestCHM15k:
         assert all(np.diff(self.obj.data["time"]) > 0)
 
     def test_read_date(self):
-        assert_array_equal(self.obj.date, self.date.split("-"))
+        assert_array_equal(self.obj.date, self.date)
 
     def test_read_metadata(self):
         assert self.obj.data["zenith_angle"] == 2
 
     def test_convert_time_error(self):
-        obj = lufft.LufftCeilo(self.file, SITE_META, "2122-01-01")
+        obj = lufft.LufftCeilo(self.file, SITE_META, datetime.date(2122, 1, 1))
         with pytest.raises(ValidTimeStampError):
             obj.read_ceilometer_file()
 

@@ -1,7 +1,11 @@
 """Module for reading and processing Vaisala / Lufft ceilometers."""
 
+import datetime
 import logging
+import os.path
 from itertools import islice
+from os import PathLike
+from uuid import UUID
 
 import netCDF4
 import numpy as np
@@ -16,11 +20,11 @@ from cloudnetpy.metadata import COMMON_ATTRIBUTES, MetaData
 
 
 def ceilo2nc(
-    full_path: str,
-    output_file: str,
+    full_path: str | PathLike,
+    output_file: str | PathLike,
     site_meta: dict,
-    uuid: str | None = None,
-    date: str | None = None,
+    uuid: str | UUID | None = None,
+    date: str | datetime.date | None = None,
 ) -> str:
     """Converts Vaisala, Lufft and Campbell Scientific ceilometer data into
     Cloudnet Level 1b netCDF file.
@@ -70,6 +74,10 @@ def ceilo2nc(
         >>> ceilo2nc('chm15k_raw.nc', 'chm15k.nc', site_meta)
 
     """
+    if isinstance(date, str):
+        date = datetime.date.fromisoformat(date)
+    if isinstance(uuid, str):
+        uuid = UUID(uuid)
     snr_limit = 5
     ceilo_obj = _initialize_ceilo(full_path, site_meta, date)
     calibration_factor = site_meta.get("calibration_factor")
@@ -145,9 +153,9 @@ def _get_n_negatives(ceilo_obj: ClCeilo | Ct25k | LufftCeilo | Cl61d | Cs135) ->
 
 
 def _initialize_ceilo(
-    full_path: str,
+    full_path: str | PathLike,
     site_meta: dict,
-    date: str | None = None,
+    date: datetime.date | None = None,
 ) -> ClCeilo | Ct25k | LufftCeilo | Cl61d | Cs135:
     if "model" in site_meta:
         if site_meta["model"] not in (
@@ -177,13 +185,16 @@ def _initialize_ceilo(
     return LufftCeilo(full_path, site_meta, date)
 
 
-def _find_ceilo_model(full_path: str) -> str:
+def _find_ceilo_model(full_path: str | PathLike) -> str:
     model = None
     try:
         with netCDF4.Dataset(full_path) as nc:
             title = nc.title
         for identifier in ["cl61d", "cl61-d"]:
-            if identifier in title.lower() or identifier in full_path.lower():
+            if (
+                identifier in title.lower()
+                or identifier in os.path.basename(full_path).lower()
+            ):
                 model = "cl61d"
         if model is None:
             model = "chm15k"

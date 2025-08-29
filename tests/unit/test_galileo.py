@@ -96,7 +96,7 @@ class TestGalileo2nc(Check):
 
     def test_uuid_from_user(self, tmp_path):
         test_path = tmp_path / "uuid.nc"
-        uuid_from_user = "kissa"
+        uuid_from_user = "fe45561b-eb08-4d2a-a463-c6b4f7be7055"
         uuid = galileo.galileo2nc(
             FILEPATH,
             test_path,

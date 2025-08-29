@@ -7,6 +7,7 @@ from collections.abc import Callable, Iterable, Iterator, Sequence
 from itertools import islice
 from os import PathLike
 from typing import Any
+from uuid import UUID
 
 import numpy as np
 import numpy.typing as npt
@@ -23,9 +24,9 @@ from .common import ATTRIBUTES, Disdrometer
 
 def parsivel2nc(
     disdrometer_file: str | PathLike | Iterable[str | PathLike],
-    output_file: str,
+    output_file: str | PathLike,
     site_meta: dict,
-    uuid: str | None = None,
+    uuid: str | UUID | None = None,
     date: str | datetime.date | None = None,
     telegram: Sequence[int | None] | None = None,
     timestamps: Sequence[datetime.datetime] | None = None,
@@ -62,6 +63,8 @@ def parsivel2nc(
     """
     if isinstance(date, str):
         date = datetime.date.fromisoformat(date)
+    if isinstance(uuid, str):
+        uuid = UUID(uuid)
     if isinstance(disdrometer_file, str | PathLike):
         disdrometer_file = [disdrometer_file]
     disdrometer = Parsivel(disdrometer_file, site_meta, telegram, date, timestamps)
