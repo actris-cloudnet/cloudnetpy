@@ -1,6 +1,6 @@
 import os
-from pathlib import Path
+from os import PathLike
 
 
-def file_exists(file_path: str) -> bool:
-    return Path.is_file(Path(file_path)) and os.path.getsize(file_path) > 0
+def file_exists(file_path: str | PathLike) -> bool:
+    return os.path.isfile(file_path) and os.path.getsize(file_path) > 0

@@ -1,6 +1,7 @@
 """Mwr module, containing the :class:`Mwr` class."""
 
 import logging
+from os import PathLike
 
 import numpy as np
 import numpy.typing as npt
@@ -21,7 +22,7 @@ class Disdrometer(DataSource):
 
     """
 
-    def __init__(self, full_path: str) -> None:
+    def __init__(self, full_path: str | PathLike) -> None:
         super().__init__(full_path)
         self._init_rainfall_rate()
 

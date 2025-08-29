@@ -2,6 +2,7 @@ import datetime
 from collections import defaultdict
 from os import PathLike
 from typing import Any
+from uuid import UUID
 
 import numpy as np
 from numpy import ma
@@ -12,6 +13,7 @@ from cloudnetpy.constants import MM_TO_M, SEC_IN_HOUR
 from cloudnetpy.exceptions import DisdrometerDataError, ValidTimeStampError
 from cloudnetpy.instruments import instruments
 from cloudnetpy.instruments.toa5 import read_toa5
+from cloudnetpy.utils import get_uuid
 
 from .common import ATTRIBUTES, Disdrometer
 
@@ -69,12 +71,12 @@ TELEGRAM4 = [
 
 
 def thies2nc(
-    disdrometer_file: str,
-    output_file: str,
+    disdrometer_file: str | PathLike,
+    output_file: str | PathLike,
     site_meta: dict,
-    uuid: str | None = None,
+    uuid: str | UUID | None = None,
     date: str | datetime.date | None = None,
-) -> str:
+) -> UUID:
     """Converts Thies-LNM disdrometer data into Cloudnet Level 1b netCDF file.
 
     Args:
@@ -101,6 +103,7 @@ def thies2nc(
     """
     if isinstance(date, str):
         date = datetime.date.fromisoformat(date)
+    uuid = get_uuid(uuid)
     try:
         disdrometer = Thies(disdrometer_file, site_meta, date)
     except (ValueError, IndexError) as err:
@@ -113,7 +116,8 @@ def thies2nc(
     disdrometer.convert_units()
     attributes = output.add_time_attribute(ATTRIBUTES, disdrometer.date)
     output.update_attributes(disdrometer.data, attributes)
-    return output.save_level1b(disdrometer, output_file, uuid)
+    output.save_level1b(disdrometer, output_file, uuid)
+    return uuid
 
 
 class Thies(Disdrometer):

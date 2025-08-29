@@ -20,24 +20,18 @@ from cloudnetpy.metadata import COMMON_ATTRIBUTES
 def save_level1b(
     obj,  # noqa: ANN001
     output_file: PathLike | str,
-    uuid: UUID | str | None = None,
-) -> str:
+    uuid: UUID,
+) -> None:
     """Saves Cloudnet Level 1b file."""
     dimensions = _get_netcdf_dimensions(obj)
     with init_file(output_file, dimensions, obj.data, uuid) as nc:
-        file_uuid = nc.file_uuid
         fix_attribute_name(nc)
         location = obj.site_meta["name"]
         nc.cloudnet_file_type = obj.instrument.domain
         nc.title = get_l1b_title(obj.instrument, location)
-        if isinstance(obj.date, list):
-            nc.year, nc.month, nc.day = obj.date
-        elif isinstance(obj.date, datetime.date):
-            nc.year = str(obj.date.year)
-            nc.month = str(obj.date.month).zfill(2)
-            nc.day = str(obj.date.day).zfill(2)
-        else:
-            raise TypeError
+        nc.year = str(obj.date.year)
+        nc.month = str(obj.date.month).zfill(2)
+        nc.day = str(obj.date.day).zfill(2)
         nc.location = location
         nc.history = get_l1b_history(obj.instrument)
         nc.source = get_l1b_source(obj.instrument)
@@ -47,7 +41,6 @@ def save_level1b(
             for software, version in obj.software.items():
                 nc.setncattr(f"{software}_version", version)
         nc.references = get_references()
-    return file_uuid
 
 
 def _get_netcdf_dimensions(obj) -> dict:  # noqa: ANN001
@@ -78,10 +71,10 @@ def _get_netcdf_dimensions(obj) -> dict:  # noqa: ANN001
 def save_product_file(
     short_id: str,
     obj: DataSource,
-    file_name: str,
-    uuid: str | None = None,
+    file_name: str | PathLike,
+    uuid: UUID,
     copy_from_cat: tuple = (),
-) -> str:
+) -> None:
     """Saves a standard Cloudnet product file.
 
     Args:
@@ -98,7 +91,6 @@ def save_product_file(
         "height": len(obj.dataset.variables["height"]),
     }
     with init_file(file_name, dimensions, obj.data, uuid) as nc:
-        file_uuid = nc.file_uuid
         nc.cloudnet_file_type = short_id
         vars_from_source = (
             "altitude",
@@ -121,7 +113,6 @@ def save_product_file(
         )
         merge_history(nc, human_readable_file_type, obj)
         nc.references = get_references(short_id)
-    return file_uuid
 
 
 def get_l1b_source(instrument: Instrument) -> str:
@@ -252,7 +243,7 @@ def init_file(
     file_name: PathLike | str,
     dimensions: dict,
     cloudnet_arrays: dict,
-    uuid: UUID | str | None = None,
+    uuid: UUID,
 ) -> netCDF4.Dataset:
     """Initializes a Cloudnet file for writing.
 
@@ -325,16 +316,11 @@ def copy_global(
 
 def add_time_attribute(
     attributes: dict,
-    date: list[str] | datetime.date,
+    date: datetime.date,
     key: str = "time",
 ) -> dict:
     """Adds time attribute with correct units."""
-    if isinstance(date, list):
-        date_str = "-".join(date)
-    elif isinstance(date, datetime.date):
-        date_str = date.isoformat()
-    else:
-        raise TypeError
+    date_str = date.isoformat()
     units = f"hours since {date_str} 00:00:00 +00:00"
     if key not in attributes:
         attributes[key] = COMMON_ATTRIBUTES[key]
@@ -436,13 +422,10 @@ def _get_identifier(short_id: str) -> str:
     return short_id
 
 
-def add_standard_global_attributes(
-    nc: netCDF4.Dataset,
-    uuid: UUID | str | None = None,
-) -> None:
+def add_standard_global_attributes(nc: netCDF4.Dataset, uuid: UUID) -> None:
     nc.Conventions = "CF-1.8"
     nc.cloudnetpy_version = version.__version__
-    nc.file_uuid = str(uuid) if uuid is not None else utils.get_uuid()
+    nc.file_uuid = str(uuid)
 
 
 def fix_attribute_name(nc: netCDF4.Dataset) -> None:

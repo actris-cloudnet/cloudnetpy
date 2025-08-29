@@ -1,6 +1,7 @@
 """General helper classes and functions for all products."""
 
 from dataclasses import dataclass
+from os import PathLike
 from typing import NamedTuple
 
 import netCDF4
@@ -49,7 +50,7 @@ class QualityBits:
 
 
 class CategorizeBits:
-    def __init__(self, categorize_file: str) -> None:
+    def __init__(self, categorize_file: str | PathLike) -> None:
         self._categorize_file = categorize_file
         self.category_bits = self._read_category_bits()
         self.quality_bits = self._read_quality_bits()
@@ -95,7 +96,7 @@ class ProductClassification(CategorizeBits):
 
     """
 
-    def __init__(self, categorize_file: str) -> None:
+    def __init__(self, categorize_file: str | PathLike) -> None:
         super().__init__(categorize_file)
         self.is_rain = get_is_rain(categorize_file)
 
@@ -105,7 +106,7 @@ class IceClassification(ProductClassification):
     Child of ProductClassification().
     """
 
-    def __init__(self, categorize_file: str) -> None:
+    def __init__(self, categorize_file: str | PathLike) -> None:
         super().__init__(categorize_file)
         self._is_attenuated = self._find_attenuated()
         self._is_corrected = self._find_corrected()
@@ -180,7 +181,7 @@ class IceClassification(ProductClassification):
 class IceSource(DataSource):
     """Base class for different ice products."""
 
-    def __init__(self, categorize_file: str, product: str) -> None:
+    def __init__(self, categorize_file: str | PathLike, product: str) -> None:
         super().__init__(categorize_file)
         self.radar_frequency = float(self.getvar("radar_frequency"))
         self.wl_band = utils.get_wl_band(self.radar_frequency)
@@ -265,7 +266,7 @@ class IceSource(DataSource):
         return float(utils.lin2db(k2))
 
 
-def get_is_rain(filename: str) -> npt.NDArray:
+def get_is_rain(filename: str | PathLike) -> npt.NDArray:
     # TODO: Check that this is correct
     with netCDF4.Dataset(filename) as nc:
         for name in ["rain_detected", "rainfall_rate", "rain_rate"]:
@@ -278,12 +279,14 @@ def get_is_rain(filename: str) -> npt.NDArray:
     raise ValueError(msg)
 
 
-def read_nc_field(nc_file: str, name: str) -> ma.MaskedArray:
+def read_nc_field(nc_file: str | PathLike, name: str) -> ma.MaskedArray:
     with netCDF4.Dataset(nc_file) as nc:
         return nc.variables[name][:]
 
 
-def interpolate_model(cat_file: str, names: str | list) -> dict[str, npt.NDArray]:
+def interpolate_model(
+    cat_file: str | PathLike, names: str | list
+) -> dict[str, npt.NDArray]:
     """Interpolates 2D model field into dense Cloudnet grid.
 
     Args:
@@ -307,12 +310,12 @@ def interpolate_model(cat_file: str, names: str | list) -> dict[str, npt.NDArray
     return {name: _interp_field(name) for name in names}
 
 
-def _read_nc_fields(nc_file: str, names: list[str]) -> list[ma.MaskedArray]:
+def _read_nc_fields(nc_file: str | PathLike, names: list[str]) -> list[ma.MaskedArray]:
     with netCDF4.Dataset(nc_file) as nc:
         return [nc.variables[name][:] for name in names]
 
 
-def _get_temperature(categorize_file: str) -> npt.NDArray:
+def _get_temperature(categorize_file: str | PathLike) -> npt.NDArray:
     """Returns interpolated temperatures in Celsius."""
     atmosphere = interpolate_model(categorize_file, "temperature")
     return atmos_utils.k2c(atmosphere["temperature"])

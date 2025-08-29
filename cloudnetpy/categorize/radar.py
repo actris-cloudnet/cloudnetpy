@@ -2,6 +2,7 @@
 
 import logging
 import math
+from os import PathLike
 
 import numpy as np
 import numpy.typing as npt
@@ -35,7 +36,7 @@ class Radar(DataSource):
 
     """
 
-    def __init__(self, full_path: str) -> None:
+    def __init__(self, full_path: str | PathLike) -> None:
         super().__init__(full_path, radar=True)
         self.radar_frequency = float(self.getvar("radar_frequency"))
         self.location = getattr(self.dataset, "location", "")

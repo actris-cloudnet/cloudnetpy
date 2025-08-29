@@ -1,4 +1,6 @@
 import logging
+from os import PathLike
+from uuid import UUID
 
 import cloudnetpy.model_evaluation.products.tools as tl
 from cloudnetpy.model_evaluation.file_handler import (
@@ -12,18 +14,19 @@ from cloudnetpy.model_evaluation.products.grid_methods import ProductGrid
 from cloudnetpy.model_evaluation.products.model_products import ModelManager
 from cloudnetpy.model_evaluation.products.observation_products import ObservationManager
 from cloudnetpy.model_evaluation.utils import file_exists
+from cloudnetpy.utils import get_uuid
 
 
 def process_L3_day_product(
     model: str,
     obs: str,
-    model_files: list,
-    product_file: str,
-    output_file: str,
-    uuid: str | None = None,
+    model_files: list[str | PathLike],
+    product_file: str | PathLike,
+    output_file: str | PathLike,
+    uuid: str | UUID | None = None,
     *,
     overwrite: bool = False,
-) -> str:
+) -> UUID:
     """Main function to generate downsample of observations to match model grid.
 
     This function will generate a L3 product nc-file. It includes the information of
@@ -63,6 +66,7 @@ def process_L3_day_product(
         >>> process_L3_day_product(model, product, [model_file], input_file,
         output_file)
     """
+    uuid = get_uuid(uuid)
     product_obj = ObservationManager(obs, product_file)
     tl.check_model_file_list(model, model_files)
     for m_file in model_files:
@@ -82,7 +86,7 @@ def process_L3_day_product(
         update_attributes(model_obj.data, attributes)
         if not file_exists(output_file) or overwrite:
             tl.add_date(model_obj, product_obj)
-            uuid_out = save_downsampled_file(
+            save_downsampled_file(
                 f"{obs}_{model}",
                 output_file,
                 (model_obj, product_obj),
@@ -91,4 +95,4 @@ def process_L3_day_product(
             )
         else:
             add_var2ncfile(model_obj, output_file)
-    return uuid_out
+    return uuid

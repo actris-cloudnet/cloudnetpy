@@ -1,5 +1,8 @@
 """Module for creating Cloudnet drizzle product."""
 
+from os import PathLike
+from uuid import UUID
+
 import numpy as np
 import numpy.typing as npt
 from numpy import ma
@@ -17,10 +20,10 @@ from cloudnetpy.products.drizzle_tools import (
 
 
 def generate_drizzle(
-    categorize_file: str,
-    output_file: str,
-    uuid: str | None = None,
-) -> str:
+    categorize_file: str | PathLike,
+    output_file: str | PathLike,
+    uuid: str | UUID | None = None,
+) -> UUID:
     """Generates Cloudnet drizzle product.
 
     This function calculates different drizzle properties from
@@ -44,6 +47,7 @@ def generate_drizzle(
         J. Appl. Meteor., 44, 14–27, https://doi.org/10.1175/JAM-2181.1
 
     """
+    uuid = utils.get_uuid(uuid)
     with DrizzleSource(categorize_file) as drizzle_source:
         drizzle_class = DrizzleClassification(categorize_file)
         spectral_width = SpectralWidth(categorize_file)
@@ -62,7 +66,8 @@ def generate_drizzle(
         date = drizzle_source.get_date()
         attributes = output.add_time_attribute(DRIZZLE_ATTRIBUTES, date)
         output.update_attributes(drizzle_source.data, attributes)
-        return output.save_product_file("drizzle", drizzle_source, output_file, uuid)
+        output.save_product_file("drizzle", drizzle_source, output_file, uuid)
+        return uuid
 
 
 class DrizzleProducts:

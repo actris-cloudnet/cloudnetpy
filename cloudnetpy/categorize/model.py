@@ -1,5 +1,8 @@
 """Model module, containing the :class:`Model` class."""
 
+import os.path
+from os import PathLike
+
 import numpy as np
 import numpy.typing as npt
 from numpy import ma
@@ -51,7 +54,7 @@ class Model(DataSource):
     )
 
     def __init__(
-        self, model_file: str, alt_site: float, options: dict | None = None
+        self, model_file: str | PathLike, alt_site: float, options: dict | None = None
     ) -> None:
         super().__init__(model_file)
         self.options = options
@@ -165,11 +168,12 @@ def _calc_mean_height(model_heights: npt.NDArray) -> npt.NDArray:
     return np.array(mean_height)
 
 
-def _find_model_type(file_name: str) -> str:
+def _find_model_type(file_name: str | PathLike) -> str:
     """Finds model type from the model filename."""
     possible_keys = ("gdas1", "icon", "ecmwf", "harmonie", "era5", "arpege")
+    basename = os.path.basename(file_name)
     for key in possible_keys:
-        if key in file_name:
+        if key in basename:
             return key
     msg = f"Unknown model type: {file_name}"
     raise ValueError(msg)

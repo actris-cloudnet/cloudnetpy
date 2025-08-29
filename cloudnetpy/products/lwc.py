@@ -2,6 +2,9 @@
 method.
 """
 
+from os import PathLike
+from uuid import UUID
+
 import numpy as np
 import numpy.typing as npt
 from numpy import ma
@@ -16,10 +19,10 @@ from cloudnetpy.products.product_tools import CategorizeBits, get_is_rain
 
 
 def generate_lwc(
-    categorize_file: str,
-    output_file: str,
-    uuid: str | None = None,
-) -> str:
+    categorize_file: str | PathLike,
+    output_file: str | PathLike,
+    uuid: str | UUID | None = None,
+) -> UUID:
     """Generates Cloudnet liquid water content product.
 
     This function calculates cloud liquid water content using the so-called
@@ -48,6 +51,7 @@ def generate_lwc(
         Bull. Amer. Meteor. Soc., 88, 883–898, https://doi.org/10.1175/BAMS-88-6-883
 
     """
+    uuid = utils.get_uuid(uuid)
     with LwcSource(categorize_file) as lwc_source:
         lwc = Lwc(lwc_source)
         clouds = CloudAdjustor(lwc_source, lwc)
@@ -56,7 +60,7 @@ def generate_lwc(
         date = lwc_source.get_date()
         attributes = output.add_time_attribute(LWC_ATTRIBUTES, date)
         output.update_attributes(lwc_source.data, attributes)
-        return output.save_product_file(
+        output.save_product_file(
             "lwc",
             lwc_source,
             output_file,
@@ -66,6 +70,7 @@ def generate_lwc(
                 "lwp_error",
             ),
         )
+        return uuid
 
 
 class LwcSource(DataSource):
@@ -88,7 +93,7 @@ class LwcSource(DataSource):
 
     """
 
-    def __init__(self, categorize_file: str) -> None:
+    def __init__(self, categorize_file: str | PathLike) -> None:
         super().__init__(categorize_file)
         if "lwp" not in self.dataset.variables:
             msg = "Liquid water path missing from the categorize file."
@@ -112,7 +117,9 @@ class LwcSource(DataSource):
         self.append_data(error, "lwc_error", units="dB")
 
     @staticmethod
-    def _get_atmosphere(categorize_file: str) -> tuple[npt.NDArray, npt.NDArray]:
+    def _get_atmosphere(
+        categorize_file: str | PathLike,
+    ) -> tuple[npt.NDArray, npt.NDArray]:
         fields = ["temperature", "pressure"]
         atmosphere = p_tools.interpolate_model(categorize_file, fields)
         return atmosphere["temperature"], atmosphere["pressure"]

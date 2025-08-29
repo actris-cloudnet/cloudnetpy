@@ -1,5 +1,8 @@
 """Module for creating classification file."""
 
+from os import PathLike
+from uuid import UUID
+
 import numpy as np
 import numpy.typing as npt
 from numpy import ma
@@ -12,10 +15,10 @@ from cloudnetpy.products.product_tools import CategorizeBits
 
 
 def generate_classification(
-    categorize_file: str,
-    output_file: str,
-    uuid: str | None = None,
-) -> str:
+    categorize_file: str | PathLike,
+    output_file: str | PathLike,
+    uuid: str | UUID | None = None,
+) -> UUID:
     """Generates Cloudnet classification product.
 
     This function reads the initial classification masks from a
@@ -36,6 +39,7 @@ def generate_classification(
         >>> generate_classification('categorize.nc', 'classification.nc')
 
     """
+    uuid = utils.get_uuid(uuid)
     with DataSource(categorize_file) as product_container:
         categorize_bits = CategorizeBits(categorize_file)
         classification = _get_target_classification(categorize_bits)
@@ -59,12 +63,13 @@ def generate_classification(
         file_type = "classification"
         if "liquid_prob" in product_container.dataset.variables:
             file_type += "-voodoo"
-        return output.save_product_file(
+        output.save_product_file(
             file_type,
             product_container,
             output_file,
             uuid,
         )
+        return uuid
 
 
 def _get_target_classification(

@@ -1,6 +1,7 @@
 import logging
 import os
 from bisect import bisect_left
+from os import PathLike
 
 import netCDF4
 import numpy as np
@@ -28,7 +29,7 @@ class DrizzleSource(DataSource):
 
     """
 
-    def __init__(self, categorize_file: str) -> None:
+    def __init__(self, categorize_file: str | PathLike) -> None:
         super().__init__(categorize_file)
         self.mie = self._read_mie_lut()
         self.height_vector = self.getvar("height")
@@ -97,7 +98,7 @@ class DrizzleClassification(ProductClassification):
 
     """
 
-    def __init__(self, categorize_file: str) -> None:
+    def __init__(self, categorize_file: str | PathLike) -> None:
         super().__init__(categorize_file)
         self.is_v_sigma = self._find_v_sigma(categorize_file)
         self.warm_liquid = self._find_warm_liquid()
@@ -106,7 +107,7 @@ class DrizzleClassification(ProductClassification):
         self.cold_rain = self._find_cold_rain()
 
     @staticmethod
-    def _find_v_sigma(cat_file: str) -> npt.NDArray:
+    def _find_v_sigma(cat_file: str | PathLike) -> npt.NDArray:
         v_sigma = product_tools.read_nc_field(cat_file, "v_sigma")
         return np.isfinite(v_sigma)
 
@@ -162,7 +163,7 @@ class SpectralWidth:
 
     """
 
-    def __init__(self, categorize_file: str) -> None:
+    def __init__(self, categorize_file: str | PathLike) -> None:
         self.cat_file = categorize_file
         self.width_ht = self._calculate_spectral_width()
 

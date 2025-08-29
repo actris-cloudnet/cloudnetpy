@@ -1,8 +1,11 @@
 """This module contains RPG Cloud Radar related functions."""
 
+import datetime
 import logging
 import math
 from collections.abc import Callable, Sequence
+from os import PathLike
+from uuid import UUID
 
 import numpy as np
 import numpy.typing as npt
@@ -21,12 +24,12 @@ from cloudnetpy.metadata import MetaData
 
 
 def rpg2nc(
-    path_to_l1_files: str,
-    output_file: str,
+    path_to_l1_files: str | PathLike,
+    output_file: str | PathLike,
     site_meta: dict,
-    uuid: str | None = None,
-    date: str | None = None,
-) -> tuple[str, list]:
+    uuid: str | UUID | None = None,
+    date: str | datetime.date | None = None,
+) -> tuple[UUID, list[str]]:
     """Converts RPG-FMCW-94 cloud radar data into Cloudnet Level 1b netCDF file.
 
     This function reads one day of RPG Level 1 cloud radar binary files,
@@ -59,11 +62,14 @@ def rpg2nc(
         >>> rpg2nc('/path/to/files/', 'test.nc', site_meta)
 
     """
+    if isinstance(date, str):
+        date = datetime.date.fromisoformat(date)
+    uuid = utils.get_uuid(uuid)
     l1_files = utils.get_sorted_filenames(path_to_l1_files, ".LV1")
     fmcw94_objects, valid_files = _get_fmcw94_objects(l1_files, date)
     one_day_of_data = create_one_day_data_record(fmcw94_objects)
     if not valid_files:
-        return "", []
+        return uuid, []
     print_info(one_day_of_data)
     fmcw = Fmcw(one_day_of_data, site_meta)
     fmcw.convert_time_to_fraction_hour()
@@ -79,7 +85,7 @@ def rpg2nc(
     fmcw.add_height()
     attributes = output.add_time_attribute(RPG_ATTRIBUTES, fmcw.date)
     output.update_attributes(fmcw.data, attributes)
-    uuid = output.save_level1b(fmcw, output_file, uuid)
+    output.save_level1b(fmcw, output_file, uuid)
     return uuid, valid_files
 
 
@@ -169,7 +175,9 @@ def _mask_invalid_data(data_in: dict) -> dict:
     return data
 
 
-def _get_fmcw94_objects(files: list, expected_date: str | None) -> tuple[list, list]:
+def _get_fmcw94_objects(
+    files: list[str], expected_date: datetime.date | None
+) -> tuple[list[Fmcw94Bin], list[str]]:
     """Creates a list of Rpg() objects from the file names."""
     objects = []
     valid_files = []
@@ -212,10 +220,10 @@ def _remove_files_with_bad_height(objects: list, files: list) -> tuple[list, lis
     return objects, files
 
 
-def _validate_date(obj: Fmcw94Bin, expected_date: str) -> None:
+def _validate_date(obj: Fmcw94Bin, expected_date: datetime.date) -> None:
     for t in obj.data["time"][:]:
-        date_str = "-".join(utils.seconds2date(t)[:3])
-        if date_str != expected_date:
+        date = utils.seconds2date(t).date()
+        if date != expected_date:
             msg = "Ignoring a file (time stamps not what expected)"
             raise ValueError(msg)
 
@@ -243,11 +251,11 @@ class Rpg(CloudnetInstrument):
             data_type=data_type,
         )
 
-    def _get_date(self) -> list:
+    def _get_date(self) -> datetime.date:
         time_first = self.raw_data["time"][0]
         time_last = self.raw_data["time"][-1]
-        date_first = utils.seconds2date(time_first)[:3]
-        date_last = utils.seconds2date(time_last)[:3]
+        date_first = utils.seconds2date(time_first).date()
+        date_last = utils.seconds2date(time_last).date()
         if date_first != date_last:
             logging.warning("Measurements from different days")
         return date_first

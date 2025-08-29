@@ -1,5 +1,6 @@
 """Module for reading raw cloud radar data."""
 
+import datetime
 import logging
 from os import PathLike
 from typing import TYPE_CHECKING
@@ -31,7 +32,7 @@ class NcRadar(DataSource, CloudnetInstrument):
     def __init__(self, full_path: PathLike | str, site_meta: dict) -> None:
         super().__init__(full_path)
         self.site_meta = site_meta
-        self.date: list[str]
+        self.date: datetime.date
         self.instrument: Instrument | None = None
 
     def init_data(self, keymap: dict) -> None:
@@ -171,7 +172,7 @@ class NcRadar(DataSource, CloudnetInstrument):
 class ChilboltonRadar(NcRadar):
     """Class for Chilbolton cloud radars Galileo and Copernicus."""
 
-    def __init__(self, full_path: str, site_meta: dict) -> None:
+    def __init__(self, full_path: str | PathLike, site_meta: dict) -> None:
         super().__init__(full_path, site_meta)
         self.date = self._init_date()
 
@@ -181,10 +182,9 @@ class ChilboltonRadar(NcRadar):
         folding_velocity = self.dataset.variables[key].folding_velocity
         self.append_data(np.array(folding_velocity), "nyquist_velocity")
 
-    def check_date(self, date: str) -> None:
-        if self.date != date.split("-"):
+    def check_date(self, date: datetime.date) -> None:
+        if self.date != date:
             raise ValidTimeStampError
 
-    def _init_date(self) -> list[str]:
-        epoch = utils.get_epoch(self.dataset["time"].units)
-        return [str(x).zfill(2) for x in epoch]
+    def _init_date(self) -> datetime.date:
+        return utils.get_epoch(self.dataset["time"].units).date()

@@ -3,7 +3,7 @@ from tempfile import TemporaryDirectory
 
 import netCDF4
 
-from cloudnetpy.categorize import generate_categorize
+from cloudnetpy.categorize import generate_categorize, CategorizeInput
 from cloudnetpy.instruments import ceilo2nc, mira2nc
 from tests.unit.all_products_fun import Check
 
@@ -27,7 +27,7 @@ class TestCategorize(Check):
     uuid_radar = mira2nc(f"{filepath}/raw_mira_radar.mmclx", radar_path, site_meta)
     uuid_lidar = ceilo2nc(f"{filepath}/raw_chm15k_lidar.nc", lidar_path, site_meta)
 
-    input_files = {
+    input_files: CategorizeInput = {
         "radar": radar_path,
         "lidar": lidar_path,
         "mwr": f"{filepath}/hatpro_mwr.nc",

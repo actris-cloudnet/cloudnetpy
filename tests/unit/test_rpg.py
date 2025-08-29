@@ -123,7 +123,7 @@ class TestRPG2nc94GHz(Check):
         test_path = tmp_path / "default.nc"
         uuid, files = rpg2nc(FILEPATH, test_path, self.site_meta)
         assert len(files) == 3
-        assert len(uuid) == 36
+        assert len(str(uuid)) == 36
 
     def test_date_validation(self, tmp_path):
         test_path = tmp_path / "date.nc"
@@ -142,7 +142,7 @@ class TestRPG2nc94GHz(Check):
 
     def test_uuid_from_user(self, tmp_path):
         test_path = tmp_path / "uuid.nc"
-        test_uuid = "abc"
+        test_uuid = "fe45561b-eb08-4d2a-a463-c6b4f7be7055"
         uuid, _ = rpg.rpg2nc(
             FILEPATH,
             test_path,
@@ -150,7 +150,7 @@ class TestRPG2nc94GHz(Check):
             date="2020-10-23",
             uuid=test_uuid,
         )
-        assert uuid == test_uuid
+        assert str(uuid) == test_uuid
 
     def test_handling_of_corrupted_files(self, tmp_path, tmp_path_factory):
         temp_dir = tmp_path_factory.mktemp("corrupt")

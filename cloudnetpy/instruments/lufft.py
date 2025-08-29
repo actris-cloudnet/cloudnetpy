@@ -1,6 +1,8 @@
 """Module with a class for Lufft chm15k ceilometer."""
 
+import datetime
 import logging
+from os import PathLike
 
 import netCDF4
 import numpy as np
@@ -16,9 +18,9 @@ class LufftCeilo(NcLidar):
 
     def __init__(
         self,
-        file_name: str,
+        file_name: str | PathLike,
         site_meta: dict,
-        expected_date: str | None = None,
+        expected_date: datetime.date | None = None,
     ) -> None:
         super().__init__()
         self.file_name = file_name

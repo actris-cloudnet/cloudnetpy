@@ -2,6 +2,7 @@
 
 import datetime
 from collections.abc import Callable
+from os import PathLike
 
 import ceilopyter.version
 import numpy as np
@@ -19,20 +20,15 @@ class VaisalaCeilo(Ceilometer):
     def __init__(
         self,
         reader: Callable,
-        full_path: str,
+        full_path: str | PathLike,
         site_meta: dict,
-        expected_date: str | None = None,
+        expected_date: datetime.date | None = None,
     ) -> None:
         super().__init__(self.noise_param)
         self.reader = reader
         self.full_path = full_path
         self.site_meta = site_meta
         self.expected_date = expected_date
-        self.sane_date = (
-            datetime.date.fromisoformat(self.expected_date)
-            if self.expected_date
-            else None
-        )
         self.software = {"ceilopyter": ceilopyter.version.__version__}
 
     def read_ceilometer_file(self, calibration_factor: float | None = None) -> None:
@@ -59,10 +55,8 @@ class VaisalaCeilo(Ceilometer):
 
     def screen_date(self) -> None:
         time = self.data["time"]
-        if self.sane_date is None:
-            self.sane_date = time[0].date()
-            self.expected_date = self.sane_date.isoformat()
-        is_valid = np.array([t.date() == self.sane_date for t in time])
+        self.date = time[0].date() if self.expected_date is None else self.expected_date
+        is_valid = np.array([t.date() == self.date for t in time])
         self._screen_time_indices(is_valid)
 
     def _screen_time_indices(
@@ -84,7 +78,6 @@ class VaisalaCeilo(Ceilometer):
         midnight = time[0].replace(hour=0, minute=0, second=0, microsecond=0)
         hour = datetime.timedelta(hours=1)
         self.data["time"] = (time - midnight) / hour
-        self.date = self.expected_date.split("-")  # type: ignore[union-attr]
 
     def _store_ceilometer_info(self) -> None:
         raise NotImplementedError
@@ -96,7 +89,10 @@ class ClCeilo(VaisalaCeilo):
     noise_param = NoiseParam(noise_min=3.1e-8, noise_smooth_min=1.1e-8)
 
     def __init__(
-        self, full_path: str, site_meta: dict, expected_date: str | None = None
+        self,
+        full_path: str | PathLike,
+        site_meta: dict,
+        expected_date: datetime.date | None = None,
     ) -> None:
         super().__init__(read_cl_file, full_path, site_meta, expected_date)
 
@@ -114,7 +110,10 @@ class Ct25k(VaisalaCeilo):
     noise_param = NoiseParam(noise_min=0.7e-7, noise_smooth_min=1.2e-8)
 
     def __init__(
-        self, full_path: str, site_meta: dict, expected_date: str | None = None
+        self,
+        full_path: str | PathLike,
+        site_meta: dict,
+        expected_date: datetime.date | None = None,
     ) -> None:
         super().__init__(read_ct_file, full_path, site_meta, expected_date)
         self._store_ceilometer_info()
@@ -129,7 +128,10 @@ class Cs135(VaisalaCeilo):
     noise_param = NoiseParam()
 
     def __init__(
-        self, full_path: str, site_meta: dict, expected_date: str | None = None
+        self,
+        full_path: str | PathLike,
+        site_meta: dict,
+        expected_date: datetime.date | None = None,
     ) -> None:
         super().__init__(read_cs_file, full_path, site_meta, expected_date)
 

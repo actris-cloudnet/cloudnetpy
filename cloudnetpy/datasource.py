@@ -1,9 +1,10 @@
 """Datasource module, containing the :class:`DataSource` class."""
 
+import datetime
 import logging
 import os
 from collections.abc import Callable
-from datetime import datetime, timezone
+from os import PathLike
 from types import TracebackType
 
 import netCDF4
@@ -50,7 +51,7 @@ class DataSource:
     data_sparse: dict
     source_type: str
 
-    def __init__(self, full_path: os.PathLike | str, *, radar: bool = False) -> None:
+    def __init__(self, full_path: PathLike | str, *, radar: bool = False) -> None:
         self.filename = os.path.basename(full_path)
         self.dataset = netCDF4.Dataset(full_path)
         self.source = getattr(self.dataset, "source", "")
@@ -103,28 +104,24 @@ class DataSource:
         """
         self.data[key] = CloudnetArray(variable, name or key, units, data_type=dtype)
 
-    def get_date(self) -> list:
+    def get_date(self) -> datetime.date:
         """Returns date components.
 
         Returns:
-            list: Date components [YYYY, MM, DD].
+            date object
 
         Raises:
              RuntimeError: Not found or invalid date.
 
         """
         try:
-            year = str(self.dataset.year)
-            month = str(self.dataset.month).zfill(2)
-            day = str(self.dataset.day).zfill(2)
-            datetime.strptime(f"{year}{month}{day}", "%Y%m%d").replace(
-                tzinfo=timezone.utc,
-            )
-
+            year = int(self.dataset.year)
+            month = int(self.dataset.month)
+            day = int(self.dataset.day)
+            return datetime.date(year, month, day)
         except (AttributeError, ValueError) as read_error:
             msg = "Missing or invalid date in global attributes."
             raise RuntimeError(msg) from read_error
-        return [year, month, day]
 
     def close(self) -> None:
         """Closes the open file."""

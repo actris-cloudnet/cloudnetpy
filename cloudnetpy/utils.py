@@ -9,7 +9,7 @@ import textwrap
 import uuid
 import warnings
 from collections.abc import Callable, Iterator
-from datetime import timezone
+from os import PathLike
 from typing import Literal, TypeVar
 
 import netCDF4
@@ -22,9 +22,6 @@ from scipy.interpolate import RectBivariateSpline, RegularGridInterpolator, grid
 from cloudnetpy.cloudnetarray import CloudnetArray
 from cloudnetpy.constants import SEC_IN_DAY, SEC_IN_HOUR, SEC_IN_MINUTE
 from cloudnetpy.exceptions import ValidTimeStampError
-
-Epoch = tuple[int, int, int]
-Date = tuple[str, str, str]
 
 
 def seconds2hours(time_in_seconds: npt.NDArray) -> npt.NDArray:
@@ -47,25 +44,12 @@ def seconds2hours(time_in_seconds: npt.NDArray) -> npt.NDArray:
     return fraction_hour
 
 
-def seconds2time(time_in_seconds: float) -> list:
-    """Converts seconds since some epoch to time of day.
-
-    Args:
-        time_in_seconds: seconds since some epoch.
-
-    Returns:
-        list: [hours, minutes, seconds] formatted as '05' etc.
-
-    """
-    seconds_since_midnight = np.mod(time_in_seconds, SEC_IN_DAY)
-    hours = seconds_since_midnight // SEC_IN_HOUR
-    minutes = seconds_since_midnight % SEC_IN_HOUR // SEC_IN_MINUTE
-    seconds = seconds_since_midnight % SEC_IN_MINUTE
-    time = [hours, minutes, seconds]
-    return [str(t).zfill(2) for t in time]
-
-
-def seconds2date(time_in_seconds: float, epoch: Epoch = (2001, 1, 1)) -> list:
+def seconds2date(
+    time_in_seconds: float,
+    epoch: datetime.datetime = datetime.datetime(
+        2001, 1, 1, tzinfo=datetime.timezone.utc
+    ),
+) -> datetime.datetime:
     """Converts seconds since some epoch to datetime (UTC).
 
     Args:
@@ -73,18 +57,10 @@ def seconds2date(time_in_seconds: float, epoch: Epoch = (2001, 1, 1)) -> list:
         epoch: Epoch, default is (2001, 1, 1) (UTC).
 
     Returns:
-        [year, month, day, hours, minutes, seconds] formatted as '05' etc (UTC).
+        Datetime
 
     """
-    epoch_in_seconds = datetime.datetime.timestamp(
-        datetime.datetime(*epoch, tzinfo=timezone.utc),
-    )
-    timestamp = float(time_in_seconds) + epoch_in_seconds
-    return (
-        datetime.datetime.fromtimestamp(timestamp, tz=datetime.timezone.utc)
-        .strftime("%Y %m %d %H %M %S")
-        .split()
-    )
+    return epoch + datetime.timedelta(seconds=float(time_in_seconds))
 
 
 def datetime2decimal_hours(data: npt.NDArray | list) -> npt.NDArray:
@@ -673,9 +649,13 @@ def date_range(
         yield start_date + datetime.timedelta(n)
 
 
-def get_uuid() -> str:
-    """Returns unique identifier."""
-    return str(uuid.uuid4())
+def get_uuid(input_uuid: str | uuid.UUID | None) -> uuid.UUID:
+    """Parse or generate unique identifier."""
+    if input_uuid is None:
+        return uuid.uuid4()
+    if isinstance(input_uuid, str):
+        return uuid.UUID(input_uuid)
+    return input_uuid
 
 
 def get_wl_band(radar_frequency: float) -> Literal["X", "Ka", "W"]:
@@ -784,7 +764,7 @@ def is_timestamp(timestamp: str) -> bool:
     return reg_exp.match(timestamp) is not None
 
 
-def get_sorted_filenames(file_path: str, extension: str) -> list:
+def get_sorted_filenames(file_path: str | PathLike, extension: str) -> list[str]:
     """Returns full paths of files with some extension, sorted by filename."""
     extension = extension.lower()
     all_files = os.listdir(file_path)
@@ -803,9 +783,9 @@ def str_to_numeric(value: str) -> int | float:
         return float(value)
 
 
-def get_epoch(units: str) -> Epoch:
+def get_epoch(units: str) -> datetime.datetime:
     """Finds epoch from units string."""
-    fallback = (2001, 1, 1)
+    fallback = datetime.datetime(2001, 1, 1, tzinfo=datetime.timezone.utc)
     try:
         date = units.split()[2]
     except IndexError:
@@ -823,11 +803,13 @@ def get_epoch(units: str) -> Epoch:
     year, month, day = date_components
     current_year = datetime.datetime.now(tz=datetime.timezone.utc).year
     if (1900 < year <= current_year) and (0 < month < 13) and (0 < day < 32):
-        return year, month, day
+        return datetime.datetime(year, month, day, tzinfo=datetime.timezone.utc)
     return fallback
 
 
-def screen_by_time(data_in: dict, epoch: Epoch, expected_date: str) -> dict:
+def screen_by_time(
+    data_in: dict, epoch: datetime.datetime, expected_date: datetime.date
+) -> dict:
     """Screen data by time.
 
     Args:
@@ -865,8 +847,8 @@ def screen_by_time(data_in: dict, epoch: Epoch, expected_date: str) -> dict:
 
 
 def find_valid_time_indices(
-    time: npt.NDArray, epoch: Epoch, expected_date: str
-) -> list:
+    time: npt.NDArray, epoch: datetime.datetime, expected_date: datetime.date
+) -> list[int]:
     """Finds valid time array indices for the given date.
 
     Args:
@@ -889,8 +871,8 @@ def find_valid_time_indices(
     ind_sorted = np.argsort(time)
     ind_valid: list[int] = []
     for ind in ind_sorted:
-        date_str = "-".join(seconds2date(time[ind], epoch=epoch)[:3])
-        if date_str == expected_date and time[ind] not in time[ind_valid]:
+        date = seconds2date(time[ind], epoch=epoch).date()
+        if date == expected_date and time[ind] not in time[ind_valid]:
             ind_valid.append(ind)
     if not ind_valid:
         raise ValidTimeStampError
@@ -1009,18 +991,18 @@ def remove_masked_blocks(array: ma.MaskedArray, limit: int = 50) -> npt.NDArray:
     return mask[labeled_array]
 
 
-def sha256sum(filename: str | os.PathLike) -> str:
+def sha256sum(filename: str | PathLike) -> str:
     """Calculates hash of file using sha-256."""
     return _calc_hash_sum(filename, "sha256", is_base64=False)
 
 
-def md5sum(filename: str | os.PathLike, *, is_base64: bool = False) -> str:
+def md5sum(filename: str | PathLike, *, is_base64: bool = False) -> str:
     """Calculates hash of file using md5."""
     return _calc_hash_sum(filename, "md5", is_base64=is_base64)
 
 
 def _calc_hash_sum(
-    filename: str | os.PathLike, method: Literal["sha256", "md5"], *, is_base64: bool
+    filename: str | PathLike, method: Literal["sha256", "md5"], *, is_base64: bool
 ) -> str:
     hash_sum = getattr(hashlib, method)()
     with open(filename, "rb") as f:

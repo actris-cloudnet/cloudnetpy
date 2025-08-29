@@ -2,10 +2,15 @@
 
 import dataclasses
 import logging
+from collections.abc import Sequence
 from dataclasses import fields
+from os import PathLike
+from typing import TypedDict
+from uuid import UUID
 
 import numpy as np
 from numpy.typing import NDArray
+from typing_extensions import NotRequired
 
 from cloudnetpy import output, utils
 from cloudnetpy.categorize import attenuation, classify
@@ -22,12 +27,21 @@ from cloudnetpy.metadata import COMMON_ATTRIBUTES, MetaData
 from cloudnetpy.products.product_tools import CategoryBits, QualityBits
 
 
+class CategorizeInput(TypedDict):
+    radar: str | PathLike
+    lidar: str | PathLike
+    model: str | PathLike
+    disdrometer: NotRequired[str | PathLike]
+    mwr: NotRequired[str | PathLike]
+    lv0_files: NotRequired[Sequence[str | PathLike]]
+
+
 def generate_categorize(
-    input_files: dict,
-    output_file: str,
-    uuid: str | None = None,
+    input_files: CategorizeInput,
+    output_file: str | PathLike,
+    uuid: str | UUID | None = None,
     options: dict | None = None,
-) -> str:
+) -> UUID:
     """Generates a Cloudnet Level 1c categorize file.
 
     This function rebins measurements into a common height/time grid
@@ -73,6 +87,7 @@ def generate_categorize(
         >>> input_files['lv0_files'] = ['file1.LV0', 'file2.LV0']  # Add RPG LV0 files
         >>> generate_categorize(input_files, 'output.nc')  # Use the Voodoo method
     """
+    uuid = utils.get_uuid(uuid)
 
     def _interpolate_to_cloudnet_grid() -> list[int]:
         if data.disdrometer is not None:
@@ -199,17 +214,18 @@ def generate_categorize(
         attributes = output.add_time_attribute(attributes, date, "model_time")
         attributes = output.add_source_attribute(attributes, data)
         output.update_attributes(cloudnet_arrays, attributes)
-        return _save_cat(output_file, data, cloudnet_arrays, uuid)
+        _save_cat(output_file, data, cloudnet_arrays, uuid)
+        return uuid
     finally:
         _close_all()
 
 
 def _save_cat(
-    full_path: str,
+    full_path: str | PathLike,
     data_obs: Observations,
     cloudnet_arrays: dict,
-    uuid: str | None,
-) -> str:
+    uuid: UUID,
+) -> None:
     """Creates a categorize netCDF4 file and saves all data into it."""
     dims = {
         "time": len(data_obs.radar.time),
@@ -223,7 +239,6 @@ def _save_cat(
         file_type += "-voodoo"
 
     with output.init_file(full_path, dims, cloudnet_arrays, uuid) as nc:
-        uuid_out = nc.file_uuid
         nc.cloudnet_file_type = file_type
         output.copy_global(
             data_obs.radar.dataset,
@@ -246,7 +261,6 @@ def _save_cat(
             nc.voodoonet_version = voodoonet.version.__version__
         output.add_source_instruments(nc, data_obs)
         output.merge_history(nc, file_type, data_obs)
-    return uuid_out
 
 
 def _classes_to_bits(data: QualityBits | CategoryBits) -> NDArray[np.int_]:

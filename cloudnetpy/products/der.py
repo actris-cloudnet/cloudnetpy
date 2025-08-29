@@ -2,7 +2,9 @@
 using the Frisch et al. 2002 method.
 """
 
+from os import PathLike
 from typing import NamedTuple
+from uuid import UUID
 
 import numpy as np
 import numpy.typing as npt
@@ -30,11 +32,11 @@ class Parameters(NamedTuple):
 
 
 def generate_der(
-    categorize_file: str,
-    output_file: str,
-    uuid: str | None = None,
+    categorize_file: str | PathLike,
+    output_file: str | PathLike,
+    uuid: str | UUID | None = None,
     parameters: Parameters | None = None,
-) -> str:
+) -> UUID:
     """Generates Cloudnet effective radius of liquid water droplets
         product according to Frisch et al. 2002.
 
@@ -70,16 +72,16 @@ def generate_der(
         https://doi.org/10.1175/1520-0426(2002)019%3C0835:TROSCD%3E2.0.CO;2
 
     """
-    der_source = DerSource(categorize_file, parameters)
-    droplet_classification = DropletClassification(categorize_file)
-    der_source.append_der()
-    der_source.append_retrieval_status(droplet_classification)
-    date = der_source.get_date()
-    attributes = output.add_time_attribute(REFF_ATTRIBUTES, date)
-    attributes = _add_der_error_comment(attributes, der_source)
-    output.update_attributes(der_source.data, attributes)
-    uuid = output.save_product_file("der", der_source, output_file, uuid)
-    der_source.close()
+    uuid = utils.get_uuid(uuid)
+    with DerSource(categorize_file, parameters) as der_source:
+        droplet_classification = DropletClassification(categorize_file)
+        der_source.append_der()
+        der_source.append_retrieval_status(droplet_classification)
+        date = der_source.get_date()
+        attributes = output.add_time_attribute(REFF_ATTRIBUTES, date)
+        attributes = _add_der_error_comment(attributes, der_source)
+        output.update_attributes(der_source.data, attributes)
+        output.save_product_file("der", der_source, output_file, uuid)
     return uuid
 
 
@@ -88,7 +90,7 @@ class DropletClassification(ProductClassification):
     Child of ProductClassification().
     """
 
-    def __init__(self, categorize_file: str) -> None:
+    def __init__(self, categorize_file: str | PathLike) -> None:
         super().__init__(categorize_file)
         self.is_mixed = self._find_mixed()
         self.is_droplet = self._find_droplet()
@@ -114,7 +116,7 @@ class DerSource(DataSource):
     """Data container for effective radius calculations."""
 
     def __init__(
-        self, categorize_file: str, parameters: Parameters | None = None
+        self, categorize_file: str | PathLike, parameters: Parameters | None = None
     ) -> None:
         super().__init__(categorize_file)
         if "lwp" not in self.dataset.variables:

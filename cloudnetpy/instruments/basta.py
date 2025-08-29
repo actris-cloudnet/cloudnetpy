@@ -1,5 +1,9 @@
 """Module for reading / converting BASTA radar data."""
 
+import datetime
+from os import PathLike
+from uuid import UUID
+
 import numpy as np
 
 from cloudnetpy import output
@@ -7,15 +11,16 @@ from cloudnetpy.exceptions import ValidTimeStampError
 from cloudnetpy.instruments import instruments
 from cloudnetpy.instruments.nc_radar import NcRadar
 from cloudnetpy.metadata import MetaData
+from cloudnetpy.utils import get_uuid
 
 
 def basta2nc(
-    basta_file: str,
-    output_file: str,
+    basta_file: str | PathLike,
+    output_file: str | PathLike,
     site_meta: dict,
-    uuid: str | None = None,
-    date: str | None = None,
-) -> str:
+    uuid: str | UUID | None = None,
+    date: str | datetime.date | None = None,
+) -> UUID:
     """Converts BASTA cloud radar data into Cloudnet Level 1b netCDF file.
 
     This function converts daily BASTA file into a much smaller file that
@@ -42,6 +47,10 @@ def basta2nc(
           >>> basta2nc('basta_file.nc', 'radar.nc', site_meta)
 
     """
+    if isinstance(date, str):
+        date = datetime.date.fromisoformat(date)
+    uuid = get_uuid(uuid)
+
     keymap = {
         "reflectivity": "Zh",
         "velocity": "v",
@@ -65,7 +74,8 @@ def basta2nc(
         basta.test_if_all_masked()
     attributes = output.add_time_attribute(ATTRIBUTES, basta.date)
     output.update_attributes(basta.data, attributes)
-    return output.save_level1b(basta, output_file, uuid)
+    output.save_level1b(basta, output_file, uuid)
+    return uuid
 
 
 class Basta(NcRadar):
@@ -77,9 +87,9 @@ class Basta(NcRadar):
 
     """
 
-    def __init__(self, full_path: str, site_meta: dict) -> None:
+    def __init__(self, full_path: str | PathLike, site_meta: dict) -> None:
         super().__init__(full_path, site_meta)
-        self.date: list[str] = self.get_date()
+        self.date = self.get_date()
         self.instrument = instruments.BASTA
 
     def screen_data(self, keymap: dict) -> None:
@@ -89,7 +99,7 @@ class Basta(NcRadar):
             if key in self.data and self.data[key].data.ndim == mask.ndim:
                 self.data[key].mask_indices(np.where(mask != 1))
 
-    def validate_date(self, expected_date: str) -> None:
+    def validate_date(self, expected_date: datetime.date) -> None:
         """Validates expected data."""
         date_units = self.dataset.variables["time"].units
         date = date_units.split()[2]

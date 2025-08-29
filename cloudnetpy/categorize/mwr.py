@@ -1,5 +1,7 @@
 """Mwr module, containing the :class:`Mwr` class."""
 
+from os import PathLike
+
 import numpy.ma as ma
 import numpy.typing as npt
 
@@ -16,7 +18,7 @@ class Mwr(DataSource):
 
     """
 
-    def __init__(self, full_path: str) -> None:
+    def __init__(self, full_path: str | PathLike) -> None:
         super().__init__(full_path)
         self._init_lwp_data()
         self._init_lwp_error()

@@ -1,3 +1,4 @@
+import datetime
 from os import path
 from tempfile import TemporaryDirectory
 
@@ -22,19 +23,19 @@ SITE_META = {
 
 
 class TestMeasurementDate:
-    correct_date = ["2020", "05", "24"]
+    correct_date = datetime.date(2020, 5, 24)
 
     @pytest.fixture(autouse=True)
     def _init(self, raw_mira_file):
         self.raw_radar = mira.Mira(raw_mira_file, {"name": "Test"})
 
     def test_validate_date(self):
-        self.raw_radar.screen_by_date("2020-05-24")
+        self.raw_radar.screen_by_date(datetime.date(2020, 5, 24))
         assert self.raw_radar.date == self.correct_date
 
     def test_validate_date_fails(self):
         with pytest.raises(ValidTimeStampError):
-            self.raw_radar.screen_by_date("2020-05-23")
+            self.raw_radar.screen_by_date(datetime.date(2020, 5, 23))
 
 
 class TestMIRA2nc(Check):
@@ -131,7 +132,7 @@ class TestMIRA2nc(Check):
 
     def test_uuid_from_user(self, tmp_path):
         test_path = tmp_path / "uuid.nc"
-        uuid_from_user = "kissa"
+        uuid_from_user = "fe45561b-eb08-4d2a-a463-c6b4f7be7055"
         uuid = mira.mira2nc(
             f"{filepath}/20210102_0000.mmclx",
             test_path,
@@ -140,7 +141,7 @@ class TestMIRA2nc(Check):
         )
         with netCDF4.Dataset(test_path) as nc:
             assert nc.file_uuid == uuid_from_user
-            assert uuid == uuid_from_user
+            assert str(uuid) == uuid_from_user
 
     def test_geolocation_from_source_file(self, tmp_path):
         test_path = tmp_path / "geo.nc"
