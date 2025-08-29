@@ -610,18 +610,6 @@ def test_is_timestamp(input, result):
 
 
 @pytest.mark.parametrize(
-    "input, result",
-    [
-        (0, ["00", "00", "00"]),
-        (24 * 60 * 60 - 1, ["23", "59", "59"]),
-        (24 * 60 * 60 * 10, ["00", "00", "00"]),
-    ],
-)
-def test_seconds2time(input, result):
-    assert utils.seconds2time(input) == result
-
-
-@pytest.mark.parametrize(
     "input, result, epoch",
     [
         (0, datetime.datetime(1970, 1, 1, 0, 0, 0), datetime.datetime(1970, 1, 1)),

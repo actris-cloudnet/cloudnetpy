@@ -44,24 +44,6 @@ def seconds2hours(time_in_seconds: npt.NDArray) -> npt.NDArray:
     return fraction_hour
 
 
-def seconds2time(time_in_seconds: float) -> list:
-    """Converts seconds since some epoch to time of day.
-
-    Args:
-        time_in_seconds: seconds since some epoch.
-
-    Returns:
-        list: [hours, minutes, seconds] formatted as '05' etc.
-
-    """
-    seconds_since_midnight = np.mod(time_in_seconds, SEC_IN_DAY)
-    hours = seconds_since_midnight // SEC_IN_HOUR
-    minutes = seconds_since_midnight % SEC_IN_HOUR // SEC_IN_MINUTE
-    seconds = seconds_since_midnight % SEC_IN_MINUTE
-    time = [hours, minutes, seconds]
-    return [str(t).zfill(2) for t in time]
-
-
 def seconds2date(
     time_in_seconds: float,
     epoch: datetime.datetime = datetime.datetime(
