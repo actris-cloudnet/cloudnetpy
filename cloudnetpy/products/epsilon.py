@@ -1,5 +1,6 @@
 from os import PathLike
 from pathlib import Path
+from uuid import UUID
 
 import doppy
 import doppy.netcdf
@@ -20,10 +21,10 @@ def generate_epsilon_from_lidar(
     doppler_lidar_file: str | PathLike,
     doppler_lidar_wind_file: str | PathLike,
     output_file: str | PathLike,
-    uuid: str | None,
-) -> str:
+    uuid: str | UUID | None = None,
+) -> UUID:
     sliding_window_in_seconds = 3 * 60
-    uuid = uuid if uuid is not None else get_uuid()
+    uuid = get_uuid(uuid)
     opts = _get_options(doppler_lidar_file)
     opts.period = sliding_window_in_seconds
     vert = _vertical_wind_from_doppler_lidar_file(doppler_lidar_file)
@@ -77,7 +78,7 @@ def generate_epsilon_from_lidar(
             dtype="f4",
         )
 
-        nc.add_attribute("file_uuid", uuid)
+        nc.add_attribute("file_uuid", str(uuid))
         nc.add_attribute("cloudnet_file_type", "epsilon-lidar")
         nc.add_attribute("doppy_version", doppy.__version__)
         nc.add_attribute("cloudnetpy_version", cloudnetpy.__version__)

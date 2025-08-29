@@ -13,6 +13,7 @@ from cloudnetpy.exceptions import ValidTimeStampError
 from cloudnetpy.instruments import instruments
 from cloudnetpy.instruments.cloudnet_instrument import CSVFile
 from cloudnetpy.metadata import MetaData
+from cloudnetpy.utils import get_uuid
 
 
 def fd12p2nc(
@@ -21,7 +22,7 @@ def fd12p2nc(
     site_meta: dict,
     uuid: str | UUID | None = None,
     date: str | datetime.date | None = None,
-) -> str:
+) -> UUID:
     """Converts Vaisala FD12P into Cloudnet Level 1b netCDF file.
 
     Args:
@@ -40,8 +41,7 @@ def fd12p2nc(
     """
     if isinstance(date, str):
         date = datetime.date.fromisoformat(date)
-    if isinstance(uuid, str):
-        uuid = UUID(uuid)
+    uuid = get_uuid(uuid)
     fd12p = FD12P(site_meta)
     fd12p.parse_input_file(input_file, date)
     fd12p.add_data()
@@ -55,7 +55,8 @@ def fd12p2nc(
     fd12p.add_site_geolocation()
     attributes = output.add_time_attribute(ATTRIBUTES, fd12p.date)
     output.update_attributes(fd12p.data, attributes)
-    return output.save_level1b(fd12p, output_file, uuid)
+    output.save_level1b(fd12p, output_file, uuid)
+    return uuid
 
 
 class FD12P(CSVFile):

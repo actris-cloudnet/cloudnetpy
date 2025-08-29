@@ -1,1 +1,1 @@
-from .categorize import generate_categorize
+from .categorize import CategorizeInput, generate_categorize

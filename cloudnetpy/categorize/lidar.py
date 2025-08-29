@@ -1,6 +1,7 @@
 """Lidar module, containing the :class:`Lidar` class."""
 
 import logging
+from os import PathLike
 from typing import Literal
 
 import numpy as np
@@ -19,7 +20,7 @@ class Lidar(DataSource):
 
     """
 
-    def __init__(self, full_path: str) -> None:
+    def __init__(self, full_path: str | PathLike) -> None:
         super().__init__(full_path)
         self.append_data(self.getvar("beta"), "beta")
         self._add_meta()

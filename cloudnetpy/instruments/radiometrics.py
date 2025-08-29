@@ -7,8 +7,10 @@ import math
 import os
 import re
 from operator import attrgetter
+from os import PathLike
 from pathlib import Path
 from typing import Any, NamedTuple
+from uuid import UUID
 
 import numpy as np
 import numpy.typing as npt
@@ -22,12 +24,12 @@ from cloudnetpy.metadata import MetaData
 
 
 def radiometrics2nc(
-    full_path: str | os.PathLike,
-    output_file: str | os.PathLike,
+    full_path: str | PathLike,
+    output_file: str | PathLike,
     site_meta: dict,
-    uuid: str | None = None,
+    uuid: str | UUID | None = None,
     date: str | datetime.date | None = None,
-) -> str:
+) -> UUID:
     """Converts Radiometrics .csv file into Cloudnet Level 1b netCDF file.
 
     Args:
@@ -50,6 +52,7 @@ def radiometrics2nc(
     """
     if isinstance(date, str):
         date = datetime.date.fromisoformat(date)
+    uuid = utils.get_uuid(uuid)
     if os.path.isdir(full_path):
         valid_filenames = list(Path(full_path).iterdir())
     else:
@@ -66,7 +69,8 @@ def radiometrics2nc(
         raise ValidTimeStampError(msg)
     attributes = output.add_time_attribute(ATTRIBUTES, radiometrics.date)
     output.update_attributes(radiometrics.data, attributes)
-    return output.save_level1b(radiometrics, output_file, uuid)
+    output.save_level1b(radiometrics, output_file, uuid)
+    return uuid
 
 
 class Record(NamedTuple):

@@ -1,6 +1,7 @@
 import csv
 import datetime
 from os import PathLike
+from uuid import UUID
 
 import numpy as np
 
@@ -8,15 +9,16 @@ from cloudnetpy import output
 from cloudnetpy.exceptions import ValidTimeStampError
 from cloudnetpy.instruments import instruments
 from cloudnetpy.instruments.cloudnet_instrument import CSVFile
+from cloudnetpy.utils import get_uuid
 
 
 def rain_e_h32nc(
     input_file: str | PathLike,
-    output_file: str,
+    output_file: str | PathLike,
     site_meta: dict,
-    uuid: str | None = None,
+    uuid: str | UUID | None = None,
     date: str | datetime.date | None = None,
-) -> str:
+) -> UUID:
     """Converts rain_e_h3 rain-gauge into Cloudnet Level 1b netCDF file.
 
     Args:
@@ -36,6 +38,7 @@ def rain_e_h32nc(
     rain = RainEH3(site_meta)
     if isinstance(date, str):
         date = datetime.date.fromisoformat(date)
+    uuid = get_uuid(uuid)
     rain.parse_input_file(input_file, date)
     rain.add_data()
     rain.add_date()
@@ -46,7 +49,8 @@ def rain_e_h32nc(
     rain.remove_duplicate_timestamps()
     attributes = output.add_time_attribute({}, rain.date)
     output.update_attributes(rain.data, attributes)
-    return output.save_level1b(rain, output_file, uuid)
+    output.save_level1b(rain, output_file, uuid)
+    return uuid
 
 
 class RainEH3(CSVFile):

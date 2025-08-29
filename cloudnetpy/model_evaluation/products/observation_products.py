@@ -1,5 +1,6 @@
 import logging
 from datetime import datetime, timezone
+from os import PathLike
 
 import numpy as np
 import numpy.typing as npt
@@ -25,7 +26,7 @@ class ObservationManager(DataSource):
         should be processed using CloudnetPy for this class to work properly.
     """
 
-    def __init__(self, obs: str, obs_file: str) -> None:
+    def __init__(self, obs: str, obs_file: str | PathLike) -> None:
         super().__init__(obs_file)
         self.obs = obs
         self._file = obs_file

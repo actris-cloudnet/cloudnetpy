@@ -1,9 +1,13 @@
 """Module for reading raw cloud radar data."""
 
+import datetime
 import logging
 import os
 from collections import OrderedDict
+from collections.abc import Sequence
+from os import PathLike
 from tempfile import NamedTemporaryFile, TemporaryDirectory
+from uuid import UUID
 
 from numpy import ma
 
@@ -14,12 +18,12 @@ from cloudnetpy.metadata import MetaData
 
 
 def mira2nc(
-    raw_mira: str | list[str],
-    output_file: str,
+    raw_mira: str | PathLike | Sequence[str | PathLike],
+    output_file: str | PathLike,
     site_meta: dict,
-    uuid: str | None = None,
-    date: str | None = None,
-) -> str:
+    uuid: str | UUID | None = None,
+    date: str | datetime.date | None = None,
+) -> UUID:
     """Converts METEK MIRA-35 cloud radar data into Cloudnet Level 1b netCDF file.
 
     This function converts raw MIRA file(s) into a much smaller file that
@@ -55,6 +59,10 @@ def mira2nc(
           >>> mira2nc('/one/day/of/mira/znc/files/', 'radar.nc', site_meta)
 
     """
+    if isinstance(date, str):
+        date = datetime.date.fromisoformat(date)
+    uuid = utils.get_uuid(uuid)
+
     with TemporaryDirectory() as temp_dir:
         input_filename, keymap = _parse_input_files(raw_mira, temp_dir)
 
@@ -62,7 +70,7 @@ def mira2nc(
             mira.init_data(keymap)
             if date is not None:
                 mira.screen_by_date(date)
-                mira.date = date.split("-")
+                mira.date = date
             mira.sort_timestamps()
             mira.remove_duplicate_timestamps()
             mira.linear_to_db(("Zh", "ldr", "SNR"))
@@ -101,7 +109,8 @@ def mira2nc(
             mira.test_if_all_masked()
         attributes = output.add_time_attribute(ATTRIBUTES, mira.date)
         output.update_attributes(mira.data, attributes)
-        return output.save_level1b(mira, output_file, uuid)
+        output.save_level1b(mira, output_file, uuid)
+        return uuid
 
 
 class Mira(NcRadar):
@@ -113,9 +122,9 @@ class Mira(NcRadar):
 
     """
 
-    epoch = (1970, 1, 1)
+    epoch = datetime.datetime(1970, 1, 1, tzinfo=datetime.timezone.utc)
 
-    def __init__(self, full_path: str, site_meta: dict) -> None:
+    def __init__(self, full_path: str | PathLike, site_meta: dict) -> None:
         super().__init__(full_path, site_meta)
         self.date = self._init_mira_date()
         if "model" not in site_meta or site_meta["model"] == "mira-35":
@@ -126,21 +135,21 @@ class Mira(NcRadar):
             msg = f"Invalid model: {site_meta['model']}"
             raise ValueError(msg)
 
-    def screen_by_date(self, expected_date: str) -> None:
+    def screen_by_date(self, expected_date: datetime.date) -> None:
         """Screens incorrect time stamps."""
         time_stamps = self.getvar("time")
         valid_indices = []
         for ind, timestamp in enumerate(time_stamps):
             if not timestamp:
                 continue
-            date = "-".join(utils.seconds2date(timestamp, self.epoch)[:3])
+            date = utils.seconds2date(timestamp, self.epoch).date()
             if date == expected_date:
                 valid_indices.append(ind)
         self.screen_time_indices(valid_indices)
 
-    def _init_mira_date(self) -> list[str]:
+    def _init_mira_date(self) -> datetime.date:
         time_stamps = self.getvar("time")
-        return utils.seconds2date(float(time_stamps[0]), self.epoch)[:3]
+        return utils.seconds2date(float(time_stamps[0]), self.epoch).date()
 
     def screen_invalid_ldr(self) -> None:
         """Masks LDR in MIRA STSR mode data.
@@ -169,16 +178,21 @@ class Mira(NcRadar):
                 array[array > (upper + margin)] = ma.masked
 
 
-def _parse_input_files(input_files: str | list[str], temp_dir: str) -> tuple:
-    if isinstance(input_files, list) or os.path.isdir(input_files):
+def _parse_input_files(
+    input_files: str | PathLike | Sequence[str | PathLike], temp_dir: str
+) -> tuple[str | PathLike, dict[str, str]]:
+    input_filename: str | PathLike
+    if (
+        not isinstance(input_files, str) and isinstance(input_files, Sequence)
+    ) or os.path.isdir(input_files):
         with NamedTemporaryFile(
             dir=temp_dir,
             suffix=".nc",
             delete=False,
         ) as temp_file:
             input_filename = temp_file.name
-            if isinstance(input_files, list):
-                valid_files = sorted(input_files)
+            if not isinstance(input_files, str) and isinstance(input_files, Sequence):
+                valid_files = sorted(map(str, input_files))
             else:
                 valid_files = utils.get_sorted_filenames(input_files, ".znc")
                 if not valid_files:
@@ -210,7 +224,7 @@ def _parse_input_files(input_files: str | list[str], temp_dir: str) -> tuple:
             )
     else:
         input_filename = input_files
-        keymap = _get_keymap(input_filename.split(".")[-1])
+        keymap = _get_keymap(str(input_filename).split(".")[-1])
 
     return input_filename, keymap
 
@@ -227,7 +241,7 @@ def _get_ignored_variables(filetype: str) -> list | None:
     return keymaps.get(filetype.lower(), keymaps.get("mmclx"))
 
 
-def _get_keymap(filetype: str) -> dict:
+def _get_keymap(filetype: str) -> dict[str, str]:
     """Returns a dictionary mapping the variables in the raw data to the processed
     Cloudnet file.
     """

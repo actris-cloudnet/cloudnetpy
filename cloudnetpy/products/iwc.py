@@ -1,5 +1,8 @@
 """Module for creating Cloudnet ice water content file using Z-T method."""
 
+from os import PathLike
+from uuid import UUID
+
 import numpy.typing as npt
 from numpy import ma
 
@@ -10,10 +13,10 @@ from cloudnetpy.products.product_tools import IceClassification, IceSource
 
 
 def generate_iwc(
-    categorize_file: str,
-    output_file: str,
-    uuid: str | None = None,
-) -> str:
+    categorize_file: str | PathLike,
+    output_file: str | PathLike,
+    uuid: str | UUID | None = None,
+) -> UUID:
     """Generates Cloudnet ice water content product.
 
     This function calculates ice water content using the so-called Z-T method.
@@ -40,6 +43,7 @@ def generate_iwc(
         J. Appl. Meteor. Climatol., 45, 301–317, https://doi.org/10.1175/JAM2340.1
 
     """
+    uuid = utils.get_uuid(uuid)
     product = "iwc"
     with IwcSource(categorize_file, product) as iwc_source:
         ice_classification = IceClassification(categorize_file)
@@ -53,7 +57,8 @@ def generate_iwc(
         attributes = _add_iwc_comment(attributes, iwc_source)
         attributes = _add_iwc_error_comment(attributes, lwp_prior, bias)
         output.update_attributes(iwc_source.data, attributes)
-        return output.save_product_file(product, iwc_source, output_file, uuid)
+        output.save_product_file(product, iwc_source, output_file, uuid)
+        return uuid
 
 
 class IwcSource(IceSource):

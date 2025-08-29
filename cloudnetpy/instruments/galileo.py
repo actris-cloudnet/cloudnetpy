@@ -1,7 +1,10 @@
 """Module for reading raw Galileo cloud radar data."""
 
+import datetime
 import os
+from os import PathLike
 from tempfile import NamedTemporaryFile, TemporaryDirectory
+from uuid import UUID
 
 import numpy as np
 
@@ -12,12 +15,12 @@ from cloudnetpy.metadata import MetaData
 
 
 def galileo2nc(
-    raw_files: str,
-    output_file: str,
+    raw_files: str | PathLike,
+    output_file: str | PathLike,
     site_meta: dict,
-    uuid: str | None = None,
-    date: str | None = None,
-) -> str:
+    uuid: str | UUID | None = None,
+    date: str | datetime.date | None = None,
+) -> UUID:
     """Converts 'Galileo' cloud radar data into Cloudnet Level 1b netCDF file.
 
     Args:
@@ -42,6 +45,10 @@ def galileo2nc(
           >>> galileo2nc('/one/day/of/galileo/files/', 'radar.nc', site_meta)
 
     """
+    if isinstance(date, str):
+        date = datetime.date.fromisoformat(date)
+    uuid = utils.get_uuid(uuid)
+
     keymap = {
         "ZED_HC": "Zh",
         "VEL_HC": "v",
@@ -56,6 +63,7 @@ def galileo2nc(
         "beamwidthH": "beamwidthH",
     }
 
+    nc_filename: str | PathLike
     with TemporaryDirectory() as temp_dir:
         if os.path.isdir(raw_files):
             with NamedTemporaryFile(
@@ -101,7 +109,8 @@ def galileo2nc(
             galileo.test_if_all_masked()
         attributes = output.add_time_attribute(ATTRIBUTES, galileo.date)
         output.update_attributes(galileo.data, attributes)
-        return output.save_level1b(galileo, output_file, uuid)
+        output.save_level1b(galileo, output_file, uuid)
+        return uuid
 
 
 class Galileo(ChilboltonRadar):
@@ -113,7 +122,7 @@ class Galileo(ChilboltonRadar):
 
     """
 
-    def __init__(self, full_path: str, site_meta: dict) -> None:
+    def __init__(self, full_path: str | PathLike, site_meta: dict) -> None:
         super().__init__(full_path, site_meta)
         self.date = self._init_date()
         self.instrument = GALILEO

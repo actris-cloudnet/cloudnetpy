@@ -67,9 +67,10 @@ def classify_measurements(data: Observations) -> ClassificationResult:
         import voodoonet  # noqa: PLC0415
 
         options = voodoonet.VoodooOptions(progress_bar=False)
-        target_time = voodoonet.utils.decimal_hour2unix(obs.date, obs.time)
+        dumb_date = obs.date.isoformat().split("-")
+        target_time = voodoonet.utils.decimal_hour2unix(dumb_date, obs.time)
         liquid_prob = voodoonet.infer(
-            obs.lv0_files, target_time=target_time, options=options
+            list(obs.lv0_files), target_time=target_time, options=options
         )
         liquid_from_radar = liquid_prob > 0.55
         liquid_from_radar = _remove_false_radar_liquid(

@@ -1,10 +1,10 @@
 """Misc. plotting routines for Cloudnet products."""
 
-import os.path
 import re
 import textwrap
 from dataclasses import dataclass
 from datetime import date
+from os import PathLike
 from typing import Any
 
 import matplotlib.pyplot as plt
@@ -892,11 +892,11 @@ class Plot1D(Plot):
 
 
 def generate_figure(
-    filename: os.PathLike | str,
+    filename: PathLike | str,
     variables: list[str],
     *,
     show: bool = True,
-    output_filename: os.PathLike | str | None = None,
+    output_filename: PathLike | str | None = None,
     options: PlotParameters | None = None,
 ) -> Dimensions:
     """Generate a figure based on the given filename and variables.

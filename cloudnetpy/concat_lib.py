@@ -1,8 +1,9 @@
 """Module for concatenating netCDF files."""
 
+import datetime
 import logging
 import shutil
-from collections.abc import Iterable
+from collections.abc import Iterable, Sequence
 from os import PathLike
 from pathlib import Path
 from types import TracebackType
@@ -87,13 +88,13 @@ def update_nc(old_file: str, new_file: str) -> int:
 
 def concatenate_files(
     filenames: Iterable[PathLike | str],
-    output_file: str,
+    output_file: str | PathLike,
     concat_dimension: str = "time",
-    variables: list | None = None,
-    new_attributes: dict | None = None,
-    ignore: list | None = None,
+    variables: list[str] | None = None,
+    new_attributes: dict[str, str | int] | None = None,
+    ignore: list[str] | None = None,
     interp_dimension: str = "range",
-) -> list:
+) -> list[Path]:
     """Concatenate netCDF files in one dimension.
 
     Args:
@@ -126,8 +127,8 @@ class _Concat:
 
     def __init__(
         self,
-        filenames: Iterable[PathLike | str],
-        output_file: str,
+        filenames: Iterable[str | PathLike],
+        output_file: str | PathLike,
         concat_dimension: str = "time",
         interp_dim: str = "range",
     ) -> None:
@@ -149,7 +150,7 @@ class _Concat:
         self,
         keep: list | None = None,
         ignore: list | None = None,
-    ) -> list:
+    ) -> list[Path]:
         """Concatenates data arrays."""
         self._write_initial_data(keep, ignore)
         output = [self.first_filename]
@@ -240,7 +241,7 @@ class _Concat:
 
                 self.concatenated_file.variables[key][ind0:ind1, ...] = array
 
-    def _init_output_file(self, output_file: str) -> netCDF4.Dataset:
+    def _init_output_file(self, output_file: str | PathLike) -> netCDF4.Dataset:
         data_model: Literal["NETCDF4", "NETCDF4_CLASSIC"] = (
             "NETCDF4" if self.first_file.data_model == "NETCDF4" else "NETCDF4_CLASSIC"
         )
@@ -318,9 +319,9 @@ def concatenate_text_files(filenames: list, output_filename: str | PathLike) -> 
 
 
 def bundle_netcdf_files(
-    files: list,
-    date: str,
-    output_file: str,
+    files: Sequence[str | PathLike],
+    date: datetime.date,
+    output_file: str | PathLike,
     concat_dimensions: tuple[str, ...] = ("time", "profile"),
     variables: list | None = None,
 ) -> list:
@@ -338,7 +339,7 @@ def bundle_netcdf_files(
             raise KeyError(msg)
     if len(files) == 1:
         shutil.copy(files[0], output_file)
-        return files
+        return list(files)
     valid_files = []
     for file in files:
         try:
@@ -350,7 +351,7 @@ def bundle_netcdf_files(
             continue
         epoch = utils.get_epoch(time_units)
         for timestamp in time_array:
-            if utils.seconds2date(timestamp, epoch)[:3] == date.split("-"):
+            if utils.seconds2date(timestamp, epoch).date() == date:
                 valid_files.append(file)
                 break
     concatenate_files(

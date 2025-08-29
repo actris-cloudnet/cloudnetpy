@@ -1,5 +1,7 @@
 import importlib
 import logging
+import os.path
+from os import PathLike
 
 import numpy as np
 import numpy.typing as npt
@@ -33,9 +35,9 @@ class ModelManager(DataSource):
 
     def __init__(
         self,
-        model_file: str,
+        model_file: str | PathLike,
         model: str,
-        output_file: str,
+        output_file: str | PathLike,
         product: str,
         *,
         check_file: bool = True,
@@ -54,15 +56,16 @@ class ModelManager(DataSource):
         self.wind = self._calculate_wind_speed()
         self.resolution_h = self._get_horizontal_resolution()
 
-    def _read_cycle_name(self, model_file: str) -> str:
+    def _read_cycle_name(self, model_file: str | PathLike) -> str:
         """Get cycle name from model_metadata.py for saving variable name(s)."""
+        basename = os.path.basename(model_file)
         try:
             cycles = self.model_info.cycle
             if cycles is None:
                 return ""
             cycles_split = [x.strip() for x in cycles.split(",")]
             for cycle in cycles_split:
-                if cycle in model_file:
+                if cycle in basename:
                     return f"_{cycle}"
         except AttributeError:
             return ""

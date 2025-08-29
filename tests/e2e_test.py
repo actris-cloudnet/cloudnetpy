@@ -1,12 +1,11 @@
 import importlib
 from pathlib import Path
-from uuid import UUID
 import numpy as np
 
 import netCDF4
 from cloudnetpy_qc import quality
 
-from cloudnetpy.categorize import generate_categorize
+from cloudnetpy.categorize import generate_categorize, CategorizeInput
 from cloudnetpy.instruments import ceilo2nc, mira2nc
 
 
@@ -41,17 +40,16 @@ def main():
         raw_files["radar"],
         calibrated_files["radar"],
         site_meta,
-        uuid="kissa",
+        uuid="7e7e1d51-daea-4f9b-a1b3-103bd8ea3ce6",
     )
-    assert uuid_radar == "kissa"
+    assert str(uuid_radar) == "7e7e1d51-daea-4f9b-a1b3-103bd8ea3ce6"
     lidar_meta = site_meta.copy()
     uuid_lidar = ceilo2nc(raw_files["lidar"], calibrated_files["lidar"], lidar_meta)
     for _, filename in calibrated_files.items():
         _run_tests(filename)
     _check_attributes(calibrated_files["radar"], site_meta)
-    _check_is_valid_uuid(uuid_lidar)
 
-    input_files = {
+    input_files: CategorizeInput = {
         "radar": calibrated_files["radar"],
         "lidar": calibrated_files["lidar"],
         "mwr": f"{source_path}hatpro_mwr.nc",
@@ -62,10 +60,9 @@ def main():
     categorize_file = f"{source_path}categorize.nc"
     uuid_categorize = generate_categorize(input_files, categorize_file)
     _run_tests(categorize_file)
-    _check_is_valid_uuid(uuid_categorize)
     _check_source_file_uuids(
         categorize_file,
-        (uuid_lidar, uuid_radar, uuid_model, uuid_mwr),
+        (str(uuid_lidar), str(uuid_radar), uuid_model, uuid_mwr),
     )
     product_file_types = [
         "classification",
@@ -82,9 +79,8 @@ def main():
             categorize_file,
         )
         _run_tests(product_file)
-        _check_is_valid_uuid(uuid_product)
         _check_attributes(product_file, site_meta)
-        _check_source_file_uuids(product_file, (uuid_categorize,))
+        _check_source_file_uuids(product_file, (str(uuid_categorize),))
 
 
 def _run_tests(filename: str):
@@ -102,7 +98,7 @@ def _run_tests(filename: str):
     assert n == len(keys)
 
 
-def _check_source_file_uuids(file: str, expected_uuids: tuple):
+def _check_source_file_uuids(file: str, expected_uuids: tuple[str, ...]):
     with netCDF4.Dataset(file) as nc:
         source_uuids = nc.source_file_uuids.replace(",", "").split(" ")
         for uuid in expected_uuids:
@@ -111,19 +107,12 @@ def _check_source_file_uuids(file: str, expected_uuids: tuple):
             assert uuid in expected_uuids
 
 
-def _check_is_valid_uuid(uuid):
-    try:
-        UUID(uuid, version=4)
-    except (ValueError, TypeError) as exc:
-        raise AssertionError(f"{uuid} is not a valid UUID.") from exc
-
-
 def _check_attributes(full_path: str, metadata: dict):
     with netCDF4.Dataset(full_path) as nc:
         assert np.all(nc.variables["altitude"][:] == metadata["altitude"])
 
 
-def _get_uuids(data: dict) -> tuple:
+def _get_uuids(data: CategorizeInput) -> tuple[str, str]:
     with netCDF4.Dataset(data["model"]) as nc:
         uuid_model = nc.file_uuid
     with netCDF4.Dataset(data["mwr"]) as nc:

@@ -19,9 +19,9 @@ def mrr2nc(
     input_file: PathLike | str | Iterable[PathLike | str],
     output_file: PathLike | str,
     site_meta: dict,
-    uuid: UUID | str | None = None,
-    date: datetime.date | str | None = None,
-) -> str:
+    uuid: str | UUID | None = None,
+    date: str | datetime.date | None = None,
+) -> UUID:
     """Converts METEK MRR-PRO data into Cloudnet Level 1b netCDF file.
 
     This function converts raw MRR file(s) into a much smaller file that
@@ -48,10 +48,9 @@ def mrr2nc(
           >>> site_meta = {'name': 'LIM', 'latitude': 51.333, 'longitude': 12.389}
           >>> mrr2nc('input.nc', 'output.nc', site_meta)
     """
-    if isinstance(uuid, str):
-        uuid = UUID(uuid)
     if isinstance(date, str):
         date = datetime.date.fromisoformat(date)
+    uuid = utils.get_uuid(uuid)
 
     keymap = {
         "RR": "rainfall_rate",
@@ -112,7 +111,8 @@ def mrr2nc(
             mrr.sort_timestamps()
         attributes = output.add_time_attribute(ATTRIBUTES, mrr.date)
         output.update_attributes(mrr.data, attributes)
-        return output.save_level1b(mrr, output_file, uuid)
+        output.save_level1b(mrr, output_file, uuid)
+        return uuid
 
 
 class MrrPro(NcRadar):
@@ -125,7 +125,7 @@ class MrrPro(NcRadar):
 
     """
 
-    epoch = (1970, 1, 1)
+    epoch = datetime.datetime(1970, 1, 1, tzinfo=datetime.timezone.utc)
 
     def __init__(self, full_path: PathLike | str, site_meta: dict) -> None:
         super().__init__(full_path, site_meta)
@@ -137,9 +137,9 @@ class MrrPro(NcRadar):
         ):
             self.serial_number = m[1]
 
-    def init_date(self) -> list[str]:
+    def init_date(self) -> datetime.date:
         time_stamps = self.getvar("time")
-        return utils.seconds2date(time_stamps[0], (1970, 1, 1))[:3]
+        return utils.seconds2date(time_stamps[0], self.epoch).date()
 
     def fix_units(self) -> None:
         self.data["v"].data *= -1  # towards -> away from instrument
@@ -156,8 +156,8 @@ class MrrPro(NcRadar):
         time_stamps = self.getvar("time")
         valid_indices = []
         for ind, timestamp in enumerate(time_stamps):
-            date = "-".join(utils.seconds2date(timestamp, self.epoch)[:3])
-            if date == expected_date.isoformat():
+            date = utils.seconds2date(timestamp, self.epoch).date()
+            if date == expected_date:
                 valid_indices.append(ind)
         self.screen_time_indices(valid_indices)
 

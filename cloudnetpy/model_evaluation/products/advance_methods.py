@@ -1,5 +1,6 @@
 import importlib
 import logging
+from os import PathLike
 
 import numpy as np
 import numpy.typing as npt
@@ -26,7 +27,7 @@ class AdvanceProductMethods(DataSource):
     def __init__(
         self,
         model_obj: ModelManager,
-        model_file: str,
+        model_file: str | PathLike,
         obs_obj: ObservationManager,
     ) -> None:
         super().__init__(model_file)

@@ -1,5 +1,7 @@
 import os
 from datetime import datetime
+from os import PathLike
+from uuid import UUID
 
 import netCDF4
 import numpy.typing as npt
@@ -63,11 +65,11 @@ def update_attributes(model_downsample_variables: dict, attributes: dict) -> Non
 
 def save_downsampled_file(
     id_mark: str,
-    file_name: str,
+    file_name: str | PathLike,
     objects: tuple,
-    files: tuple,
-    uuid: str | None,
-) -> str:
+    files: tuple[list[str | PathLike], str | PathLike],
+    uuid: UUID,
+) -> None:
     """Saves a standard downsampled day product file.
 
     Args:
@@ -83,30 +85,25 @@ def save_downsampled_file(
     """
     obj = objects[0]
     dimensions = {"time": len(obj.time), "level": len(obj.data["level"][:])}
-    root_group = output.init_file(file_name, dimensions, obj.data, uuid)
-    _augment_global_attributes(root_group)
-    uuid = root_group.file_uuid
-    root_group.cloudnet_file_type = "l3-" + id_mark.split("_")[0]
-    root_group.title = (
-        f"Downsampled {id_mark.capitalize().replace('_', ' of ')} "
-        f"from {obj.dataset.location}"
-    )
-    _add_source(root_group, objects, files)
-    output.copy_global(obj.dataset, root_group, ("location", "day", "month", "year"))
-    if not hasattr(obj.dataset, "day"):
-        root_group.year, root_group.month, root_group.day = obj.date
-    output.merge_history(root_group, id_mark, obj)
-    root_group.close()
-    if not isinstance(uuid, str):
-        msg = "UUID is not a string."
-        raise TypeError(msg)
-    return uuid
+    with output.init_file(file_name, dimensions, obj.data, uuid) as root_group:
+        _augment_global_attributes(root_group)
+        root_group.cloudnet_file_type = "l3-" + id_mark.split("_")[0]
+        root_group.title = (
+            f"Downsampled {id_mark.capitalize().replace('_', ' of ')} "
+            f"from {obj.dataset.location}"
+        )
+        _add_source(root_group, objects, files)
+        output.copy_global(
+            obj.dataset, root_group, ("location", "day", "month", "year")
+        )
+        if not hasattr(obj.dataset, "day"):
+            root_group.year, root_group.month, root_group.day = obj.date
+        output.merge_history(root_group, id_mark, obj)
 
 
-def add_var2ncfile(obj: ModelManager, file_name: str) -> None:
-    nc_file = netCDF4.Dataset(file_name, "r+", format="NETCDF4_CLASSIC")
-    _write_vars2nc(nc_file, obj.data)
-    nc_file.close()
+def add_var2ncfile(obj: ModelManager, file_name: str | PathLike) -> None:
+    with netCDF4.Dataset(file_name, "r+", format="NETCDF4_CLASSIC") as nc_file:
+        _write_vars2nc(nc_file, obj.data)
 
 
 def _write_vars2nc(rootgrp: netCDF4.Dataset, cloudnet_variables: dict) -> None:

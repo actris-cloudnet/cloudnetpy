@@ -1,4 +1,5 @@
 from pathlib import Path
+from uuid import UUID
 
 import netCDF4
 import numpy as np
@@ -18,7 +19,7 @@ class Check:
     nc: netCDF4.Dataset
     date: str
     site_meta: dict
-    uuid: str
+    uuid: UUID
 
     @pytest.fixture(autouse=True)
     def run_before_and_after_tests(self):
@@ -50,7 +51,7 @@ class Check:
 class AllProductsFun:
     """Common tests for all Cloudnet products."""
 
-    def __init__(self, nc: netCDF4.Dataset, site_meta: dict, date: str, uuid):
+    def __init__(self, nc: netCDF4.Dataset, site_meta: dict, date: str, uuid: UUID):
         self.nc = nc
         self.site_meta = site_meta
         self.date = date
@@ -106,7 +107,7 @@ class AllProductsFun:
 
     def test_global_attributes(self):
         assert self.nc.location == self.site_meta["name"]
-        assert self.nc.file_uuid == self.uuid
+        assert self.nc.file_uuid == str(self.uuid)
         assert self.nc.Conventions == "CF-1.8"
         y, m, d = self.date.split("-")
         assert self.nc.year == y

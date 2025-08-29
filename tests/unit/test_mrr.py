@@ -71,4 +71,4 @@ class TestMrrPro(Check):
         uuid = mrr2nc(filename, test_path, self.site_meta, uuid=uuid_from_user)
         with netCDF4.Dataset(test_path) as nc:
             assert nc.file_uuid == uuid_from_user
-            assert uuid == uuid_from_user
+            assert str(uuid) == uuid_from_user

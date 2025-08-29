@@ -1,5 +1,6 @@
 import logging
 from os import PathLike
+from pathlib import Path
 from typing import BinaryIO, Literal
 
 import numpy as np
@@ -183,7 +184,7 @@ class HatproBin:
     QUALITY_MEDIUM = 2
     QUALITY_LOW = 3
 
-    def __init__(self, filename: str | PathLike) -> None:
+    def __init__(self, filename: Path) -> None:
         self.filename = filename
         with open(self.filename, "rb") as file:
             self._read_header(file)

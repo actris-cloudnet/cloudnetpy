@@ -2,19 +2,19 @@ import argparse
 import gzip
 import importlib
 import logging
-import os
 import re
 import shutil
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass
+from os import PathLike
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from typing import TYPE_CHECKING, Final
+from typing import TYPE_CHECKING, Final, cast
 
 import requests
 
 from cloudnetpy import concat_lib, instruments
-from cloudnetpy.categorize import generate_categorize
+from cloudnetpy.categorize import CategorizeInput, generate_categorize
 from cloudnetpy.exceptions import PlottingError
 from cloudnetpy.plotting import generate_figure
 from cloudnetpy.utils import md5sum
@@ -104,7 +104,7 @@ def _process_categorize(input_files: dict, args: argparse.Namespace) -> str | No
 
     try:
         logging.info("Processing categorize...")
-        generate_categorize(input_files, cat_filepath)
+        generate_categorize(cast("CategorizeInput", input_files), cat_filepath)
         logging.info("Processed categorize to %s", cat_filepath)
     except NameError:
         logging.info("No data available for this date.")
@@ -485,7 +485,7 @@ def _check_input(files: list) -> None:
 
 
 def _plot(
-    filepath: os.PathLike | str | None, product: str, args: argparse.Namespace
+    filepath: PathLike | str | None, product: str, args: argparse.Namespace
 ) -> None:
     if filepath is None or (not args.plot and not args.show):
         return

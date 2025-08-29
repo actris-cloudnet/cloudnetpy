@@ -1,4 +1,6 @@
+from collections.abc import Sequence
 from dataclasses import dataclass
+from os import PathLike
 
 import numpy as np
 import numpy.typing as npt
@@ -22,7 +24,7 @@ class Observations:
     model: Model
     mwr: Mwr | None = None
     disdrometer: Disdrometer | None = None
-    lv0_files: list[str] | None = None
+    lv0_files: Sequence[str | PathLike] | None = None
 
 
 @dataclass

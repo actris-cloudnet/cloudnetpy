@@ -1,3 +1,5 @@
+import datetime
+from uuid import UUID
 import netCDF4
 import pytest
 
@@ -109,18 +111,17 @@ def test_get_source_uuids():
 
 def test_add_standard_global_attributes(tmpdir_factory):
     file = tmpdir_factory.mktemp("data").join("nc_file.nc")
+    uuid = "3dec60dc-d89a-4d59-bffc-ef24105445a7"
     with netCDF4.Dataset(file, "w", format="NETCDF4_CLASSIC") as root_grp:
-        output.add_standard_global_attributes(root_grp, "abcd")
-        assert root_grp.file_uuid == "abcd"
+        output.add_standard_global_attributes(root_grp, UUID(uuid))
+        assert root_grp.file_uuid == uuid
         assert root_grp.Conventions == "CF-1.8"
-        output.add_standard_global_attributes(root_grp)
-        assert root_grp.file_uuid != "abcd"
 
 
 def test_add_time_attribute():
     attr = MetaData(long_name="Some name", units="xy", dimensions=None)
     attributes = {"kissa": attr}
-    date = ["2020", "01", "12"]
+    date = datetime.date(2020, 1, 12)
     new_attributes = output.add_time_attribute(attributes, date)
     assert new_attributes["time"].units == "hours since 2020-01-12 00:00:00 +00:00"
     assert new_attributes["kissa"].units == "xy"

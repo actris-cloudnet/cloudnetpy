@@ -1,6 +1,8 @@
 import os
 import tempfile
+from os import PathLike
 from typing import TYPE_CHECKING, Literal
+from uuid import UUID
 
 import netCDF4
 import numpy as np
@@ -19,8 +21,10 @@ if TYPE_CHECKING:
 
 
 def generate_mwr_single(
-    mwr_l1c_file: str, output_file: str, uuid: str | None = None
-) -> str:
+    mwr_l1c_file: str | PathLike,
+    output_file: str | PathLike,
+    uuid: str | UUID | None = None,
+) -> UUID:
     """Generates MWR single-pointing product including liquid water path, integrated
     water vapor, etc. from zenith measurements.
 
@@ -39,8 +43,10 @@ def generate_mwr_single(
 
 
 def generate_mwr_lhumpro(
-    mwr_l1c_file: str, output_file: str, uuid: str | None = None
-) -> str:
+    mwr_l1c_file: str | PathLike,
+    output_file: str | PathLike,
+    uuid: str | UUID | None = None,
+) -> UUID:
     """Generates LHUMPRO single-pointing product including liquid water path, integrated
     water vapor, etc. from zenith measurements.
 
@@ -59,8 +65,10 @@ def generate_mwr_lhumpro(
 
 
 def generate_mwr_multi(
-    mwr_l1c_file: str, output_file: str, uuid: str | None = None
-) -> str:
+    mwr_l1c_file: str | PathLike,
+    output_file: str | PathLike,
+    uuid: str | UUID | None = None,
+) -> UUID:
     """Generates MWR multiple-pointing product, including relative humidity profiles,
     etc. from scanning measurements.
 
@@ -77,11 +85,12 @@ def generate_mwr_multi(
 
 
 def _generate_product(
-    mwr_l1c_file: str,
-    output_file: str,
-    uuid: str | None,
+    mwr_l1c_file: str | PathLike,
+    output_file: str | PathLike,
+    uuid: str | UUID | None,
     product: Literal["multi", "single", "lhumpro"],
-) -> str:
+) -> UUID:
+    uuid = utils.get_uuid(uuid)
     fun: Callable
     if product == "multi":
         fun = gen_multi
@@ -115,13 +124,13 @@ def _generate_product(
 
 class Mwr:
     def __init__(
-        self, nc_l1c: netCDF4.Dataset, nc_l2: netCDF4.Dataset, uuid: str | None
+        self, nc_l1c: netCDF4.Dataset, nc_l2: netCDF4.Dataset, uuid: UUID
     ) -> None:
         self.nc_l1c = nc_l1c
         self.nc_l2 = nc_l2
-        self.uuid = uuid if uuid is not None else utils.get_uuid()
+        self.uuid = uuid
 
-    def harmonize(self, product: Literal["multi", "single"]) -> str:
+    def harmonize(self, product: Literal["multi", "single"]) -> UUID:
         self._truncate_global_attributes()
         self._copy_global_attributes()
         self._fix_variable_attributes()
@@ -168,7 +177,7 @@ class Mwr:
         self.nc_l2.instrument_pid = self.nc_l1c.instrument_pid
 
 
-def _read_mwrpy_coeffs(mwr_l1c_file: str, folder: str) -> list[str]:
+def _read_mwrpy_coeffs(mwr_l1c_file: str | PathLike, folder: str) -> list[str]:
     with netCDF4.Dataset(mwr_l1c_file) as nc:
         links = nc.mwrpy_coefficients.split(", ")
     coeffs = []

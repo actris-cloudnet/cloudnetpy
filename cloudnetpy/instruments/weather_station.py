@@ -5,6 +5,7 @@ import re
 from collections import defaultdict
 from collections.abc import Iterable, Sequence
 from os import PathLike
+from uuid import UUID
 
 import numpy as np
 from numpy import ma
@@ -17,16 +18,16 @@ from cloudnetpy.exceptions import ValidTimeStampError
 from cloudnetpy.instruments import instruments
 from cloudnetpy.instruments.cloudnet_instrument import CSVFile
 from cloudnetpy.instruments.toa5 import read_toa5
-from cloudnetpy.utils import datetime2decimal_hours
+from cloudnetpy.utils import datetime2decimal_hours, get_uuid
 
 
 def ws2nc(
     weather_station_file: str | PathLike | Sequence[str | PathLike],
-    output_file: str,
+    output_file: str | PathLike,
     site_meta: dict,
-    uuid: str | None = None,
+    uuid: str | UUID | None = None,
     date: str | datetime.date | None = None,
-) -> str:
+) -> UUID:
     """Converts weather station data into Cloudnet Level 1b netCDF file.
 
     Args:
@@ -47,6 +48,7 @@ def ws2nc(
         weather_station_file = [weather_station_file]
     if isinstance(date, str):
         date = datetime.date.fromisoformat(date)
+    uuid = get_uuid(uuid)
     ws: WS
     if site_meta["name"] == "Palaiseau":
         ws = PalaiseauWS(weather_station_file, site_meta)
@@ -85,7 +87,8 @@ def ws2nc(
     ws.calculate_rainfall_amount()
     attributes = output.add_time_attribute({}, ws.date)
     output.update_attributes(ws.data, attributes)
-    return output.save_level1b(ws, output_file, uuid)
+    output.save_level1b(ws, output_file, uuid)
+    return uuid
 
 
 class WS(CSVFile):
@@ -93,7 +96,7 @@ class WS(CSVFile):
         super().__init__(site_meta)
         self.instrument = instruments.GENERIC_WEATHER_STATION
 
-    date: list[str]
+    date: datetime.date
 
     def calculate_rainfall_amount(self) -> None:
         if "rainfall_amount" in self.data or "rainfall_rate" not in self.data:
@@ -443,7 +446,7 @@ class GalatiWS(WS):
 
     def add_data(self) -> None:
         # Skip wind measurements where range was limited to 0-180 degrees
-        if datetime.date(*map(int, self.date)) < datetime.date(2024, 10, 29):
+        if self.date < datetime.date(2024, 10, 29):
             del self._data["wind_speed"]
             del self._data["wind_direction"]
         return super().add_data()

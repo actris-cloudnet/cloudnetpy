@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from cloudnetpy.categorize import generate_categorize
+from cloudnetpy.categorize import CategorizeInput, generate_categorize
 from cloudnetpy.instruments import ceilo2nc, hatpro2nc, mira2nc
 from cloudnetpy.plotting import generate_figure
 from cloudnetpy.products import generate_classification
@@ -39,7 +39,7 @@ generate_figure(
     output_filename="source/_static/quickstart_model.png",
 )
 
-input_files = {
+input_files: CategorizeInput = {
     "radar": "radar.nc",
     "lidar": "lidar.nc",
     "model": "20230729_munich_ecmwf.nc",

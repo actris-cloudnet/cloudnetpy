@@ -30,10 +30,10 @@ class TestHatpro2nc(Check):
         test_path = tmp_path / "several.nc"
         uuid, files = hatpro.hatpro2nc(file_path, test_path, self.site_meta)
         assert len(files) == 4
-        assert len(uuid) == 36
+        assert len(str(uuid)) == 36
 
     def test_processing_of_several_lwp_files(self, tmp_path):
-        test_uuid = "abc"
+        test_uuid = "fe45561b-eb08-4d2a-a463-c6b4f7be7055"
         test_path = tmp_path / "several.nc"
         uuid, files = hatpro.hatpro2nc(
             file_path,
@@ -43,7 +43,7 @@ class TestHatpro2nc(Check):
             uuid=test_uuid,
         )
         assert len(files) == 2
-        assert uuid == test_uuid
+        assert str(uuid) == test_uuid
         with netCDF4.Dataset(test_path) as nc:
             time = nc.variables["time"]
             assert "hours since" in time.units
@@ -84,7 +84,7 @@ class TestHatpro2nc(Check):
         test_path = tmp_path / "full.nc"
         uuid, files = hatpro.hatpro2nc(file_path, test_path, self.site_meta)
         assert len(files) == 4
-        assert len(uuid) == 36
+        assert len(str(uuid)) == 36
         with netCDF4.Dataset(test_path) as nc:
             time = nc.variables["time"]
             assert "hours since" in time.units

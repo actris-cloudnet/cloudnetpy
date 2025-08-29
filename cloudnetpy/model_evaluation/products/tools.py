@@ -1,6 +1,9 @@
 import datetime
 import logging
+import os.path
+from collections.abc import Sequence
 from datetime import timedelta
+from os import PathLike
 
 import numpy as np
 import numpy.typing as npt
@@ -10,10 +13,10 @@ from cloudnetpy.model_evaluation.products.model_products import ModelManager
 from cloudnetpy.model_evaluation.products.observation_products import ObservationManager
 
 
-def check_model_file_list(name: str, models: list) -> None:
+def check_model_file_list(name: str, models: Sequence[str | PathLike]) -> None:
     """Check that files in models are from same model and date."""
     for m in models:
-        if name not in m:
+        if name not in os.path.basename(m):
             logging.error("Invalid model file set")
             msg = f"{m} not from {name}"
             raise AttributeError(msg)

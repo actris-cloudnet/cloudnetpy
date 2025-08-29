@@ -1,5 +1,8 @@
 """Module for creating Cloudnet ice effective radius file using Z-T method."""
 
+from os import PathLike
+from uuid import UUID
+
 import numpy as np
 from numpy import ma
 
@@ -7,13 +10,14 @@ from cloudnetpy import constants, output
 from cloudnetpy.metadata import MetaData
 from cloudnetpy.products.iwc import DEFINITIONS as IWC_DEFINITION
 from cloudnetpy.products.product_tools import IceClassification, IceSource
+from cloudnetpy.utils import get_uuid
 
 
 def generate_ier(
-    categorize_file: str,
-    output_file: str,
-    uuid: str | None = None,
-) -> str:
+    categorize_file: str | PathLike,
+    output_file: str | PathLike,
+    uuid: str | UUID | None = None,
+) -> UUID:
     """Generates Cloudnet ice effective radius product.
 
     This function calculates ice particle effective radius using the Grieche
@@ -55,6 +59,7 @@ def generate_ier(
         from https://doi.org/10.5194/amt-13-5335-2020,
 
     """
+    uuid = get_uuid(uuid)
     product = "ier"
     with IerSource(categorize_file, product) as ier_source:
         ice_classification = IceClassification(categorize_file)
@@ -66,7 +71,8 @@ def generate_ier(
         attributes = output.add_time_attribute(IER_ATTRIBUTES, date)
         attributes = _add_ier_comment(attributes, ier_source)
         output.update_attributes(ier_source.data, attributes)
-        return output.save_product_file(product, ier_source, output_file, uuid)
+        output.save_product_file(product, ier_source, output_file, uuid)
+        return uuid
 
 
 class IerSource(IceSource):
