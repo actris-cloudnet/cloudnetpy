@@ -3,23 +3,28 @@ using the Frisch et al. 2002 method.
 """
 
 import logging
+from collections.abc import Callable
+from os import PathLike
+from uuid import UUID
 
 import numpy as np
+import numpy.typing as npt
 from numpy import ma
 from scipy.interpolate import CubicSpline
 
-from cloudnetpy import output  # , utils
+from cloudnetpy import output
 from cloudnetpy.datasource import DataSource
 from cloudnetpy.metadata import MetaData
 from cloudnetpy.products import product_tools
+from cloudnetpy.utils import get_uuid
 
 
 def generate_edr(
-    radar_file: str,
-    categorize_file: str,
-    output_file: str,
-    uuid: str | None = None,
-) -> str:
+    radar_file: str | PathLike,
+    categorize_file: str | PathLike,
+    output_file: str | PathLike,
+    uuid: str | UUID | None = None,
+) -> UUID:
     """Generates Cloudnet eddy dissipation rates
     product according to Griesche 2020 / Borque 2016.
 
@@ -53,27 +58,25 @@ def generate_edr(
         from https://doi.org/10.1002/2015JD024543.
 
     """
+    uuid = get_uuid(uuid)
     wind_source = WindSource(categorize_file)
-    edr_source = EdrSource(radar_file)
-    edr_source.append_edr(wind_source)
-    edr_source.update_time_dependent_variables(wind_source)
-    date = edr_source.get_date()
-    attributes = output.add_time_attribute(EDR_ATTRIBUTES, date)
-    output.update_attributes(edr_source.data, attributes)
-    uuid = output.save_product_file("edr", edr_source, output_file, uuid)
-    edr_source.close()
+    with EdrSource(radar_file) as edr_source:
+        edr_source.append_edr(wind_source)
+        edr_source.update_time_dependent_variables(wind_source)
+        date = edr_source.get_date()
+        attributes = output.add_time_attribute(EDR_ATTRIBUTES, date)
+        output.update_attributes(edr_source.data, attributes)
+        output.save_product_file("edr", edr_source, output_file, uuid)
     return uuid
 
 
 class WindSource(DataSource):
     """Data container for wind for eddy dissipation rate calculations."""
 
-    #
-    def __init__(self, categorize_file: str):
+    def __init__(self, categorize_file: str | PathLike) -> None:
         super().__init__(categorize_file)
 
-    #
-    def get_wind(self) -> np.ndarray:
+    def get_wind(self) -> Callable[[npt.NDArray, npt.NDArray], npt.NDArray]:
         uwind = self.getvar("uwind")
         vwind = self.getvar("vwind")
         model_time = self.getvar("model_time")
@@ -82,19 +85,19 @@ class WindSource(DataSource):
             uwind, vwind, model_time, model_height
         )
 
-    #
-    def get_cat_time(self) -> np.ndarray:
+    def get_cat_time(self) -> npt.NDArray:
         return self.getvar("time")
 
 
 class EdrSource(DataSource):
     """Data container for eddy dissipation rate calculations."""
 
-    #
-    def __init__(self, radar_file: str):
+    def __init__(self, radar_file: str | PathLike) -> None:
         super().__init__(radar_file)
 
-    def update_time_dependent_variables(self, wind_source, copy_from_cat: tuple = ()):
+    def update_time_dependent_variables(
+        self, wind_source: WindSource, copy_from_cat: tuple[str, ...] = ()
+    ) -> None:
         """Update the temporal high resolved variables that will be stored in
         the product file to the standard Cloudnet product time resolution of
         30s.
@@ -113,7 +116,7 @@ class EdrSource(DataSource):
             if self.dataset.variables[key].size > 0:
                 self.dataset.variables[key] = wind_source.dataset.variables[key]
 
-    def append_edr(self, wind_source):
+    def append_edr(self, wind_source: WindSource) -> None:
         """Estimate Eddy Dissipation Rate (EDR) according to Griesche et al. 2020."""
 
         def interpolate_missing_values(
@@ -139,9 +142,9 @@ class EdrSource(DataSource):
             return spline(time_window)
 
         def compute_epsilon_from_spectrum(
-            freq_sp: np.ndarray,
-            power_sp: np.ndarray,
-            freq_list: list[list[float]],
+            freq_sp: npt.NDArray,
+            power_sp: npt.NDArray,
+            freq_list: list[tuple[float, float]],
             constant: float,
         ) -> list[float]:
             """Compute epsilon values from power spectrum."""
@@ -262,30 +265,32 @@ EDR_ATTRIBUTES = {
         units="m2 s-3",
         ancillary_variables="edr_error",
         comment=COMMENTS["edr"],
+        dimensions=("time", "height"),
     ),
     "edr_error": MetaData(
         long_name="Absolute error in eddy dissipation rate",
         units="m2 s-3",
+        dimensions=("time", "height"),
     ),
 }
 
 
 standard_freq_list = [
-    [5e-3, 5e-2],
-    [5e-3, 1e-1],
-    [5e-3, 35e-2],
-    [5e-3, 8e-1],
-    [1e-2, 1e-1],
-    [1e-2, 35e-2],
-    [1e-2, 8e-1],
-    [2e-2, 2e-1],
-    [2e-2, 8e-1],
-    [35e-3, 2e-1],
-    [35e-3, 8e-1],
-    [5e-2, 2e-1],
-    [5e-2, 8e-1],
-    [8e-2, 35e-2],
-    [8e-2, 8e-1],
-    [1e-1, 5e-1],
-    [1e-1, 8e-1],
+    (5e-3, 5e-2),
+    (5e-3, 1e-1),
+    (5e-3, 35e-2),
+    (5e-3, 8e-1),
+    (1e-2, 1e-1),
+    (1e-2, 35e-2),
+    (1e-2, 8e-1),
+    (2e-2, 2e-1),
+    (2e-2, 8e-1),
+    (35e-3, 2e-1),
+    (35e-3, 8e-1),
+    (5e-2, 2e-1),
+    (5e-2, 8e-1),
+    (8e-2, 35e-2),
+    (8e-2, 8e-1),
+    (1e-1, 5e-1),
+    (1e-1, 8e-1),
 ]  # adapted from Griesche et al. 2020

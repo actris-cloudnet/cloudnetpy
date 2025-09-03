@@ -1,5 +1,6 @@
 """General helper classes and functions for all products."""
 
+from collections.abc import Callable
 from dataclasses import dataclass
 from os import PathLike
 from typing import NamedTuple
@@ -323,14 +324,19 @@ def _get_temperature(categorize_file: str | PathLike) -> npt.NDArray:
     return atmos_utils.k2c(atmosphere["temperature"])
 
 
-def get_interpolated_horizontal_wind(uwind, vwind, wind_time, wind_height):
+def get_interpolated_horizontal_wind(
+    uwind: npt.NDArray,
+    vwind: npt.NDArray,
+    wind_time: npt.NDArray,
+    wind_height: npt.NDArray,
+) -> Callable[[npt.NDArray, npt.NDArray], npt.NDArray]:
     horizontal_wind_speed = np.sqrt((uwind) ** 2 + (vwind) ** 2)
     return RectBivariateSpline(
         wind_time, wind_height, horizontal_wind_speed, kx=1, ky=1
     )
 
 
-def periodogram(vel_data, delta_t, adv_vel=10):
+def periodogram(vel_data: npt.NDArray, delta_t: float, adv_vel: float = 10.0) -> tuple:
     """Compute frequency and power spectra.
 
     Based on a time series of mean Doppler velocities.
@@ -356,7 +362,9 @@ def periodogram(vel_data, delta_t, adv_vel=10):
     return freq_sp, power_sp
 
 
-def spec_fit(freq, power, freq_range):
+def spec_fit(
+    freq: npt.NDArray, power: npt.NDArray, freq_range: tuple[float, float]
+) -> tuple[float, float, float, float, float, float]:
     """Fit a linear function (power~frequency).
 
     Within a given frequency range (in log space).
