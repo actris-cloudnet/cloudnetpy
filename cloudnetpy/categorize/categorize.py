@@ -425,7 +425,7 @@ CATEGORIZE_ATTRIBUTES = {
         long_name="Minimum detectable radar reflectivity",
         units="dBZ",
         comment=COMMENTS["Z_sensitivity"],
-        dimensions=("time", "height"),
+        dimensions=("height",),
     ),
     "v": COMMON_ATTRIBUTES["v"]._replace(dimensions=("time", "height")),
     "width": COMMON_ATTRIBUTES["width"]._replace(dimensions=("time", "height")),
