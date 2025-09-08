@@ -1,4 +1,4 @@
 MAJOR = 1
-MINOR = 80
-PATCH = 8
+MINOR = 81
+PATCH = 0
 __version__ = f"{MAJOR}.{MINOR}.{PATCH}"

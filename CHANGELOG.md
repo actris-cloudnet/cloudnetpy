@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.81.0 – 2025-09-08
+
+- Add type hints to all functions and methods
+- Use `PathLike`, `date` and `UUID` in high-level functions
+- Fix dimensions of `Z_sensitivity` variable
+
 ## 1.80.8 – 2025-08-28
 
 - Fix cpr-simulation plotting when altitude is vector
