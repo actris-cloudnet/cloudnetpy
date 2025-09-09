@@ -101,8 +101,12 @@ class WS(CSVFile):
     def calculate_rainfall_amount(self) -> None:
         if "rainfall_amount" in self.data or "rainfall_rate" not in self.data:
             return
-        resolution = np.median(np.diff(self.data["time"].data)) * SEC_IN_HOUR
-        rainfall_amount = ma.cumsum(self.data["rainfall_rate"].data * resolution)
+        time = self.data["time"].data
+        if len(time) == 1:
+            rainfall_amount = np.array([0])
+        else:
+            resolution = np.median(np.diff(time)) * SEC_IN_HOUR
+            rainfall_amount = ma.cumsum(self.data["rainfall_rate"].data * resolution)
         self.data["rainfall_amount"] = CloudnetArray(rainfall_amount, "rainfall_amount")
 
     def screen_timestamps(self, date: datetime.date) -> None:
