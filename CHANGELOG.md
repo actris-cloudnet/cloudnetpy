@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.81.1 – 2025-09-09
+
+- Fix rainfall amount calculation on one timestamp
+
 ## 1.81.0 – 2025-09-08
 
 - Add type hints to all functions and methods
