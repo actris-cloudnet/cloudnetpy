@@ -42,6 +42,7 @@ def hatpro2l1c(
     output_file: str | PathLike,
     site_meta: dict,
     instrument_type: IType = "hatpro",
+    lidar_file: str | PathLike | None = None,
     uuid: str | UUID | None = None,
     date: str | datetime.date | None = None,
 ) -> UUID:
@@ -52,6 +53,7 @@ def hatpro2l1c(
         output_file: Output file name.
         site_meta: Dictionary containing information about the site and instrument
         instrument_type: Specific type of the RPG microwave radiometer.
+        lidar_file: Path to a lidar file.
         uuid: Set specific UUID for the file.
         date: Expected date in the input files.
 
@@ -71,6 +73,7 @@ def hatpro2l1c(
             str(mwr_dir),
             instrument_type=instrument_type,
             output_file=str(output_file),
+            lidar_path=lidar_file,
             coeff_files=coeff_files,
             instrument_config=site_meta,
             date=date,
