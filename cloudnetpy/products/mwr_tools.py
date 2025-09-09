@@ -1,7 +1,7 @@
 import os
 import tempfile
 from os import PathLike
-from typing import TYPE_CHECKING, Literal
+from typing import Literal
 from uuid import UUID
 
 import netCDF4
@@ -16,14 +16,12 @@ from mwrpy.version import __version__ as mwrpy_version
 from cloudnetpy import output, utils
 from cloudnetpy.exceptions import ValidTimeStampError
 
-if TYPE_CHECKING:
-    from collections.abc import Callable
-
 
 def generate_mwr_single(
     mwr_l1c_file: str | PathLike,
     output_file: str | PathLike,
     uuid: str | UUID | None = None,
+    lwp_offset: tuple[float | None, float | None] = (None, None),
 ) -> UUID:
     """Generates MWR single-pointing product including liquid water path, integrated
     water vapor, etc. from zenith measurements.
@@ -32,6 +30,7 @@ def generate_mwr_single(
         mwr_l1c_file: The Level 1C MWR file to be processed.
         output_file: The file path where the output file should be saved.
         uuid: The UUID, if any, associated with the output file. Defaults to None.
+        lwp_offset: Optional offset to apply to the liquid water path.
 
     Returns:
         UUID of generated file.
@@ -39,13 +38,14 @@ def generate_mwr_single(
     Example:
         >>> generate_mwr_single('input_mwr_l1c_file', 'output_file', 'abcdefg1234567')
     """
-    return _generate_product(mwr_l1c_file, output_file, uuid, "single")
+    return _generate_product(mwr_l1c_file, output_file, uuid, "single", lwp_offset)
 
 
 def generate_mwr_lhumpro(
     mwr_l1c_file: str | PathLike,
     output_file: str | PathLike,
     uuid: str | UUID | None = None,
+    lwp_offset: tuple[float | None, float | None] = (None, None),
 ) -> UUID:
     """Generates LHUMPRO single-pointing product including liquid water path, integrated
     water vapor, etc. from zenith measurements.
@@ -54,6 +54,7 @@ def generate_mwr_lhumpro(
         mwr_l1c_file: The Level 1C MWR file to be processed.
         output_file: The file path where the output file should be saved.
         uuid: The UUID, if any, associated with the output file. Defaults to None.
+        lwp_offset: Optional offset to apply to the liquid water path.
 
     Returns:
         UUID of generated file.
@@ -61,7 +62,7 @@ def generate_mwr_lhumpro(
     Example:
         >>> generate_mwr_lhumpro('input_mwr_l1c_file', 'output_file', 'abcdefg1234567')
     """
-    return _generate_product(mwr_l1c_file, output_file, uuid, "lhumpro")
+    return _generate_product(mwr_l1c_file, output_file, uuid, "lhumpro", lwp_offset)
 
 
 def generate_mwr_multi(
@@ -88,24 +89,20 @@ def _generate_product(
     mwr_l1c_file: str | PathLike,
     output_file: str | PathLike,
     uuid: str | UUID | None,
-    product: Literal["multi", "single", "lhumpro"],
+    product: Literal["single", "multi", "lhumpro"],
+    lwp_offset: tuple[float | None, float | None] = (None, None),
 ) -> UUID:
     uuid = utils.get_uuid(uuid)
-    fun: Callable
-    if product == "multi":
-        fun = gen_multi
-    elif product == "single":
-        fun = gen_single
-    elif product == "lhumpro":
-        fun = gen_lhumpro
-        product = "single"
-    else:
-        msg = f"Invalid product: {product}"
-        raise ValueError(msg)
     with tempfile.TemporaryDirectory() as temp_dir:
         coeffs = _read_mwrpy_coeffs(mwr_l1c_file, temp_dir)
         try:
-            fun(None, mwr_l1c_file, output_file, coeff_files=coeffs)
+            if product == "multi":
+                gen_multi(None, mwr_l1c_file, output_file, coeffs)
+            elif product == "single":
+                gen_single(None, mwr_l1c_file, output_file, lwp_offset, coeffs)
+            else:
+                gen_lhumpro(None, mwr_l1c_file, output_file, lwp_offset, coeffs)
+                product = "single"
         except MissingInputData as err:
             raise ValidTimeStampError from err
     with (
