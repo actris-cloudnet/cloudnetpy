@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.81.2 – 2025-09-12
+
+- Fix BASTA date validation
+
 ## 1.81.1 – 2025-09-09
 
 - Fix rainfall amount calculation on one timestamp
