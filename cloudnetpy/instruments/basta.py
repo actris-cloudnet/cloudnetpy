@@ -102,9 +102,11 @@ class Basta(NcRadar):
     def validate_date(self, expected_date: datetime.date) -> None:
         """Validates expected data."""
         date_units = self.dataset.variables["time"].units
-        date = date_units.split()[2]
+        date_str = date_units.split()[2]
+        date = datetime.date.fromisoformat(date_str)
         if expected_date != date:
-            raise ValidTimeStampError
+            msg = "Time units doesn't match expected date"
+            raise ValidTimeStampError(msg)
 
     def add_zenith_angle(self) -> None:
         elevation = self.getvar("elevation")
