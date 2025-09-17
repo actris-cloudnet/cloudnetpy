@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.82.0 – 2025-09-17
+
+- Add option to use lidar file and `lwp_offset` in MWRpy processing
+
 ## 1.81.2 – 2025-09-12
 
 - Fix BASTA date validation
