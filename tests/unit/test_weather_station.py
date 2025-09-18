@@ -1,14 +1,14 @@
 import os
 from tempfile import TemporaryDirectory
 
-from cloudnetpy.cloudnetarray import CloudnetArray
 import pytest
+import numpy as np
+from numpy import ma
 
 from cloudnetpy.exceptions import ValidTimeStampError
 from cloudnetpy.instruments import weather_station
+from cloudnetpy.cloudnetarray import CloudnetArray
 from tests.unit.all_products_fun import Check
-import numpy as np
-from numpy import ma
 
 SCRIPT_PATH = os.path.dirname(os.path.realpath(__file__))
 
@@ -47,7 +47,7 @@ class WS(Check):
         min_wind_dir = ma.min(self.nc.variables["wind_direction"][:])
         max_wind_dir = ma.max(self.nc.variables["wind_direction"][:])
         assert min_wind_dir >= 0
-        assert max_wind_dir <= 360
+        assert max_wind_dir < 360
 
     def test_rainfall_rate_values(self):
         if "rainfall_rate" not in self.nc.variables:
@@ -83,7 +83,7 @@ class TestWeatherStation(WS):
     uuid = weather_station.ws2nc(filename, temp_path, site_meta)
 
     def test_dimensions(self):
-        assert self.nc.dimensions["time"].size == 29
+        assert self.nc.dimensions["time"].size == 28
 
 
 class TestDateArgument(WS):
@@ -177,12 +177,15 @@ class TestWeatherStationHyytiala(WS):
 
 
 class TestWeatherStationGalati(WS):
-    date = "2024-07-14"
+    date = "2025-08-05"
     temp_dir = TemporaryDirectory()
     temp_path = temp_dir.name + "/test.nc"
     site_meta = {**SITE_META, "name": "Galați"}
     filename = f"{SCRIPT_PATH}/data/ws/galati.csv"
     uuid = weather_station.ws2nc(filename, temp_path, site_meta)
+
+    def test_dimensions(self):
+        assert self.nc.dimensions["time"].size == 5
 
 
 class TestWeatherStationBucharest(WS):

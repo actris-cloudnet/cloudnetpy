@@ -86,6 +86,7 @@ def ws2nc(
     ws.convert_rainfall_amount()
     ws.normalize_cumulative_amount("rainfall_amount")
     ws.calculate_rainfall_amount()
+    ws.wrap_wind_direction()
     attributes = output.add_time_attribute({}, ws.date)
     output.update_attributes(ws.data, attributes)
     output.save_level1b(ws, output_file, uuid)
@@ -148,6 +149,16 @@ class WS(CSVFile):
 
     def convert_rainfall_amount(self) -> None:
         pass
+
+    def wrap_wind_direction(self) -> None:
+        if "wind_direction" not in self.data:
+            return
+        # Wrap values little outside of [0, 360), keep original values
+        # otherwise.
+        threshold = 2
+        values = self.data["wind_direction"].data
+        values[(values > -threshold) & (values < 0)] += 360
+        values[(values >= 360) & (values < 360 + threshold)] -= 360
 
 
 class PalaiseauWS(WS):
