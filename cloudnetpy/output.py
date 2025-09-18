@@ -197,34 +197,39 @@ def get_source_uuids(data: Observations | list[netCDF4.Dataset | DataSource]) ->
 def merge_history(
     nc: netCDF4.Dataset, file_type: str, data: Observations | DataSource
 ) -> None:
-    """Merges history fields from one or several files and creates a new record.
+    """Merges history fields from one or several files and creates a new record."""
 
-    Args:
-        nc: The netCDF Dataset instance.
-        file_type: Long description of the file.
-        data: Dictionary of objects with history attribute.
+    def extract_history(obj: DataSource | Observations) -> list[str]:
+        if hasattr(obj, "dataset") and hasattr(obj.dataset, "history"):
+            history = obj.dataset.history
+            if isinstance(obj, Model):
+                return [history.split("\n")[-1]]
+            return history.split("\n")
+        return []
 
-    """
-    new_record = f"{utils.get_time()} - {file_type} file created"
-    histories = []
-    if (
-        isinstance(data, DataSource)
-        and hasattr(data, "dataset")
-        and hasattr(data.dataset, "history")
-    ):
-        history = data.dataset.history
-        histories.append(history)
-    if isinstance(data, Observations):
+    histories: list[str] = []
+    if isinstance(data, DataSource):
+        histories.extend(extract_history(data))
+    elif isinstance(data, Observations):
         for field in fields(data):
-            obj = getattr(data, field.name)
-            if hasattr(obj, "dataset") and hasattr(obj.dataset, "history"):
-                history = obj.dataset.history
-                history = history.split("\n")[-1] if isinstance(obj, Model) else history
-                histories.append(history)
-    histories.sort(reverse=True)
-    old_history = [f"\n{history}" for history in histories]
-    old_history_str = "".join(old_history)
-    nc.history = f"{new_record}{old_history_str}"
+            histories.extend(extract_history(getattr(data, field.name)))
+
+    # Remove duplicates
+    histories = list(dict.fromkeys(histories))
+
+    def parse_time(line: str) -> datetime.datetime:
+        try:
+            return datetime.datetime.strptime(
+                line.split(" - ")[0].strip(), "%Y-%m-%d %H:%M:%S %z"
+            )
+        except ValueError:
+            return datetime.datetime.min.replace(
+                tzinfo=datetime.timezone.utc
+            )  # malformed lines to bottom
+
+    histories.sort(key=parse_time, reverse=True)
+    new_record = f"{utils.get_time()} - {file_type} file created"
+    nc.history = new_record + "".join(f"\n{h}" for h in histories)
 
 
 def add_source_instruments(nc: netCDF4.Dataset, data: Observations) -> None:
