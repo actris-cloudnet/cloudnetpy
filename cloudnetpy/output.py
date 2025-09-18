@@ -229,14 +229,15 @@ def merge_history(
 
 def add_source_instruments(nc: netCDF4.Dataset, data: Observations) -> None:
     """Adds source attribute to categorize file."""
-    sources = []
-    for field in fields(data):
-        obj = getattr(data, field.name)
-        if hasattr(obj, "source"):
-            sources.append(obj.source)
+    sources = {
+        src
+        for field in fields(data)
+        for obj in [getattr(data, field.name)]
+        if hasattr(obj, "source")
+        for src in obj.source.split("\n")
+    }
     if sources:
-        formatted_sources = [sources[0]] + [f"\n{source}" for source in sources[1:]]
-        nc.source = "".join(formatted_sources)
+        nc.source = "\n".join(sorted(sources))
 
 
 def init_file(
