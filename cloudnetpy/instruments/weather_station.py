@@ -79,6 +79,7 @@ def ws2nc(
     ws.add_date()
     ws.add_site_geolocation()
     ws.add_data()
+    ws.remove_duplicate_timestamps()
     ws.convert_temperature_and_humidity()
     ws.convert_pressure()
     ws.convert_rainfall_rate()
