@@ -5,6 +5,7 @@ import pytest
 
 from cloudnetpy import output, utils
 from cloudnetpy.metadata import MetaData
+from cloudnetpy.datasource import DataSource
 
 
 @pytest.mark.parametrize(
@@ -75,21 +76,18 @@ def test_copy_variables(tmpdir_factory, fake_nc_file):
                 assert source.variables[var][:] == root_grp.variables[var][:]
 
 
-# def test_merge_history():
-#     root = RootGrp()
-#     file_type = "dummy"
-#     source1 = RootGrp()
-#     source1.dataset.history = "20:00 some history x"
-#     source2 = RootGrp()
-#     source2.dataset.history = "21:00 some history y"
-#     output.merge_history(root, file_type, source1) # type: ignore
-#     output.merge_history(root, file_type, source2) # type: ignore
-#     history = str(root.history)
-#     assert utils.is_timestamp(f"-{history[:19]}") is True
-#     assert (
-#         history[19:]
-#         == " +00:00 - dummy file created\n21:00 some history y\n20:00 some history x"
-#     )
+def test_merge_history(nc_file: netCDF4.Dataset):
+    root = RootGrp()
+    with netCDF4.Dataset(nc_file) as source:
+        source_history = source.history
+    file_type = "dummy"
+    data_source = DataSource(nc_file)
+    output.merge_history(root, file_type, data_source)  # type: ignore
+    output.merge_history(root, file_type, data_source)  # type: ignore
+    history = str(root.history)
+    assert utils.is_timestamp(f"-{history[:19]}") is True
+    print(history)
+    assert history[19:] == f" +00:00 - dummy file created\n{source_history}"
 
 
 def test_get_source_uuids():

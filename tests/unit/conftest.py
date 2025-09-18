@@ -45,6 +45,7 @@ def nc_file(tmpdir_factory, file_metadata):
         )
         _create_variable(root_grp, "test_array", TEST_ARRAY, "m s-1")
         _create_variable(root_grp, "range", TEST_ARRAY, "km")
+        root_grp.history = "2024-09-18 13:26:53 +00:00 - test file created"
     return file_name
 
 
