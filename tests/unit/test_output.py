@@ -86,7 +86,6 @@ def test_merge_history(nc_file: netCDF4.Dataset):
     output.merge_history(root, file_type, data_source)  # type: ignore
     history = str(root.history)
     assert utils.is_timestamp(f"-{history[:19]}") is True
-    print(history)
     assert history[19:] == f" +00:00 - dummy file created\n{source_history}"
 
 
