@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.82.1 – 2025-09-18
+
+- Remove duplicate source attributes
+- Remove duplicates from history attribute
+- Remove duplicate timestamps from weather station
+- Wrap wind direction values in weather weather
+
 ## 1.82.0 – 2025-09-17
 
 - Add option to use lidar file and `lwp_offset` in MWRpy processing
