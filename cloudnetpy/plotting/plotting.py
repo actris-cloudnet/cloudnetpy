@@ -807,8 +807,8 @@ class Plot1D(Plot):
             data = np.stack([wind_speed, data], axis=1)
 
         block_ind = np.where(np.diff(is_invalid))[0] + 1
-        valid_time_blocks = np.split(time, block_ind)[is_invalid[0] :: 2]
-        valid_data_blocks = np.split(data, block_ind)[is_invalid[0] :: 2]
+        valid_time_blocks = np.split(time, block_ind)[int(is_invalid[0]) :: 2]
+        valid_data_blocks = np.split(data, block_ind)[int(is_invalid[0]) :: 2]
 
         for time1, data1 in zip(valid_time_blocks, valid_data_blocks, strict=False):
             if is_wind_direction:
