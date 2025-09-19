@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.82.2 – 2025-09-19
+
+- Skip epsilon-lidar if not enough data points
+
 ## 1.82.1 – 2025-09-18
 
 - Remove duplicate source attributes
