@@ -195,12 +195,14 @@ def test_correct_liquid_top():
     class Obs:
         def __init__(self):
             self.height = np.arange(11)
-            self.z: ma.MaskedArray = ma.masked_array(np.random.random((3, 10)))
-            self.z.mask = [
-                [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-                [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-                [0, 0, 0, 0, 0, 0, 0, 0, 1, 0],
-            ]  # Here one masked value
+            self.z: ma.MaskedArray = ma.masked_array(
+                np.random.random((3, 10)),
+                mask=[
+                    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+                    [0, 0, 0, 0, 0, 0, 0, 0, 1, 0],
+                ],
+            )  # Here one masked value
 
     is_freezing = np.array(
         [

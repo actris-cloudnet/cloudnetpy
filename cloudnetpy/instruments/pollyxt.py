@@ -246,7 +246,8 @@ def _read_array_from_file_pair(
 
 
 def _only_zeros_or_masked(data: ma.MaskedArray) -> bool:
-    return ma.sum(data) == 0 or data.mask.all()
+    mask = ma.getmaskarray(data)
+    return ma.sum(data) == 0 or mask.all()
 
 
 ATTRIBUTES = {

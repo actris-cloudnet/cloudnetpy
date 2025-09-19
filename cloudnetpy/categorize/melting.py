@@ -76,7 +76,9 @@ def find_melting_layer(obs: ClassData, *, smooth: bool = True) -> npt.NDArray:
             ldr_prof = obs.ldr[ind, temp_indices]
             ldr_dprof = ldr_diff[ind, temp_indices]
 
-        if ma.count(ldr_prof) > 3 or ma.count(v_prof) > 3:
+        if (ldr_prof is not None and ma.count(ldr_prof) > 3) or (
+            v_prof is not None and ma.count(v_prof) > 3
+        ):
             try:
                 if ldr_prof is None or ldr_dprof is None:
                     msg = "ldr_prof or ldr_dprof is None"

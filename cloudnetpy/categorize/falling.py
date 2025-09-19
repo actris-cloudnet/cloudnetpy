@@ -115,10 +115,11 @@ def _fix_liquid_dominated_radar(
 
 
 def _is_z_missing_above_liquid(z: ma.MaskedArray, ind_top: int) -> bool:
-    """Checks is z is masked right above the liquid layer top."""
+    """Checks if z is masked right above the liquid layer top."""
     if ind_top == len(z) - 1:
         return False
-    return z.mask[ind_top + 1]
+    mask = ma.getmaskarray(z)
+    return bool(mask[ind_top + 1])
 
 
 def _is_z_increasing(z: ma.MaskedArray, ind_base: int, ind_top: int) -> bool:

@@ -326,6 +326,11 @@ class HatproBinCombined:
         else:
             msg = "Only implemented up to 2 files"
             raise NotImplementedError(msg)
+
+        if arr.dtype.fields is None:
+            msg = "Data has no fields"
+            raise ValueError(msg)
+
         self.data = {field: arr[field] for field in arr.dtype.fields}
 
 

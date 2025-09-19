@@ -371,7 +371,7 @@ def interpolate_2d_mask(
         method="linear",
     )
     # Preserve mask:
-    mask_fun = RectBivariateSpline(x, y, z.mask[:], kx=1, ky=1)
+    mask_fun = RectBivariateSpline(x, y, ma.getmaskarray(z), kx=1, ky=1)
     mask = mask_fun(x_new, y_new)
     mask[mask < 0.5] = 0
     masked_array = ma.array(data, mask=mask.astype(bool))

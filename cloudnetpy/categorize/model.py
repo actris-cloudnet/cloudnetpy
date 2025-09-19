@@ -182,4 +182,4 @@ def _find_model_type(file_name: str | PathLike) -> str:
 def _find_number_of_valid_profiles(array: npt.NDArray) -> int:
     mask = ma.getmaskarray(array)
     all_masked_profiles = np.all(mask, axis=1)
-    return np.count_nonzero(~all_masked_profiles)
+    return int(np.count_nonzero(~all_masked_profiles))
