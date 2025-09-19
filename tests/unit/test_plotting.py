@@ -59,9 +59,11 @@ def test_figure_data(basta_nc):
 
 
 def test_generate_figure(basta_nc):
-    plotting.generate_figure(basta_nc, ["Zh"], show=False)
+    plotting.generate_figure(basta_nc, ["Zh", "zenith_angle"], show=False)
     image_name = "test_23142134.png"
-    plotting.generate_figure(basta_nc, ["Zh"], show=False, output_filename=image_name)
+    plotting.generate_figure(
+        basta_nc, ["Zh", "zenith_angle"], show=False, output_filename=image_name
+    )
     assert path.exists(image_name)
     os.remove(image_name)
 
