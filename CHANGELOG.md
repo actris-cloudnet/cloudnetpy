@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.82.3 – 2025-09-19
+
+- Fix plotting in NumPy 2.3.0
+
 ## 1.82.2 – 2025-09-19
 
 - Skip epsilon-lidar if not enough data points
