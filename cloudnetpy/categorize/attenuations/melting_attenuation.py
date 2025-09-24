@@ -13,14 +13,14 @@ def calc_melting_attenuation(
     data: Observations, classification: ClassificationResult
 ) -> Attenuation:
     shape = classification.category_bits.melting.shape
-    is_rain = classification.is_rain
+    no_rain = classification.is_rain == 0
 
     affected_region = classification.category_bits.freezing.copy()
 
     if data.disdrometer is None:
-        affected_region[~is_rain, :] = False
         above_melting = utils.ffill(classification.category_bits.melting)
         affected_region[~above_melting] = False
+        affected_region[no_rain, :] = False
         return Attenuation(
             amount=ma.masked_all(shape),
             error=ma.masked_all(shape),
@@ -29,22 +29,23 @@ def calc_melting_attenuation(
         )
 
     rainfall_rate = data.disdrometer.data["rainfall_rate"][:]
-    rainfall_rate[is_rain == 0] = ma.masked
+    rainfall_rate = ma.where(no_rain, 0, rainfall_rate)
+
     frequency = data.radar.radar_frequency
 
     attenuation_array = _calc_melting_attenuation(rainfall_rate, frequency)
 
     amount = affected_region * utils.transpose(attenuation_array)
 
-    affected_region[amount == 0] = False
+    no_attenuation = amount == 0
 
-    amount[amount == 0] = ma.masked
+    affected_region[no_attenuation] = False
+    amount[no_attenuation] = ma.masked
 
     band = utils.get_wl_band(data.radar.radar_frequency)
     error_factor = {"Ka": 0.2, "W": 0.1}[band]
 
     error = amount * error_factor
-    error[~affected_region] = ma.masked
 
     return Attenuation(
         amount=amount,
