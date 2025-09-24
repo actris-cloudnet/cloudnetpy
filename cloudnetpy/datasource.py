@@ -74,14 +74,14 @@ class DataSource:
             ndarray: The actual data.
 
         Raises:
-             RuntimeError: The variable is not found.
+             KeyError: The variable is not found.
 
         """
         for arg in args:
             if arg in self.dataset.variables:
                 return self.dataset.variables[arg][:]
         msg = f"Missing variable {args[0]} in the input file."
-        raise RuntimeError(msg)
+        raise KeyError(msg)
 
     def append_data(
         self,

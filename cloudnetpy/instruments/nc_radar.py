@@ -41,7 +41,7 @@ class NcRadar(DataSource, CloudnetInstrument):
             name = keymap[key]
             try:
                 array = self.getvar(key)
-            except RuntimeError:
+            except KeyError:
                 logging.warning("Can not find variable %s from the input file", key)
                 continue
             array = np.array(array) if utils.isscalar(array) else array
@@ -158,7 +158,7 @@ class NcRadar(DataSource, CloudnetInstrument):
             self.data[key] = CloudnetArray(np.median(np.array(data)), key)
             if "NyquistVelocity" in self.data:
                 del self.data["NyquistVelocity"]
-        except RuntimeError:
+        except KeyError:
             logging.warning("Unable to find nyquist_velocity")
 
     def test_if_all_masked(self) -> None:

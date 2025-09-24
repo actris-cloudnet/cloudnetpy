@@ -54,5 +54,5 @@ def test_init_lwp_error(fake_mwr_file):
 
 
 def test_missing_variable(bad_mwr_file):
-    with pytest.raises(RuntimeError):
+    with pytest.raises(KeyError):
         Mwr(bad_mwr_file)

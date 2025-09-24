@@ -104,7 +104,7 @@ class ObservationManager(DataSource):
         """Check if rainrate in file."""
         try:
             self.getvar("rainrate")
-        except RuntimeError:
+        except KeyError:
             return False
         return True
 

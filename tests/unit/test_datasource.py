@@ -20,7 +20,7 @@ class TestDataSource:
         assert_array_equal(self.obj.get_date(), datetime.date(2019, 5, 23))
 
     def test_getvar_missing(self):
-        with pytest.raises(RuntimeError):
+        with pytest.raises(KeyError):
             self.obj.getvar("not_existing_variable")
 
     def test_init_time(self, test_array):
