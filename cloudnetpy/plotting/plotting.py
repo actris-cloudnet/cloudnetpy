@@ -28,6 +28,7 @@ from cloudnetpy.categorize.atmos_utils import calc_altitude
 from cloudnetpy.exceptions import PlottingError
 from cloudnetpy.instruments.ceilometer import calc_sigma_units
 from cloudnetpy.plotting.plot_meta import ATTRIBUTES, PlotMeta
+from cloudnetpy.products.classification import TopStatus
 
 EARTHCARE_MAX_X = 517.84
 
@@ -375,6 +376,7 @@ class Plot:
             "air_temperature": (add, -273.15, "\u00b0C"),
             "r_accum_RT": (multiply, 1000, "mm"),
             "r_accum_NRT": (multiply, 1000, "mm"),
+            "cloud_top_height_agl": (multiply, con.M_TO_KM, "Height (km AGL)"),
         }
         conversion_method, conversion, units = units_conversion.get(
             self.sub_plot.variable.name, (multiply, 1, None)
@@ -467,6 +469,12 @@ class Plot:
         self._data = data_new
         figure_data.time_including_gaps = time_new
 
+    def _read_cloud_top_flags(
+        self, figure_data: FigureData, flag_value: int | tuple[int, ...]
+    ) -> ndarray:
+        status = figure_data.file.variables["cloud_top_height_status"][:]
+        return np.isin(status, flag_value)
+
     def _read_flagged_data(self, figure_data: FigureData) -> ndarray:
         flag_names = [
             f"{self.sub_plot.variable.name}_quality_flag",
@@ -502,6 +510,32 @@ class Plot2D(Plot):
 
         if figure_data.is_mwrpy_product():
             self._fill_flagged_data(figure_data)
+
+        if figure_data.variables[0].name == "signal_source_status":
+            self._indicate_rainy_profiles(figure_data)
+
+    def _indicate_rainy_profiles(self, figure_data: FigureData) -> None:
+        if "rain_detected" not in figure_data.file.variables:
+            return
+        rain = figure_data.file.variables["rain_detected"][:]
+        is_rain: ma.MaskedArray = ma.masked_array(np.zeros_like(rain), mask=(rain == 0))
+        if is_rain.mask.all():
+            return
+        self._ax.plot(
+            figure_data.time,
+            is_rain,
+            color="red",
+            marker="|",
+            linestyle="None",
+            markersize=10,
+            zorder=-999,
+            label="Rain",
+        )
+        self._ax.legend(
+            markerscale=0.75,
+            numpoints=1,
+            frameon=False,
+        )
 
     def _fill_flagged_data(self, figure_data: FigureData) -> None:
         flags = self._read_flagged_data(figure_data)
@@ -672,11 +706,35 @@ class Plot1D(Plot):
         self.sub_plot.set_yax(ylabel=units, y_limits=self._get_y_limits())
         pos = self._ax.get_position()
         self._ax.set_position((pos.x0, pos.y0, pos.width * 0.965, pos.height))
+        self._plot_flags(figure_data)
+
+    def _plot_flags(self, figure_data: FigureData) -> None:
         if figure_data.is_mwrpy_product():
             flags = self._read_flagged_data(figure_data)
             if np.any(flags):
                 self._plot_flag_data(figure_data.time[flags], self._data_orig[flags])
                 self._add_legend()
+        if (
+            figure_data.variables[0].name == "cloud_top_height_agl"
+            and "cloud_top_height_status" in figure_data.file.variables
+        ):
+            legend: tuple = ()
+            flag_value = (TopStatus.MODERATE_ATT, TopStatus.UNCORR_ATT)
+            flags = self._read_cloud_top_flags(figure_data, flag_value)
+            if np.any(flags):
+                self._plot_flag_data(
+                    figure_data.time[flags], self._data_orig[flags], color="orange"
+                )
+                legend += ("Suspicious",)
+            flag_value = (TopStatus.SEVERE_ATT, TopStatus.ABOVE_RANGE)
+            flags = self._read_cloud_top_flags(figure_data, flag_value)
+            if np.any(flags):
+                self._plot_flag_data(
+                    figure_data.time[flags], self._data_orig[flags], color="red"
+                )
+                legend += ("Unreliable",)
+            if legend:
+                self._add_legend(name=legend)
 
     def plot_tb(self, figure_data: FigureData, freq_ind: int) -> None:
         if len(self._data.shape) != 2 or freq_ind >= self._data.shape[1]:
@@ -728,20 +786,22 @@ class Plot1D(Plot):
             },
         )
 
-    def _plot_flag_data(self, time: ndarray, values: ndarray) -> None:
+    def _plot_flag_data(
+        self, time: ndarray, values: ndarray, color: str = "salmon"
+    ) -> None:
         self._ax.plot(
             time,
             values,
-            color="salmon",
+            color=color,
             marker=".",
             lw=0,
             markersize=3,
             zorder=_get_zorder("flags"),
         )
 
-    def _add_legend(self) -> None:
+    def _add_legend(self, name: str | tuple = ("Flagged data",)) -> None:
         self._ax.legend(
-            ["Flagged data"],
+            name,
             markerscale=3,
             numpoints=1,
             frameon=False,
@@ -772,7 +832,10 @@ class Plot1D(Plot):
         custom_options = {
             "tb": {
                 "color": "lightblue",
-            }
+            },
+            "cloud_top_height_agl": {
+                "color": "steelblue",
+            },
         }
 
         variable_name = self.sub_plot.variable.name

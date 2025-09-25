@@ -90,6 +90,12 @@ _CLABEL = {
         ("Clutter", _COLORS["shockred"]),
         ("_Lidar molecular scattering", _COLORS["pink"]),
     ),
+    "signal_source_status": (
+        ("Clear sky", _COLORS["white"]),
+        ("Radar & lidar", _COLORS["green"]),
+        ("Radar only", _COLORS["lightsteel"]),
+        ("Lidar only", _COLORS["yellow"]),
+    ),
     "ice_retrieval_status": (
         ("_No ice", _COLORS["white"]),
         ("Reliable", _COLORS["green"]),
@@ -123,6 +129,15 @@ _CLABEL = {
         ("Mixed phase", _COLORS["lightgreen"]),
         ("Unfeasible", _COLORS["red"]),
         ("Surrounding ice", _COLORS["lightsteel"]),
+    ),
+    "radar_attenuation_status": (
+        ("_Clear sky", _COLORS["white"]),
+        ("Negligible", _COLORS["green"]),
+        ("Minor", _COLORS["lightgreen"]),
+        ("Moderate", _COLORS["yellow"]),
+        ("Severe", _COLORS["red"]),
+        ("Unquantifiable", _COLORS["seaweed_roll"]),
+        ("Undetected", _COLORS["skyblue"]),
     ),
 }
 
@@ -213,6 +228,9 @@ ATTRIBUTES = {
         ),
     },
     "fallback": {
+        "cloud_top_height_agl": PlotMeta(
+            moving_average=False,
+        ),
         "nubf": PlotMeta(plot_range=(0, 5)),
         "ze_sat": PlotMeta(
             plot_range=(-40, 15),
@@ -280,6 +298,9 @@ ATTRIBUTES = {
         ),
         "der_retrieval_status": PlotMeta(
             clabel=_CLABEL["der_retrieval_status"],
+        ),
+        "radar_attenuation_status": PlotMeta(
+            clabel=_CLABEL["radar_attenuation_status"],
         ),
         "mu": PlotMeta(
             plot_range=(0, 10),
@@ -553,6 +574,9 @@ ATTRIBUTES = {
         ),
         "detection_status": PlotMeta(
             clabel=_CLABEL["detection_status"],
+        ),
+        "signal_source_status": PlotMeta(
+            clabel=_CLABEL["signal_source_status"],
         ),
         "iwc": PlotMeta(
             plot_range=(1e-7, 1e-3),
