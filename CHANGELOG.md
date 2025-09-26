@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.83.0 – 2025-09-26
+
+- Fix region affected by melting layer attenuation
+- Add new variables to classification
+
 ## 1.82.3 – 2025-09-19
 
 - Fix plotting in NumPy 2.3.0
