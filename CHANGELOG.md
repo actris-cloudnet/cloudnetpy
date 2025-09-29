@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.84.0 – 2025-09-29
+
+- Interpolate LWP in categorize
+
 ## 1.83.1 – 2025-09-29
 
 - Add missing `synop_WaWa` to some parsivel files
