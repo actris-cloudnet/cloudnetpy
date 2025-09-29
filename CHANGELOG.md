@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.83.1 – 2025-09-29
+
+- Add missing `synop_WaWa` to some parsivel files
+- Add support for Maido weather station
+- Fix author names
+
 ## 1.83.0 – 2025-09-26
 
 - Fix region affected by melting layer attenuation
