@@ -2,6 +2,7 @@ import netCDF4
 import numpy as np
 import pytest
 from numpy.testing import assert_array_equal
+from numpy import ma
 
 from cloudnetpy.categorize.mwr import Mwr
 
@@ -21,12 +22,22 @@ def fake_mwr_file(tmpdir_factory):
     return file_name
 
 
-def test_rebin_to_grid(fake_mwr_file):
+def test_interpolate_to_grid(fake_mwr_file):
     obj = Mwr(fake_mwr_file)
-    time_new = np.array([1.4, 2.8])
-    obj.rebin_to_grid(time_new)
-    result = np.array([1.2, 0.2])
-    assert_array_equal(obj.data["lwp"][:], result)
+    time_new = np.array([0.5, 1.5])
+    obj.interpolate_to_grid(time_new, max_time=60)
+    result = np.array([1.3, 1.2])
+    lwp = obj.data["lwp"][:]
+    assert_array_equal(lwp.data, result)
+    assert_array_equal(lwp.mask, np.array([False, False]))
+
+
+def test_interpolate_to_grid_masked(fake_mwr_file):
+    obj = Mwr(fake_mwr_file)
+    time_new = np.array([0.5, 1.5])
+    obj.interpolate_to_grid(time_new, max_time=25)
+    lwp = obj.data["lwp"][:]
+    assert_array_equal(lwp.mask, np.array([True, True]))
 
 
 @pytest.fixture(scope="session")
@@ -43,7 +54,7 @@ def bad_mwr_file(tmpdir_factory):
 def test_init_lwp_data(fake_mwr_file):
     obj = Mwr(fake_mwr_file)
     result = np.array([0.1, 2.5, -0.1, 0.2, 0.0])
-    assert_array_equal(obj.data["lwp"][:], result)
+    assert_array_equal(obj.data["lwp"][:].data, result)
 
 
 def test_init_lwp_error(fake_mwr_file):

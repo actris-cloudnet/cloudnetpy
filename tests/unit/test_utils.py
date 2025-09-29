@@ -887,3 +887,134 @@ def test_parse_global_attribute_numeral(data: str, result: float, tmp_path):
         for key in ["Altitude", "Latitude", "Longitude"]:
             setattr(nc, key, data)
             assert utils._parse_global_attribute_numeral(nc, key) == result
+
+
+@pytest.mark.parametrize(
+    "original_grid, new_grid, threshold, expected",
+    [
+        (np.array([1, 2, 3, 4, 5]), np.array([1.9, 2.2, 3.1, 4.0, 4.9]), 1, []),
+        (np.array([1, 2, 3, 4, 5]), np.array([10, 20, 30, 40, 50]), 1, [0, 1, 2, 3, 4]),
+        (
+            np.array([1, 2, 3, 4, 5]),
+            np.array([1.1, 2.1, 3.2, 4.2, 5.3]),
+            0.15,
+            [2, 3, 4],
+        ),
+        (np.array([]), np.array([]), 0.5, []),
+        (np.array([0.0, 1.0, 2.0, 3.0]), np.array([0.0, 1.0, 2.0, 3.0]), 0.1, []),
+        (np.array([0.0, 1.0, 2.0]), np.array([0.05, 0.95, 2.02]), 0.1, []),
+        (np.array([0.0, 1.0, 2.0]), np.array([0.5, 1.5, 2.6]), 0.2, [0, 1, 2]),
+        (np.array([0.0, 1.0, 2.0, 5.0]), np.array([0.1, 2.5, 4.9, 6.0]), 0.2, [1, 3]),
+        (np.array([1.0, 2.0, 3.0]), np.array([0.0]), 0.5, [0]),
+        (np.array([1.0, 2.0, 3.0]), np.array([4.0]), 0.5, [0]),
+        (np.array([1.0, 2.0, 3.0]), np.array([]), 0.5, []),
+        (np.array([]), np.array([1.0, 2.0]), 0.5, [0, 1]),
+    ],
+)
+def test_get_gap_ind(
+    original_grid: npt.NDArray,
+    new_grid: npt.NDArray,
+    threshold: float,
+    expected: npt.NDArray,
+):
+    assert utils.get_gap_ind(original_grid, new_grid, threshold) == expected
+
+
+@pytest.mark.parametrize(
+    "original_grid, new_grid, threshold",
+    [
+        (np.array([0.0, 1.0, 2.0, 5.0]), np.array([0.1, 2.5, 4.9, 6.0]), 0.2),
+        (np.array([1.0, 2.0, 3.0]), np.array([0.0, 4.0]), 0.5),
+        (np.array([]), np.array([1.0, 2.0]), 0.5),
+        (np.array([0.0, 1.0, 2.0]), np.array([0.05, 0.95, 2.02]), 0.1),
+    ],
+)
+def test_get_gap_ind_matches_bruteforce(original_grid, new_grid, threshold):
+    expected = _brute_force_gap_ind(original_grid, new_grid, threshold)
+    result = utils.get_gap_ind(original_grid, new_grid, threshold)
+    assert result == expected
+
+
+def _brute_force_gap_ind(
+    grid: np.ndarray, new_grid: np.ndarray, threshold: float
+) -> list[int]:
+    """Reference implementation: slow but crystal-clear."""
+    if grid.size == 0:
+        return list(range(len(new_grid)))
+    result = []
+    for i, v in enumerate(new_grid):
+        d = np.min(np.abs(grid - v))
+        if d > threshold:
+            result.append(i)
+    return result
+
+
+@pytest.mark.parametrize(
+    "time, y, time_new, max_time, expected, expect_mask",
+    [
+        (
+            np.array([0.0, 1.0, 2.0]),
+            ma.array([0.0, 1.0, 2.0]),
+            np.array([0.5, 1.5]),
+            60,
+            [0.5, 1.5],
+            [False, False],
+        ),
+        (
+            np.array([0.0, 1.0, 2.0]),
+            ma.array([0.0, ma.masked, 2.0]),
+            np.array([0.5, 1.5]),
+            60,
+            [0.5, 1.5],
+            [False, False],
+        ),
+        (
+            np.array([0.0, 1.0, 2.0]),
+            ma.masked_all(3),
+            np.array([0.5, 1.5]),
+            60,
+            [np.nan, np.nan],
+            [True, True],
+        ),
+        (
+            np.array([1.0, 2.0, 3.0]),
+            ma.array([10.0, 20.0, 30.0]),
+            np.array([0.0, 4.0]),
+            60,
+            [10.0, 30.0],
+            [False, False],
+        ),
+        (
+            np.array([0.0, 1.0, 10.0]),
+            ma.array([0.0, 1.0, 10.0]),
+            np.array([5.0]),
+            60,
+            [np.nan],
+            [True],
+        ),
+        (
+            np.array([0.0, 1.0, 2.0]),
+            ma.array([0.0, 1.0, 2.0]),
+            np.array([1.1]),
+            15,
+            [1.1],
+            [False],
+        ),
+    ],
+)
+def test_interpolate_1d_cases(time, y, time_new, max_time, expected, expect_mask):
+    out = utils.interpolate_1d(time, y, time_new, max_time)
+    mask_array = ma.getmaskarray(out)
+    assert mask_array.tolist() == expect_mask
+    np.testing.assert_allclose(
+        out[~mask_array],
+        np.array(expected)[~np.array(expect_mask)],
+    )
+
+
+def test_invalid_time_raises():
+    time = np.array([-1.0, 1.0, 2.0])  # negative time not allowed
+    y = ma.array([0.0, 1.0, 2.0])
+    time_new = np.array([0.5, 1.5])
+    with pytest.raises(ValueError):
+        utils.interpolate_1d(time, y, time_new, max_time=60)

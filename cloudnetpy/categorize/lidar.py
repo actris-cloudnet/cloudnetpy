@@ -4,12 +4,11 @@ import logging
 from os import PathLike
 from typing import Literal
 
-import numpy as np
 import numpy.typing as npt
 from numpy import ma
 
 from cloudnetpy.datasource import DataSource
-from cloudnetpy.utils import interpolate_2d_nearest
+from cloudnetpy.utils import get_gap_ind, interpolate_2d_nearest
 
 
 class Lidar(DataSource):
@@ -70,13 +69,3 @@ class Lidar(DataSource):
         self.append_data(float(self.getvar("wavelength")), "lidar_wavelength")
         self.append_data(0.5, "beta_error")
         self.append_data(3.0, "beta_bias")
-
-
-def get_gap_ind(
-    grid: npt.NDArray, new_grid: npt.NDArray, threshold: float
-) -> list[int]:
-    return [
-        ind
-        for ind, value in enumerate(new_grid)
-        if np.min(np.abs(grid - value)) > threshold
-    ]

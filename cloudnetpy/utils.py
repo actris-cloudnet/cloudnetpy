@@ -3,6 +3,7 @@
 import base64
 import datetime
 import hashlib
+import logging
 import os
 import re
 import textwrap
@@ -17,7 +18,12 @@ import numpy as np
 import numpy.typing as npt
 from numpy import ma
 from scipy import ndimage, stats
-from scipy.interpolate import RectBivariateSpline, RegularGridInterpolator, griddata
+from scipy.interpolate import (
+    RectBivariateSpline,
+    RegularGridInterpolator,
+    griddata,
+    interp1d,
+)
 
 from cloudnetpy.cloudnetarray import CloudnetArray
 from cloudnetpy.constants import SEC_IN_DAY, SEC_IN_HOUR, SEC_IN_MINUTE
@@ -411,6 +417,55 @@ def interpolate_2d_nearest(
     )
     xx, yy = np.meshgrid(x_new, y_new)
     return fun((xx, yy)).T
+
+
+def interpolate_1d(
+    time: npt.NDArray, y: ma.MaskedArray, time_new: npt.NDArray, max_time: float
+) -> npt.NDArray:
+    """1D linear interpolation preserving the mask.
+
+    Args:
+        time: 1D array in fraction hour.
+        y: 1D masked array, data values.
+        time_new: 1D array, new time coordinates.
+        max_time: Maximum allowed gap in minutes. Values outside this gap will
+            be masked.
+    """
+    if np.max(time) > 24 or np.min(time) < 0:
+        msg = "Time vector must be in fraction hours between 0 and 24"
+        raise ValueError(msg)
+    if ma.is_masked(y):
+        if y.mask.all():
+            return ma.masked_all(time_new.shape)
+        time = time[~y.mask]
+        y = y[~y.mask]
+    fun = interp1d(time, y, fill_value=(y[0], y[-1]), bounds_error=False)
+    interpolated = ma.array(fun(time_new))
+    bad_idx = get_gap_ind(time, time_new, max_time / 60)
+
+    if len(bad_idx) > 0:
+        msg = f"Unable to interpolate for {len(bad_idx)} time steps"
+        logging.warning(msg)
+        interpolated[bad_idx] = ma.masked
+
+    return interpolated
+
+
+def get_gap_ind(
+    grid: npt.NDArray, new_grid: npt.NDArray, threshold: float
+) -> list[int]:
+    """Finds indices in new_grid that are too far from grid."""
+    if grid.size == 0:
+        return list(range(len(new_grid)))
+    idxs = np.searchsorted(grid, new_grid)
+    left_dist = np.where(idxs > 0, np.abs(new_grid - grid[idxs - 1]), np.inf)
+    right_dist = np.where(
+        idxs < len(grid),
+        np.abs(new_grid - grid[np.clip(idxs, 0, len(grid) - 1)]),
+        np.inf,
+    )
+    nearest = np.minimum(left_dist, right_dist)
+    return np.where(nearest > threshold)[0].tolist()
 
 
 def calc_relative_error(reference: npt.NDArray, array: npt.NDArray) -> npt.NDArray:

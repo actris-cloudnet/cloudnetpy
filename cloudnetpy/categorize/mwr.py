@@ -8,6 +8,7 @@ import numpy.typing as npt
 from cloudnetpy import utils
 from cloudnetpy.constants import G_TO_KG
 from cloudnetpy.datasource import DataSource
+from cloudnetpy.utils import interpolate_1d
 
 
 class Mwr(DataSource):
@@ -23,15 +24,11 @@ class Mwr(DataSource):
         self._init_lwp_data()
         self._init_lwp_error()
 
-    def rebin_to_grid(self, time_grid: npt.NDArray) -> None:
-        """Approximates lwp and its error in a grid using mean.
-
-        Args:
-            time_grid: 1D target time grid.
-
-        """
-        for array in self.data.values():
-            array.rebin_data(self.time, time_grid)
+    def interpolate_to_grid(self, time_grid: npt.NDArray, max_time: float = 1) -> None:
+        for key, array in self.data.items():
+            self.data[key].data = interpolate_1d(
+                self.time, array.data, time_grid, max_time=max_time
+            )
 
     def _init_lwp_data(self) -> None:
         lwp = self.dataset.variables["lwp"][:]
