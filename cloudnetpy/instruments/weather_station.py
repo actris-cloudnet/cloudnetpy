@@ -1,5 +1,6 @@
 import csv
 import datetime
+import logging
 import math
 import re
 from collections import defaultdict
@@ -198,6 +199,13 @@ class PalaiseauWS(WS):
                 if not (columns := row.split()):
                     continue
                 if re.match(r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z", columns[0]):
+                    if len(columns) != len(self.keys) + 1:
+                        msg = (
+                            f"Skipping row '{row.strip()}' due to unexpected "
+                            "number of values"
+                        )
+                        logging.warning(msg)
+                        continue
                     timestamp = datetime.datetime.strptime(
                         columns[0], "%Y-%m-%dT%H:%M:%SZ"
                     ).replace(tzinfo=datetime.timezone.utc)
