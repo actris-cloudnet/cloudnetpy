@@ -113,6 +113,10 @@ class NcRadar(DataSource, CloudnetInstrument):
             self.append_data(azimuth_offset, "azimuth_offset")
             azimuth += azimuth_offset
 
+        if len(elevation) < 2 or len(azimuth) < 2:
+            msg = "Less than two profiles with valid zenith / azimuth angles"
+            raise ValidTimeStampError(msg)
+
         elevation_diff = ma.diff(elevation, prepend=elevation[1])
         azimuth_diff = ma.diff(azimuth, prepend=azimuth[1])
 
