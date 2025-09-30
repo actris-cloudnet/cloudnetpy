@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.84.1 – 2025-09-30
+
+- Skip malformed lines in weather station file
+
 ## 1.84.0 – 2025-09-29
 
 - Interpolate LWP in categorize
