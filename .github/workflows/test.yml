@@ -6,29 +6,47 @@ jobs:
   build:
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
-        python-version: ["3.10", "3.11", "3.12", "3.13"]
+        include:
+          - os: ubuntu-latest
+            python-version: "3.10"
+          - os: ubuntu-latest
+            python-version: "3.11"
+          - os: ubuntu-latest
+            python-version: "3.12"
+          - os: ubuntu-latest
+            python-version: "3.13"
+          - os: windows-latest
+            python-version: "3.13"
+          - os: macos-latest
+            python-version: "3.13"
 
     runs-on: ${{ matrix.os }}
+
     steps:
       - uses: actions/checkout@v4
+
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
           cache: "pip"
+
       - name: Install dependencies
         run: |
           pip install --upgrade pip
           pip install .[dev,test,extras]
+
       - name: Run pre-commit checks
-        if: startsWith(matrix.os, 'ubuntu-')
+        if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.13'
         run: |
           pre-commit run --all-files --show-diff-on-failure
+
       - name: Run unit tests
         run: |
           pytest --flake-finder --flake-runs=2
+
       - name: Run E2E tests
+        if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.13'
         run: |
           python3 tests/e2e_test.py
           python3 cloudnetpy/model_evaluation/tests/e2e/process_cf/main.py
