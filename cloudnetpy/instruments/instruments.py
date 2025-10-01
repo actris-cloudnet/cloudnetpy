@@ -253,3 +253,11 @@ FD12P = Instrument(
     category="present weather sensor",
     model="FD12P",
 )
+
+DA10 = Instrument(
+    manufacturer="Vaisala",
+    domain="lidar",
+    category="differential absorption lidar",
+    model="DA10",
+    wavelength=911.0,
+)

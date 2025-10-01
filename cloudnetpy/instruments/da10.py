@@ -10,8 +10,8 @@ from cloudnetpy.instruments import instruments
 from cloudnetpy.instruments.nc_lidar import NcLidar
 
 
-class Cl61d(NcLidar):
-    """Class for Vaisala CL61d ceilometer."""
+class Da10(NcLidar):
+    """Class for Vaisala DA10 differential absorption lidar."""
 
     def __init__(
         self,
@@ -23,10 +23,9 @@ class Cl61d(NcLidar):
         self.file_name = file_name
         self.site_meta = site_meta
         self.expected_date = expected_date
-        self.instrument = instruments.CL61D
+        self.instrument = instruments.DA10
 
     def read_ceilometer_file(self, calibration_factor: float | None = None) -> None:
-        """Reads data and metadata from concatenated Vaisala CL61d netCDF file."""
         with netCDF4.Dataset(self.file_name) as dataset:
             self.dataset = dataset
             self._fetch_attributes()
@@ -50,10 +49,6 @@ class Cl61d(NcLidar):
         beta_raw *= calibration_factor
         self.data["calibration_factor"] = float(calibration_factor)
         self.data["beta_raw"] = beta_raw
-        self.data["depolarisation"] = (
-            self.dataset.variables["x_pol"][:] / self.dataset.variables["p_pol"][:]
-        )
-        self.data["depolarisation_raw"] = self.data["depolarisation"].copy()
 
     def _fetch_attributes(self) -> None:
         self.serial_number = getattr(self.dataset, "instrument_serial_number", None)

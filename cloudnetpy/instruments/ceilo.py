@@ -14,10 +14,13 @@ from numpy import ma
 
 from cloudnetpy import output
 from cloudnetpy.instruments.cl61d import Cl61d
+from cloudnetpy.instruments.da10 import Da10
 from cloudnetpy.instruments.lufft import LufftCeilo
 from cloudnetpy.instruments.vaisala import ClCeilo, Cs135, Ct25k
 from cloudnetpy.metadata import COMMON_ATTRIBUTES, MetaData
 from cloudnetpy.utils import get_uuid
+
+CeiloObject = ClCeilo | Ct25k | LufftCeilo | Cl61d | Cs135 | Da10
 
 
 def ceilo2nc(
@@ -30,7 +33,7 @@ def ceilo2nc(
     """Converts Vaisala, Lufft and Campbell Scientific ceilometer data into
     Cloudnet Level 1b netCDF file.
 
-    This function reads raw Vaisala (CT25k, CL31, CL51, CL61), Lufft
+    This function reads raw Vaisala (CT25k, CL31, CL51, CL61, DA10), Lufft
     (CHM 15k, CHM 15k-x) and Campbell Scientific (CS135) ceilometer files and writes
     the data into netCDF file. Three variants of the backscatter are saved:
 
@@ -44,8 +47,8 @@ def ceilo2nc(
         2. SNR-screened depolarisation with smoothed weak background,
            `depolarisation_smooth`
 
-    CL61 screened backscatter is screened using beta_smooth mask to improve detection
-    of weak aerosol layers and supercooled liquid clouds.
+    With most instruments, screened backscatter is screened using beta_smooth
+    mask to improve detection of weak aerosol layers and supercooled liquid clouds.
 
     Args:
         full_path: Ceilometer file name.
@@ -118,7 +121,7 @@ def ceilo2nc(
         if (
             any(
                 model in ceilo_obj.instrument.model.lower()
-                for model in ("cl61", "chm15k", "chm15kx", "cl51", "cl31")
+                for model in ("cl61", "chm15k", "chm15kx", "cl51", "cl31", "da10")
             )
             and range_corrected
         ):
@@ -141,7 +144,7 @@ def ceilo2nc(
     return uuid
 
 
-def _get_n_negatives(ceilo_obj: ClCeilo | Ct25k | LufftCeilo | Cl61d | Cs135) -> int:
+def _get_n_negatives(ceilo_obj: CeiloObject) -> int:
     is_old_chm_version = (
         hasattr(ceilo_obj, "is_old_version") and ceilo_obj.is_old_version
     )
@@ -157,7 +160,7 @@ def _initialize_ceilo(
     full_path: str | PathLike,
     site_meta: dict,
     date: datetime.date | None = None,
-) -> ClCeilo | Ct25k | LufftCeilo | Cl61d | Cs135:
+) -> CeiloObject:
     if "model" in site_meta:
         if site_meta["model"] not in (
             "cl31",
@@ -166,6 +169,7 @@ def _initialize_ceilo(
             "ct25k",
             "chm15k",
             "cs135",
+            "da10",
         ):
             msg = f"Invalid ceilometer model: {site_meta['model']}"
             raise ValueError(msg)
@@ -181,6 +185,8 @@ def _initialize_ceilo(
         return Ct25k(full_path, site_meta, date)
     if model == "cl61d":
         return Cl61d(full_path, site_meta, date)
+    if model == "da10":
+        return Da10(full_path, site_meta, date)
     if model == "cs135":
         return Cs135(full_path, site_meta, date)
     return LufftCeilo(full_path, site_meta, date)
