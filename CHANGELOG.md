@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.85.0 – 2025-10-01
+
+- Skip MIRA files with less than two zenith / azimuth angles
+- Add support for Vaisala DA10 DIAL
+
 ## 1.84.1 – 2025-09-30
 
 - Skip malformed lines in weather station file
