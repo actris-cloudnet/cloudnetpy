@@ -138,12 +138,12 @@ def _horizontal_wind_from_doppler_lidar_file(
         t = np.broadcast_to(time[:, None], mask.shape)[~mask]
         h = np.broadcast_to(height[None, :], mask.shape)[~mask]
 
-        if len(np.unique(t)) < 2 or len(np.unique(h)) < 2:
+        if len(np.unique(t)) < 3 or len(np.unique(h)) < 3:
             msg = "Not enough unique values for interpolation"
             raise ValidTimeStampError(msg)
 
-        interp_linear = LinearNDInterpolator(list(zip(t, h, strict=False)), V[~mask])
-        interp_nearest = NearestNDInterpolator(list(zip(t, h, strict=False)), V[~mask])
+        interp_linear = LinearNDInterpolator(list(zip(t, h, strict=True)), V[~mask])
+        interp_nearest = NearestNDInterpolator(list(zip(t, h, strict=True)), V[~mask])
         T, H = np.meshgrid(time, height, indexing="ij")
         V_linear = interp_linear(T, H)
         V_nearest = interp_nearest(T, H)
