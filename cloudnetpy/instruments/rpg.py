@@ -83,6 +83,10 @@ def rpg2nc(
     valid_ind = fmcw.add_zenith_angle()
     fmcw.screen_time_indices(valid_ind)
     fmcw.add_height()
+    if len(np.unique(fmcw.data["time"][:].astype("f4"))) != len(fmcw.data["time"][:]):
+        msg = "Convert time to f8 to keep values unique in netCDF"
+        logging.info(msg)
+        fmcw.data["time"].data_type = "f8"
     attributes = output.add_time_attribute(RPG_ATTRIBUTES, fmcw.date)
     output.update_attributes(fmcw.data, attributes)
     output.save_level1b(fmcw, output_file, uuid)
