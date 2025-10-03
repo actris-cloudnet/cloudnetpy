@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.85.1 – 2025-10-03
+
+- Require three points for epsilon-lidar interpolation
+- Handle outliers in RPG latitude and longitude
+- Convert RPG-FMCW-94 time to double when necessary
+
 ## 1.85.0 – 2025-10-01
 
 - Skip MIRA files with less than two zenith / azimuth angles
