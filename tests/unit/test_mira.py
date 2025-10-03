@@ -69,6 +69,7 @@ class TestMIRA2nc(Check):
             "prf",
             "nfft",
             "snr_limit",
+            "tpow",
         }
         assert set(self.nc.variables.keys()) == keys
 
@@ -271,5 +272,5 @@ class TestFilesHavingNyquistVelocityVector(Check):
 
 def test_masked_mira():
     filepath = f"{SCRIPT_PATH}/data/mira-masked/"
-    with pytest.raises(RadarDataError):
+    with pytest.raises(ValidTimeStampError):
         mira.mira2nc(f"{filepath}", "temp.nc", SITE_META)

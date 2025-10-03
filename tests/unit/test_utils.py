@@ -830,45 +830,6 @@ def test_bit_field_definition():
     )
 
 
-def test_find_unmasked_profiles():
-    data = ma.empty((15, 5))
-    data[7:9, :] = ma.masked  # should be masked
-    data[2, :] = ma.masked  # should not be masked
-    data[11:15, :] = ma.masked  # should be masked
-    valid_ind = utils.remove_masked_blocks(data, limit=2)
-    expected = [
-        True,
-        True,
-        True,
-        True,
-        True,
-        True,
-        True,
-        False,
-        False,
-        True,
-        True,
-        False,
-        False,
-        False,
-        False,
-    ]
-    assert_array_equal(np.array(valid_ind), np.array(expected))
-
-
-@pytest.mark.parametrize(
-    "data, expected",
-    [
-        (ma.array([1, 2, 3], mask=[1, 1, 1]), [False]),
-        (ma.array([1, 2, 3], mask=[0, 1, 0]), [True]),
-        (ma.array([1, 2, 3], mask=[0, 0, 0]), [True]),
-    ],
-)
-def test_find_unmasked_profiles2(data, expected):
-    valid_ind = utils.remove_masked_blocks(data, limit=2)
-    assert_array_equal(np.array(valid_ind), np.array(expected))
-
-
 @pytest.mark.parametrize(
     "data, result",
     [

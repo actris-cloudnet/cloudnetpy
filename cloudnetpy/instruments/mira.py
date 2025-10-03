@@ -9,6 +9,7 @@ from os import PathLike
 from tempfile import NamedTemporaryFile, TemporaryDirectory
 from uuid import UUID
 
+import numpy as np
 from numpy import ma
 
 from cloudnetpy import concat_lib, output, utils
@@ -74,9 +75,7 @@ def mira2nc(
             mira.sort_timestamps()
             mira.remove_duplicate_timestamps()
             mira.linear_to_db(("Zh", "ldr", "SNR"))
-            n_profiles = utils.n_elements(mira.time, 5, "time")
-            valid_ind = utils.remove_masked_blocks(mira.data["Zh"][:], limit=n_profiles)
-            mira.screen_time_indices(valid_ind)
+            mira.screen_low_power()
 
             if "snr_limit" in site_meta and site_meta["snr_limit"] is not None:
                 snr_limit = site_meta["snr_limit"]
@@ -150,6 +149,24 @@ class Mira(NcRadar):
     def _init_mira_date(self) -> datetime.date:
         time_stamps = self.getvar("time")
         return utils.seconds2date(float(time_stamps[0]), self.epoch).date()
+
+    def screen_low_power(self) -> None:
+        """Screen times with average transmit power close to zero."""
+        if "tpow" not in self.data:
+            logging.warning("Variable tpow is missing")
+            return
+        tpow = self.data["tpow"][:]
+        # Threshold for abnormally low power e.g. Limassol 2024-10-20. Average
+        # power should 30 to 60 W according to MIRA-35 data sheet. Based on a
+        # random sample, typical range is 15 to 25 W. In Lampedusa, the power is
+        # constantly as low as 1.9 W.
+        is_low = tpow < 1
+        n_removed = np.count_nonzero(is_low)
+        if n_removed > 0:
+            logging.warning(
+                "Filtering %s profiles due to low average transmit power", n_removed
+            )
+            self.screen_time_indices(~is_low)
 
     def screen_invalid_ldr(self) -> None:
         """Masks LDR in MIRA STSR mode data.
@@ -284,6 +301,7 @@ def _get_keymap(filetype: str) -> dict[str, str]:
                 ("prf", "prf"),
                 ("rg0", "rg0"),
                 ("NyquistVelocity", "NyquistVelocity"),  # variable in some mmclx files
+                ("tpow", "tpow"),
             ]
         ),
     }
@@ -310,6 +328,9 @@ ATTRIBUTES = {
     ),
     "prf": MetaData(
         long_name="Pulse Repetition Frequency", units="Hz", dimensions=("time",)
+    ),
+    "tpow": MetaData(
+        long_name="Average Transmit Power", units="W", dimensions=("time",)
     ),
     "zenith_offset": MetaData(
         long_name="Zenith offset of the instrument",

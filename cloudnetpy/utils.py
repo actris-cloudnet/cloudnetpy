@@ -1035,17 +1035,6 @@ def path_lengths_from_ground(height: npt.NDArray) -> npt.NDArray:
     return np.diff(height, prepend=0)
 
 
-def remove_masked_blocks(array: ma.MaskedArray, limit: int = 50) -> npt.NDArray:
-    """Filters out large blocks of completely masked profiles."""
-    if array.ndim == 1:
-        return np.array(not ma.all(array.mask))
-    masked_profiles = ma.all(array.mask, axis=1)
-    labeled_array, _ = ndimage.label(masked_profiles)
-    mask = np.bincount(labeled_array) < limit
-    mask[0] = True
-    return mask[labeled_array]
-
-
 def sha256sum(filename: str | PathLike) -> str:
     """Calculates hash of file using sha-256."""
     return _calc_hash_sum(filename, "sha256", is_base64=False)
