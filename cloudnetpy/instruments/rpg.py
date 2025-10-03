@@ -137,19 +137,17 @@ def _reduce_header(header: dict) -> dict:
     """Removes duplicate header data. Otherwise, we would need n_files dimension."""
     reduced_header = {}
     for key, data in header.items():
+        # Handle outliers in latitude and longitude (e.g. Galati 2024-02-11):
+        if key in ("latitude", "longitude"):
+            reduced_header[key] = ma.median(data)
+            continue
         first_profile_value = data[0]
         is_identical_value = bool(
             np.isclose(data, first_profile_value, rtol=1e-2).all(),
         )
         if is_identical_value is False:
             msg = f"Inconsistent header: {key}: {data}"
-            if key in (
-                "latitude",
-                "longitude",
-                "sample_duration",
-                "calibration_interval",
-                "noise_threshold",
-            ):
+            if key in ("sample_duration", "calibration_interval", "noise_threshold"):
                 logging.warning(msg)
             else:
                 raise InconsistentDataError(msg)
