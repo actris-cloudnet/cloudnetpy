@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.85.2 – 2025-10-03
+
+- Screen profiles with low power in MIRA
+
 ## 1.85.1 – 2025-10-03
 
 - Require three points for epsilon-lidar interpolation
