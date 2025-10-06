@@ -362,6 +362,10 @@ class Plot:
         self._is_log = sub_plot.plot_meta.log_scale
         self._ax = sub_plot.ax
 
+    def _mask_zeros(self) -> None:
+        self._data = ma.masked_where(self._data == 0, self._data)
+        self._data_orig = ma.masked_where(self._data_orig == 0, self._data_orig)
+
     def _convert_units(self) -> str:
         multiply, add = "multiply", "add"
         units_conversion = {
@@ -491,6 +495,8 @@ class Plot:
 class Plot2D(Plot):
     def plot(self, figure_data: FigureData) -> None:
         self._convert_units()
+        if self._plot_meta.mask_zeros:
+            self._mask_zeros()
         if figure_data.file_type == "cpr-simulation":
             min_x, max_x = 0, EARTHCARE_MAX_X
         else:
@@ -693,6 +699,8 @@ class Plot1D(Plot):
             msg = "All data is masked"
             raise PlottingError(msg)
         units = self._convert_units()
+        if self._plot_meta.mask_zeros:
+            self._mask_zeros()
         self._mark_gaps(figure_data)
         self._ax.plot(
             figure_data.time_including_gaps,
