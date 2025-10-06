@@ -689,6 +689,9 @@ class Plot2D(Plot):
 
 class Plot1D(Plot):
     def plot(self, figure_data: FigureData, hacky_freq_ind: int | None = None) -> None:
+        if self._data.mask.all() and figure_data.options.raise_on_empty:
+            msg = "All data is masked"
+            raise PlottingError(msg)
         units = self._convert_units()
         self._mark_gaps(figure_data)
         self._ax.plot(
