@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.85.4 – 2025-10-06
+
+- Detect all masked values in 1D plot
+
 ## 1.85.3 – 2025-10-06
 
 - Mask all zero values from HATPRO
