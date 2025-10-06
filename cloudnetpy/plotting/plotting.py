@@ -831,6 +831,9 @@ class Plot1D(Plot):
         max_y = max_data + gap
         if min_y == 0 and max_y == 0:
             return fallback
+        if min_y == max_y:
+            gap = np.abs(min_y) * percent_gap
+            return min_y - gap, max_y + gap
         return min_y, max_y
 
     def _get_plot_options(self) -> dict:
