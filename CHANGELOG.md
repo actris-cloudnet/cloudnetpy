@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.85.3 – 2025-10-06
+
+- Mask all zero values from HATPRO
+
 ## 1.85.2 – 2025-10-03
 
 - Screen profiles with low power in MIRA
