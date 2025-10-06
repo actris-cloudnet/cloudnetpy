@@ -193,6 +193,12 @@ class HatproBin:
         self._add_zenith_angle()
 
     def screen_bad_profiles(self) -> None:
+        # In Limassol 2025-06-06 for instance, LWP is all zero but IWV has
+        # values.
+        if ma.all(self.data[self.variable] == 0):
+            self.data[self.variable][:] = ma.masked
+            return
+        # Screen by quality flag.
         is_bad = self.data["_quality_flag"] & 0b110 == self.QUALITY_LOW << 1
         n_bad = np.count_nonzero(is_bad)
         if n_bad == len(is_bad):
