@@ -564,7 +564,7 @@ ATTRIBUTES = {
             plot_range=(0, 5),
         ),
         "radar_rain_atten": PlotMeta(
-            plot_range=(0, 5),
+            plot_range=(0, 15),
         ),
         "radar_melting_atten": PlotMeta(
             plot_range=(0, 5),

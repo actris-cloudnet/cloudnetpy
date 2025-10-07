@@ -11,6 +11,7 @@ from numpy import ma
 
 from cloudnetpy import output, utils
 from cloudnetpy.categorize import atmos_utils
+from cloudnetpy.constants import M_S_TO_MM_H
 from cloudnetpy.datasource import DataSource
 from cloudnetpy.metadata import MetaData
 from cloudnetpy.products.product_tools import CategorizeBits, QualityBits
@@ -189,24 +190,36 @@ def _get_attenuation_classes(data_source: DataSource) -> AttenuationClass:
     rain_atten = _read_atten("radar_rain_atten")
     melting_atten = _read_atten("radar_melting_atten")
 
-    if (
-        "lwp" not in data_source.dataset.variables
-        or data_source.getvar("radar_frequency") < 90
-    ):
+    not_w_band = data_source.getvar("radar_frequency") < 90
+
+    if "lwp" not in data_source.dataset.variables or not_w_band:
         lwp = np.zeros(data_source.time.shape)
     else:
         lwp_data = data_source.getvar("lwp")
         lwp = lwp_data.filled(0) if isinstance(lwp_data, ma.MaskedArray) else lwp_data
+
+    if "rainfall_rate" not in data_source.dataset.variables or not_w_band:
+        rain_rate = np.zeros(data_source.time.shape)
+    else:
+        rain_data = data_source.getvar("rainfall_rate") * M_S_TO_MM_H
+        rain_rate = (
+            rain_data.filled(0) if isinstance(rain_data, ma.MaskedArray) else rain_data
+        )
 
     total_atten = liquid_atten + rain_atten + melting_atten
 
     threshold_moderate = 10  # dB
     threshold_severe = 15  # dB
     threshold_lwp = 1  # kg/m2
+    threshold_rain = 3  # mm/h
 
     small = total_atten > 0
     moderate = total_atten >= threshold_moderate
-    severe = (total_atten > threshold_severe) | (lwp[:, np.newaxis] > threshold_lwp)
+    severe = (
+        (total_atten > threshold_severe)
+        | (lwp[:, np.newaxis] > threshold_lwp)
+        | (rain_rate[:, np.newaxis] > threshold_rain)
+    )
 
     return AttenuationClass(small=small, moderate=moderate, severe=severe)
 
