@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.86.0 – 2025-10-07
+
+- Use synop codes in rain detection
+- Use high rainfall rate values to flag severe attenuation
+
 ## 1.85.5 – 2025-10-07
 
 - Add option to mask zeros in plotting
