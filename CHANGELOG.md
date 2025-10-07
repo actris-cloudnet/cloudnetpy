@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.85.5 – 2025-10-07
+
+- Add option to mask zeros in plotting
+- Fix 1D plot gap mask with constant non-zero data
+- Fix MRR-PRO range to above ground level
+
 ## 1.85.4 – 2025-10-06
 
 - Detect all masked values in 1D plot
