@@ -24,14 +24,17 @@ class Disdrometer(DataSource):
 
     def interpolate_to_grid(self, time_grid: npt.NDArray) -> None:
         for key, array in self.data.items():
+            method = "nearest" if key == "synop_WaWa" else "linear"
             self.data[key].data = interpolate_1d(
-                self.time, array.data, time_grid, max_time=1
+                self.time, array.data, time_grid, max_time=1, method=method
             )
 
     def _init_rainfall_rate(self) -> None:
-        keys = ("rainfall_rate", "n_particles")
+        keys = ("rainfall_rate", "n_particles", "synop_WaWa")
         for key in keys:
             if key not in self.dataset.variables:
+                if key == "synop_WaWa":
+                    continue
                 msg = f"variable {key} is missing"
                 raise DisdrometerDataError(msg)
             self.append_data(self.dataset.variables[key][:], key)

@@ -198,7 +198,4 @@ ATTRIBUTES = {
         comment="Cumulated snow since 00:00 UTC",
         dimensions=("time",),
     ),
-    "synop_WaWa": MetaData(
-        long_name="Synop code WaWa", units="1", dimensions=("time",)
-    ),
 }

@@ -92,10 +92,18 @@ class ClassData:
         rain_from_disdrometer = self._find_rain_from_disdrometer()
         ind = ~rain_from_disdrometer.mask
         is_rain[ind] = rain_from_disdrometer[ind]
-        mask = ma.getmaskarray(self.tw)
-        first_valid_ind = np.nonzero(np.all(~mask, axis=0))[0][0]
-        is_positive_temp = self.tw[:, first_valid_ind] > T0 + 5  # Filter snowfall
-        return is_rain & is_positive_temp
+        # Filter out snowfall:
+        if (
+            self.data.disdrometer is not None
+            and "synop_WaWa" in self.data.disdrometer.data
+        ):
+            wawa = self.data.disdrometer.data["synop_WaWa"].data
+            liquid_rain_only = (wawa >= 57) & (wawa <= 68)
+        else:
+            mask = ma.getmaskarray(self.tw)
+            first_valid_ind = np.nonzero(np.all(~mask, axis=0))[0][0]
+            liquid_rain_only = self.tw[:, first_valid_ind] > T0 + 5
+        return is_rain & liquid_rain_only
 
     def _find_rain_from_radar_echo(self) -> npt.NDArray:
         first_gate_with_data = np.argmin(self.z.mask.all(axis=0))

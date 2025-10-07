@@ -224,4 +224,7 @@ COMMON_ATTRIBUTES = {
         comment="SNR threshold used in data screening.",
         dimensions=None,
     ),
+    "synop_WaWa": MetaData(
+        long_name="Synop code WaWa", units="1", dimensions=("time",)
+    ),
 }

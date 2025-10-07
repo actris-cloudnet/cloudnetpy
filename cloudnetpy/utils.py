@@ -420,7 +420,11 @@ def interpolate_2d_nearest(
 
 
 def interpolate_1d(
-    time: npt.NDArray, y: ma.MaskedArray, time_new: npt.NDArray, max_time: float
+    time: npt.NDArray,
+    y: ma.MaskedArray,
+    time_new: npt.NDArray,
+    max_time: float,
+    method: str = "linear",
 ) -> npt.NDArray:
     """1D linear interpolation preserving the mask.
 
@@ -430,6 +434,7 @@ def interpolate_1d(
         time_new: 1D array, new time coordinates.
         max_time: Maximum allowed gap in minutes. Values outside this gap will
             be masked.
+        method: Interpolation method, 'linear' (default) or 'nearest'.
     """
     if np.max(time) > 24 or np.min(time) < 0:
         msg = "Time vector must be in fraction hours between 0 and 24"
@@ -439,7 +444,7 @@ def interpolate_1d(
             return ma.masked_all(time_new.shape)
         time = time[~y.mask]
         y = y[~y.mask]
-    fun = interp1d(time, y, fill_value=(y[0], y[-1]), bounds_error=False)
+    fun = interp1d(time, y, kind=method, fill_value=(y[0], y[-1]), bounds_error=False)
     interpolated = ma.array(fun(time_new))
     bad_idx = get_gap_ind(time, time_new, max_time / 60)
 
