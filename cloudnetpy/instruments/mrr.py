@@ -104,6 +104,7 @@ def mrr2nc(
             if date:
                 mrr.screen_by_date(date)
             mrr.add_time_and_range()
+            mrr.fix_range()
             mrr.add_site_geolocation()
             mrr.add_zenith_angle()
             mrr.add_radar_specific_variables()
@@ -160,6 +161,12 @@ class MrrPro(NcRadar):
             if date == expected_date:
                 valid_indices.append(ind)
         self.screen_time_indices(valid_indices)
+
+    def fix_range(self) -> None:
+        # It seems like the "range" variable in MRR-PRO raw files is actually
+        # defined above mean sea level -> convert to range above ground level
+        range_data = self.data["range"].data
+        range_data -= range_data[0]
 
 
 ATTRIBUTES = {
