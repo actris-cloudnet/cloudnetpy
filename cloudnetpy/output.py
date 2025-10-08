@@ -391,7 +391,6 @@ def _write_vars2nc(nc: netCDF4.Dataset, cloudnet_variables: dict) -> None:
         else:
             fill_value = False
         size = obj.dimensions if obj.dimensions is not None else ()
-
         nc_variable = nc.createVariable(
             obj.name,
             obj.data_type,
@@ -399,7 +398,11 @@ def _write_vars2nc(nc: netCDF4.Dataset, cloudnet_variables: dict) -> None:
             zlib=True,
             fill_value=fill_value,
         )
-        nc_variable[:] = obj.data
+        try:
+            nc_variable[:] = obj.data
+        except IndexError as err:
+            msg = f"Unable to write variable {obj.name} to file: {err}"
+            raise IndexError(msg) from err
         for attr in obj.fetch_attributes():
             setattr(nc_variable, attr, getattr(obj, attr))
 

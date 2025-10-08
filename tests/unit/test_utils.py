@@ -979,3 +979,42 @@ def test_invalid_time_raises():
     time_new = np.array([0.5, 1.5])
     with pytest.raises(ValueError):
         utils.interpolate_1d(time, y, time_new, max_time=60)
+
+
+@pytest.mark.parametrize(
+    "y, z, y_new, expected_values, expected_mask",
+    [
+        (
+            np.array([0, 1, 2]),
+            ma.MaskedArray([[10, 20, 30], [40, 50, 60]]),
+            np.array([0.1, 1.5]),
+            np.array([[10, 20], [40, 50]]),
+            np.array([[False, False], [False, False]]),
+        ),
+        (
+            np.array([0, 1, 2]),
+            ma.MaskedArray([[10, 20, 30]]),
+            np.array([-100, -1, 0.5, 3]),
+            np.array([[10, 10, 10, 30]]),
+            np.array([[True, True, False, True]]),
+        ),
+        (
+            np.array([0, 1, 2]),
+            ma.MaskedArray([[1, 2, 3]], mask=[[False, True, False]]),
+            np.array([0, 1, 2]),
+            np.array([[1, 2, 3]]),
+            np.array([[False, True, False]]),
+        ),
+        (
+            np.array([0, 5, 10]),
+            ma.MaskedArray([[0, 50, 100]]),
+            np.array([4]),
+            np.array([[50]]),
+            np.array([[False]]),
+        ),
+    ],
+)
+def test_interpolate_2D_along_y(y, z, y_new, expected_values, expected_mask):
+    result = utils.interpolate_2D_along_y(y, z, y_new)
+    assert_array_equal(result.data, expected_values)
+    assert_array_equal(result.mask, expected_mask)

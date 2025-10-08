@@ -18,19 +18,6 @@ SCRIPT_PATH = path.dirname(path.realpath(__file__))
 FILEPATH = f"{SCRIPT_PATH}/data/rpg-fmcw-94"
 
 
-class TestReduceHeader:
-    n_points = 100
-    header = {"a": n_points * [1], "b": n_points * [2], "c": n_points * [3]}
-
-    def test_1(self):
-        assert_equal(rpg._reduce_header(self.header), {"a": 1, "b": 2, "c": 3})
-
-    def test_2(self):
-        self.header["a"][50] = 10
-        with pytest.raises(InconsistentDataError):
-            assert_equal(rpg._reduce_header(self.header), {"a": 1, "b": 2, "c": 3})
-
-
 class TestRPG2nc94GHz(Check):
     site_meta = {
         "name": "Bucharest",
@@ -103,8 +90,9 @@ class TestRPG2nc94GHz(Check):
         bad_values = (-999, 1e-10)
         for key in self.nc.variables.keys():
             for value in bad_values:
-                array = self.nc.variables[key][:]
-                if array.ndim > 1:
+                var = self.nc.variables[key]
+                if var.dimensions == ("time", "range"):
+                    array = var[:]
                     assert not np.any(
                         np.isclose(array, value),
                     ), f"{key} - {value}: {array}"
@@ -121,9 +109,8 @@ class TestRPG2nc94GHz(Check):
 
     def test_default_processing(self, tmp_path):
         test_path = tmp_path / "default.nc"
-        uuid, files = rpg2nc(FILEPATH, test_path, self.site_meta)
-        assert len(files) == 3
-        assert len(str(uuid)) == 36
+        with pytest.raises(ValueError):
+            rpg2nc(FILEPATH, test_path, self.site_meta)
 
     def test_date_validation(self, tmp_path):
         test_path = tmp_path / "date.nc"
@@ -174,11 +161,45 @@ class TestRPG2nc94GHz(Check):
     def test_geolocation_from_source_file(self, tmp_path):
         test_path = tmp_path / "geo.nc"
         meta_without_geolocation = {"name": "Kumpula", "altitude": 34}
-        rpg.rpg2nc(FILEPATH, test_path, meta_without_geolocation)
+        rpg.rpg2nc(FILEPATH, test_path, meta_without_geolocation, date="2020-10-22")
         with netCDF4.Dataset(test_path) as nc:
             for key in ("latitude", "longitude"):
                 assert key in nc.variables
                 assert np.all(nc.variables[key][:] > 0)
+
+
+class TestRPG2ncDifferentChirps(Check):
+    site_meta = {
+        "name": "Norunda",
+        "latitude": 60.086,
+        "longitude": 17.481,
+        "altitude": 15,
+    }
+    date = "2020-03-27"
+    temp_dir = TemporaryDirectory()
+    temp_path = temp_dir.name + "/rpg.nc"
+    uuid, valid_files = rpg2nc(
+        f"{SCRIPT_PATH}/data/rpg-fmcw-94-chirps", temp_path, site_meta
+    )
+
+    def test_chirp_related_variables(self):
+        time = self.nc.variables["time"][:]
+        for key in self.nc.variables:
+            var = self.nc.variables[key]
+            if not var.dimensions == ("time", "chirp_sequence"):
+                continue
+            array = var[:]
+            assert array.shape == (time.size, 4)
+            assert not np.any(array[:, :3].mask)
+            assert np.any(array[:, -1].mask)
+
+    def test_nyquist_velocity(self):
+        time = self.nc.variables["time"][:]
+        range = self.nc.variables["range"][:]
+        nyquist_velocity = self.nc.variables["nyquist_velocity"][:]
+        assert nyquist_velocity.shape == (time.size, range.size)
+        assert np.all(nyquist_velocity > 0)
+        assert not np.any(nyquist_velocity.mask)
 
 
 class TestRPG2ncSTSR35GHz(Check):
@@ -268,8 +289,9 @@ class TestRPG2ncSTSR35GHz(Check):
         bad_values = (-999, 1e-10)
         for key in self.nc.variables.keys():
             for value in bad_values:
-                array = self.nc.variables[key][:]
-                if array.ndim > 1:
+                var = self.nc.variables[key]
+                if var.dimensions == ("time", "range"):
+                    array = var[:]
                     assert not np.any(
                         np.isclose(array, value),
                     ), f"{key} - {value}: {array}"

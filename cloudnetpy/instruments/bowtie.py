@@ -127,4 +127,9 @@ ATTRIBUTES = RPG_ATTRIBUTES | {
         ),
         dimensions=("time", "range"),
     ),
+    "nyquist_velocity": MetaData(
+        long_name="Nyquist velocity",
+        units="m s-1",
+        dimensions=("time", "chirp_sequence"),
+    ),
 }

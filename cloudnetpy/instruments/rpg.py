@@ -1,9 +1,7 @@
-"""This module contains RPG Cloud Radar related functions."""
-
 import datetime
 import logging
 import math
-from collections.abc import Callable, Sequence
+from collections.abc import Sequence
 from os import PathLike
 from uuid import UUID
 
@@ -15,7 +13,7 @@ from rpgpy import RPGFileError
 from cloudnetpy import output, utils
 from cloudnetpy.cloudnetarray import CloudnetArray
 from cloudnetpy.constants import G_TO_KG, HPA_TO_PA, KM_H_TO_M_S, MM_H_TO_M_S
-from cloudnetpy.exceptions import InconsistentDataError, ValidTimeStampError
+from cloudnetpy.exceptions import ValidTimeStampError
 from cloudnetpy.instruments import instruments
 from cloudnetpy.instruments.cloudnet_instrument import CloudnetInstrument
 from cloudnetpy.instruments.instruments import Instrument
@@ -68,9 +66,8 @@ def rpg2nc(
     l1_files = utils.get_sorted_filenames(path_to_l1_files, ".LV1")
     fmcw94_objects, valid_files = _get_fmcw94_objects(l1_files, date)
     one_day_of_data = create_one_day_data_record(fmcw94_objects)
-    if not valid_files:
-        return uuid, []
-    print_info(one_day_of_data)
+    one_day_of_data["nyquist_velocity"] = _expand_nyquist(one_day_of_data)
+    _print_info(one_day_of_data)
     fmcw = Fmcw(one_day_of_data, site_meta)
     fmcw.convert_time_to_fraction_hour()
     fmcw.mask_invalid_ldr()
@@ -93,7 +90,7 @@ def rpg2nc(
     return uuid, valid_files
 
 
-def print_info(data: dict) -> None:
+def _print_info(data: dict) -> None:
     dual_pol = data["dual_polarization"]
     if dual_pol == 0:
         mode = "single polarisation"
@@ -108,55 +105,64 @@ RpgObjects = Sequence[Fmcw94Bin] | Sequence[HatproBinCombined]
 
 
 def create_one_day_data_record(rpg_objects: RpgObjects) -> dict:
-    """Concatenates all RPG data from one day."""
+    """Concatenates all RPG FMCW / HATPRO data from one day."""
     rpg_raw_data, rpg_header = _stack_rpg_data(rpg_objects)
-    if len(rpg_objects) > 1:
-        rpg_header = _reduce_header(rpg_header)
+    if "range" in rpg_header:
+        rpg_header["range"] = rpg_objects[0].header["range"]
+    should_be_constant = [
+        "model_number",
+        "dual_polarization",
+        "antenna_separation",
+        "antenna_diameter",
+        "antenna_gain",
+        "half_power_beam_width",
+        "radar_frequency",
+    ]
+    for key in should_be_constant:
+        if key not in rpg_header:
+            continue
+        unique_values = np.unique(rpg_header[key])
+        if len(unique_values) > 1:
+            msg = f"More than one value for {key} found: {unique_values}"
+            raise ValueError(msg)
+        rpg_header[key] = unique_values[0]
+
     rpg_raw_data = _mask_invalid_data(rpg_raw_data)
     return {**rpg_header, **rpg_raw_data}
 
 
+def _expand_nyquist(data: dict) -> npt.NDArray:
+    """Expands Nyquist velocity from time X chirp => time X range."""
+    nyquist_velocity = ma.array(data["nyquist_velocity"])
+    chirp_start_indices = ma.array(data["chirp_start_indices"])
+    n_time = chirp_start_indices.shape[0]
+    n_range = len(data["range"])
+    expanded_nyquist = np.empty((n_time, n_range))
+    for t in range(n_time):
+        starts = chirp_start_indices[t].compressed()
+        v_nyq = nyquist_velocity[t].compressed()
+        ends = np.r_[starts[1:], n_range]
+        seg_lengths = ends - starts
+        expanded_nyquist[t, :] = np.repeat(v_nyq, seg_lengths)
+    return expanded_nyquist
+
+
 def _stack_rpg_data(rpg_objects: RpgObjects) -> tuple[dict, dict]:
-    """Combines data from hourly RPG objects.
-
-    Notes:
-        Ignores variable names starting with an underscore.
-
-    """
-
-    def _stack(source: dict, target: dict, fun: Callable) -> None:
-        for name, value in source.items():
-            if not name.startswith("_"):
-                target[name] = fun((target[name], value)) if name in target else value
-
     data: dict = {}
     header: dict = {}
     for rpg in rpg_objects:
-        _stack(rpg.data, data, ma.concatenate)
-        _stack(rpg.header, header, ma.vstack)
+        for src, dst in ((rpg.data, data), (rpg.header, header)):
+            for name, value in src.items():
+                if name.startswith("_"):
+                    continue
+                arr = dst.get(name)
+                fun = (
+                    ma.concatenate
+                    if any(isinstance(x, ma.MaskedArray) for x in (value, arr))
+                    else np.concatenate
+                )
+                dst[name] = fun((arr, value)) if arr is not None else value
     return data, header
-
-
-def _reduce_header(header: dict) -> dict:
-    """Removes duplicate header data. Otherwise, we would need n_files dimension."""
-    reduced_header = {}
-    for key, data in header.items():
-        # Handle outliers in latitude and longitude (e.g. Galati 2024-02-11):
-        if key in ("latitude", "longitude"):
-            reduced_header[key] = ma.median(data)
-            continue
-        first_profile_value = data[0]
-        is_identical_value = bool(
-            np.isclose(data, first_profile_value, rtol=1e-2).all(),
-        )
-        if is_identical_value is False:
-            msg = f"Inconsistent header: {key}: {data}"
-            if key in ("sample_duration", "calibration_interval", "noise_threshold"):
-                logging.warning(msg)
-            else:
-                raise InconsistentDataError(msg)
-        reduced_header[key] = first_profile_value
-    return reduced_header
 
 
 def _mask_invalid_data(data_in: dict) -> dict:
@@ -193,33 +199,68 @@ def _get_fmcw94_objects(
             continue
         objects.append(obj)
         valid_files.append(file)
-    if objects:
-        objects, valid_files = _remove_files_with_bad_height(objects, valid_files)
-    if not valid_files:
-        raise ValidTimeStampError
+    if not objects:
+        msg = "No valid files found"
+        raise ValidTimeStampError(msg)
+    objects = _interpolate_to_common_height(objects)
+    objects = _pad_chirp_related_fields(objects)
+    objects = _expand_time_related_fields(objects)
     return objects, valid_files
 
 
-def _remove_files_with_bad_height(objects: list, files: list) -> tuple[list, list]:
-    lengths = [obj.data["Zh"].shape[1] for obj in objects]
-    most_common = np.bincount(lengths).argmax()
-    files = [
-        file
-        for file, obj, length in zip(files, objects, lengths, strict=True)
-        if length == most_common
-    ]
-    objects = [
-        obj
-        for obj, length in zip(objects, lengths, strict=True)
-        if length == most_common
-    ]
-    n_removed = len(lengths) - len(files)
-    if n_removed > 0:
-        logging.warning(
-            "Removed %s RPG-FMCW-94 files due to inconsistent height vector",
-            n_removed,
-        )
-    return objects, files
+def _interpolate_to_common_height(objects: list[Fmcw94Bin]) -> list[Fmcw94Bin]:
+    range_arrays = [obj.header["range"] for obj in objects]
+    if all(np.array_equal(range_arrays[0], r) for r in range_arrays[1:]):
+        return objects
+    # Use range with the highest range gate for interpolation
+    target_height = max(range_arrays, key=lambda r: r[-1])
+    for obj in objects:
+        src_range = obj.header["range"]
+        if np.array_equal(src_range, target_height):
+            continue
+        for key, arr in obj.data.items():
+            if arr.ndim == 2 and arr.shape[1] == src_range.size:
+                obj.data[key] = utils.interpolate_2D_along_y(
+                    src_range, arr, target_height
+                )
+        obj.header["range"] = target_height
+    return objects
+
+
+def _pad_chirp_related_fields(objects: list[Fmcw94Bin]) -> list[Fmcw94Bin]:
+    """Pads chirp-related header fields with masked values to have the same length."""
+    chirp_lens = [len(obj.header["chirp_start_indices"]) for obj in objects]
+    if all(chirp_lens[0] == length for length in chirp_lens[1:]):
+        return objects
+    max_chirp_len = max(chirp_lens)
+    for obj in objects:
+        n_chirps = len(obj.header["chirp_start_indices"])
+        if n_chirps == max_chirp_len:
+            continue
+        for key, arr in obj.header.items():
+            if not isinstance(arr, str) and arr.ndim == 1 and arr.size == n_chirps:
+                pad_len = max_chirp_len - n_chirps
+                masked_arr = ma.array(arr, dtype=arr.dtype)
+                pad = ma.masked_all(pad_len, dtype=arr.dtype)
+                obj.header[key] = ma.concatenate([masked_arr, pad])
+    return objects
+
+
+def _expand_time_related_fields(objects: list[Fmcw94Bin]) -> list[Fmcw94Bin]:
+    for obj in objects:
+        n_time = obj.data["time"].size
+        for key in obj.header:
+            if key in ("range", "time") or key.startswith("_"):
+                continue
+            arr = obj.header[key]
+            # Handle outliers in latitude and longitude (e.g. Galati 2024-02-11):
+            if key in ("latitude", "longitude"):
+                arr = ma.median(arr)
+            if utils.isscalar(arr):
+                obj.header[key] = np.repeat(arr, n_time)
+            else:
+                obj.header[key] = np.tile(arr, (n_time, 1))
+    return objects
 
 
 def _validate_date(obj: Fmcw94Bin, expected_date: datetime.date) -> None:
@@ -443,9 +484,11 @@ RPG_ATTRIBUTES = {
         long_name="File code",
         units="1",
         comment="Indicates the RPG software version.",
-        dimensions=None,
+        dimensions=("time",),
     ),
-    "program_number": MetaData(long_name="Program number", units="1", dimensions=None),
+    "program_number": MetaData(
+        long_name="Program number", units="1", dimensions=("time",)
+    ),
     "model_number": MetaData(
         long_name="Model number",
         units="1",
@@ -469,54 +512,51 @@ RPG_ATTRIBUTES = {
         dimensions=None,
     ),
     "sample_duration": MetaData(
-        long_name="Sample duration", units="s", dimensions=None
+        long_name="Sample duration", units="s", dimensions=("time",)
     ),
     "calibration_interval": MetaData(
-        long_name="Calibration interval in samples", units="1", dimensions=None
+        long_name="Calibration interval in samples", units="1", dimensions=("time",)
     ),
     "number_of_spectral_samples": MetaData(
         long_name="Number of spectral samples in each chirp sequence",
         units="1",
-        dimensions=("chirp_sequence",),
-    ),
-    "nyquist_velocity": MetaData(
-        long_name="Nyquist velocity", units="m s-1", dimensions=("chirp_sequence",)
+        dimensions=("time", "chirp_sequence"),
     ),
     "number_of_averaged_chirps": MetaData(
         long_name="Number of averaged chirps in sequence",
         units="1",
-        dimensions=("chirp_sequence",),
+        dimensions=("time", "chirp_sequence"),
     ),
     "chirp_start_indices": MetaData(
         long_name="Chirp sequences start indices",
         units="1",
-        dimensions=("chirp_sequence",),
+        dimensions=("time", "chirp_sequence"),
     ),
     "integration_time": MetaData(
         long_name="Integration time",
         units="s",
         comment="Effective integration time of chirp sequence",
-        dimensions=("chirp_sequence",),
+        dimensions=("time", "chirp_sequence"),
     ),
     "range_resolution": MetaData(
         long_name="Vertical resolution of range",
         units="m",
-        dimensions=("chirp_sequence",),
+        dimensions=("time", "chirp_sequence"),
     ),
     "FFT_window": MetaData(
         long_name="FFT window type",
         units="1",
         definition=DEFINITIONS["FFT_window"],
-        dimensions=None,
+        dimensions=("time",),
     ),
     "input_voltage_range": MetaData(
-        long_name="ADC input voltage range (+/-)", units="mV", dimensions=None
+        long_name="ADC input voltage range (+/-)", units="mV", dimensions=("time",)
     ),
     "noise_threshold": MetaData(
         long_name="Noise filter threshold factor",
         units="1",
         comment="Multiple of the standard deviation of Doppler spectra.",
-        dimensions=None,
+        dimensions=("time",),
     ),
     "time_ms": MetaData(long_name="Time ms", units="ms", dimensions=("time",)),
     "quality_flag": MetaData(
@@ -544,8 +584,5 @@ RPG_ATTRIBUTES = {
     ),
     "pc_temperature": MetaData(
         long_name="PC temperature", units="K", dimensions=("time",)
-    ),
-    "correlation_coefficient": MetaData(
-        long_name="Correlation coefficient", units="1", dimensions=None
     ),
 }

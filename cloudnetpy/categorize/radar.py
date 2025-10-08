@@ -401,7 +401,6 @@ class Radar(DataSource):
 
         if fvel.shape == (n_time, n_height):
             # Folding velocity is already expanded in radar file
-            # Not yet in current files
             return fvel
         if utils.isscalar(fvel):
             # e.g. MIRA

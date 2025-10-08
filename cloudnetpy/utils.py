@@ -387,7 +387,7 @@ def interpolate_2d_mask(
 def interpolate_2d_nearest(
     x: npt.NDArray,
     y: npt.NDArray,
-    z: npt.NDArray,
+    z: ma.MaskedArray,
     x_new: npt.NDArray,
     y_new: npt.NDArray,
 ) -> ma.MaskedArray:
@@ -419,18 +419,53 @@ def interpolate_2d_nearest(
     return fun((xx, yy)).T
 
 
+def interpolate_2D_along_y(
+    y: npt.NDArray,
+    z: npt.NDArray | ma.MaskedArray,
+    y_new: npt.NDArray,
+) -> ma.MaskedArray:
+    """Fast 1D nearest-neighbor interpolation along y for each x.
+
+    Args:
+        y: 1D numpy array of y-coordinates (length M).
+        z: 2D array of shape (N, M).
+        y_new: 1D numpy array of new y-coordinates.
+
+    Returns:
+        Masked 2D masked array interpolated along y.
+
+    Notes:
+        Only interpolates along y. Points outside range are masked.
+    """
+    idx = np.searchsorted(y, y_new, side="left")
+    idx = np.clip(idx, 0, len(y) - 1)
+    left = np.maximum(idx - 1, 0)
+    choose_right = (idx == 0) | (
+        (idx < len(y)) & (np.abs(y[idx] - y_new) < np.abs(y_new - y[left]))
+    )
+    idx[~choose_right] = left[~choose_right]
+    z_interp = ma.array(z[:, idx])
+    mask = (y_new < y.min()) | (y_new > y.max())
+    if z_interp.mask is ma.nomask:
+        z_mask = np.zeros(z_interp.shape, dtype=bool)
+    else:
+        z_mask = z_interp.mask.copy()
+    z_mask[:, mask] = True
+    return ma.MaskedArray(z_interp, mask=z_mask)
+
+
 def interpolate_1d(
     time: npt.NDArray,
     y: ma.MaskedArray,
     time_new: npt.NDArray,
     max_time: float,
     method: str = "linear",
-) -> npt.NDArray:
+) -> ma.MaskedArray:
     """1D linear interpolation preserving the mask.
 
     Args:
         time: 1D array in fraction hour.
-        y: 1D masked array, data values.
+        y: 1D array, data values.
         time_new: 1D array, new time coordinates.
         max_time: Maximum allowed gap in minutes. Values outside this gap will
             be masked.
