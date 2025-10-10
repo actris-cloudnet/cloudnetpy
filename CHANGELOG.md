@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.86.1 – 2025-10-10
+
+- Merge RPG files with different height vectors and chirp configurations
+
 ## 1.86.0 – 2025-10-07
 
 - Use synop codes in rain detection
