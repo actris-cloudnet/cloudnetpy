@@ -3,6 +3,7 @@
 import datetime
 import logging
 import os
+import re
 from collections import OrderedDict
 from collections.abc import Sequence
 from os import PathLike
@@ -224,7 +225,7 @@ def _parse_input_files(
                 )
                 raise FileNotFoundError(msg)
 
-            filetypes = list({f.split(".")[-1].lower() for f in valid_files})
+            filetypes = list({_get_suffix(f) for f in valid_files})
 
             if len(filetypes) > 1:
                 err_msg = "Mixed mmclx and znc files. Please use only one filetype."
@@ -241,7 +242,7 @@ def _parse_input_files(
             )
     else:
         input_filename = input_files
-        keymap = _get_keymap(str(input_filename).split(".")[-1])
+        keymap = _get_keymap(_get_suffix(input_filename))
 
     return input_filename, keymap
 
@@ -256,6 +257,13 @@ def _get_ignored_variables(filetype: str) -> list | None:
     }
 
     return keymaps.get(filetype.lower(), keymaps.get("mmclx"))
+
+
+def _get_suffix(filename: str | PathLike) -> str:
+    m = re.search(r"\.(\w+)(\.\d+)?$", str(filename))
+    if m is None:
+        return ""
+    return m[1].lower()
 
 
 def _get_keymap(filetype: str) -> dict[str, str]:
@@ -284,6 +292,7 @@ def _get_keymap(filetype: str) -> dict[str, str]:
                 ("nave", "nave"),
                 ("prf", "prf"),
                 ("rg0", "rg0"),
+                ("tpow", "tpow"),
             ],
         ),
         "mmclx": OrderedDict(

@@ -274,3 +274,26 @@ def test_masked_mira():
     filepath = f"{SCRIPT_PATH}/data/mira-masked/"
     with pytest.raises(ValidTimeStampError):
         mira.mira2nc(f"{filepath}", "temp.nc", SITE_META)
+
+
+@pytest.mark.parametrize(
+    "filename, suffix",
+    [
+        ("20251013_120000.azisectorscan.mmclx", "mmclx"),
+        ("20251013_120000.dmp", "dmp"),
+        ("20251013_120000.man.mmclx", "mmclx"),
+        ("20251013_120000.man.mmclx.01", "mmclx"),
+        ("20251013_120000.mmclx", "mmclx"),
+        ("20251013_120000.mmclx.01", "mmclx"),
+        ("20251013_120000.ppibb.mmclx", "mmclx"),
+        ("20251013_120000.ppi.mmclx", "mmclx"),
+        ("20251013_120000.rhi.mmclx", "mmclx"),
+        ("20251013_120000.rhistep.mmclx", "mmclx"),
+        ("20251013_120000.vert.mmclx", "mmclx"),
+        ("20251013_120000.zen.mmclx", "mmclx"),
+        ("20251013_120000.znc", "znc"),
+        ("20251013_120000", ""),
+    ],
+)
+def test_get_suffix(filename: str, suffix: str):
+    assert mira._get_suffix(filename) == suffix
