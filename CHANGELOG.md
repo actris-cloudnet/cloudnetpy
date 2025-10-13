@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.86.2 – 2025-10-13
+
+- Support MIRA files with suffixes like `.mmclx.01`
+
 ## 1.86.1 – 2025-10-10
 
 - Merge RPG files with different height vectors and chirp configurations
