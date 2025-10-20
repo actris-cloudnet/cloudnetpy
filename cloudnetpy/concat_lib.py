@@ -132,12 +132,23 @@ class _Concat:
         concat_dimension: str = "time",
         interp_dim: str = "range",
     ) -> None:
-        self.filenames = sorted(map(Path, filenames), key=lambda f: f.name)
         self.concat_dimension = concat_dimension
         self.interp_dim = interp_dim
+        self.filenames = sorted(
+            [Path(filename) for filename in filenames if self._is_valid_file(filename)],
+            key=lambda f: f.name,
+        )
         self.first_filename = self.filenames[0]
         self.first_file = netCDF4.Dataset(self.first_filename)
         self.concatenated_file = self._init_output_file(output_file)
+
+    def _is_valid_file(self, filename: str | PathLike) -> bool:
+        # Added to handle strange .znc files with no time and huge range
+        # dimension resulting in large memory usage (e.g. Jülich 2019-05-18).
+        with netCDF4.Dataset(filename) as nc:
+            return (
+                nc[self.concat_dimension].size > 0 and nc[self.interp_dim].size < 10_000
+            )
 
     def create_global_attributes(self, new_attributes: dict | None) -> None:
         """Copies global attributes from one of the source files."""
