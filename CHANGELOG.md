@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.86.3 – 2025-10-20
+
+- Skip invalid .znc files
+
 ## 1.86.2 – 2025-10-13
 
 - Support MIRA files with suffixes like `.mmclx.01`
