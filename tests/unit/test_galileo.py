@@ -79,6 +79,9 @@ class TestGalileo2nc(Check):
         assert self.nc.source == "RAL Space Galileo"
         assert self.nc.title == f"Galileo cloud radar from {self.site_meta['name']}"
 
+    def test_range(self):
+        assert np.min(self.nc.variables["range"][:]) >= 0
+
     def test_filename_argument(self, tmp_path):
         test_path = tmp_path / "date.nc"
         filename = f"{FILEPATH}galileo-file-1.nc"

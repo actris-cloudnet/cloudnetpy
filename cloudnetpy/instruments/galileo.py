@@ -92,6 +92,7 @@ def galileo2nc(
                 galileo.check_date(date)
             galileo.sort_timestamps()
             galileo.remove_duplicate_timestamps()
+            galileo.screen_negative_altitudes()
             snr_limit = site_meta.get("snr_limit", 3)
             galileo.screen_by_snr(snr_limit=snr_limit)
             galileo.mask_clutter()
@@ -128,13 +129,26 @@ class Galileo(ChilboltonRadar):
         self.instrument = GALILEO
 
     def mask_clutter(self) -> None:
-        """Masks clutter."""
         # Only strong Z values are valid
         n_low_gates = 15
         ind = np.where(self.data["Zh"][:, :n_low_gates] < -15) and np.where(
             self.data["ldr"][:, :n_low_gates] > -5,
         )
         self.data["v"].mask_indices(ind)
+
+    def screen_negative_altitudes(self) -> None:
+        range_var = self.data["range"][:]
+        valid_idx = np.where(range_var > 0)[0]
+        if valid_idx.size == 0:
+            msg = "No valid altitudes found."
+            raise ValueError(msg)
+        if valid_idx.size == range_var.shape[0]:
+            return
+        for arr in self.data.values():
+            if utils.isscalar(arr.data):
+                continue
+            if arr[:].shape[-1] == range_var.shape[0]:
+                arr.data = arr[..., valid_idx]
 
 
 ATTRIBUTES = {
