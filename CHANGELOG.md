@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.86.4 – 2025-10-22
+
+- Screen negative altitudes from Galileo
+
 ## 1.86.3 – 2025-10-20
 
 - Skip invalid .znc files
