@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.86.7 – 2025-10-23
+
+- Adjust Copernicus range_offset
+
 ## 1.86.6 – 2025-10-23
 
 - Adjust Copernicus reflectivity offset
