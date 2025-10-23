@@ -131,15 +131,28 @@ class Copernicus(ChilboltonRadar):
         self.instrument = COPERNICUS
 
     def calibrate_reflectivity(self) -> None:
-        zed_hc = self.dataset.variables["ZED_HC"]
+        zed_hc = self.dataset["ZED_HC"]
         offset_applied = getattr(zed_hc, "applied_calibration_offset", 0)
 
-        # Estimated by comparing with MIRA-35 2021 data:
+        # Estimated by comparing with MIRA-35 data:
         default_offset = -149.5
         zh_offset = self.site_meta.get("Zh_offset", default_offset)
 
         self.data["Zh"].data[:] = self.data["Zh"].data[:] - offset_applied + zh_offset
         self.append_data(np.array(zh_offset, dtype=np.float32), "Zh_offset")
+
+    def fix_range_offset(self, site_meta: dict) -> None:
+        range_var = self.dataset["range"]
+        offset_applied = getattr(range_var, "range_offset", 0)
+
+        # Estimated by comparing with MIRA-35 data:
+        default_offset = -720
+        range_offset = site_meta.get("range_offset", default_offset)
+
+        self.data["range"].data[:] = (
+            self.data["range"].data[:] - offset_applied + range_offset
+        )
+        self.append_data(np.array(range_offset, dtype=float), "range_offset")
 
     def mask_corrupted_values(self) -> None:
         """Experimental masking of corrupted Copernicus data.
@@ -152,12 +165,6 @@ class Copernicus(ChilboltonRadar):
         for key, value in thresholds.items():
             ind = np.where(np.abs(self.data[key][:]) > value)
             self.data["v"].mask_indices(ind)
-
-    def fix_range_offset(self, site_meta: dict) -> None:
-        """Fixes range offset."""
-        range_offset = site_meta.get("range_offset", 0)
-        self.data["range"].data[:] += range_offset
-        self.append_data(np.array(range_offset, dtype=float), "range_offset")
 
     def screen_negative_ranges(self) -> None:
         """Screens negative range values."""
@@ -187,9 +194,13 @@ ATTRIBUTES = {
     "range_offset": MetaData(
         long_name="Radar range offset",
         units="m",
-        comment="Range offset applied.",
+        comment=(
+            "Range offset applied after removing the original offset "
+            "from the raw files."
+        ),
         dimensions=None,
     ),
+    "range": COMMON_ATTRIBUTES["range"]._replace(ancillary_variables="range_offset"),
     "antenna_diameter": MetaData(
         long_name="Antenna diameter", units="m", dimensions=("time",)
     ),
