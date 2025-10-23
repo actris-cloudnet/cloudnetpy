@@ -105,7 +105,7 @@ def copernicus2nc(
             copernicus.add_site_geolocation()
             valid_indices = copernicus.add_zenith_and_azimuth_angles(
                 elevation_threshold=1.1,
-                elevation_diff_threshold=0.1,
+                elevation_diff_threshold=0.5,
                 azimuth_diff_threshold=0.1,
             )
             copernicus.screen_time_indices(valid_indices)
