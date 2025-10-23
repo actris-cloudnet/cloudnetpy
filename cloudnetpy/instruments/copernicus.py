@@ -131,11 +131,14 @@ class Copernicus(ChilboltonRadar):
         self.instrument = COPERNICUS
 
     def calibrate_reflectivity(self) -> None:
-        default_offset = (
-            -141.5
-        )  # Taken from 2016-01 raw files where this was already applied
+        zed_hc = self.dataset.variables["ZED_HC"]
+        offset_applied = getattr(zed_hc, "applied_calibration_offset", 0)
+
+        # Estimated by comparing with MIRA-35 2021 data:
+        default_offset = -149.5
         zh_offset = self.site_meta.get("Zh_offset", default_offset)
-        self.data["Zh"].data[:] += zh_offset
+
+        self.data["Zh"].data[:] = self.data["Zh"].data[:] - offset_applied + zh_offset
         self.append_data(np.array(zh_offset, dtype=np.float32), "Zh_offset")
 
     def mask_corrupted_values(self) -> None:
@@ -174,7 +177,10 @@ ATTRIBUTES = {
     "Zh_offset": MetaData(
         long_name="Radar reflectivity calibration offset",
         units="dBZ",
-        comment="Calibration offset applied.",
+        comment=(
+            "Calibration offset applied after removing the original offset "
+            "from the raw files."
+        ),
         dimensions=None,
     ),
     "Zh": COMMON_ATTRIBUTES["Zh"]._replace(ancillary_variables="Zh_offset"),
