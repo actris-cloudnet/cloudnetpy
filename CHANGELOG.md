@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.86.6 – 2025-10-23
+
+- Adjust Copernicus reflectivity offset
+
 ## 1.86.5 – 2025-10-23
 
 - Avoid filtering out too many Copernicus profiles
