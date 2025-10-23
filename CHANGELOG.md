@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.86.5 – 2025-10-23
+
+- Avoid filtering out too many Copernicus profiles
+- Adjust reflectivity factor offset
+
 ## 1.86.4 – 2025-10-22
 
 - Screen negative altitudes from Galileo
