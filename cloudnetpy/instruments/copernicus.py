@@ -12,7 +12,7 @@ import numpy as np
 from cloudnetpy import concat_lib, output, utils
 from cloudnetpy.instruments.instruments import COPERNICUS
 from cloudnetpy.instruments.nc_radar import ChilboltonRadar
-from cloudnetpy.metadata import MetaData
+from cloudnetpy.metadata import COMMON_ATTRIBUTES, MetaData
 
 
 def copernicus2nc(
@@ -131,10 +131,12 @@ class Copernicus(ChilboltonRadar):
         self.instrument = COPERNICUS
 
     def calibrate_reflectivity(self) -> None:
-        default_offset = -146.8  # TODO: check this value
-        calibration_factor = self.site_meta.get("calibration_offset", default_offset)
-        self.data["Zh"].data[:] += calibration_factor
-        self.append_data(np.array(calibration_factor), "calibration_offset")
+        default_offset = (
+            -141.5
+        )  # Taken from 2016-01 raw files where this was already applied
+        zh_offset = self.site_meta.get("Zh_offset", default_offset)
+        self.data["Zh"].data[:] += zh_offset
+        self.append_data(np.array(zh_offset, dtype=np.float32), "Zh_offset")
 
     def mask_corrupted_values(self) -> None:
         """Experimental masking of corrupted Copernicus data.
@@ -169,12 +171,13 @@ class Copernicus(ChilboltonRadar):
 
 
 ATTRIBUTES = {
-    "calibration_offset": MetaData(
+    "Zh_offset": MetaData(
         long_name="Radar reflectivity calibration offset",
         units="dBZ",
         comment="Calibration offset applied.",
         dimensions=None,
     ),
+    "Zh": COMMON_ATTRIBUTES["Zh"]._replace(ancillary_variables="Zh_offset"),
     "range_offset": MetaData(
         long_name="Radar range offset",
         units="m",
