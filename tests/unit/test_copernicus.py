@@ -116,3 +116,13 @@ class TestCopernicus2nc(Check):
         with netCDF4.Dataset(test_path) as nc:
             assert nc.file_uuid == uuid_from_user
             assert str(uuid) == uuid_from_user
+
+    def test_bad_files_validation(self, tmp_path):
+        test_path = tmp_path / "dummy.nc"
+        input_path = f"{SCRIPT_PATH}/data/chm15k/"
+        with pytest.raises(ValidTimeStampError):
+            copernicus.copernicus2nc(
+                input_path,
+                test_path,
+                self.site_meta,
+            )

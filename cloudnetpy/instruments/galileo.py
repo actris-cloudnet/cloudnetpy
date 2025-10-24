@@ -9,6 +9,7 @@ from uuid import UUID
 import numpy as np
 
 from cloudnetpy import concat_lib, output, utils
+from cloudnetpy.exceptions import ValidTimeStampError
 from cloudnetpy.instruments.instruments import GALILEO
 from cloudnetpy.instruments.nc_radar import ChilboltonRadar
 from cloudnetpy.metadata import MetaData
@@ -76,6 +77,9 @@ def galileo2nc(
                 valid_filenames = utils.get_files_with_variables(
                     valid_filenames, ["time", "ZED_HC"]
                 )
+                if not valid_filenames:
+                    msg = "No valid files."
+                    raise ValidTimeStampError(msg)
                 variables = list(keymap.keys())
                 concat_lib.concatenate_files(
                     valid_filenames,

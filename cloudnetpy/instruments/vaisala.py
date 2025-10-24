@@ -34,6 +34,9 @@ class VaisalaCeilo(Ceilometer):
     def read_ceilometer_file(self, calibration_factor: float | None = None) -> None:
         """Read all lines of data from the file."""
         time, data = self.reader(self.full_path)
+        if not data:
+            msg = "No valid data found."
+            raise ValidTimeStampError(msg)
         range_res = data[0].range_resolution
         n_gates = len(data[0].beta)
         self.data["time"] = np.array(time)
