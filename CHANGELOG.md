@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.86.9 – 2025-10-24
+
+- Raise ValidTimeStampError if no valid files to concatenate
+
 ## 1.86.8 – 2025-10-24
 
 - Avoid crashing with invalid input data
