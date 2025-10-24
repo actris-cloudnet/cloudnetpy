@@ -126,3 +126,13 @@ class TestCopernicus2nc(Check):
                 test_path,
                 self.site_meta,
             )
+
+    def test_bad_files_validationII(self, tmp_path):
+        test_path = tmp_path / "dummy.nc"
+        input_path = f"{SCRIPT_PATH}/data/copernicus-invalid/"
+        with pytest.raises(ValidTimeStampError):
+            copernicus.copernicus2nc(
+                input_path,
+                test_path,
+                self.site_meta,
+            )

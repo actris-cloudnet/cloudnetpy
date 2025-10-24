@@ -16,6 +16,7 @@ from numpy import ma
 from typing_extensions import Self
 
 from cloudnetpy import utils
+from cloudnetpy.exceptions import ValidTimeStampError
 
 
 def truncate_netcdf_file(
@@ -138,6 +139,9 @@ class _Concat:
             [Path(filename) for filename in filenames if self._is_valid_file(filename)],
             key=lambda f: f.name,
         )
+        if not self.filenames:
+            msg = "No valid files to concatenate."
+            raise ValidTimeStampError(msg)
         self.first_filename = self.filenames[0]
         self.first_file = netCDF4.Dataset(self.first_filename)
         self.concatenated_file = self._init_output_file(output_file)
