@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.86.8 – 2025-10-24
+
+- Avoid crashing with invalid input data
+
 ## 1.86.7 – 2025-10-23
 
 - Adjust Copernicus range_offset
