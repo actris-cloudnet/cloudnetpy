@@ -318,7 +318,7 @@ class GranadaWS(WS):
             "wind_dir_avg": "Deg",
             "rain_Tot": "mm",
         }
-        units, process, rows = read_toa5(self.filename)
+        units, _process, rows = read_toa5(self.filename)
         for key in units:
             if key in expected_units and expected_units[key] != units[key]:
                 msg = (
@@ -536,7 +536,7 @@ class JuelichWS(WS):
             "WS_ms_S_WVT": "meters/Second",
             "WindDir_D1_WVT": "Deg",
         }
-        units, process, rows = read_toa5(self.filename)
+        units, _process, rows = read_toa5(self.filename)
         for key in units:
             if key in expected_units and expected_units[key] != units[key]:
                 msg = (
