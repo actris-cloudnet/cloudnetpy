@@ -121,11 +121,11 @@ def create_one_day_data_record(rpg_objects: RpgObjects) -> dict:
     for key in should_be_constant:
         if key not in rpg_header:
             continue
-        unique_values = np.unique(rpg_header[key])
-        if len(unique_values) > 1:
-            msg = f"More than one value for {key} found: {unique_values}"
+        values = rpg_header[key]
+        if not np.allclose(values[0], values[1:]):
+            msg = f"Value for '{key}' is not constant"
             raise ValueError(msg)
-        rpg_header[key] = unique_values[0]
+        rpg_header[key] = values[0]
 
     rpg_raw_data = _mask_invalid_data(rpg_raw_data)
     return {**rpg_header, **rpg_raw_data}
