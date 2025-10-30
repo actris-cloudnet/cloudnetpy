@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.86.10 – 2025-10-30
+
+- Allow small differences in RPG header values
+
 ## 1.86.9 – 2025-10-24
 
 - Raise ValidTimeStampError if no valid files to concatenate
