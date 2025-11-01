@@ -1,0 +1,95 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2022, 芬兰气象研究所
+# This file is distributed under the same license as the CloudnetPy package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2025.
+#
+
+msgid ""
+msgstr ""
+"Project-Id-Version: CloudnetPy \n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2025-11-01 17:28+0800\n"
+"PO-Revision-Date: 2025-11-01 17:30+0800\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: zh_CN\n"
+"Language-Team: zh_CN <LL@li.org>\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.17.0\n"
+
+msgid "模式评估"
+msgstr "模式评估"
+
+msgid ""
+"CloudnetPy 具有正在进行中的模式评估功能。它旨在将 Cloudnet 观测产品与 "
+"来自各种模式的模拟产品联系起来并进行比较。该系统的主要目标是指出 不同模拟云变量的能力和不足。"
+msgstr ""
+"CloudnetPy 具有正在进行中的模式评估功能。它旨在将 Cloudnet 观测产品与 "
+"来自各种模式的模拟产品联系起来并进行比较。该系统的主要目标是指出 不同模拟云变量的能力和不足。"
+
+msgid ""
+"模式评估分析将在多个不同的时间尺度上进行。最短且最重要的产品是 日尺度降采样产品。日尺度产品还不是模式评估产品，但日尺度是 "
+"创建观测和模式模拟之间评估分析的关键步骤。在软件开发的后期阶段， 还将基于日尺度产品创建月、季节、年和十年的时间长度。"
+msgstr ""
+"模式评估分析将在多个不同的时间尺度上进行。最短且最重要的产品是 日尺度降采样产品。日尺度产品还不是模式评估产品，但日尺度是 "
+"创建观测和模式模拟之间评估分析的关键步骤。在软件开发的后期阶段， 还将基于日尺度产品创建月、季节、年和十年的时间长度。"
+
+msgid "云分数、冰水含量和液态水含量的模式评估日尺度处理链示例。"
+msgstr "云分数、冰水含量和液态水含量的模式评估日尺度处理链示例。"
+
+msgid ""
+"Cloudnet L2 产品'分类'。它是使用 Cloudnet 分类位生成的。 相同的位用于生成无法观测的'观测'云分数。 "
+"云分数是模式的后处理变量。"
+msgstr ""
+"Cloudnet L2 产品'分类'。它是使用 Cloudnet 分类位生成的。 相同的位用于生成无法观测的'观测'云分数。 "
+"云分数是模式的后处理变量。"
+
+msgid "Cloudnet L2 产品'冰水含量'。模式不产生完全相同的变量， 而是网格点处的冰的混合比。 可比较的产品是使用模式的温度、压力和湿度计算的。"
+msgstr "Cloudnet L2 产品'冰水含量'。模式不产生完全相同的变量， 而是网格点处的冰的混合比。 可比较的产品是使用模式的温度、压力和湿度计算的。"
+
+msgid ""
+"Cloudnet L2 产品'液态水含量'。模式不产生完全相同的变量， 而是网格点处的液体的混合比。 "
+"可比较的产品是使用模式的温度、压力和湿度计算的。"
+msgstr ""
+"Cloudnet L2 产品'液态水含量'。模式不产生完全相同的变量， 而是网格点处的液体的混合比。 "
+"可比较的产品是使用模式的温度、压力和湿度计算的。"
+
+msgid "观测产品的时间-高度网格总是比模式的网格更密集，因此 观测数据通过平均降采样以与模式网格大小相同。 降采样的观测和模拟是 L3 日尺度产品。"
+msgstr "观测产品的时间-高度网格总是比模式的网格更密集，因此 观测数据通过平均降采样以与模式网格大小相同。 降采样的观测和模拟是 L3 日尺度产品。"
+
+msgid "L3 日产品示例：云分数、IWC 和 LWC 的模式模拟与降采样观测比较。"
+msgstr "L3 日产品示例：云分数、IWC 和 LWC 的模式模拟与降采样观测比较。"
+
+msgid "观测和模拟的云分数。使用的模式为 ECMWF。"
+msgstr "观测和模拟的云分数。使用的模式为 ECMWF。"
+
+msgid "观测和模拟的 IWC。使用的模式为 ECMWF。"
+msgstr "观测和模拟的 IWC。使用的模式为 ECMWF。"
+
+msgid "观测和模拟的 LWC。使用的模式为 ECMWF。"
+msgstr "观测和模拟的 LWC。使用的模式为 ECMWF。"
+
+msgid ""
+"为了确保最合适的观测降采样版本，有几个特定产品的版本。 对于所有产品，都有降采样到高度-平流时间网格版本。 "
+"对于云分数，有几种不同的生成观测的方法，也有高层云过滤版本。 对于 IWC，有不同的掩码版本。"
+msgstr ""
+"为了确保最合适的观测降采样版本，有几个特定产品的版本。 对于所有产品，都有降采样到高度-平流时间网格版本。 "
+"对于云分数，有几种不同的生成观测的方法，也有高层云过滤版本。 对于 IWC，有不同的掩码版本。"
+
+msgid "模式评估工作流程图示例"
+msgstr "模式评估工作流程图示例"
+
+msgid "另见："
+msgstr "另见："
+
+msgid "Cloudnet 数据门户：https://cloudnet.fmi.fi/"
+msgstr "Cloudnet 数据门户：https://cloudnet.fmi.fi/"
+
+msgid "ACTRIS 主页：http://actris.eu/"
+msgstr "ACTRIS 主页：http://actris.eu/"
+
+msgid "ACTRIS 数据门户：http://actris.nilu.no/"
+msgstr "ACTRIS 数据门户：http://actris.nilu.no/"
+

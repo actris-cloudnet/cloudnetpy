@@ -1,0 +1,20 @@
+# macOS
+.DS_Store
+
+# Sphinx build outputs
+build/
+html/
+doctrees/
+gettext/
+
+# Python
+*.pyc
+__pycache__/
+
+# Compiled translation files (can be regenerated from .po files)
+*.mo
+
+# Temporary files
+*.tmp
+*.bak
+*~

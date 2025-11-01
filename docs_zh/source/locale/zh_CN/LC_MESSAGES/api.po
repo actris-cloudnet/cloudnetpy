@@ -1,0 +1,1315 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2022, 芬兰气象研究所
+# This file is distributed under the same license as the CloudnetPy package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2025.
+#
+
+msgid ""
+msgstr ""
+"Project-Id-Version: CloudnetPy \n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2025-11-01 17:28+0800\n"
+"PO-Revision-Date: 2025-11-01 17:30+0800\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: zh_CN\n"
+"Language-Team: zh_CN <LL@li.org>\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.17.0\n"
+
+msgid "API 参考"
+msgstr "API 参考"
+
+msgid ""
+"本文档中的 API 参考部分由 Sphinx 从源代码自动生成，部分技术描述保留英文以确保准确性。 "
+"对于主要函数，我们在下方提供了详细的中文说明和使用示例。"
+msgstr ""
+"本文档中的 API 参考部分由 Sphinx 从源代码自动生成，部分技术描述保留英文以确保准确性。 "
+"对于主要函数，我们在下方提供了详细的中文说明和使用示例。"
+
+msgid "高级函数"
+msgstr "高级函数"
+
+msgid ""
+"CloudnetPy 的高级函数提供了一种简单的机制来处理云遥感测量并生成 Cloudnet 产品。 "
+"完整的处理分步进行。每一步都会生成一个文件，该文件用作下一步的输入。"
+msgstr ""
+"CloudnetPy 的高级函数提供了一种简单的机制来处理云遥感测量并生成 Cloudnet 产品。 "
+"完整的处理分步进行。每一步都会生成一个文件，该文件用作下一步的输入。"
+
+msgid "原始数据转换"
+msgstr "原始数据转换"
+
+msgid ""
+"不同的 Cloudnet 仪器以各种格式（netCDF、二进制、文本）提供原始数据， 首先需要将其转换为包含统一单位和其他元数据的同质 "
+"Cloudnet netCDF 文件。 这一初始处理步骤对于确保后续处理步骤适用于所有支持的仪器组合是必要的。"
+msgstr ""
+"不同的 Cloudnet 仪器以各种格式（netCDF、二进制、文本）提供原始数据， 首先需要将其转换为包含统一单位和其他元数据的同质 "
+"Cloudnet netCDF 文件。 这一初始处理步骤对于确保后续处理步骤适用于所有支持的仪器组合是必要的。"
+
+msgid "雷达数据处理"
+msgstr "雷达数据处理"
+
+msgid "**METEK MIRA 云雷达数据转换**"
+msgstr "**METEK MIRA 云雷达数据转换**"
+
+msgid "**中文说明：**"
+msgstr "**中文说明：**"
+
+msgid "将 METEK MIRA 系列云雷达的原始数据文件转换为标准的 Cloudnet netCDF 格式。"
+msgstr "将 METEK MIRA 系列云雷达的原始数据文件转换为标准的 Cloudnet netCDF 格式。"
+
+msgid "**输入格式**：MIRA 雷达原始数据文件（通常为 .mmclx 或 .mmclx.gz 格式）"
+msgstr "**输入格式**：MIRA 雷达原始数据文件（通常为 .mmclx 或 .mmclx.gz 格式）"
+
+msgid "**输出格式**：Cloudnet Level 1b netCDF 文件"
+msgstr "**输出格式**：Cloudnet Level 1b netCDF 文件"
+
+msgid "**主要功能**：提取雷达反射率、多普勒速度等参数，添加必要的元数据"
+msgstr "**主要功能**：提取雷达反射率、多普勒速度等参数，添加必要的元数据"
+
+msgid "**使用示例：**"
+msgstr "**使用示例：**"
+
+msgid "**RPG 云雷达数据转换**"
+msgstr "**RPG 云雷达数据转换**"
+
+msgid "处理 RPG (Radiometer Physics GmbH) 云雷达数据，支持 94 GHz FMCW 雷达。"
+msgstr "处理 RPG (Radiometer Physics GmbH) 云雷达数据，支持 94 GHz FMCW 雷达。"
+
+msgid "**输入格式**：RPG 雷达 netCDF 文件"
+msgstr "**输入格式**：RPG 雷达 netCDF 文件"
+
+msgid "**特点**：RPG 雷达通常集成了微波辐射计通道，可同时提供液态水路径数据"
+msgstr "**特点**：RPG 雷达通常集成了微波辐射计通道，可同时提供液态水路径数据"
+
+msgid "**BASTA 雷达数据转换**"
+msgstr "**BASTA 雷达数据转换**"
+
+msgid "转换法国 BASTA (Bistatic rAdar SysTem for Atmospheric studies) 雷达数据。"
+msgstr "转换法国 BASTA (Bistatic rAdar SysTem for Atmospheric studies) 雷达数据。"
+
+msgid "激光雷达/云高仪数据处理"
+msgstr "激光雷达/云高仪数据处理"
+
+msgid "**云高仪数据转换**"
+msgstr "**云高仪数据转换**"
+
+msgid "处理各种品牌的云高仪（激光雷达）数据，包括："
+msgstr "处理各种品牌的云高仪（激光雷达）数据，包括："
+
+msgid "Lufft CHM 15k"
+msgstr "Lufft CHM 15k"
+
+msgid "Vaisala CL31, CL51, CL61"
+msgstr "Vaisala CL31, CL51, CL61"
+
+msgid "Jenoptik CHM 15k"
+msgstr "Jenoptik CHM 15k"
+
+msgid "云高仪是激光雷达的一种，专门用于测量云底高度和大气后向散射特性。"
+msgstr "云高仪是激光雷达的一种，专门用于测量云底高度和大气后向散射特性。"
+
+msgid "**PollyXT 激光雷达数据转换**"
+msgstr "**PollyXT 激光雷达数据转换**"
+
+msgid "处理 PollyXT 多波长拉曼偏振激光雷达数据，这是一种先进的大气探测激光雷达系统。"
+msgstr "处理 PollyXT 多波长拉曼偏振激光雷达数据，这是一种先进的大气探测激光雷达系统。"
+
+msgid "微波辐射计数据处理"
+msgstr "微波辐射计数据处理"
+
+msgid "**HATPRO 微波辐射计数据转换**"
+msgstr "**HATPRO 微波辐射计数据转换**"
+
+msgid "处理 RPG-HATPRO (Humidity And Temperature PROfiler) 微波辐射计数据。"
+msgstr "处理 RPG-HATPRO (Humidity And Temperature PROfiler) 微波辐射计数据。"
+
+msgid "**输入格式**：HATPRO 二进制文件（.LWP, .IWV 等）"
+msgstr "**输入格式**：HATPRO 二进制文件（.LWP, .IWV 等）"
+
+msgid "**输出变量**：液态水路径（LWP）、积分水汽（IWV）等"
+msgstr "**输出变量**：液态水路径（LWP）、积分水汽（IWV）等"
+
+msgid "**重要参数**：需要指定日期，因为多个文件可能对应一天"
+msgstr "**重要参数**：需要指定日期，因为多个文件可能对应一天"
+
+msgid "**Radiometrics 微波辐射计数据转换**"
+msgstr "**Radiometrics 微波辐射计数据转换**"
+
+msgid "处理 Radiometrics 公司的微波辐射计数据。"
+msgstr "处理 Radiometrics 公司的微波辐射计数据。"
+
+msgid "雨滴谱仪和气象站数据处理"
+msgstr "雨滴谱仪和气象站数据处理"
+
+msgid "``parsivel2nc``：处理 OTT Parsivel² 雨滴谱仪数据"
+msgstr "``parsivel2nc``：处理 OTT Parsivel² 雨滴谱仪数据"
+
+msgid "``thies2nc``：处理 Thies 激光雨滴谱仪数据"
+msgstr "``thies2nc``：处理 Thies 激光雨滴谱仪数据"
+
+msgid "``ws2nc``：处理气象站数据（温度、湿度、气压等）"
+msgstr "``ws2nc``：处理气象站数据（温度、湿度、气压等）"
+
+msgid "分类文件生成"
+msgstr "分类文件生成"
+
+msgid ""
+"分类文件是 Cloudnet 处理的核心步骤，它将所有输入数据（雷达、激光雷达、模式、微波辐射计） "
+"整合到统一的时间-高度网格上，并对每个网格点进行初步分类。"
+msgstr ""
+"分类文件是 Cloudnet 处理的核心步骤，它将所有输入数据（雷达、激光雷达、模式、微波辐射计） "
+"整合到统一的时间-高度网格上，并对每个网格点进行初步分类。"
+
+msgid "**生成分类文件**"
+msgstr "**生成分类文件**"
+
+msgid "这是 Cloudnet 处理的关键步骤，将多源观测数据融合并分类。"
+msgstr "这是 Cloudnet 处理的关键步骤，将多源观测数据融合并分类。"
+
+msgid "**必需输入：** - 雷达数据（radar） - 大气模式数据（model）"
+msgstr "**必需输入：** - 雷达数据（radar） - 大气模式数据（model）"
+
+msgid "**可选输入：** - 激光雷达数据（lidar）- 强烈推荐，用于改进低层云和气溶胶识别 - 微波辐射计数据（mwr）- 用于液态水路径信息"
+msgstr "**可选输入：** - 激光雷达数据（lidar）- 强烈推荐，用于改进低层云和气溶胶识别 - 微波辐射计数据（mwr）- 用于液态水路径信息"
+
+msgid "**输出内容：**"
+msgstr "**输出内容：**"
+
+msgid "分类文件包含： - 统一网格上的所有观测数据 - 分类比特位（云相态、降水、昆虫等） - 质量控制标记 - 大气参数（温度、压力、湿度）"
+msgstr "分类文件包含： - 统一网格上的所有观测数据 - 分类比特位（云相态、降水、昆虫等） - 质量控制标记 - 大气参数（温度、压力、湿度）"
+
+msgid "产品生成"
+msgstr "产品生成"
+
+msgid "从分类文件可以生成多种地球物理产品，每个产品聚焦于特定的云属性。"
+msgstr "从分类文件可以生成多种地球物理产品，每个产品聚焦于特定的云属性。"
+
+msgid "**分类产品**"
+msgstr "**分类产品**"
+
+msgid "生成目标分类产品，这是最简单的 Cloudnet 产品。"
+msgstr "生成目标分类产品，这是最简单的 Cloudnet 产品。"
+
+msgid ""
+"**产品内容：** - ``target_classification``：目标分类（云滴、冰、融化层、昆虫、气溶胶等） - "
+"``detection_status``：探测状态 - ``quality_bits``：质量标记"
+msgstr ""
+"**产品内容：** - ``target_classification``：目标分类（云滴、冰、融化层、昆虫、气溶胶等） - "
+"``detection_status``：探测状态 - ``quality_bits``：质量标记"
+
+msgid "**冰水含量产品**"
+msgstr "**冰水含量产品**"
+
+msgid "检索大气冰水含量（Ice Water Content, IWC）。"
+msgstr "检索大气冰水含量（Ice Water Content, IWC）。"
+
+msgid "**方法：** - 使用雷达反射率和温度的经验关系 - 适用于冰云区域"
+msgstr "**方法：** - 使用雷达反射率和温度的经验关系 - 适用于冰云区域"
+
+msgid ""
+"**产品变量：** - ``iwc``：冰水含量 (kg m⁻³) - ``iwc_error``：估计误差 - "
+"``iwc_retrieval_status``：检索状态"
+msgstr ""
+"**产品变量：** - ``iwc``：冰水含量 (kg m⁻³) - ``iwc_error``：估计误差 - "
+"``iwc_retrieval_status``：检索状态"
+
+msgid "**液态水含量产品**"
+msgstr "**液态水含量产品**"
+
+msgid "检索液态水含量（Liquid Water Content, LWC）。"
+msgstr "检索液态水含量（Liquid Water Content, LWC）。"
+
+msgid "**方法：** - 绝热法：基于云绝热假设 - 缩放法：使用微波辐射计液态水路径进行缩放"
+msgstr "**方法：** - 绝热法：基于云绝热假设 - 缩放法：使用微波辐射计液态水路径进行缩放"
+
+msgid "**产品变量：** - ``lwc``：液态水含量 (kg m⁻³) - ``lwc_error``：估计误差"
+msgstr "**产品变量：** - ``lwc``：液态水含量 (kg m⁻³) - ``lwc_error``：估计误差"
+
+msgid "**毛毛雨产品**"
+msgstr "**毛毛雨产品**"
+
+msgid "检索毛毛雨（drizzle）参数，包括粒子大小和下落速度。"
+msgstr "检索毛毛雨（drizzle）参数，包括粒子大小和下落速度。"
+
+msgid "**液滴有效半径产品**"
+msgstr "**液滴有效半径产品**"
+
+msgid "检索云滴有效半径（Droplet Effective Radius, DER）。"
+msgstr "检索云滴有效半径（Droplet Effective Radius, DER）。"
+
+msgid "**冰粒有效半径产品**"
+msgstr "**冰粒有效半径产品**"
+
+msgid "检索冰粒有效半径（Ice Effective Radius, IER）。"
+msgstr "检索冰粒有效半径（Ice Effective Radius, IER）。"
+
+msgid "可视化结果"
+msgstr "可视化结果"
+
+msgid "CloudnetPy 提供易于使用的绘图接口，可以快速可视化各种产品。"
+msgstr "CloudnetPy 提供易于使用的绘图接口，可以快速可视化各种产品。"
+
+msgid "**生成图表**"
+msgstr "**生成图表**"
+
+msgid "快速生成 Cloudnet 数据的可视化图表。"
+msgstr "快速生成 Cloudnet 数据的可视化图表。"
+
+msgid "**功能特点：** - 自动识别变量类型并选择合适的色标 - 支持同时绘制多个变量 - 可自定义图表参数 - 支持保存为图片文件"
+msgstr "**功能特点：** - 自动识别变量类型并选择合适的色标 - 支持同时绘制多个变量 - 可自定义图表参数 - 支持保存为图片文件"
+
+msgid "**绘图参数类**"
+msgstr "**绘图参数类**"
+
+msgid "控制图表生成的参数类，包括： - 图片尺寸、DPI - 是否显示/保存 - 自定义标题等"
+msgstr "控制图表生成的参数类，包括： - 图片尺寸、DPI - 是否显示/保存 - 自定义标题等"
+
+msgid "详细模块参考"
+msgstr "详细模块参考"
+
+msgid "以下部分包含各个模块的详细 API 参考，主要面向开发者。 这些模块的文档从源代码自动生成，部分内容为英文。"
+msgstr "以下部分包含各个模块的详细 API 参考，主要面向开发者。 这些模块的文档从源代码自动生成，部分内容为英文。"
+
+msgid "分类模块"
+msgstr "分类模块"
+
+msgid "分类是 CloudnetPy 的子包。它包含创建 Cloudnet 分类文件时使用的多个模块。 这些是底层模块，通常不需要直接调用。"
+msgstr "分类是 CloudnetPy 的子包。它包含创建 Cloudnet 分类文件时使用的多个模块。 这些是底层模块，通常不需要直接调用。"
+
+msgid "radar"
+msgstr "radar"
+
+msgid "lidar"
+msgstr "lidar"
+
+msgid "mwr"
+msgstr "mwr"
+
+msgid "model"
+msgstr "model"
+
+msgid "classify"
+msgstr "classify"
+
+msgid "melting"
+msgstr "melting"
+
+msgid "freezing"
+msgstr "freezing"
+
+msgid "falling"
+msgstr "falling"
+
+msgid "insects"
+msgstr "insects"
+
+msgid "atmos"
+msgstr "atmos"
+
+msgid "droplet"
+msgstr "droplet"
+
+msgid "产品模块"
+msgstr "产品模块"
+
+msgid "产品是 CloudnetPy 的子包。它包含对应于不同 Cloudnet 产品的多个模块。"
+msgstr "产品是 CloudnetPy 的子包。它包含对应于不同 Cloudnet 产品的多个模块。"
+
+msgid "classification"
+msgstr "classification"
+
+msgid "iwc"
+msgstr "iwc"
+
+msgid "lwc"
+msgstr "lwc"
+
+msgid "drizzle"
+msgstr "drizzle"
+
+msgid "der"
+msgstr "der"
+
+msgid "ier"
+msgstr "ier"
+
+msgid "product_tools"
+msgstr "product_tools"
+
+msgid "工具模块"
+msgstr "工具模块"
+
+msgid "具有低级功能的各种工具模块。这些模块提供文件操作、数据处理等辅助功能。"
+msgstr "具有低级功能的各种工具模块。这些模块提供文件操作、数据处理等辅助功能。"
+
+msgid "文件连接工具"
+msgstr "文件连接工具"
+
+msgid "concat_lib"
+msgstr "concat_lib"
+
+msgid "``concat_lib`` 模块提供连接（合并）netCDF 文件的功能，用于将多个时间段的数据文件合并成单个文件。"
+msgstr "``concat_lib`` 模块提供连接（合并）netCDF 文件的功能，用于将多个时间段的数据文件合并成单个文件。"
+
+msgid "**主要功能：**"
+msgstr "**主要功能：**"
+
+msgid "**truncate_netcdf_file** - 截断 netCDF 文件"
+msgstr "**truncate_netcdf_file** - 截断 netCDF 文件"
+
+msgid "**update_nc** - 追加数据到现有文件"
+msgstr "**update_nc** - 追加数据到现有文件"
+
+msgid "**concatenate_files** - 连接多个 netCDF 文件"
+msgstr "**concatenate_files** - 连接多个 netCDF 文件"
+
+msgid "**concatenate_text_files** - 连接文本文件"
+msgstr "**concatenate_text_files** - 连接文本文件"
+
+msgid "**bundle_netcdf_files** - 将多个文件打包成日文件"
+msgstr "**bundle_netcdf_files** - 将多个文件打包成日文件"
+
+msgid "**使用场景：** - 将小时数据合并成日数据 - 合并多个站点或时间段的观测数据 - 创建测试用的小文件"
+msgstr "**使用场景：** - 将小时数据合并成日数据 - 合并多个站点或时间段的观测数据 - 创建测试用的小文件"
+
+msgid "**详细 API 参考：**"
+msgstr "**详细 API 参考：**"
+
+msgid "Module for concatenating netCDF files."
+msgstr "Module for concatenating netCDF files."
+
+msgid ""
+"Truncates netcdf file in dim_name dimension taking only n_profiles. "
+"Useful for creating small files for tests."
+msgstr ""
+"Truncates netcdf file in dim_name dimension taking only n_profiles. "
+"Useful for creating small files for tests."
+
+msgid "Appends data to existing netCDF file."
+msgstr "Appends data to existing netCDF file."
+
+msgid "参数"
+msgstr "参数"
+
+msgid "Filename of an existing netCDF file."
+msgstr "Filename of an existing netCDF file."
+
+msgid "Filename of a new file whose data will be appended to the end."
+msgstr "Filename of a new file whose data will be appended to the end."
+
+msgid "返回"
+msgstr "返回"
+
+msgid "1 = success, 0 = failed to add new data."
+msgstr "1 = success, 0 = failed to add new data."
+
+msgid "备注"
+msgstr "备注"
+
+msgid "Requires 'time' variable with unlimited dimension."
+msgstr "Requires 'time' variable with unlimited dimension."
+
+msgid "Concatenate netCDF files in one dimension."
+msgstr "Concatenate netCDF files in one dimension."
+
+msgid "List of files to be concatenated."
+msgstr "List of files to be concatenated."
+
+msgid "Output file name."
+msgstr "Output file name."
+
+msgid "Dimension name for concatenation. Default is 'time'."
+msgstr "Dimension name for concatenation. Default is 'time'."
+
+msgid ""
+"List of variables with the 'concat_dimension' to be concatenated. Default"
+" is None when all variables with 'concat_dimension' will be saved."
+msgstr ""
+"List of variables with the 'concat_dimension' to be concatenated. Default"
+" is None when all variables with 'concat_dimension' will be saved."
+
+#, python-brace-format
+msgid "Optional new global attributes as {'attribute_name': value}."
+msgstr "Optional new global attributes as {'attribute_name': value}."
+
+msgid "List of variables to be ignored."
+msgstr "List of variables to be ignored."
+
+msgid "Dimension name for interpolation if the dimensions are not the same."
+msgstr "Dimension name for interpolation if the dimensions are not the same."
+
+msgid "List of filenames that were successfully concatenated."
+msgstr "List of filenames that were successfully concatenated."
+
+msgid ""
+"Arrays without 'concat_dimension' and scalars are expanded to the "
+"concat_dimension. Global attributes are taken from the first file. "
+"Groups, possibly present in a NETCDF4 formatted file, are ignored."
+msgstr ""
+"Arrays without 'concat_dimension' and scalars are expanded to the "
+"concat_dimension. Global attributes are taken from the first file. "
+"Groups, possibly present in a NETCDF4 formatted file, are ignored."
+
+msgid "Concatenates text files."
+msgstr "Concatenates text files."
+
+msgid ""
+"Concatenates several netcdf files into daily file with some extra data "
+"manipulation."
+msgstr ""
+"Concatenates several netcdf files into daily file with some extra data "
+"manipulation."
+
+msgid "实用工具"
+msgstr "实用工具"
+
+msgid "utils"
+msgstr "utils"
+
+msgid "``utils`` 模块包含各种实用工具函数，如数据转换、单位换算、数组操作等。"
+msgstr "``utils`` 模块包含各种实用工具函数，如数据转换、单位换算、数组操作等。"
+
+msgid "This module contains general helper functions."
+msgstr "This module contains general helper functions."
+
+msgid "Converts seconds since some epoch to fraction hour."
+msgstr "Converts seconds since some epoch to fraction hour."
+
+msgid "1-D array of seconds since some epoch that starts on midnight."
+msgstr "1-D array of seconds since some epoch that starts on midnight."
+
+msgid "Time as fraction hour."
+msgstr "Time as fraction hour."
+
+msgid "Excludes leap seconds."
+msgstr "Excludes leap seconds."
+
+msgid "Converts seconds since some epoch to datetime (UTC)."
+msgstr "Converts seconds since some epoch to datetime (UTC)."
+
+msgid "Seconds since some epoch."
+msgstr "Seconds since some epoch."
+
+msgid "Epoch, default is (2001, 1, 1) (UTC)."
+msgstr "Epoch, default is (2001, 1, 1) (UTC)."
+
+msgid "Datetime"
+msgstr "Datetime"
+
+msgid "Converts array of datetime to decimal_hours."
+msgstr "Converts array of datetime to decimal_hours."
+
+msgid "Returns decimal hour array between 0 and 24."
+msgstr "Returns decimal hour array between 0 and 24."
+
+msgid ""
+"Computes fraction hour time vector 0-24 with user-given resolution (in "
+"seconds)."
+msgstr ""
+"Computes fraction hour time vector 0-24 with user-given resolution (in "
+"seconds)."
+
+msgid "Time resolution in seconds, greater than 1. Default is 30."
+msgstr "Time resolution in seconds, greater than 1. Default is 30."
+
+msgid "Time vector between 0 and 24."
+msgstr "Time vector between 0 and 24."
+
+msgid "抛出"
+msgstr "抛出"
+
+msgid "Bad resolution as input."
+msgstr "Bad resolution as input."
+
+msgid "Converts 1-D center points to bins with even spacing."
+msgstr "Converts 1-D center points to bins with even spacing."
+
+msgid "1-D array of N real values."
+msgstr "1-D array of N real values."
+
+msgid "N + 1 edge values."
+msgstr "N + 1 edge values."
+
+msgid "返回类型"
+msgstr "返回类型"
+
+msgid "示例"
+msgstr "示例"
+
+msgid "Rebins 1D array."
+msgstr "Rebins 1D array."
+
+msgid "1-D array with shape (n,)."
+msgstr "1-D array with shape (n,)."
+
+msgid "1-D input data with shape (m,)."
+msgstr "1-D input data with shape (m,)."
+
+msgid "1-D target vector (center points) with shape (N,)."
+msgstr "1-D target vector (center points) with shape (N,)."
+
+msgid ""
+"Statistic to be calculated. Possible statistics are 'mean', 'std'. "
+"Default is 'mean'."
+msgstr ""
+"Statistic to be calculated. Possible statistics are 'mean', 'std'. "
+"Default is 'mean'."
+
+msgid "Re-binned data with shape (N,)."
+msgstr "Re-binned data with shape (N,)."
+
+msgid "From a 2D boolean array, remove completely isolated single cells."
+msgstr "From a 2D boolean array, remove completely isolated single cells."
+
+msgid "2-D boolean array containing isolated values."
+msgstr "2-D boolean array containing isolated values."
+
+msgid "Cleaned array."
+msgstr "Cleaned array."
+
+msgid "From a 2D boolean array, remove cells isolated in x-direction."
+msgstr "From a 2D boolean array, remove cells isolated in x-direction."
+
+msgid "2-D boolean array containing isolated pixels in x-direction."
+msgstr "2-D boolean array containing isolated pixels in x-direction."
+
+msgid "Stronger cleaning than `filter_isolated_pixels()`"
+msgstr "Stronger cleaning than `filter_isolated_pixels()`"
+
+msgid "Tests if nth bit (0,1,2,...) is set."
+msgstr "Tests if nth bit (0,1,2,...) is set."
+
+msgid "Integer array."
+msgstr "Integer array."
+
+msgid "Investigated bit."
+msgstr "Investigated bit."
+
+msgid "Boolean array denoting values where nth_bit is set."
+msgstr "Boolean array denoting values where nth_bit is set."
+
+msgid "negative bit as input."
+msgstr "negative bit as input."
+
+msgid "utils.setbit()"
+msgstr "utils.setbit()"
+
+msgid "Sets nth bit (0, 1, 2, ...) on number."
+msgstr "Sets nth bit (0, 1, 2, ...) on number."
+
+msgid "Bit to be set."
+msgstr "Bit to be set."
+
+msgid "Integer where nth bit is set."
+msgstr "Integer where nth bit is set."
+
+msgid "utils.isbit()"
+msgstr "utils.isbit()"
+
+msgid "Linear interpolation of gridded 2d data."
+msgstr "Linear interpolation of gridded 2d data."
+
+msgid "1-D array."
+msgstr "1-D array."
+
+msgid "2-D array at points (x, y)."
+msgstr "2-D array at points (x, y)."
+
+msgid "Interpolated data."
+msgstr "Interpolated data."
+
+msgid ""
+"Does not work with nans. Ignores mask of masked data. Does not "
+"extrapolate."
+msgstr ""
+"Does not work with nans. Ignores mask of masked data. Does not "
+"extrapolate."
+
+msgid "2D linear interpolation preserving the mask."
+msgstr "2D linear interpolation preserving the mask."
+
+msgid "1D array, x-coordinates."
+msgstr "1D array, x-coordinates."
+
+msgid "1D array, y-coordinates."
+msgstr "1D array, y-coordinates."
+
+msgid "2D masked array, data values."
+msgstr "2D masked array, data values."
+
+msgid "1D array, new x-coordinates."
+msgstr "1D array, new x-coordinates."
+
+msgid "1D array, new y-coordinates."
+msgstr "1D array, new y-coordinates."
+
+msgid "Interpolated 2D masked array."
+msgstr "Interpolated 2D masked array."
+
+msgid ""
+"Points outside the original range will be nans (and masked). Uses linear "
+"interpolation. Input data may contain nan-values."
+msgstr ""
+"Points outside the original range will be nans (and masked). Uses linear "
+"interpolation. Input data may contain nan-values."
+
+msgid "2D nearest neighbor interpolation preserving mask."
+msgstr "2D nearest neighbor interpolation preserving mask."
+
+msgid "Points outside the original range will be interpolated but masked."
+msgstr "Points outside the original range will be interpolated but masked."
+
+msgid "Fast 1D nearest-neighbor interpolation along y for each x."
+msgstr "Fast 1D nearest-neighbor interpolation along y for each x."
+
+msgid "1D numpy array of y-coordinates (length M)."
+msgstr "1D numpy array of y-coordinates (length M)."
+
+msgid "2D array of shape (N, M)."
+msgstr "2D array of shape (N, M)."
+
+msgid "1D numpy array of new y-coordinates."
+msgstr "1D numpy array of new y-coordinates."
+
+msgid "Masked 2D masked array interpolated along y."
+msgstr "Masked 2D masked array interpolated along y."
+
+msgid "Only interpolates along y. Points outside range are masked."
+msgstr "Only interpolates along y. Points outside range are masked."
+
+msgid "1D linear interpolation preserving the mask."
+msgstr "1D linear interpolation preserving the mask."
+
+msgid "1D array in fraction hour."
+msgstr "1D array in fraction hour."
+
+msgid "1D array, data values."
+msgstr "1D array, data values."
+
+msgid "1D array, new time coordinates."
+msgstr "1D array, new time coordinates."
+
+msgid "Maximum allowed gap in minutes. Values outside this gap will be masked."
+msgstr "Maximum allowed gap in minutes. Values outside this gap will be masked."
+
+msgid "Interpolation method, 'linear' (default) or 'nearest'."
+msgstr "Interpolation method, 'linear' (default) or 'nearest'."
+
+msgid "Finds indices in new_grid that are too far from grid."
+msgstr "Finds indices in new_grid that are too far from grid."
+
+msgid "Calculates relative error (%)."
+msgstr "Calculates relative error (%)."
+
+msgid "DB to linear conversion."
+msgstr "DB to linear conversion."
+
+msgid "Linear to dB conversion."
+msgstr "Linear to dB conversion."
+
+msgid "Returns median difference of 1-D array."
+msgstr "Returns median difference of 1-D array."
+
+msgid "Returns l2 norm."
+msgstr "Returns l2 norm."
+
+msgid "Variable number of data (*array_like*) with the same shape."
+msgstr "Variable number of data (*array_like*) with the same shape."
+
+msgid "The l2 norm."
+msgstr "The l2 norm."
+
+msgid "Calculates scaled and weighted Euclidean distance."
+msgstr "Calculates scaled and weighted Euclidean distance."
+
+msgid ""
+"Calculated distance is of form: scale * sqrt((a1*a)**2 + (b1*b)**2 + ...)"
+" where a, b, ... are terms to be summed and a1, a2, ... are optional "
+"weights for the terms."
+msgstr ""
+"Calculated distance is of form: scale * sqrt((a1*a)**2 + (b1*b)**2 + ...)"
+" where a, b, ... are terms to be summed and a1, a2, ... are optional "
+"weights for the terms."
+
+msgid "Tuple containing the values."
+msgstr "Tuple containing the values."
+
+msgid "Scale factor for the calculated Euclidean distance."
+msgstr "Scale factor for the calculated Euclidean distance."
+
+msgid ""
+"Weights for the terms. Must be single float or a list of numbers (one per"
+" term)."
+msgstr ""
+"Weights for the terms. Must be single float or a list of numbers (one per"
+" term)."
+
+msgid "Scaled and weighted Euclidean distance."
+msgstr "Scaled and weighted Euclidean distance."
+
+msgid "TODO: Use masked arrays instead of tuples."
+msgstr "TODO: Use masked arrays instead of tuples."
+
+msgid "Finds cumulative sum that resets on 0."
+msgstr "Finds cumulative sum that resets on 0."
+
+msgid "Input array."
+msgstr "Input array."
+
+msgid "Axis where the sum is calculated. Default is 0."
+msgstr "Axis where the sum is calculated. Default is 0."
+
+msgid "Cumulative sum, restarted at 0."
+msgstr "Cumulative sum, restarted at 0."
+
+msgid "Forward fills an array."
+msgstr "Forward fills an array."
+
+msgid "1-D or 2-D array."
+msgstr "1-D or 2-D array."
+
+msgid "Value to be filled. Default is 0."
+msgstr "Value to be filled. Default is 0."
+
+msgid "Forward-filled array."
+msgstr "Forward-filled array."
+
+msgid "Works only in axis=1 direction."
+msgstr "Works only in axis=1 direction."
+
+msgid "Initializes several numpy arrays."
+msgstr "Initializes several numpy arrays."
+
+msgid "Number of arrays to be generated."
+msgstr "Number of arrays to be generated."
+
+msgid "Shape of the arrays, e.g. (2, 3)."
+msgstr "Shape of the arrays, e.g. (2, 3)."
+
+msgid "The desired data-type for the arrays, e.g., int. Default is float."
+msgstr "The desired data-type for the arrays, e.g., int. Default is float."
+
+msgid ""
+"If True, generated arrays are masked arrays, else ordinary numpy arrays. "
+"Default is True."
+msgstr ""
+"If True, generated arrays are masked arrays, else ordinary numpy arrays. "
+"Default is True."
+
+msgid "生成器"
+msgstr "生成器"
+
+msgid "Iterator containing the empty arrays."
+msgstr "Iterator containing the empty arrays."
+
+msgid "Returns the number of elements that cover certain distance."
+msgstr "Returns the number of elements that cover certain distance."
+
+msgid ""
+"Input array with arbitrary units or time in fraction hour. *x* should be "
+"evenly spaced or at least close to."
+msgstr ""
+"Input array with arbitrary units or time in fraction hour. *x* should be "
+"evenly spaced or at least close to."
+
+msgid ""
+"Distance to be covered. If x is fraction time, *dist* is in minutes. "
+"Otherwise, *x* and *dist* should have the same units."
+msgstr ""
+"Distance to be covered. If x is fraction time, *dist* is in minutes. "
+"Otherwise, *x* and *dist* should have the same units."
+
+msgid ""
+"If 'time', input is fraction hour and distance in minutes, else inputs "
+"have the same units. Default is None (same units)."
+msgstr ""
+"If 'time', input is fraction hour and distance in minutes, else inputs "
+"have the same units. Default is None (same units)."
+
+msgid "Number of elements in the input array that cover *dist*."
+msgstr "Number of elements in the input array that cover *dist*."
+
+msgid "The result is rounded to the closest integer, so:"
+msgstr "The result is rounded to the closest integer, so:"
+
+msgid "With fraction hour time vector:"
+msgstr "With fraction hour time vector:"
+
+msgid "Tests if input is scalar."
+msgstr "Tests if input is scalar."
+
+msgid "By \"scalar\" we mean that array has a single value."
+msgstr "By \"scalar\" we mean that array has a single value."
+
+msgid "Returns current UTC-time."
+msgstr "Returns current UTC-time."
+
+msgid "Returns range between two dates (datetimes)."
+msgstr "Returns range between two dates (datetimes)."
+
+msgid "Parse or generate unique identifier."
+msgstr "Parse or generate unique identifier."
+
+msgid "Returns IEEE radar band corresponding to radar frequency."
+msgstr "Returns IEEE radar band corresponding to radar frequency."
+
+msgid "Radar frequency (GHz)."
+msgstr "Radar frequency (GHz)."
+
+msgid "IEEE radar band as string."
+msgstr "IEEE radar band as string."
+
+msgid "Transposes numpy array of (n, ) to (n, 1)."
+msgstr "Transposes numpy array of (n, ) to (n, 1)."
+
+msgid "Deletes multiple keys from dictionary."
+msgstr "Deletes multiple keys from dictionary."
+
+msgid "A dictionary."
+msgstr "A dictionary."
+
+msgid "Keys to be deleted."
+msgstr "Keys to be deleted."
+
+msgid "Dictionary without the deleted keys."
+msgstr "Dictionary without the deleted keys."
+
+msgid "Converts continuous variable into 0-1 probability."
+msgstr "Converts continuous variable into 0-1 probability."
+
+msgid "Numpy array."
+msgstr "Numpy array."
+
+msgid ""
+"Center of the distribution. Values smaller than this will have small "
+"probability. Values greater than this will have large probability."
+msgstr ""
+"Center of the distribution. Values smaller than this will have small "
+"probability. Values greater than this will have large probability."
+
+msgid ""
+"Width of the distribution, i.e., how fast the probability drops or "
+"increases from the peak."
+msgstr ""
+"Width of the distribution, i.e., how fast the probability drops or "
+"increases from the peak."
+
+msgid ""
+"If True, large values have small probability and vice versa. Default is "
+"False."
+msgstr ""
+"If True, large values have small probability and vice versa. Default is "
+"False."
+
+msgid "Probability with the same shape as the input data."
+msgstr "Probability with the same shape as the input data."
+
+msgid "Converts distances from a tilted instrument to height above the ground."
+msgstr "Converts distances from a tilted instrument to height above the ground."
+
+msgid "Distances towards the line of sign from the instrument."
+msgstr "Distances towards the line of sign from the instrument."
+
+msgid "Angle in degrees from the zenith (0 = zenith)."
+msgstr "Angle in degrees from the zenith (0 = zenith)."
+
+msgid "Altitudes of the LOS points."
+msgstr "Altitudes of the LOS points."
+
+msgid "Uses plane parallel Earth approximation."
+msgstr "Uses plane parallel Earth approximation."
+
+msgid "Tests if a line (of a text file) is empty."
+msgstr "Tests if a line (of a text file) is empty."
+
+msgid "Tests if the input string is formatted as -yyyy-mm-dd hh:mm:ss."
+msgstr "Tests if the input string is formatted as -yyyy-mm-dd hh:mm:ss."
+
+msgid "Returns full paths of files with some extension, sorted by filename."
+msgstr "Returns full paths of files with some extension, sorted by filename."
+
+msgid "Converts string to number (int or float)."
+msgstr "Converts string to number (int or float)."
+
+msgid "Finds epoch from units string."
+msgstr "Finds epoch from units string."
+
+msgid "Screen data by time."
+msgstr "Screen data by time."
+
+msgid "Dictionary containing at least 'time' key and other numpy arrays."
+msgstr "Dictionary containing at least 'time' key and other numpy arrays."
+
+msgid "Epoch of the time array, e.g., (1970, 1, 1)"
+msgstr "Epoch of the time array, e.g., (1970, 1, 1)"
+
+msgid "Expected date in yyyy-mm-dd"
+msgstr "Expected date in yyyy-mm-dd"
+
+msgid "Screened and sorted by the time vector."
+msgstr "Screened and sorted by the time vector."
+
+msgid "Requires 'time' key"
+msgstr "Requires 'time' key"
+
+msgid "Works for dimensions 1, 2, 3 (time has to be at 0-axis)"
+msgstr "Works for dimensions 1, 2, 3 (time has to be at 0-axis)"
+
+msgid "Does nothing for scalars"
+msgstr "Does nothing for scalars"
+
+msgid "Finds valid time array indices for the given date."
+msgstr "Finds valid time array indices for the given date."
+
+msgid "Time in seconds from some epoch."
+msgstr "Time in seconds from some epoch."
+
+msgid "Valid indices for the given date in sorted order."
+msgstr "Valid indices for the given date in sorted order."
+
+msgid "No valid timestamps."
+msgstr "No valid timestamps."
+
+msgid "Appends data to a dictionary field (creates the field if not yet present)."
+msgstr "Appends data to a dictionary field (creates the field if not yet present)."
+
+msgid "Dictionary where data will be appended."
+msgstr "Dictionary where data will be appended."
+
+msgid "Key of the field."
+msgstr "Key of the field."
+
+msgid "Numpy array to be appended to data_in[key]."
+msgstr "Numpy array to be appended to data_in[key]."
+
+msgid "Shifts values half bin towards up or down."
+msgstr "Shifts values half bin towards up or down."
+
+msgid "1D numpy array (e.g. range)"
+msgstr "1D numpy array (e.g. range)"
+
+msgid "If 'lower', increase values by half bin. If 'upper', decrease values."
+msgstr "If 'lower', increase values by half bin. If 'upper', decrease values."
+
+msgid "Shifted values."
+msgstr "Shifted values."
+
+msgid "Returns cloudnet file type from new and legacy files."
+msgstr "Returns cloudnet file type from new and legacy files."
+
+msgid "Returns files where all variables exist."
+msgstr "Returns files where all variables exist."
+
+msgid "Tests if all values are masked."
+msgstr "Tests if all values are masked."
+
+msgid "Finds indices of masked profiles in a 2-D array."
+msgstr "Finds indices of masked profiles in a 2-D array."
+
+msgid "Calculates hash of file using sha-256."
+msgstr "Calculates hash of file using sha-256."
+
+msgid "Calculates hash of file using md5."
+msgstr "Calculates hash of file using md5."
+
+msgid "cloudnetarray"
+msgstr "cloudnetarray"
+
+msgid "``cloudnetarray`` 模块定义了 CloudnetPy 使用的数组类，包含额外的元数据和操作方法。"
+msgstr "``cloudnetarray`` 模块定义了 CloudnetPy 使用的数组类，包含额外的元数据和操作方法。"
+
+msgid "CloudnetArray class."
+msgstr "CloudnetArray class."
+
+msgid "Stores netCDF4 variables, numpy arrays and scalars as CloudnetArrays."
+msgstr "Stores netCDF4 variables, numpy arrays and scalars as CloudnetArrays."
+
+msgid ""
+"The netCDF4 :class:`Variable` instance, numpy array (masked or regular), "
+"or scalar (float, int)."
+msgstr ""
+"The netCDF4 :class:`Variable` instance, numpy array (masked or regular), "
+"or scalar (float, int)."
+
+msgid "Name of the variable."
+msgstr "Name of the variable."
+
+msgid "Explicit units, optional."
+msgstr "Explicit units, optional."
+
+msgid "Explicit dimension names, optional."
+msgstr "Explicit dimension names, optional."
+
+msgid "Explicit data type, optional."
+msgstr "Explicit data type, optional."
+
+msgid "Source attribute, optional."
+msgstr "Source attribute, optional."
+
+msgid "Converts linear units to log."
+msgstr "Converts linear units to log."
+
+msgid "Converts log units to linear."
+msgstr "Converts log units to linear."
+
+msgid "Masks data from given indices."
+msgstr "Masks data from given indices."
+
+msgid "Rebins `data` in time."
+msgstr "Rebins `data` in time."
+
+msgid "1D time array."
+msgstr "1D time array."
+
+msgid "1D new time array."
+msgstr "1D new time array."
+
+msgid "Time indices without data."
+msgstr "Time indices without data."
+
+msgid "Returns list of user-defined attributes."
+msgstr "Returns list of user-defined attributes."
+
+msgid "Overwrites existing instance attributes."
+msgstr "Overwrites existing instance attributes."
+
+msgid "Filters hot pixels from radar data."
+msgstr "Filters hot pixels from radar data."
+
+msgid "Filters vertical artifacts from radar data."
+msgstr "Filters vertical artifacts from radar data."
+
+msgid "datasource"
+msgstr "datasource"
+
+msgid "``datasource`` 模块处理数据源的读取和管理，支持多种输入格式。"
+msgstr "``datasource`` 模块处理数据源的读取和管理，支持多种输入格式。"
+
+msgid "Datasource module, containing the :class:`DataSource` class."
+msgstr "Datasource module, containing the :class:`DataSource` class."
+
+msgid "Base class for all Cloudnet measurements and model data."
+msgstr "Base class for all Cloudnet measurements and model data."
+
+msgid "Calibrated instrument / model NetCDF file."
+msgstr "Calibrated instrument / model NetCDF file."
+
+msgid "Indicates if data is from cloud radar. Default is False."
+msgstr "Indicates if data is from cloud radar. Default is False."
+
+msgid "Filename of the input file."
+msgstr "Filename of the input file."
+
+msgid "type"
+msgstr "type"
+
+msgid "str"
+msgstr "str"
+
+msgid "A netCDF4 Dataset instance."
+msgstr "A netCDF4 Dataset instance."
+
+msgid "netCDF4.Dataset"
+msgstr "netCDF4.Dataset"
+
+msgid "Global attribute `source` read from the input file."
+msgstr "Global attribute `source` read from the input file."
+
+msgid "Time array of the instrument."
+msgstr "Time array of the instrument."
+
+msgid "ndarray"
+msgstr "ndarray"
+
+msgid "Altitude of instrument above mean sea level (m)."
+msgstr "Altitude of instrument above mean sea level (m)."
+
+msgid "float"
+msgstr "float"
+
+msgid "Dictionary containing :class:`CloudnetArray` instances."
+msgstr "Dictionary containing :class:`CloudnetArray` instances."
+
+msgid "dict"
+msgstr "dict"
+
+msgid "Returns data array from the source file variables."
+msgstr "Returns data array from the source file variables."
+
+msgid "Returns just the data (and no attributes) from the original"
+msgstr "Returns just the data (and no attributes) from the original"
+
+msgid "variables dictionary, fetched from the input netCDF file."
+msgstr "variables dictionary, fetched from the input netCDF file."
+
+msgid "possible names of the variable. The first match is returned."
+msgstr "possible names of the variable. The first match is returned."
+
+msgid "The actual data."
+msgstr "The actual data."
+
+msgid "The variable is not found."
+msgstr "The variable is not found."
+
+msgid "Adds new CloudnetVariable or RadarVariable into `data` attribute."
+msgstr "Adds new CloudnetVariable or RadarVariable into `data` attribute."
+
+msgid "netCDF variable or data array to be added."
+msgstr "netCDF variable or data array to be added."
+
+msgid "Key used with *variable* when added to `data` attribute (dictionary)."
+msgstr "Key used with *variable* when added to `data` attribute (dictionary)."
+
+msgid "CloudnetArray.name attribute. Default value is *key*."
+msgstr "CloudnetArray.name attribute. Default value is *key*."
+
+msgid "CloudnetArray.units attribute."
+msgstr "CloudnetArray.units attribute."
+
+msgid "CloudnetArray.data_type attribute."
+msgstr "CloudnetArray.data_type attribute."
+
+msgid "Returns date components."
+msgstr "Returns date components."
+
+msgid "date object"
+msgstr "date object"
+
+msgid "Not found or invalid date."
+msgstr "Not found or invalid date."
+
+msgid "Closes the open file."
+msgstr "Closes the open file."
+
+msgid "Converts km to m."
+msgstr "Converts km to m."
+
+msgid "Converts m to km."
+msgstr "Converts m to km."
+
+msgid "output"
+msgstr "output"
+
+msgid "``output`` 模块负责生成符合 Cloudnet 标准的 netCDF 输出文件，包括元数据、变量属性等。"
+msgstr "``output`` 模块负责生成符合 Cloudnet 标准的 netCDF 输出文件，包括元数据、变量属性等。"
+
+msgid "Functions for file writing."
+msgstr "Functions for file writing."
+
+msgid "Saves Cloudnet Level 1b file."
+msgstr "Saves Cloudnet Level 1b file."
+
+msgid "Saves a standard Cloudnet product file."
+msgstr "Saves a standard Cloudnet product file."
+
+msgid "Short file identifier, e.g. 'lwc', 'iwc', 'drizzle', 'classification'."
+msgstr "Short file identifier, e.g. 'lwc', 'iwc', 'drizzle', 'classification'."
+
+msgid ""
+"Instance containing product specific attributes: `time`, `dataset`, "
+"`data`."
+msgstr ""
+"Instance containing product specific attributes: `time`, `dataset`, "
+"`data`."
+
+msgid "Name of the output file to be generated."
+msgstr "Name of the output file to be generated."
+
+msgid "Set specific UUID for the file."
+msgstr "Set specific UUID for the file."
+
+msgid "Variables to be copied from the categorize file."
+msgstr "Variables to be copied from the categorize file."
+
+msgid "Returns level 1b file source."
+msgstr "Returns level 1b file source."
+
+msgid "Returns level 1b file history."
+msgstr "Returns level 1b file history."
+
+msgid "Returns level 1b file title."
+msgstr "Returns level 1b file title."
+
+msgid "Returns references."
+msgstr "Returns references."
+
+msgid "Cloudnet file type, e.g., 'iwc'."
+msgstr "Cloudnet file type, e.g., 'iwc'."
+
+msgid "List of additional references to include"
+msgstr "List of additional references to include"
+
+msgid "Returns file_uuid attributes of objects."
+msgstr "Returns file_uuid attributes of objects."
+
+msgid "Observations instance."
+msgstr "Observations instance."
+
+msgid "UUIDs separated by comma."
+msgstr "UUIDs separated by comma."
+
+msgid "Merges history fields from one or several files and creates a new record."
+msgstr "Merges history fields from one or several files and creates a new record."
+
+msgid "Adds source attribute to categorize file."
+msgstr "Adds source attribute to categorize file."
+
+msgid "Initializes a Cloudnet file for writing."
+msgstr "Initializes a Cloudnet file for writing."
+
+msgid "File name to be generated."
+msgstr "File name to be generated."
+
+msgid "Dictionary containing dimension for this file."
+msgstr "Dictionary containing dimension for this file."
+
+msgid "Copies variables (and their attributes) from one file to another."
+msgstr "Copies variables (and their attributes) from one file to another."
+
+msgid "Source object."
+msgstr "Source object."
+
+msgid "Target object."
+msgstr "Target object."
+
+msgid "Variable names to be copied."
+msgstr "Variable names to be copied."
+
+msgid "Copies global attributes from one file to another."
+msgstr "Copies global attributes from one file to another."
+
+msgid "List of attributes to be copied."
+msgstr "List of attributes to be copied."
+
+msgid "Adds time attribute with correct units."
+msgstr "Adds time attribute with correct units."
+
+msgid "Adds source attribute to variables."
+msgstr "Adds source attribute to variables."
+
+msgid "Overrides existing CloudnetArray-attributes."
+msgstr "Overrides existing CloudnetArray-attributes."
+
+msgid ""
+"Overrides existing attributes using hard-coded values. New attributes are"
+" added."
+msgstr ""
+"Overrides existing attributes using hard-coded values. New attributes are"
+" added."
+
+msgid "CloudnetArray instances."
+msgstr "CloudnetArray instances."
+
+msgid "Product-specific attributes."
+msgstr "Product-specific attributes."
+
+msgid "Changes incorrect 'unit' variable attribute to correct 'units'."
+msgstr "Changes incorrect 'unit' variable attribute to correct 'units'."
+
+msgid "This is true at least for 'drg' variable in raw MIRA files."
+msgstr "This is true at least for 'drg' variable in raw MIRA files."
+
