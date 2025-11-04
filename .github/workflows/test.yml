@@ -15,10 +15,12 @@ jobs:
             python-version: "3.12"
           - os: ubuntu-latest
             python-version: "3.13"
+          - os: ubuntu-latest
+            python-version: "3.14"
           - os: windows-latest
-            python-version: "3.13"
+            python-version: "3.14"
           - os: macos-latest
-            python-version: "3.13"
+            python-version: "3.14"
 
     runs-on: ${{ matrix.os }}
 
@@ -37,7 +39,7 @@ jobs:
           pip install .[dev,test,extras]
 
       - name: Run pre-commit checks
-        if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.13'
+        if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.14'
         run: |
           pre-commit run --all-files --show-diff-on-failure
 
@@ -46,7 +48,6 @@ jobs:
           pytest --flake-finder --flake-runs=2
 
       - name: Run E2E tests
-        if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.13'
         run: |
           python3 tests/e2e_test.py
           python3 cloudnetpy/model_evaluation/tests/e2e/process_cf/main.py
