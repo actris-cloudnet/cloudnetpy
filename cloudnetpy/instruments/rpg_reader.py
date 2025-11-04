@@ -38,7 +38,7 @@ class Fmcw94Bin:
             "CGProg": "program_number",
             "ModelNo": "model_number",
             "ProgName": "_program_name",
-            "CustName": "_customer_name",
+            "CustName": "customer_name",
             "Freq": "radar_frequency",
             "AntSep": "antenna_separation",
             "AntDia": "antenna_diameter",

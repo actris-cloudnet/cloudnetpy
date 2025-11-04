@@ -110,6 +110,7 @@ def create_one_day_data_record(rpg_objects: RpgObjects) -> dict:
     if "range" in rpg_header:
         rpg_header["range"] = rpg_objects[0].header["range"]
     should_be_constant = [
+        "customer_name",
         "model_number",
         "dual_polarization",
         "antenna_separation",
@@ -118,14 +119,18 @@ def create_one_day_data_record(rpg_objects: RpgObjects) -> dict:
         "half_power_beam_width",
         "radar_frequency",
     ]
+    to_be_removed = ["customer_name"]
     for key in should_be_constant:
         if key not in rpg_header:
             continue
-        values = rpg_header[key]
-        if not np.allclose(values[0], values[1:]):
-            msg = f"Value for '{key}' is not constant"
+        unique_values = np.unique(rpg_header[key])
+        if len(unique_values) > 1:
+            msg = f"More than one value for {key} found: {unique_values}"
             raise ValueError(msg)
-        rpg_header[key] = values[0]
+        if key in to_be_removed:
+            del rpg_header[key]
+        else:
+            rpg_header[key] = unique_values[0]
 
     rpg_raw_data = _mask_invalid_data(rpg_raw_data)
     return {**rpg_header, **rpg_raw_data}
