@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.86.11 – 2025-11-04
+
+- Check customer name matches in RPG radar files
+- Fix chirp start indices interpolation
+
 ## 1.86.10 – 2025-10-30
 
 - Allow small differences in RPG header values
