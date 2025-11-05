@@ -209,13 +209,13 @@ IWC_ATTRIBUTES = {
         long_name="Possible bias in ice water content",
         units="dB",
         comment=COMMENTS["iwc_bias"],
-        dimensions=("time", "height"),
+        dimensions=None,
     ),
     "iwc_sensitivity": MetaData(
         long_name="Minimum detectable ice water content",
         units="kg m-3",
         comment=COMMENTS["iwc_sensitivity"],
-        dimensions=("time", "height"),
+        dimensions=("height",),
     ),
     "iwc_retrieval_status": MetaData(
         long_name="Ice water content retrieval status",
