@@ -36,7 +36,7 @@ def calc_rain_attenuation(
     specific_attenuation = utils.transpose(specific_attenuation_array) * ma.ones(shape)
 
     two_way_attenuation = calc_two_way_attenuation(
-        data.radar.height, specific_attenuation
+        data.radar.height_agl, specific_attenuation
     )
 
     two_way_attenuation[~inducing_region] = 0

@@ -124,6 +124,7 @@ class DerSource(DataSource):
             raise InvalidSourceFileError(msg)
         self.is_rain = get_is_rain(categorize_file)
         self.categorize_bits = CategorizeBits(categorize_file)
+        self.height_agl: npt.NDArray
         if parameters is None:
             # Default parameters from Frisch et al. 2002
             self.parameters = Parameters(2.0, 200.0e6, 200.0e6, 0.35, 0.1, 5.0e-3)
@@ -154,8 +155,7 @@ class DerSource(DataSource):
         liquid_bases = atmos_utils.find_cloud_bases(is_droplet)
         liquid_tops = atmos_utils.find_cloud_tops(is_droplet)
 
-        height = self.getvar("height")
-        path_lengths = utils.path_lengths_from_ground(height)
+        path_lengths = utils.path_lengths_from_ground(self.height_agl)
 
         for base, top in zip(
             zip(*np.where(liquid_bases), strict=True),

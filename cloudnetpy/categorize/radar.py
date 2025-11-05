@@ -42,6 +42,7 @@ class Radar(DataSource):
         self.location = getattr(self.dataset, "location", "")
         self.source_type = getattr(self.dataset, "source", "")
         self.height: npt.NDArray
+        self.height_agl: npt.NDArray
         self.altitude: float
         self._init_data()
 

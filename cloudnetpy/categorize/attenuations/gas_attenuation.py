@@ -19,7 +19,7 @@ def calc_gas_attenuation(
     specific_attenuation[liquid_in_pixel] = saturated_attenuation[liquid_in_pixel]
 
     two_way_attenuation = calc_two_way_attenuation(
-        data.radar.height, specific_attenuation
+        data.radar.height_agl, specific_attenuation
     )
 
     return Attenuation(

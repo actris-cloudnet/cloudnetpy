@@ -102,7 +102,8 @@ class LwcSource(DataSource):
         self.lwp[self.lwp < 0] = 0
         self.lwp_error = self.getvar("lwp_error")
         self.is_rain = get_is_rain(categorize_file)
-        self.path_lengths = utils.path_lengths_from_ground(self.getvar("height"))
+        self.height_agl: npt.NDArray
+        self.path_lengths = utils.path_lengths_from_ground(self.height_agl)
         self.atmosphere = self._get_atmosphere(categorize_file)
         self.categorize_bits = CategorizeBits(categorize_file)
 
@@ -141,7 +142,7 @@ class Lwc:
 
     def __init__(self, lwc_source: LwcSource) -> None:
         self.lwc_source = lwc_source
-        self.height = lwc_source.getvar("height")
+        self.height_agl = lwc_source.height_agl
         self.is_liquid = self._get_liquid()
         self.lwc_adiabatic = self._init_lwc_adiabatic()
         self.lwc = self._adiabatic_lwc_to_lwc()
@@ -157,7 +158,7 @@ class Lwc:
             *self.lwc_source.atmosphere,
             self.is_liquid,
         )
-        return atmos_utils.calc_adiabatic_lwc(lwc_dz, self.height)
+        return atmos_utils.calc_adiabatic_lwc(lwc_dz, self.height_agl)
 
     def _adiabatic_lwc_to_lwc(self) -> npt.NDArray:
         """Initialises liquid water content (kg/m3).
@@ -167,7 +168,7 @@ class Lwc:
         return atmos_utils.normalize_lwc_by_lwp(
             self.lwc_adiabatic,
             self.lwc_source.lwp,
-            self.height,
+            self.height_agl,
         )
 
     def _mask_rain(self) -> None:

@@ -303,13 +303,13 @@ def calc_air_density(
     return pressure / (con.RS * temperature * (0.6 * svp_mixing_ratio + 1))
 
 
-def calc_adiabatic_lwc(lwc_dz: npt.NDArray, height: npt.NDArray) -> npt.NDArray:
+def calc_adiabatic_lwc(lwc_dz: npt.NDArray, height_agl: npt.NDArray) -> npt.NDArray:
     """Calculates adiabatic liquid water content (kg m-3).
 
     Args:
         lwc_dz: Liquid water content change rate (kg m-3 m-1) calculated at the
             base of each cloud and filled to that cloud.
-        height: Height vector (m).
+        height_agl: Height above ground level vector (m).
 
     Returns:
         Liquid water content (kg m-3).
@@ -317,13 +317,13 @@ def calc_adiabatic_lwc(lwc_dz: npt.NDArray, height: npt.NDArray) -> npt.NDArray:
     """
     is_cloud = lwc_dz != 0
     cloud_indices = utils.cumsumr(is_cloud, axis=1)
-    dz = utils.path_lengths_from_ground(height) * np.ones_like(lwc_dz)
+    dz = utils.path_lengths_from_ground(height_agl) * np.ones_like(lwc_dz)
     dz[cloud_indices < 1] = 0
     return utils.cumsumr(dz, axis=1) * lwc_dz
 
 
 def normalize_lwc_by_lwp(
-    lwc_adiabatic: npt.NDArray, lwp: npt.NDArray, height: npt.NDArray
+    lwc_adiabatic: npt.NDArray, lwp: npt.NDArray, height_agl: npt.NDArray
 ) -> npt.NDArray:
     """Finds LWC that would produce measured LWP.
 
@@ -334,13 +334,13 @@ def normalize_lwc_by_lwp(
     Args:
         lwc_adiabatic: Theoretical 2D liquid water content (kg m-3).
         lwp: 1D liquid water path (kg m-2).
-        height: Height vector (m).
+        height_agl: Height above ground level vector (m).
 
     Returns:
         2D LWP-weighted, scaled LWC (kg m-3) that would produce the observed LWP.
 
     """
-    path_lengths = utils.path_lengths_from_ground(height)
+    path_lengths = utils.path_lengths_from_ground(height_agl)
     theoretical_lwp = ma.sum(lwc_adiabatic * path_lengths, axis=1)
     scaling_factors = lwp / theoretical_lwp
     return lwc_adiabatic * utils.transpose(scaling_factors)

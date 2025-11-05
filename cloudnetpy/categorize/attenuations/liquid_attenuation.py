@@ -21,7 +21,7 @@ class LiquidAttenuation:
     ) -> None:
         self._model = data.model.data_dense
         self._liquid_in_pixel = classification.category_bits.droplet
-        self._height = data.radar.height
+        self._height_agl = data.radar.height_agl
 
         if data.mwr is not None:
             lwp = data.mwr.data["lwp"][:]
@@ -57,8 +57,10 @@ class LiquidAttenuation:
         """Finds radar liquid attenuation."""
         lwp = lwp.copy()
         lwp[lwp < 0] = 0
-        lwc_adiabatic = atmos_utils.calc_adiabatic_lwc(lwc_dz, self._height)
-        lwc_scaled = atmos_utils.normalize_lwc_by_lwp(lwc_adiabatic, lwp, self._height)
+        lwc_adiabatic = atmos_utils.calc_adiabatic_lwc(lwc_dz, self._height_agl)
+        lwc_scaled = atmos_utils.normalize_lwc_by_lwp(
+            lwc_adiabatic, lwp, self._height_agl
+        )
         return self._calc_two_way_attenuation(lwc_scaled)
 
     def _calc_liquid_atten_err(
@@ -66,7 +68,7 @@ class LiquidAttenuation:
     ) -> ma.MaskedArray:
         """Finds radar liquid attenuation error."""
         lwc_err_scaled = atmos_utils.normalize_lwc_by_lwp(
-            lwc_dz, lwp_error, self._height
+            lwc_dz, lwp_error, self._height_agl
         )
         return self._calc_two_way_attenuation(lwc_err_scaled)
 
@@ -79,4 +81,4 @@ class LiquidAttenuation:
         """
         specific_attenuation_rate = self._model["specific_liquid_atten"]
         specific_attenuation = specific_attenuation_rate * lwc_scaled * con.KG_TO_G
-        return calc_two_way_attenuation(self._height, specific_attenuation)
+        return calc_two_way_attenuation(self._height_agl, specific_attenuation)
