@@ -219,7 +219,7 @@ DRIZZLE_ATTRIBUTES = {
     "drizzle_N_bias": MetaData(
         long_name="Possible bias in drizzle number concentration",
         units="dB",
-        dimensions=("time", "height"),
+        dimensions=None,
     ),
     "drizzle_lwc": MetaData(
         long_name="Drizzle liquid water content",
@@ -236,7 +236,7 @@ DRIZZLE_ATTRIBUTES = {
     "drizzle_lwc_bias": MetaData(
         long_name="Possible bias in drizzle liquid water content",
         units="dB",
-        dimensions=("time", "height"),
+        dimensions=None,
     ),
     "drizzle_lwf": MetaData(
         long_name="Drizzle liquid water flux",
@@ -252,7 +252,7 @@ DRIZZLE_ATTRIBUTES = {
     "drizzle_lwf_bias": MetaData(
         long_name="Possible bias in drizzle liquid water flux",
         units="dB",
-        dimensions=("time", "height"),
+        dimensions=None,
     ),
     "v_drizzle": MetaData(
         long_name="Drizzle droplet fall velocity",  # TODO: should include 'terminal' ?
@@ -269,7 +269,7 @@ DRIZZLE_ATTRIBUTES = {
     "v_drizzle_bias": MetaData(
         long_name="Possible bias in drizzle droplet fall velocity",
         units="dB",
-        dimensions=("time", "height"),
+        dimensions=None,
     ),
     "v_air": MetaData(
         long_name="Vertical air velocity",
@@ -298,7 +298,7 @@ DRIZZLE_ATTRIBUTES = {
     "Do_bias": MetaData(
         long_name="Possible bias in drizzle median diameter",
         units="dB",
-        dimensions=("time", "height"),
+        dimensions=None,
     ),
     "mu": MetaData(
         long_name="Drizzle droplet size distribution shape parameter",
