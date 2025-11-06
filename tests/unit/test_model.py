@@ -153,7 +153,7 @@ def test_interpolate_to_grid(fake_model_file):
     obj.calc_attenuations(94.0)
     obj.interpolate_to_common_height()
     time_grid = np.array([1, 3])
-    height_grid = np.array([1, 3])
+    height_grid = np.array([500, 1500])
     obj.interpolate_to_grid(time_grid, height_grid)
     assert_array_equal(obj.height, height_grid)
     assert hasattr(obj, "data_dense")
