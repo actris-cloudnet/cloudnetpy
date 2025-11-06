@@ -63,12 +63,12 @@ class VaisalaCeilo(Ceilometer):
         self._screen_time_indices(is_valid)
 
     def _screen_time_indices(
-        self, valid_indices: npt.NDArray[np.intp] | npt.NDArray[np.bool]
+        self, valid_indices: npt.NDArray[np.intp] | npt.NDArray[np.bool_]
     ) -> None:
         time = self.data["time"]
         n_time = len(time)
         if len(valid_indices) == 0 or (
-            valid_indices.dtype == np.bool and not np.any(valid_indices)
+            valid_indices.dtype == np.bool_ and not np.any(valid_indices)
         ):
             msg = "All timestamps screened"
             raise ValidTimeStampError(msg)
