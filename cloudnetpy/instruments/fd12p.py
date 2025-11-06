@@ -129,7 +129,7 @@ class FD12P(CSVFile):
             self.data[key].data = self.data[key][:] / 1000  # mm -> m
 
     def screen_all_masked(self) -> None:
-        is_valid = np.ones_like(self.data["time"][:], dtype=np.bool)
+        is_valid = np.ones_like(self.data["time"][:], dtype=np.bool_)
         for key in self.data:
             if key == "time":
                 continue
