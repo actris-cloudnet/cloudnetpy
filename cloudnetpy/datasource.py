@@ -58,6 +58,11 @@ class DataSource:
         self.time: npt.NDArray = self._init_time()
         self.altitude = self._init_altitude()
         self.height = self._init_height()
+        self.height_agl = (
+            self.height - self.altitude
+            if self.height is not None and self.altitude is not None
+            else None
+        )
         self.data: dict = {}
         self._is_radar = radar
 

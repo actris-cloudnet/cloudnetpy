@@ -1071,8 +1071,8 @@ def bit_field_definition(definitions: dict[T, str]) -> str:
     return _format_definition("Bit", definitions)
 
 
-def path_lengths_from_ground(height: npt.NDArray) -> npt.NDArray:
-    return np.diff(height, prepend=0)
+def path_lengths_from_ground(height_agl: npt.NDArray) -> npt.NDArray:
+    return np.diff(height_agl, prepend=0)
 
 
 def sha256sum(filename: str | PathLike) -> str:

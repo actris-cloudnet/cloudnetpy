@@ -64,6 +64,7 @@ class Model(DataSource):
         self.height: npt.NDArray
         self.data_sparse: dict = {}
         self.data_dense: dict = {}
+        self.alt_site = alt_site
         self._append_grid()
 
     def interpolate_to_common_height(self) -> None:
@@ -102,7 +103,7 @@ class Model(DataSource):
             Indices fully masked profiles.
 
         """
-        half_height = height_grid - np.diff(height_grid, prepend=0) / 2
+        half_height = height_grid - np.diff(height_grid, prepend=self.alt_site) / 2
         for key in self.fields_dense + self.fields_atten:
             array = self.data_sparse[key][:]
             valid_profiles = _find_number_of_valid_profiles(array)

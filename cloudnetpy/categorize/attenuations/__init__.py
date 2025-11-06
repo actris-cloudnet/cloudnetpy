@@ -26,12 +26,12 @@ class RadarAttenuation:
 
 
 def calc_two_way_attenuation(
-    height: npt.NDArray, specific_attenuation: ma.MaskedArray
+    height_agl: npt.NDArray, specific_attenuation: ma.MaskedArray
 ) -> ma.MaskedArray:
     """Calculates two-way attenuation (dB) for given specific attenuation
-    (dB km-1) and height (m).
+    (dB km-1) and height above ground level (m).
     """
-    path_lengths = path_lengths_from_ground(height) * con.M_TO_KM  # km
+    path_lengths = path_lengths_from_ground(height_agl) * con.M_TO_KM  # km
     one_way_attenuation = specific_attenuation * path_lengths
     accumulated_attenuation = ma.cumsum(one_way_attenuation, axis=1)
     return accumulated_attenuation * con.TWO_WAY

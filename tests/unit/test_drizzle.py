@@ -90,8 +90,8 @@ def drizzle_cat_file(tmpdir_factory, file_metadata):
         _create_dimension_variables(root_grp, TEST_ARRAY_X, DIMENSIONS_X)
         _create_dimensions(root_grp, TEST_ARRAY_Y, DIMENSIONS_Y)
         _create_dimension_variables(root_grp, TEST_ARRAY_Y, DIMENSIONS_Y)
-        var = root_grp.createVariable("dheight", "f8")
-        var[:] = 10
+        var = root_grp.createVariable("altitude", "f8", ("time",))
+        var[:] = 100
         var = root_grp.createVariable("uwind", "f8", ("model_time", "model_height"))
         var[:] = [[2, 2, 1], [1, 3, 5]]
         var = root_grp.createVariable("vwind", "f8", ("model_time", "model_height"))
@@ -232,16 +232,18 @@ def test_calculate_spectral_width(drizzle_cat_file):
 def test_calc_beam_divergence(drizzle_cat_file):
     obj = drizzle.SpectralWidth(drizzle_cat_file)
     height = netCDF4.Dataset(drizzle_cat_file).variables["height"][:]
-    expected = height * np.deg2rad(0.5)
+    height_agl = height - 100
+    expected = height_agl * np.deg2rad(0.5)
     testing.assert_almost_equal(obj._calc_beam_divergence(), expected)
 
 
 def test_calc_v_sigma_factor(drizzle_cat_file):
     obj = drizzle.SpectralWidth(drizzle_cat_file)
     height = netCDF4.Dataset(drizzle_cat_file).variables["height"][:]
+    height_agl = height - 100
     uwind = netCDF4.Dataset(drizzle_cat_file).variables["uwind"][:]
     vwind = netCDF4.Dataset(drizzle_cat_file).variables["vwind"][:]
-    beam = height * np.deg2rad(0.5)
+    beam = height_agl * np.deg2rad(0.5)
     wind = utils.l2norm(uwind, vwind)
     a_wind = (wind + beam) ** (2 / 3)
     s_wind = (30 * wind + beam) ** (2 / 3)
