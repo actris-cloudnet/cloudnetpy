@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.86.12 – 2025-11-06
+
+- Fix height calculations.
+- Fix dimensions in IWC and drizzle product
+- Use `np.bool_` instead of `np.bool`
+- Test with Python 3.14
+
 ## 1.86.11 – 2025-11-04
 
 - Check customer name matches in RPG radar files
