@@ -238,11 +238,18 @@ ATTRIBUTES = {
         "ze_sat": PlotMeta(
             plot_range=(-40, 15),
         ),
+        "echo_cpr": PlotMeta(
+            plot_range=(-40, 15),
+        ),
         "vm_sat": PlotMeta(
             cmap="RdBu_r",
             plot_range=(-4, 4),
         ),
         "vm_sat_folded": PlotMeta(
+            cmap="RdBu_r",
+            plot_range=(-4, 4),
+        ),
+        "v_cpr": PlotMeta(
             cmap="RdBu_r",
             plot_range=(-4, 4),
         ),
