@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.86.13 – 2025-11-12
+
+- Add cpr-validation plots
+
 ## 1.86.12 – 2025-11-06
 
 - Fix height calculations.
