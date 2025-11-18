@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.86.14 – 2025-11-18
+
+- Add support for Kenttärova Parsivel
+- Remove dead code
+
 ## 1.86.13 – 2025-11-12
 
 - Add cpr-validation plots
