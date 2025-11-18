@@ -1020,11 +1020,6 @@ class Plot1D(Plot):
                 )
 
     @staticmethod
-    def _get_line_width(time: ndarray) -> float:
-        line_width = np.median(np.diff(time)) * 1000
-        return min(max(line_width, 0.25), 0.9)
-
-    @staticmethod
     def _get_bad_zenith_profiles(figure_data: FigureData) -> ndarray:
         zenith_limit = 5
         valid_pointing_status = 0

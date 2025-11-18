@@ -1,8 +1,6 @@
 """This module contains general helper functions."""
 
-import base64
 import datetime
-import hashlib
 import logging
 import os
 import re
@@ -1010,20 +1008,6 @@ def edges2mid(data: npt.NDArray, reference: Literal["upper", "lower"]) -> npt.ND
     return data - gaps
 
 
-def get_file_type(filename: str) -> str:
-    """Returns cloudnet file type from new and legacy files."""
-    with netCDF4.Dataset(filename) as nc:
-        if hasattr(nc, "cloudnet_file_type"):
-            return nc.cloudnet_file_type
-    product = filename.split("_")[-1][:-3]
-    if product in ("categorize", "classification", "drizzle"):
-        return product
-    if product[:3] in ("lwc", "iwc"):
-        return product[:3]
-    msg = "Unknown file type"
-    raise ValueError(msg)
-
-
 def get_files_with_variables(filenames: list, variables: list[str]) -> list:
     """Returns files where all variables exist."""
     valid_files = []
@@ -1073,28 +1057,6 @@ def bit_field_definition(definitions: dict[T, str]) -> str:
 
 def path_lengths_from_ground(height_agl: npt.NDArray) -> npt.NDArray:
     return np.diff(height_agl, prepend=0)
-
-
-def sha256sum(filename: str | PathLike) -> str:
-    """Calculates hash of file using sha-256."""
-    return _calc_hash_sum(filename, "sha256", is_base64=False)
-
-
-def md5sum(filename: str | PathLike, *, is_base64: bool = False) -> str:
-    """Calculates hash of file using md5."""
-    return _calc_hash_sum(filename, "md5", is_base64=is_base64)
-
-
-def _calc_hash_sum(
-    filename: str | PathLike, method: Literal["sha256", "md5"], *, is_base64: bool
-) -> str:
-    hash_sum = getattr(hashlib, method)()
-    with open(filename, "rb") as f:
-        for byte_block in iter(lambda: f.read(4096), b""):
-            hash_sum.update(byte_block)
-    if is_base64:
-        return base64.encodebytes(hash_sum.digest()).decode("utf-8").strip()
-    return hash_sum.hexdigest()
 
 
 def add_site_geolocation(

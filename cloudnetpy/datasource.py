@@ -143,17 +143,6 @@ class DataSource:
             raise ValueError(msg)
         return alt
 
-    @staticmethod
-    def to_km(var: netCDF4.Variable) -> npt.NDArray:
-        """Converts m to km."""
-        alt = var[:]
-        if var.units == "m":
-            alt /= 1000
-        elif var.units != "km":
-            msg = f"Unexpected unit: {var.units}"
-            raise ValueError(msg)
-        return alt
-
     def _init_time(self) -> npt.NDArray:
         time = self.getvar("time")
         if len(time) == 0:

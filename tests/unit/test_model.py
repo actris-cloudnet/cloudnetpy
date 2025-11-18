@@ -36,8 +36,6 @@ def test_calc_mean_height():
     assert_array_equal(model._calc_mean_height(height), result)
 
 
-BIG_ARRAY = np.ones((2, 3, 4))
-
 EMPTY_ARRAY = ma.array(
     [[0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]],
     mask=[[0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]],

@@ -35,10 +35,6 @@ class TestDataSource:
         alt = self.obj.dataset.variables["range"]
         assert_array_equal(self.obj.to_m(alt), test_array * 1000)
 
-    def test_to_km(self, test_array):
-        alt = self.obj.dataset.variables["height"]
-        assert_array_equal(self.obj.to_km(alt), test_array / 1000)
-
     def test_get_height_m(self, test_array):
         assert self.obj.height is not None
         assert_array_equal(self.obj.height, test_array)

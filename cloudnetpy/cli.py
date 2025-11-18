@@ -1,5 +1,7 @@
 import argparse
+import base64
 import gzip
+import hashlib
 import importlib
 import logging
 import re
@@ -9,7 +11,7 @@ from dataclasses import dataclass
 from os import PathLike
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from typing import TYPE_CHECKING, Final, cast
+from typing import TYPE_CHECKING, Final, Literal, cast
 
 import requests
 
@@ -17,7 +19,6 @@ from cloudnetpy import concat_lib, instruments
 from cloudnetpy.categorize import CategorizeInput, generate_categorize
 from cloudnetpy.exceptions import PlottingError
 from cloudnetpy.plotting import generate_figure
-from cloudnetpy.utils import md5sum
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -603,6 +604,23 @@ def main() -> None:
 
     with TemporaryDirectory() as tmpdir:
         run(args, tmpdir)
+
+
+def md5sum(filename: str | PathLike, *, is_base64: bool = False) -> str:
+    """Calculates hash of file using md5."""
+    return _calc_hash_sum(filename, "md5", is_base64=is_base64)
+
+
+def _calc_hash_sum(
+    filename: str | PathLike, method: Literal["sha256", "md5"], *, is_base64: bool
+) -> str:
+    hash_sum = getattr(hashlib, method)()
+    with open(filename, "rb") as f:
+        for byte_block in iter(lambda: f.read(4096), b""):
+            hash_sum.update(byte_block)
+    if is_base64:
+        return base64.encodebytes(hash_sum.digest()).decode("utf-8").strip()
+    return hash_sum.hexdigest()
 
 
 if __name__ == "__main__":

@@ -4,9 +4,6 @@ from numpy import testing
 
 from cloudnetpy.products import drizzle_error as de
 
-DRIZZLE_PARAMETERS = {
-    "Do": np.array([[0.0001, 0.01, 0.000001], [0.001, 0.000001, 0.0001]]),
-}
 DRIZZLE_INDICES = {
     "drizzle": np.array([[1, 1, 1], [1, 1, 1]], dtype=bool),
     "small": np.array([[1, 0, 0], [0, 0, 1]], dtype=bool),

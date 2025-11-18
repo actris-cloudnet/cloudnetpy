@@ -53,13 +53,6 @@ class ValidTimeStampError(CloudnetException):
         super().__init__(msg)
 
 
-class MissingInputFileError(CloudnetException):
-    """Internal exception class."""
-
-    def __init__(self, msg: str = "Missing required input files") -> None:
-        super().__init__(msg)
-
-
 class HatproDataError(CloudnetException):
     """Internal exception class."""
 
