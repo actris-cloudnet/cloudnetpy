@@ -250,6 +250,26 @@ TOA5_HEADERS = {
     "IOP firmware version": "_iop_firmware_version",
     "Station name": "_station_name",
     "Rain amount absolute [mm]": "_rain_amount_absolute",
+    # Kenttärova
+    "wawa [ww]": "synop_WW",
+    "wawa [METAR]": "_metar_speci",
+    "wawa [NWS]": "_nws",
+    "DSP firmware version": "_dsp_firmware_version",
+    "Start of measurement [DD.MM.YY_HH:MM:SS]": "_datetime_skip",
+    "Sensor time [HH:MM:SS]": "_time_skip",
+    "Sensor date [DD.MM.YY]": "_date_skip",
+    "Station number": "_station_number",
+    "Temperature PCB [°C]": "_T_pcb",
+    "Temperature right sensor head [°C]": "_T_right",
+    "Temperature left sensor head [°C]": "_T_left",
+    "Rain intensity 16 bit low [mm/h]": "_rainfall_rate_16_bit_low",
+    "Rain intensity 16 bit high [mm/h]": "_rainfall_rate_16_bit_high",
+    "Rain accumulated 16 bit [mm]": "_rain_accum_16_bit",
+    "Reflectivity 16 bit [dBZ]": "_radar_reflectivity_16_bit",
+    "Kinetic energy [J m-2 h-1)]": "kinetic_energy",
+    "Snow depth intensity (vol equiv.) [mm/h]": "snowfall_rate",
+    "Number of particles": "n_particles",
+    "Particle list (empty, see particle file)": "_particles",
 }
 
 TELEGRAM = {
@@ -525,10 +545,15 @@ def _read_toa5(filename: str | PathLike) -> dict[str, list]:
         return data
 
 
-def _read_bucharest_file(filename: str | PathLike) -> dict[str, list]:
+def _read_pyatmoslogger_file(filename: str | PathLike) -> dict[str, list]:
+    """Read CSV file from pyAtmosLogger.
+
+    References:
+        https://pypi.org/project/pyAtmosLogger/
+    """
     with open(filename, errors="ignore") as file:
-        reader = csv.reader(file)
-        header_line = next(reader)[0].split(";")
+        lines = file.readlines()
+        header_line = lines[0].strip().strip(";").split(";")
         headers = [
             TOA5_HEADERS.get(
                 re.sub(
@@ -548,9 +573,8 @@ def _read_bucharest_file(filename: str | PathLike) -> dict[str, list]:
         data: dict[str, list] = {header: [] for header in headers if header is not None}
         n_rows = 0
         n_invalid_rows = 0
-        for data_line in reader:
-            data_line_splat = data_line[0].split(";")
-            data_line_splat = [d for d in data_line_splat if d != ""]
+        for data_line in lines[1:]:
+            data_line_splat = data_line.strip().strip(";").split(";")
             n_rows += 1
             scalars: dict[str, datetime.datetime | int | float | str] = {}
             arrays: dict[str, list] = {
@@ -679,7 +703,7 @@ def _read_parsivel(
         if "TOA5" in lines[0]:
             data = _read_toa5(filename)
         elif "N00" in lines[0]:
-            data = _read_bucharest_file(filename)
+            data = _read_pyatmoslogger_file(filename)
         elif "TYP OP4A" in lines[0]:
             data = _read_typ_op4a(lines)
             data = {key: [value] for key, value in data.items()}
