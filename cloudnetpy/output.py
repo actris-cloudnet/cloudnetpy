@@ -289,6 +289,7 @@ def copy_variables(
                 key,
                 variable.datatype,
                 variable.dimensions,
+                zlib=True,
                 fill_value=fill_value,
             )
             var_out.setncatts(
