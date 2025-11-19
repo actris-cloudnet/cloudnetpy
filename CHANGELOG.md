@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.86.15 – 2025-11-19
+
+- Fix compression in L2 products
+
 ## 1.86.14 – 2025-11-18
 
 - Add support for Kenttärova Parsivel
