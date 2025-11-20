@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.86.16 – 2025-11-20
+
+- Always store azimuth and zenith offsets as float
+
 ## 1.86.15 – 2025-11-19
 
 - Fix compression in L2 products
