@@ -62,11 +62,36 @@ _COLORS = {
     "lightsteel": "#a0b0bb",
     "steelblue": "#4682b4",
     "mask": "#C8C8C8",
+    "black": "#000000",
+    "grey": "#808080",
 }
 
 # Labels (and corresponding data) starting with an underscore are NOT shown:
 
 _CLABEL = {
+    "target_classification_cpr": (
+        ("Ground", _COLORS["black"]),
+        ("_Clear", _COLORS["white"]),
+        ("No drizzling liquid cloud", _COLORS["lightblue"]),
+        ("Drizzling liquid clouds", _COLORS["lightblue"]),
+        ("Drizzle or warm rain", _COLORS["blue"]),
+        ("Cold rain", _COLORS["blue"]),
+        ("Melting snow", _COLORS["orange"]),
+        ("Rimed snow", _COLORS["lightpurple"]),
+        ("Ice", _COLORS["lightsteel"]),
+        ("Stratospheric cloud", _COLORS["lightsteel"]),
+        ("Insects or artifacts", _COLORS["pink"]),
+        ("Heavy rain likely present", _COLORS["blue"]),
+        ("Heavy mixed-phase precip. likely present", _COLORS["blue"]),
+        ("Heavy rain", _COLORS["blue"]),
+        ("Heavy mixed-phase precip.", _COLORS["blue"]),
+        # clutter:
+        ("Possible drizzle/rain in clutter", _COLORS["blue"]),
+        ("Possible snow/mixed-phase precip. in clutter", _COLORS["blue"]),
+        ("Possible cloud in clutter", _COLORS["lightblue"]),
+        ("Cloud/precip. unlikely present", _COLORS["grey"]),
+        ("Uncertain", _COLORS["grey"]),
+    ),
     "target_classification": (
         ("_Clear sky", _COLORS["white"]),
         ("Droplets", _COLORS["lightblue"]),
@@ -582,6 +607,9 @@ ATTRIBUTES = {
         ),
         "target_classification": PlotMeta(
             clabel=_CLABEL["target_classification"],
+        ),
+        "target_classification_cpr": PlotMeta(
+            clabel=_CLABEL["target_classification_cpr"],
         ),
         "detection_status": PlotMeta(
             clabel=_CLABEL["detection_status"],

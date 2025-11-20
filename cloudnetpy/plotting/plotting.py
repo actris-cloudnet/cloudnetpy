@@ -185,8 +185,12 @@ class FigureData:
         variable_names = [f.name for f in self.variables]
         if self.file_type == "cpr-simulation":
             x_data = self.file.variables["along_track_sat"][:] * con.M_TO_KM
-        elif self.file_type == "cpr-validation" and (
-            "echo_cpr" in variable_names or "v_cpr" in variable_names
+        elif (
+            self.file_type == "cpr-validation"
+            and ("echo_cpr" in variable_names or "v_cpr" in variable_names)
+        ) or (
+            self.file_type == "cpr-tc-validation"
+            and ("target_classification_cpr" in variable_names)
         ):
             x_data = self.file.variables["time_cpr"][:]
         else:
@@ -253,6 +257,17 @@ class SubPlot:
     def set_xax(self, figure_data: FigureData) -> None:
         if self.file_type == "cpr-simulation":
             self.ax.set_xlim(0, EARTHCARE_MAX_X)  # km
+            return
+        if self.file_type == "cpr-tc-validation":
+            time = figure_data.time
+            self.ax.set_xlim(min(time), max(time))
+            self.ax.set_xlabel("Time (UTC)", fontsize=13)
+            if self.variable.name in ("target_classification_cpr",):
+                self.ax.xaxis_date()
+                date_fmt = mdates.DateFormatter("%H:%M:%S")
+                self.ax.xaxis.set_major_formatter(date_fmt)
+                self.ax.xaxis.set_major_locator(mdates.AutoDateLocator())
+                self.ax.tick_params(axis="both", which="major", labelsize=11)
             return
         if self.file_type == "cpr-validation":
             if self.variable.name in ("ze_sat", "echo_cpr", "vm_sat_folded", "v_cpr"):
