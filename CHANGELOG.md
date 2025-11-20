@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.86.17 – 2025-11-20
+
+- Add cpr-tc-validation plots
+
 ## 1.86.16 – 2025-11-20
 
 - Always store azimuth and zenith offsets as float
