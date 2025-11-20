@@ -105,11 +105,13 @@ class NcRadar(DataSource, CloudnetInstrument):
         """
         elevation = self.data["elevation"].data
         if zenith_offset is not None:
+            zenith_offset = float(zenith_offset)
             self.append_data(zenith_offset, "zenith_offset")
             elevation -= zenith_offset
 
         azimuth = self.data["azimuth_angle"].data
         if azimuth_offset is not None:
+            azimuth_offset = float(azimuth_offset)
             self.append_data(azimuth_offset, "azimuth_offset")
             azimuth += azimuth_offset
 
