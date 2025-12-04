@@ -233,10 +233,14 @@ def _interpolate_to_common_height(objects: list[Fmcw94Bin]) -> list[Fmcw94Bin]:
     return objects
 
 
-def _interpolate_chirp_start_indices(obj: Fmcw94Bin, range_new: np.ndarray) -> None:
+def _interpolate_chirp_start_indices(obj: Fmcw94Bin, target_range: np.ndarray) -> None:
     range_orig = obj.header["range"]
     vals = range_orig[obj.header["chirp_start_indices"]]
-    obj.header["chirp_start_indices"] = np.abs(range_new[:, None] - vals).argmin(axis=0)
+    indices = np.abs(target_range[:, None] - vals).argmin(axis=0)
+    # Chirp start indices should always start from 0:
+    if indices[0] != 0:
+        indices[0] = 0
+    obj.header["chirp_start_indices"] = indices
 
 
 def _pad_chirp_related_fields(objects: list[Fmcw94Bin]) -> list[Fmcw94Bin]:
