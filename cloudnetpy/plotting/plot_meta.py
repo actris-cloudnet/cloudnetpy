@@ -64,6 +64,7 @@ _COLORS = {
     "mask": "#C8C8C8",
     "black": "#000000",
     "grey": "#808080",
+    "snow": "#CFD4DC",
 }
 
 # Labels (and corresponding data) starting with an underscore are NOT shown:
@@ -78,6 +79,7 @@ _CLABEL = {
         ("Cold rain", _COLORS["blue"]),
         ("Melting snow", _COLORS["orange"]),
         ("Rimed snow", _COLORS["lightpurple"]),
+        ("Snow", _COLORS["snow"]),
         ("Ice", _COLORS["lightsteel"]),
         ("Stratospheric cloud", _COLORS["lightsteel"]),
         ("Insects or artifacts", _COLORS["pink"]),
