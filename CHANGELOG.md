@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.86.19 – 2025-12-04
+
+- Fix chirp start index interpolation
+
 ## 1.86.18 – 2025-12-04
 
 - Add snow to CPR classification plot
