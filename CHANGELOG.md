@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.86.18 – 2025-12-04
+
+- Add snow to CPR classification plot
+
 ## 1.86.17 – 2025-11-20
 
 - Add cpr-tc-validation plots
