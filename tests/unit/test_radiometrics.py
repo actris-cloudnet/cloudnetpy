@@ -260,3 +260,24 @@ class TestOldDWDMP3039AFileFormat(Check):
     def test_masking(self):
         temp = self.nc.variables["temperature"][:]
         assert temp.mask.sum() == 1
+
+
+class TestRadiometricsAlternatingProcWhere301before401(Check):
+    test_input = f"{SCRIPT_PATH}/data/radiometrics/2025-09-30_00-00-45_lv2.csv"
+    date = "2025-09-30"
+    temp_dir = TemporaryDirectory()
+    temp_path = temp_dir.name + "/radiometrics.nc"
+    site_meta = SITE_META
+    uuid = radiometrics2nc(test_input, temp_path, site_meta, date=date)
+
+    def test_time(self):
+        time = self.nc.variables["time"][:]
+        assert_allclose(time, [4 / 60 + 18 / 60 / 60])
+
+    def test_lwp(self):
+        lwp = self.nc.variables["lwp"][:]
+        assert_allclose(lwp, [0])
+
+    def test_iwv(self):
+        iwv = self.nc.variables["iwv"][:]
+        assert_allclose(iwv, [11.14])

@@ -156,9 +156,9 @@ class RadiometricsMP:
         ahs = []
         ah_times = []
         block_titles = {}
-        skip_procs = set()
+        superblock: list[Record] = []
 
-        def _parse_floats() -> list[float]:
+        def _parse_floats(record: Record) -> list[float]:
             return [
                 float(record.values[column])
                 if record.values[column].replace(".", "", 1).isdigit()
@@ -166,58 +166,74 @@ class RadiometricsMP:
                 for column in self.ranges
             ]
 
-        for record in self.raw_data:
-            if record.block_type == 100:
-                block_type = int(record.values["Record Type"]) - 1
-                title = record.values["Title"]
-                block_titles[block_type] = title
-            if title := block_titles.get(record.block_type + record.block_index):
-                # "LV2 Processor" values "Zenith" and "0.00:90.00" should be OK
-                # but "Angle20(N)" and similar should be skipped.
-                proc = record.values["LV2 Processor"]
-                if proc.startswith(("Angle", "Zenith26")):
-                    skip_procs.add(proc)
-                    continue
-                if title == "Temperature (K)":
-                    temp_times.append(record.timestamp)
-                    temps.append(_parse_floats())
-                elif title == "Relative Humidity (%)":
-                    rh_times.append(record.timestamp)
-                    rhs.append(_parse_floats())
-                elif title == "Vapor Density (g/m^3)":
-                    ah_times.append(record.timestamp)
-                    ahs.append(_parse_floats())
-            elif record.block_type == 10:
-                if record.block_index == 0:
-                    lwp = record.values["Lqint(mm)"]
-                    iwv = record.values["Vint(cm)"]
+        def _process_superblock() -> None:
+            # There can be multiple 301 records but they don't have "LV2
+            # Processor" column. We can deduce the "LV2 Processor" values from
+            # 401 records in the same "superblock" before or after the 301
+            # records.
+            procs = []
+            for record in superblock:
+                if record.block_type == 400 and record.block_index == 1:
+                    procs.append(record.values["LV2 Processor"])
+            good_procs = ["0.00:19.80", "Zenith", "Zenith16", "Zenith18"]
+            curr_proc = 0
+            for record in superblock:
+                if record.block_type == 100:
+                    block_type = int(record.values["Record Type"]) - 1
+                    title = record.values["Title"]
+                    block_titles[block_type] = title
+                if title := block_titles.get(record.block_type + record.block_index):
+                    if record.values["LV2 Processor"] not in good_procs:
+                        continue
+                    if title == "Temperature (K)":
+                        temp_times.append(record.timestamp)
+                        temps.append(_parse_floats(record))
+                    elif title == "Relative Humidity (%)":
+                        rh_times.append(record.timestamp)
+                        rhs.append(_parse_floats(record))
+                    elif title == "Vapor Density (g/m^3)":
+                        ah_times.append(record.timestamp)
+                        ahs.append(_parse_floats(record))
+                elif record.block_type == 10:
+                    if record.block_index == 0:
+                        lwp = record.values["Lqint(mm)"]
+                        iwv = record.values["Vint(cm)"]
+                        irt = record.values["Tir(K)"]
+                        times.append(record.timestamp)
+                        lwps.append(float(lwp))
+                        iwvs.append(float(iwv))
+                        irt_times.append(record.timestamp)
+                        irts.append([float(irt)])
+                        temp_times.append(record.timestamp)
+                        temps.append(_parse_floats(record))
+                    elif record.block_index == 1:
+                        ah_times.append(record.timestamp)
+                        ahs.append(_parse_floats(record))
+                    elif record.block_index == 2:
+                        rh_times.append(record.timestamp)
+                        rhs.append(_parse_floats(record))
+                elif record.block_type == 200:
+                    irt_times.append(record.timestamp)
                     irt = record.values["Tir(K)"]
+                    irts.append([float(irt)])
+                elif record.block_type == 300:
+                    if procs:
+                        curr_proc += 1
+                        if procs[curr_proc - 1] not in good_procs:
+                            continue
+                    lwp = record.values["Int. Liquid(mm)"]
+                    iwv = record.values["Int. Vapor(cm)"]
                     times.append(record.timestamp)
                     lwps.append(float(lwp))
                     iwvs.append(float(iwv))
-                    irt_times.append(record.timestamp)
-                    irts.append([float(irt)])
-                    temp_times.append(record.timestamp)
-                    temps.append(_parse_floats())
-                elif record.block_index == 1:
-                    ah_times.append(record.timestamp)
-                    ahs.append(_parse_floats())
-                elif record.block_index == 2:
-                    rh_times.append(record.timestamp)
-                    rhs.append(_parse_floats())
-            elif record.block_type == 200:
-                irt_times.append(record.timestamp)
-                irt = record.values["Tir(K)"]
-                irts.append([float(irt)])
-            elif record.block_type == 300:
-                if skip_procs:
-                    skip_procs.pop()
-                    continue
-                lwp = record.values["Int. Liquid(mm)"]
-                iwv = record.values["Int. Vapor(cm)"]
-                times.append(record.timestamp)
-                lwps.append(float(lwp))
-                iwvs.append(float(iwv))
+
+        for record in self.raw_data:
+            if record.block_type == 200 and superblock:
+                _process_superblock()
+                superblock.clear()
+            superblock.append(record)
+        if superblock:
+            _process_superblock()
 
         self.data["time"] = np.array(times, dtype="datetime64[s]")
         self.data["lwp"] = np.array(lwps)  # mm => kg m-2
