@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.86.20 – 2025-12-08
+
+- Rework Radiometrics reader
+
 ## 1.86.19 – 2025-12-04
 
 - Fix chirp start index interpolation
