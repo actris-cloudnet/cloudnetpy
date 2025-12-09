@@ -73,6 +73,8 @@ def ws2nc(
         ws = LAquilaWS(weather_station_file, site_meta)
     elif site_meta["name"] == "Maïdo Observatory":
         ws = MaidoWS(weather_station_file, site_meta)
+    elif site_meta["name"] == "Cluj-Napoca":
+        ws = ClujWS(weather_station_file, site_meta)
     else:
         msg = "Unsupported site"
         raise ValueError(msg)
@@ -759,3 +761,56 @@ class LAquilaWS(WS):
     def _parse_value(self, value: str) -> float:
         value = value.strip()
         return float(value) if value else math.nan
+
+
+class ClujWS(WS):
+    def __init__(self, filenames: Sequence[str | PathLike], site_meta: dict) -> None:
+        super().__init__(site_meta)
+        self.filenames = filenames
+        self._data = self._read_data()
+
+    def _read_data(self) -> dict:
+        with open(self.filenames[0]) as f:
+            rows = f.readlines()
+            headers = rows[0].strip().split("\t")
+            raw_data: dict[str, list[str]] = {header: [] for header in headers}
+            for row in rows[1:]:
+                columns = row.strip().split("\t")
+                for key, value in zip(headers, columns, strict=True):
+                    raw_data[key].append(value)
+        return self.format_data(
+            {
+                "time": [self._parse_datetime(x) for x in raw_data["DateTime"]],
+                "air_temperature": [
+                    self._parse_value(x) for x in raw_data["Air_temperature_C"]
+                ],
+                "air_pressure": [
+                    self._parse_value(x) for x in raw_data["air_pressure_hPA"]
+                ],
+                "relative_humidity": [
+                    self._parse_value(x) for x in raw_data["rel_humidity_pct"]
+                ],
+                "rainfall_rate": [
+                    self._parse_value(x) for x in raw_data["Precipitation_mm"]
+                ],
+                "wind_speed": [self._parse_value(x) for x in raw_data["WS_azimuth_ms"]],
+                "wind_direction": [
+                    self._parse_value(x) for x in raw_data["WD_azimuth_deg"]
+                ],
+            }
+        )
+
+    def _parse_datetime(self, value: str) -> datetime.datetime:
+        return datetime.datetime.strptime(value, "%d.%m.%y %H:%M:%S.%f").replace(
+            tzinfo=datetime.timezone.utc
+        )
+
+    def _parse_value(self, value: str) -> float:
+        value = value.strip()
+        return float(value) if value else math.nan
+
+    def convert_rainfall_rate(self) -> None:
+        rainfall_rate = self.data["rainfall_rate"][:]
+        self.data["rainfall_rate"].data = rainfall_rate / (
+            1000 * 600
+        )  # mm/10min => m/s
