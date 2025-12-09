@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.86.21 – 2025-12-09
+
+- Add support for Cluj weather station
+
 ## 1.86.20 – 2025-12-08
 
 - Rework Radiometrics reader
