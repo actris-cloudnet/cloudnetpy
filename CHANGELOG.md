@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.86.22 – 2025-12-10
+
+- Fix Galati weather station reader and add visibility
+- Skip invalid lines in Kenttärova weather station files
+
 ## 1.86.21 – 2025-12-09
 
 - Add support for Cluj weather station
