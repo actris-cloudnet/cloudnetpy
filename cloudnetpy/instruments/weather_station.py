@@ -361,9 +361,12 @@ class KenttarovaWS(WS):
                     for key, value in row.items():
                         parsed_value: float | datetime.datetime
                         if key == "Read time (UTC+2)":
-                            parsed_value = datetime.datetime.strptime(
-                                value, "%Y-%m-%d %H:%M:%S"
-                            ) - datetime.timedelta(hours=2)
+                            try:
+                                parsed_value = datetime.datetime.strptime(
+                                    value, "%Y-%m-%d %H:%M:%S"
+                                ) - datetime.timedelta(hours=2)
+                            except ValueError:
+                                break  # Should be first column, so skip whole row.
                         else:
                             try:
                                 parsed_value = float(value)
