@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.86.23 – 2025-12-11
+
+- Fix xticklabels in cpr plots
+
 ## 1.86.22 – 2025-12-10
 
 - Fix Galati weather station reader and add visibility
