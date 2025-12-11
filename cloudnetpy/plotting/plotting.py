@@ -3,11 +3,10 @@
 import re
 import textwrap
 from dataclasses import dataclass
-from datetime import date
+from datetime import date, datetime, timedelta, timezone
 from os import PathLike
 from typing import Any
 
-import matplotlib.dates as mdates
 import matplotlib.pyplot as plt
 import netCDF4
 import numpy as np
@@ -153,6 +152,14 @@ class FigureData:
             verticalalignment="bottom",
         )
 
+    def datetime(self) -> datetime:
+        return datetime(
+            int(self.file.year),
+            int(self.file.month),
+            int(self.file.day),
+            tzinfo=timezone.utc,
+        )
+
     def _get_subtitle_text(self) -> str:
         measurement_date = date(
             int(self.file.year), int(self.file.month), int(self.file.day)
@@ -258,30 +265,20 @@ class SubPlot:
         if self.file_type == "cpr-simulation":
             self.ax.set_xlim(0, EARTHCARE_MAX_X)  # km
             return
-        if self.file_type == "cpr-tc-validation":
-            time = figure_data.time
+        if (
+            self.file_type == "cpr-validation"
+            and self.variable.name != "cloud_top_height"
+        ) or self.file_type == "cpr-tc-validation":
+            time = np.array(figure_data.time, dtype=float)
             self.ax.set_xlim(min(time), max(time))
             self.ax.set_xlabel("Time (UTC)", fontsize=13)
-            if self.variable.name in ("target_classification_cpr",):
-                self.ax.xaxis_date()
-                date_fmt = mdates.DateFormatter("%H:%M:%S")
-                self.ax.xaxis.set_major_formatter(date_fmt)
-                self.ax.xaxis.set_major_locator(mdates.AutoDateLocator())
-                self.ax.tick_params(axis="both", which="major", labelsize=11)
-            return
-        if self.file_type == "cpr-validation":
-            if self.variable.name in ("ze_sat", "echo_cpr", "vm_sat_folded", "v_cpr"):
-                time = figure_data.time
-                self.ax.set_xlim(min(time), max(time))
-                self.ax.set_xlabel("Time (UTC)", fontsize=13)
-            else:
-                self.ax.tick_params(axis="both", which="major", labelsize=11)
-            if self.variable.name in ("echo_cpr", "v_cpr"):
-                self.ax.xaxis_date()
-                date_fmt = mdates.DateFormatter("%H:%M:%S")
-                self.ax.xaxis.set_major_formatter(date_fmt)
-                self.ax.xaxis.set_major_locator(mdates.AutoDateLocator())
-                self.ax.tick_params(axis="both", which="major", labelsize=11)
+            ticks = np.linspace(min(time), max(time), 8)[1:-1]
+            tick_dts = [figure_data.datetime() + timedelta(hours=h) for h in ticks]
+            tick_labels = [dt.strftime("%H:%M:%S") for dt in tick_dts]
+            self.ax.set_xticks(ticks)
+            self.ax.set_xticklabels(tick_labels, fontsize=12)
+            self.ax.tick_params(axis="both", which="major", labelsize=11)
+        if self.file_type in ("cpr-validation", "cpr-tc-validation"):
             return
         resolution = 4
         x_tick_labels = [
