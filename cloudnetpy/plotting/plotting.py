@@ -67,8 +67,8 @@ class PlotParameters:
     footer_text: str | None = None
     plot_meta: PlotMeta | None = None
     raise_on_empty: bool = False
-    minor_ticks: bool = False
-    plot_above_ground: bool = False
+    minor_ticks: bool = True
+    plot_above_ground: bool = True
 
 
 class Dimensions:
