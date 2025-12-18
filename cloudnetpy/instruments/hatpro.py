@@ -64,7 +64,7 @@ def hatpro2l1c(
         date = datetime.date.fromisoformat(date)
     uuid = utils.get_uuid(uuid)
 
-    coeff_files = site_meta.get("coefficientFiles")
+    coeff_files = site_meta.get("coefficientLinks")
     time_offset = site_meta.get("time_offset")
 
     try:

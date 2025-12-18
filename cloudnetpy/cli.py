@@ -1,19 +1,20 @@
 import argparse
 import base64
+import datetime
 import gzip
 import hashlib
 import importlib
 import logging
 import re
 import shutil
-from concurrent.futures import ThreadPoolExecutor, as_completed
-from dataclasses import dataclass
 from os import PathLike
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from typing import TYPE_CHECKING, Final, Literal, cast
 
 import requests
+from cloudnet_api_client import APIClient, CloudnetAPIError
+from cloudnet_api_client.containers import Instrument, ProductMetadata, RawMetadata
 
 from cloudnetpy import concat_lib, instruments
 from cloudnetpy.categorize import CategorizeInput, generate_categorize
@@ -27,20 +28,15 @@ if TYPE_CHECKING:
 cloudnet_api_url: Final = "https://cloudnet.fmi.fi/api/"
 
 
-@dataclass
-class Instrument:
-    id: str
-    pid: str
-    name: str
-
-
-def run(args: argparse.Namespace, tmpdir: str) -> None:
+def run(args: argparse.Namespace, tmpdir: str, client: APIClient) -> None:
     cat_files = {}
 
     # Instrument based products
-    if source_instruments := _get_source_instruments(args.products):
+    if source_instruments := _get_source_instruments(args.products, client):
         for product, possible_instruments in source_instruments.items():
-            meta = _fetch_raw_meta(possible_instruments, args)
+            if not possible_instruments:
+                continue
+            meta = _fetch_raw_meta(possible_instruments, args, client)
             instrument = _select_instrument(meta, product)
             if not instrument:
                 logging.info("No instrument found for %s", product)
@@ -51,23 +47,23 @@ def run(args: argparse.Namespace, tmpdir: str) -> None:
                 logging.info("No suitable data available for %s", product)
                 continue
             output_filepath = _process_instrument_product(
-                product, meta, instrument, tmpdir, args
+                product, meta, instrument, tmpdir, args, client
             )
             _plot(output_filepath, product, args)
             cat_files[product] = output_filepath
 
-    prod_sources = _get_product_sources(args.products)
+    prod_sources = _get_product_sources(args.products, client)
 
     # Categorize based products
     if "categorize" in args.products:
-        cat_filepath = _process_categorize(cat_files, args)
+        cat_filepath = _process_categorize(cat_files, args, client)
         _plot(cat_filepath, "categorize", args)
     else:
         cat_filepath = None
     cat_products = [p for p in prod_sources if "categorize" in prod_sources[p]]
     for product in cat_products:
         if cat_filepath is None:
-            cat_filepath = _fetch_product(args, "categorize")
+            cat_filepath = _fetch_product(args, "categorize", client)
         if cat_filepath is None:
             logging.info("No categorize data available for {}")
             break
@@ -80,7 +76,7 @@ def run(args: argparse.Namespace, tmpdir: str) -> None:
         if "mwr-l1c" in cat_files:
             mwrpy_filepath = cat_files.get("mwr-l1c")
         else:
-            mwrpy_filepath = _fetch_product(args, "mwr-l1c")
+            mwrpy_filepath = _fetch_product(args, "mwr-l1c", client)
         if mwrpy_filepath is None:
             logging.info("No MWR-L1c data available for %s", product)
             break
@@ -88,19 +84,23 @@ def run(args: argparse.Namespace, tmpdir: str) -> None:
         _plot(l2_filename, product, args)
 
 
-def _process_categorize(input_files: dict, args: argparse.Namespace) -> str | None:
+def _process_categorize(
+    input_files: dict, args: argparse.Namespace, client: APIClient
+) -> str | None:
     cat_filepath = _create_categorize_filepath(args)
 
-    input_files["model"] = _fetch_model(args)
+    input_files["model"] = _fetch_model(args, client)
     if input_files["model"] is None:
         logging.info("No model data available for this date.")
         return None
 
     for product in ("radar", "lidar", "disdrometer"):
-        if product not in input_files and (filepath := _fetch_product(args, product)):
+        if product not in input_files and (
+            filepath := _fetch_product(args, product, client)
+        ):
             input_files[product] = filepath
 
-    if mwr := _fetch_mwr(args):
+    if mwr := _fetch_mwr(args, client):
         input_files["mwr"] = mwr
 
     try:
@@ -113,7 +113,7 @@ def _process_categorize(input_files: dict, args: argparse.Namespace) -> str | No
     return cat_filepath
 
 
-def _fetch_mwr(args: argparse.Namespace) -> str | None:
+def _fetch_mwr(args: argparse.Namespace, client: APIClient) -> str | None:
     mwr_sources = [
         ("mwr-single", None),
         ("mwr", None),
@@ -121,7 +121,7 @@ def _fetch_mwr(args: argparse.Namespace) -> str | None:
         ("radar", "rpg-fmcw-94"),
     ]
     for product, source in mwr_sources:
-        mwr = _fetch_product(args, product, source=source)
+        mwr = _fetch_product(args, product, client, source=source)
         if mwr:
             return mwr
     return None
@@ -129,21 +129,29 @@ def _fetch_mwr(args: argparse.Namespace) -> str | None:
 
 def _process_instrument_product(
     product: str,
-    meta: list[dict],
+    meta: list[RawMetadata],
     instrument: Instrument,
     tmpdir: str,
     args: argparse.Namespace,
+    client: APIClient,
 ) -> str | None:
     output_filepath = _create_instrument_filepath(instrument, args)
-    site_meta = _read_site_meta(meta)
-    input_files: list[str] | str
-    input_files = _fetch_raw(meta, args)
+    site_obj = meta[0].site
+    site_meta: dict = {
+        "name": site_obj.human_readable_name,
+        "latitude": site_obj.latitude,
+        "longitude": site_obj.longitude,
+        "altitude": site_obj.altitude,
+    }
+    input_files: list[Path] | Path
+    input_files = _fetch_raw(meta, args, client)
+    input_files = [_unzip_gz_file(f) for f in input_files]
     if args.dl:
         return None
-    input_folder = str(Path(input_files[0]).parent)
-    calibration = _get_calibration(instrument, args)
+    input_folder = input_files[0].parent
+    calibration = _get_calibration(instrument, args, client)
     fun: Callable
-    match (product, instrument.id):
+    match (product, instrument.instrument_id):
         case ("radar", _id) if "mira" in _id:
             fun = instruments.mira2nc
         case ("radar", _id) if "rpg" in _id:
@@ -167,19 +175,19 @@ def _process_instrument_product(
         case ("lidar", _id) if _id == "cl61d":
             fun = instruments.ceilo2nc
             variables = ["x_pol", "p_pol", "beta_att", "time", "tilt_angle"]
-            concat_file = str(Path(tmpdir) / "tmp.nc")
+            concat_file = Path(tmpdir) / "tmp.nc"
             concat_lib.bundle_netcdf_files(
                 input_files,
-                args.date,
+                datetime.date.fromisoformat(args.date),
                 concat_file,
                 variables=variables,
             )
             input_files = concat_file
-            site_meta["model"] = instrument.id
+            site_meta["model"] = instrument.instrument_id
         case ("lidar", _id):
             fun = instruments.ceilo2nc
             input_files = _concatenate_(input_files, tmpdir)
-            site_meta["model"] = instrument.id
+            site_meta["model"] = instrument.instrument_id
             if factor := calibration.get("calibration_factor"):
                 site_meta["calibration_factor"] = factor
         case ("mwr", _id):
@@ -189,7 +197,7 @@ def _process_instrument_product(
             fun = instruments.hatpro2l1c
             coefficients = _fetch_coefficient_files(calibration, tmpdir)
             site_meta = {**site_meta, **calibration}
-            site_meta["coefficientFiles"] = coefficients
+            site_meta["coefficientLinks"] = coefficients
             input_files = input_folder
         case ("mrr", _id):
             fun = instruments.mrr2nc
@@ -201,9 +209,9 @@ def _process_instrument_product(
     return output_filepath
 
 
-def _concatenate_(input_files: list[str], tmpdir: str) -> str:
+def _concatenate_(input_files: list[Path], tmpdir: str) -> Path:
     if len(input_files) > 1:
-        concat_file = str(Path(tmpdir) / "tmp.nc")
+        concat_file = Path(tmpdir) / "tmp.nc"
         try:
             concat_lib.concatenate_files(input_files, concat_file)
         except OSError:
@@ -212,9 +220,11 @@ def _concatenate_(input_files: list[str], tmpdir: str) -> str:
     return input_files[0]
 
 
-def _fetch_coefficient_files(calibration: dict, tmpdir: str) -> list:
-    if not (links := calibration.get("coefficientLinks")):
-        msg = "No calibration coefficients found"
+def _fetch_coefficient_files(calibration: dict, tmpdir: str) -> list[str]:
+    msg = "No calibration coefficients found"
+    if not (coeffs := calibration.get("retrieval_coefficients")):
+        raise ValueError(msg)
+    if not (links := coeffs[0].get("links")):
         raise ValueError(msg)
     coefficient_paths = []
     for filename in links:
@@ -226,19 +236,17 @@ def _fetch_coefficient_files(calibration: dict, tmpdir: str) -> list:
     return coefficient_paths
 
 
-def _get_calibration(instrument: Instrument, args: argparse.Namespace) -> dict:
-    params = {
-        "date": args.date,
-        "instrumentPid": instrument.pid,
-    }
-    res = requests.get(
-        f"{cloudnet_api_url}calibration",
-        params=params,
-        timeout=60,
-    )
-    if res.status_code == 404:
+def _get_calibration(
+    instrument: Instrument, args: argparse.Namespace, client: APIClient
+) -> dict:
+    try:
+        calibration = client.calibration(
+            date=args.date,
+            instrument_pid=instrument.pid,
+        )
+        return calibration.get("data", {})
+    except CloudnetAPIError:
         return {}
-    return res.json().get("data", {})
 
 
 def _create_instrument_filepath(
@@ -246,7 +254,9 @@ def _create_instrument_filepath(
 ) -> str:
     folder = _create_output_folder("instrument", args)
     pid = _shorten_pid(instrument.pid)
-    filename = f"{args.date.replace('-', '')}_{args.site}_{instrument.id}_{pid}.nc"
+    filename = (
+        f"{args.date.replace('-', '')}_{args.site}_{instrument.instrument_id}_{pid}.nc"
+    )
     return str(folder / filename)
 
 
@@ -268,58 +278,56 @@ def _create_output_folder(end_point: str, args: argparse.Namespace) -> Path:
     return folder
 
 
-def _fetch_raw_meta(instruments: list[str], args: argparse.Namespace) -> list[dict]:
-    res = requests.get(
-        f"{cloudnet_api_url}raw-files/",
-        params={
-            "site": args.site,
-            "date": args.date,
-            "instrument": instruments,
-            "status": ["uploaded", "processed"],
-        },
-        timeout=60,
+def _fetch_raw_meta(
+    instruments: list[str], args: argparse.Namespace, client: APIClient
+) -> list[RawMetadata]:
+    return client.raw_files(
+        site_id=args.site,
+        date=args.date,
+        instrument_id=instruments,
+        status=["uploaded", "processed"],
     )
-    res.raise_for_status()
-    return res.json()
 
 
-def _filter_by_instrument(meta: list[dict], instrument: Instrument) -> list[dict]:
-    return [m for m in meta if m["instrumentInfo"]["pid"] == instrument.pid]
+def _filter_by_instrument(
+    meta: list[RawMetadata], instrument: Instrument
+) -> list[RawMetadata]:
+    return [m for m in meta if m.instrument.pid == instrument.pid]
 
 
-def _filter_by_suffix(meta: list[dict], product: str) -> list[dict]:
+def _filter_by_suffix(meta: list[RawMetadata], product: str) -> list[RawMetadata]:
     if product == "radar":
-        meta = [m for m in meta if not m["filename"].lower().endswith(".lv0")]
+        meta = [m for m in meta if not m.filename.lower().endswith(".lv0")]
     elif product == "mwr":
-        meta = [
-            m for m in meta if re.search(r"\.(lwp|iwv)", m["filename"], re.IGNORECASE)
-        ]
+        meta = [m for m in meta if re.search(r"\.(lwp|iwv)", m.filename, re.IGNORECASE)]
     elif product == "mwr-l1c":
-        meta = [m for m in meta if not m["filename"].lower().endswith(".nc")]
+        meta = [m for m in meta if not m.filename.lower().endswith(".nc")]
     return meta
 
 
-def _get_source_instruments(products: list[str]) -> dict[str, list[str]]:
+def _get_source_instruments(
+    products: list[str], client: APIClient
+) -> dict[str, list[str]]:
     source_instruments = {}
     for product in products:
         prod, model = _parse_instrument(product)
-        res = requests.get(f"{cloudnet_api_url}products/{prod}", timeout=60)
-        res.raise_for_status()
-        if sources := res.json().get("sourceInstruments", []):
-            source_instruments[prod] = [i["id"] for i in sources]
-            if match := [i for i in source_instruments[prod] if i == model]:
-                source_instruments[prod] = match
+        all_possible = client.product(prod).source_instrument_ids
+        if all_possible and (match := [i for i in all_possible if i == model]):
+            source_instruments[prod] = match
+        else:
+            source_instruments[prod] = list(all_possible)
     return source_instruments
 
 
-def _get_product_sources(products: list[str]) -> dict[str, list[str]]:
+def _get_product_sources(
+    products: list[str], client: APIClient
+) -> dict[str, list[str]]:
     source_products = {}
     for product in products:
         prod, _ = _parse_instrument(product)
-        res = requests.get(f"{cloudnet_api_url}products/{prod}", timeout=60)
-        res.raise_for_status()
-        if sources := res.json().get("sourceProducts", []):
-            source_products[prod] = [i["id"] for i in sources]
+        product_obj = client.product(prod)
+        if product_obj.source_product_ids:
+            source_products[prod] = list(product_obj.source_product_ids)
     return source_products
 
 
@@ -333,7 +341,7 @@ def _parse_instrument(s: str) -> tuple[str, str | None]:
     return name, value
 
 
-def _select_instrument(meta: list[dict], product: str) -> Instrument | None:
+def _select_instrument(meta: list[RawMetadata], product: str) -> Instrument | None:
     instruments = _get_unique_instruments(meta)
     if len(instruments) == 0:
         logging.info("No instruments found")
@@ -351,35 +359,20 @@ def _select_instrument(meta: list[dict], product: str) -> Instrument | None:
     return selected_instrument
 
 
-def _get_unique_instruments(meta: list[dict]) -> list[Instrument]:
-    unique_pids = {m["instrumentInfo"]["pid"] for m in meta}
-    unique_instruments = []
-    for pid in unique_pids:
-        for m in meta:
-            if m["instrumentInfo"]["pid"] == pid:
-                i = m["instrumentInfo"]
-                unique_instruments.append(
-                    Instrument(i["instrumentId"], i["pid"], i["name"])
-                )
-                break
+def _get_unique_instruments(meta: list[RawMetadata]) -> list[Instrument]:
+    unique_instruments = list({m.instrument for m in meta})
     return sorted(unique_instruments, key=lambda x: x.name)
 
 
 def _fetch_product(
-    args: argparse.Namespace, product: str, source: str | None = None
+    args: argparse.Namespace, product: str, client: APIClient, source: str | None = None
 ) -> str | None:
-    payload = {
-        "date": args.date,
-        "site": args.site,
-        "product": product,
-    }
-    url = f"{cloudnet_api_url}files"
-    res = requests.get(url, payload, timeout=60)
-    res.raise_for_status()
-    meta = res.json()
+    meta = client.files(product_id=product, date=args.date, site_id=args.site)
     if source:
         meta = [
-            m for m in meta if "instrument" in m and m["instrument"]["id"] == source
+            m
+            for m in meta
+            if m.instrument is not None and m.instrument.instrument_id == source
         ]
     if not meta:
         logging.info("No data available for %s", product)
@@ -388,91 +381,42 @@ def _fetch_product(
         logging.info(
             "Multiple files for %s ... taking the first but some logic needed", product
         )
-    meta = meta[0]
-    suffix = "geophysical" if "geophysical" in meta["product"]["type"] else "instrument"
+        meta = [meta[0]]
+    suffix = "geophysical" if "geophysical" in meta[0].product.type else "instrument"
     folder = _create_output_folder(suffix, args)
-    return _download_product_file(meta, folder)
+    return _download_product_file(meta, folder, client)
 
 
-def _fetch_model(args: argparse.Namespace) -> str | None:
-    payload = {
-        "date": args.date,
-        "site": args.site,
-    }
-    url = f"{cloudnet_api_url}model-files"
-    res = requests.get(url, payload, timeout=60)
-    res.raise_for_status()
-    meta = res.json()
-    if not meta:
+def _fetch_model(args: argparse.Namespace, client: APIClient) -> str | None:
+    files = client.files(product_id="model", date=args.date, site_id=args.site)
+    if not files:
         logging.info("No model data available for this date")
         return None
-    meta = meta[0]
     folder = _create_output_folder("instrument", args)
-    return _download_product_file(meta, folder)
+    return _download_product_file(files, folder, client)
 
 
-def _fetch_raw(metadata: list[dict], args: argparse.Namespace) -> list[str]:
-    pid = _shorten_pid(metadata[0]["instrumentInfo"]["pid"])
-    instrument = f"{metadata[0]['instrumentInfo']['instrumentId']}_{pid}"
+def _fetch_raw(
+    metadata: list[RawMetadata], args: argparse.Namespace, client: APIClient
+) -> list[Path]:
+    pid = _shorten_pid(metadata[0].instrument.pid)
+    instrument = f"{metadata[0].instrument.instrument_id}_{pid}"
     folder = _create_input_folder(instrument, args)
-    filepaths = []
-    with ThreadPoolExecutor() as executor:
-        futures = [
-            executor.submit(_download_raw_file, meta, folder) for meta in metadata
-        ]
-        for future in as_completed(futures):
-            filepaths.append(future.result())
-    return filepaths
+    return client.download(metadata, output_directory=folder)
 
 
-def _download_raw_file(meta: dict, folder: Path) -> str:
-    filepath = folder / meta["filename"]
-    possible_filepaths = [filepath]
-    if filepath.suffix == ".gz":
-        possible_filepaths.append(filepath.with_suffix(""))
-    for path in possible_filepaths:
-        if path.exists() and md5sum(path) == meta["checksum"]:
-            logging.info("Existing file found: %s", path)
-            return str(path)
-    logging.info("Downloading file: %s", filepath)
-    res = requests.get(meta["downloadUrl"], timeout=60)
-    res.raise_for_status()
-    filepath.write_bytes(res.content)
-    if filepath.suffix == ".gz":
-        filepath = _unzip_gz_file(filepath)
-    return str(filepath)
-
-
-def _download_product_file(meta: dict, folder: Path) -> str:
-    filepath = folder / meta["filename"]
+def _download_product_file(
+    meta: list[ProductMetadata], folder: Path, client: APIClient
+) -> str:
+    if len(meta) > 1:
+        msg = "Multiple product files found"
+        raise ValueError(msg)
+    filepath = folder / meta[0].filename
     if filepath.exists():
         logging.info("Existing file found: %s", filepath)
         return str(filepath)
     logging.info("Downloading file: %s", filepath)
-    res = requests.get(meta["downloadUrl"], timeout=60)
-    res.raise_for_status()
-    filepath.write_bytes(res.content)
-    return str(filepath)
-
-
-def _unzip_gz_file(path_in: Path) -> Path:
-    if path_in.suffix != ".gz":
-        return path_in
-    path_out = path_in.with_suffix("")
-    logging.debug("Decompressing %s to %s", path_in, path_out)
-    with gzip.open(path_in, "rb") as file_in, open(path_out, "wb") as file_out:
-        shutil.copyfileobj(file_in, file_out)
-    path_in.unlink()
-    return path_out
-
-
-def _read_site_meta(meta: list[dict]) -> dict:
-    return {
-        "latitude": meta[0]["site"]["latitude"],
-        "longitude": meta[0]["site"]["longitude"],
-        "altitude": meta[0]["site"]["altitude"],
-        "name": meta[0]["site"]["humanReadableName"],
-    }
+    return str(client.download(meta, output_directory=folder)[0])
 
 
 def _shorten_pid(pid: str) -> str:
@@ -527,17 +471,9 @@ def _process_mwrpy_product(
     return str(output_file)
 
 
-def _fetch_cloudnet_sites() -> list[str]:
-    res = requests.get(f"{cloudnet_api_url}sites", timeout=60)
-    res.raise_for_status()
-    return [site["id"] for site in res.json()]
-
-
-def _parse_products(product_argument: str) -> list[str]:
+def _parse_products(product_argument: str, client: APIClient) -> list[str]:
     products = product_argument.split(",")
-    res = requests.get(f"{cloudnet_api_url}products", timeout=60)
-    res.raise_for_status()
-    valid_options = [p["id"] for p in res.json()]
+    valid_options = [p.id for p in client.products()]
     valid_products = []
     for product in products:
         prod, _ = _parse_instrument(product)
@@ -547,6 +483,7 @@ def _parse_products(product_argument: str) -> list[str]:
 
 
 def main() -> None:
+    client = APIClient()
     parser = argparse.ArgumentParser(
         description="Command line interface for running CloudnetPy."
     )
@@ -556,7 +493,7 @@ def main() -> None:
         type=str,
         help="Site",
         required=True,
-        choices=_fetch_cloudnet_sites(),
+        choices=[site.id for site in client.sites()],
         metavar="SITE",
     )
     parser.add_argument(
@@ -565,7 +502,7 @@ def main() -> None:
     parser.add_argument(
         "-p",
         "--products",
-        type=_parse_products,
+        type=lambda arg: _parse_products(arg, client),
         help=(
             "Products to process, e.g. 'radar' or 'classification'. If the site "
             "has many instruments, you can specify the instrument in brackets, "
@@ -603,7 +540,7 @@ def main() -> None:
     logger.handlers = [handler]
 
     with TemporaryDirectory() as tmpdir:
-        run(args, tmpdir)
+        run(args, tmpdir, client)
 
 
 def md5sum(filename: str | PathLike, *, is_base64: bool = False) -> str:
@@ -621,6 +558,16 @@ def _calc_hash_sum(
     if is_base64:
         return base64.encodebytes(hash_sum.digest()).decode("utf-8").strip()
     return hash_sum.hexdigest()
+
+
+def _unzip_gz_file(path_in: Path) -> Path:
+    if path_in.suffix != ".gz":
+        return path_in
+    path_out = path_in.with_suffix("")
+    logging.debug("Decompressing %s to %s", path_in, path_out)
+    with gzip.open(path_in, "rb") as file_in, open(path_out, "wb") as file_out:
+        shutil.copyfileobj(file_in, file_out)
+    return path_out
 
 
 if __name__ == "__main__":
