@@ -92,6 +92,14 @@ class TestPolly2:
             for key in ("latitude", "longitude", "kissa"):
                 assert key not in nc.variables
 
+    def test_filepaths_instead_of_folder(self, tmp_path):
+        temp_path = tmp_path / "filepaths.nc"
+        file1 = f"{SCRIPT_PATH}/data/pollyxt/2021_09_17_Fri_CPV_00_00_31_att_bsc.nc"
+        file2 = f"{SCRIPT_PATH}/data/pollyxt/2021_09_17_Fri_CPV_00_00_31_vol_depol.nc"
+        pollyxt2nc([file1, file2], temp_path, SITE_META)
+        with netCDF4.Dataset(temp_path) as nc:
+            assert len(nc.variables["time"]) == 20
+
 
 def test_broken_channel():
     filepath = f"{SCRIPT_PATH}/data/pollyxt/broken_1064_channel"

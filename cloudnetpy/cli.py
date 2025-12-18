@@ -171,6 +171,7 @@ def _process_instrument_product(
             fun = instruments.thies2nc
             input_files = _concatenate_(input_files, tmpdir)
         case ("lidar", _id) if "pollyxt" in _id:
+            site_meta["snr_limit"] = calibration.get("snr_limit", 25)
             fun = instruments.pollyxt2nc
         case ("lidar", _id) if _id == "cl61d":
             fun = instruments.ceilo2nc

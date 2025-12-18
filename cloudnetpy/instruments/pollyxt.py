@@ -4,6 +4,8 @@ import datetime
 import glob
 import logging
 from collections import Counter
+from collections.abc import Sequence
+from fnmatch import fnmatch
 from os import PathLike
 from uuid import UUID
 
@@ -21,7 +23,7 @@ from cloudnetpy.metadata import COMMON_ATTRIBUTES, MetaData
 
 
 def pollyxt2nc(
-    input_folder: str | PathLike,
+    input_data: str | PathLike | Sequence[str | PathLike],
     output_file: str | PathLike,
     site_meta: dict,
     uuid: str | UUID | None = None,
@@ -30,7 +32,8 @@ def pollyxt2nc(
     """Converts PollyXT Raman lidar data into Cloudnet Level 1b netCDF file.
 
     Args:
-        input_folder: Path to pollyxt netCDF files.
+        input_data: Path to folder containing pollyxt netCDF files
+            or a sequence of filename paths.
         output_file: Output filename.
         site_meta: Dictionary containing information about the site with keys:
 
@@ -58,7 +61,7 @@ def pollyxt2nc(
     uuid = utils.get_uuid(uuid)
     snr_limit = site_meta.get("snr_limit", 2)
     polly = PollyXt(site_meta, date)
-    epoch = polly.fetch_data(input_folder)
+    epoch = polly.fetch_data(input_data)
     polly.get_date_and_time(epoch)
     polly.fetch_zenith_angle()
     polly.calc_screened_products(snr_limit)
@@ -102,10 +105,19 @@ class PollyXt(Ceilometer):
         default = 5
         self.data["zenith_angle"] = float(self.metadata.get("zenith_angle", default))
 
-    def fetch_data(self, input_folder: str | PathLike) -> datetime.datetime:
-        """Read input data."""
-        bsc_files = glob.glob(f"{input_folder}/*[0-9]_att*.nc")
-        depol_files = glob.glob(f"{input_folder}/*[0-9]_vol*.nc")
+    def fetch_data(
+        self, input_data: str | PathLike | Sequence[str | PathLike]
+    ) -> datetime.datetime:
+        att_id = "*[0-9]_att*.nc"
+        vol_id = "*[0-9]_vol*.nc"
+        if isinstance(input_data, (str, PathLike)):
+            bsc_files = glob.glob(f"{input_data}/{att_id}")
+            depol_files = glob.glob(f"{input_data}/{vol_id}")
+        else:
+            file_list = [str(f) for f in input_data]
+            bsc_files = [f for f in file_list if fnmatch(f, att_id)]
+            depol_files = [f for f in file_list if fnmatch(f, vol_id)]
+
         bsc_files.sort()
         depol_files.sort()
         if not bsc_files:
