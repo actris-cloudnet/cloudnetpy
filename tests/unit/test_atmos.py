@@ -39,7 +39,10 @@ def test_find_lowest_cloud_bases():
         ],
     )
     height = np.array([1.0, 2.0, 3.0, 4.0])
-    expected = ma.array([2.0, 2.0, 1.0, 1.0, 0.0, 1.0, 3.0], mask=[0, 0, 0, 0, 1, 0, 0])
+    expected = ma.array(
+        [2.0, 2.0, 1.0, 1.0, 0.0, 1.0, 3.0],
+        mask=[False, False, False, False, True, False, False],
+    )
     result = atmos_utils.find_lowest_cloud_bases(cloud_mask, height)
     assert_array_almost_equal(result.data, expected.data)
     assert_array_almost_equal(result.mask, expected.mask)
@@ -58,7 +61,10 @@ def test_find_highest_cloud_tops():
         ],
     )
     height = np.array([1.0, 2.0, 3.0, 4.0])
-    expected = ma.array([4.0, 3.0, 4.0, 1.0, 0.0, 4.0, 4.0], mask=[0, 0, 0, 0, 1, 0, 0])
+    expected = ma.array(
+        [4.0, 3.0, 4.0, 1.0, 0.0, 4.0, 4.0],
+        mask=[False, False, False, False, True, False, False],
+    )
     result = atmos_utils.find_highest_cloud_tops(cloud_mask, height)
     assert_array_almost_equal(result.data, expected.data)
     assert_array_almost_equal(result.mask, expected.mask)

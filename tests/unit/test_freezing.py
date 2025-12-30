@@ -25,25 +25,25 @@ def test_find_t0_alt():
     "mean_melting_alt, t0_alt, height, expected_result",
     [
         (
-            ma.array([1, 2, 3], mask=[1, 1, 1]),
+            ma.array([1, 2, 3], mask=[True, True, True]),
             np.array([1, 1]),
             np.array([1, 2]),
             True,
         ),
         (
-            ma.array([1, 2, 3], mask=[1, 0, 1]),
+            ma.array([1, 2, 3], mask=[False, False, True]),
             np.array([1, 1]),
             np.array([1, 2]),
             False,
         ),
         (
-            ma.array([1, 2, 3], mask=[1, 1, 1]),
+            ma.array([1, 2, 3], mask=[True, True, True]),
             np.array([1.2, 1]),
             np.array([1, 2]),
             False,
         ),
         (
-            ma.array([1, 2, 3], mask=[0, 1, 1]),
+            ma.array([1, 2, 3], mask=[False, True, True]),
             np.array([1.2, 1]),
             np.array([1, 2]),
             False,

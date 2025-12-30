@@ -727,7 +727,7 @@ def _read_parsivel(
             combined_data[key].extend(values)
     if timestamps is not None:
         combined_data["_datetime"] = list(timestamps)
-    result = {}
+    result: dict = {}
     for key, value in combined_data.items():
         array = np.array(
             [

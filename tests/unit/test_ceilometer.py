@@ -19,7 +19,9 @@ class TestNoisyData:
     def test_remove_noise(self):
         noise = np.array([1.1, -1.1])
         array = ma.array([[1, 2, 3], [1, 2, 3]], mask=False)
-        expected = ma.array([[1, 2, 3], [1, 2, 3]], mask=[[1, 0, 0], [1, 0, 0]])
+        expected = ma.array(
+            [[1, 2, 3], [1, 2, 3]], mask=[[True, False, False], [True, False, False]]
+        )
         screened_array = self.noisy_data._remove_noise(
             array, noise, keep_negative=True, snr_limit=1
         )
@@ -42,9 +44,9 @@ class TestNoisyData:
                 [1, 2, 1, 2, 0, 0, 0],
             ],
             mask=[
-                [0, 0, 0, 0, 0, 0, 0],
-                [0, 0, 0, 1, 1, 0, 1],
-                [0, 0, 0, 0, 0, 0, 0],
+                [False, False, False, False, False, False, False],
+                [False, False, False, True, True, False, True],
+                [False, False, False, False, False, False, False],
             ],
         )
 
@@ -77,9 +79,9 @@ class TestNoisyData:
                 [10, 2, 0.2, 2, 0, 0, 0],
             ],
             mask=[
-                [0, 0, 0, 1, 1, 0, 1],
-                [0, 0, 0, 0, 0, 0, 0],
-                [0, 0, 1, 0, 1, 1, 1],
+                [False, False, False, True, True, False, True],
+                [False, False, False, False, False, False, False],
+                [False, False, True, False, True, True, True],
             ],
         )
         self.noisy_data._clean_fog_profiles(data, is_fog, threshold=1)
@@ -228,7 +230,11 @@ class TestCeilometer:
 def test_estimate_clouds_from_beta():
     beta = ma.array(
         [[0, 0, 1e-5, 0], [0, 10, 1e-7, 0], [0, 1e-4, 1e-3, 0]],
-        mask=[[0, 0, 0, 0], [1, 1, 0, 0], [0, 0, 0, 0]],
+        mask=[
+            [False, False, False, False],
+            [True, True, False, False],
+            [False, False, False, False],
+        ],
     )
 
     cloud_ind = ([0, 1, 2, 2], [2, 1, 1, 2])
@@ -247,9 +253,72 @@ def test_estimate_background_noise():
             [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0.6, 1.2, 5.3],
         ],
         mask=[
-            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-            [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+            [
+                False,
+                False,
+                False,
+                False,
+                False,
+                False,
+                False,
+                False,
+                False,
+                False,
+                False,
+                False,
+                False,
+                False,
+                False,
+                False,
+                False,
+                False,
+                False,
+                False,
+            ],
+            [
+                False,
+                False,
+                False,
+                False,
+                False,
+                False,
+                False,
+                False,
+                False,
+                False,
+                False,
+                False,
+                False,
+                False,
+                False,
+                False,
+                False,
+                False,
+                False,
+                False,
+            ],
+            [
+                True,
+                True,
+                True,
+                True,
+                True,
+                True,
+                True,
+                True,
+                True,
+                True,
+                True,
+                True,
+                True,
+                True,
+                True,
+                True,
+                True,
+                True,
+                True,
+                True,
+            ],
         ],
     )
     result = np.array([np.std([0.1, 0.2]), np.std([0, 0.1]), np.std([0.6, 1.2, 5.3])])

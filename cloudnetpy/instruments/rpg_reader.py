@@ -263,7 +263,7 @@ class HatproBinLwp(HatproBin):
                 ("lwp", "<f"),
                 ("_instrument_angles", "<f" if self.version == 1 else "<i4"),
             ],
-            self.header["_n_samples"],
+            int(self.header["_n_samples"]),
         )
         self.data["lwp"] *= G_TO_KG
 
@@ -302,7 +302,7 @@ class HatproBinIwv(HatproBin):
                 ("iwv", "<f"),
                 ("_instrument_angles", "<f" if self.version == 1 else "<i4"),
             ],
-            self.header["_n_samples"],
+            int(self.header["_n_samples"]),
         )
 
 

@@ -183,7 +183,7 @@ class NoisyData:
         filter_negatives: bool = True,
         filter_snr: bool = True,
     ) -> npt.NDArray:
-        data = ma.copy(data_in)
+        data: npt.NDArray = ma.copy(data_in)
         self._calc_range_uncorrected(data)
         noise = _estimate_background_noise(data)
         noise = self._adjust_noise(noise, is_smoothed=is_smoothed)

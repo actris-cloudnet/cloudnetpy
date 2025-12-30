@@ -63,7 +63,7 @@ def test_bad_input():
 
 
 def test_masked_array():
-    data = ma.array([1.0, 2.0, 3.0], mask=[1, 0, 0])
+    data = ma.array([1.0, 2.0, 3.0], mask=[True, False, False])
     obj = CloudnetArray(data, "test")
     assert_array_equal(obj.data.data, data.data)
     assert obj.data_type == "f4"
@@ -102,7 +102,7 @@ class TestCloudnetArrayWithNc:
     def test_mask_indices(self):
         obj = CloudnetArray(self.time, "test_name")
         obj.mask_indices([0, 1])
-        result = ma.array([0, 1, 2, 3, 4], mask=[1, 1, 0, 0, 0])
+        result = ma.array([0, 1, 2, 3, 4], mask=[True, True, False, False, False])
         assert_array_equal(obj.data.data, result.data)
 
     def test_fetch_attributes(self):

@@ -31,7 +31,12 @@ def fake_lidar_file(tmpdir_factory):
         var[:] = ma.array(
             [[1, 2, 3, 4], [1, 2, 3, 4], [1, 2, 3, 4], [1, 2, 3, 4]],
             dtype=float,
-            mask=[[0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]],
+            mask=[
+                [False, False, False, False],
+                [False, False, False, False],
+                [False, False, False, False],
+                [False, False, False, False],
+            ],
         )
     return file_name
 

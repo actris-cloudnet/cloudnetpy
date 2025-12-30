@@ -147,7 +147,7 @@ class TestAppending:
     def test_append_ier_error(self):
         self.ier_source.data["ier"] = np.ma.array(
             [[1, 2], [3, 4], [5, 6]],
-            mask=[[1, 0], [1, 0], [1, 0]],
+            mask=[[True, False], [True, False], [True, False]],
         )
         self.ice_class.is_ice = np.array([[0, 0], [0, 1], [1, 1]], dtype=bool)
         self.ice_class.ice_above_rain = np.array([[1, 0], [1, 0], [1, 0]], dtype=bool)

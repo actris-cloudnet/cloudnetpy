@@ -10,7 +10,10 @@ class Obs:
     def __init__(self):
         self.z = ma.array(
             [[0.4, 0.5, 0.6, 0.7, 0.5, 0.5], [0.5, 0.5, 0.5, 0.5, 0.5, 0.5]],
-            mask=[[0, 0, 0, 1, 0, 0], [0, 1, 0, 0, 0, 0]],
+            mask=[
+                [False, False, False, True, False, False],
+                [False, True, False, False, False, False],
+            ],
         )
 
         self.is_clutter = np.array([[1, 0, 0, 0, 0, 0], [1, 1, 0, 0, 0, 0]])
@@ -20,7 +23,10 @@ class Obs:
                 [1e-8, 1e-8, 1e-5, 1e-8, 1e-8, 1e-3],
                 [1e-8, 1e-8, 1e-5, 1e-5, 1e-8, 1e-8],
             ],
-            mask=[[0, 0, 0, 1, 0, 0], [0, 1, 1, 0, 0, 0]],
+            mask=[
+                [False, False, False, True, False, False],
+                [False, True, True, False, False, False],
+            ],
         )
 
         self.tw = ma.array(
@@ -49,11 +55,11 @@ def test_find_cold_aerosols():
 @pytest.mark.parametrize(
     "z, ind_top, result",
     [
-        (ma.masked_array([1, 1, 1, 1], mask=[0, 0, 0, 0]), 2, False),
-        (ma.masked_array([1, 1, 1, 1], mask=[0, 0, 0, 0]), 2, False),
-        (ma.masked_array([1, 1, 1, 1], mask=[0, 0, 0, 0]), 3, False),
-        (ma.masked_array([1, 1, 1, 1], mask=[1, 1, 1, 1]), 3, False),
-        (ma.masked_array([1, 1, 1, 1], mask=[0, 0, 0, 1]), 2, True),
+        (ma.masked_array([1, 1, 1, 1], mask=[False, False, False, False]), 2, False),
+        (ma.masked_array([1, 1, 1, 1], mask=[False, False, False, False]), 2, False),
+        (ma.masked_array([1, 1, 1, 1], mask=[False, False, False, False]), 3, False),
+        (ma.masked_array([1, 1, 1, 1], mask=[True, True, True, True]), 3, False),
+        (ma.masked_array([1, 1, 1, 1], mask=[False, False, False, True]), 2, True),
     ],
 )
 def test_is_z_missing_above_liquid(z, ind_top, result):
@@ -63,11 +69,11 @@ def test_is_z_missing_above_liquid(z, ind_top, result):
 @pytest.mark.parametrize(
     "z, ind_base, ind_top, result",
     [
-        (ma.masked_array([1, 1, 1, 1], mask=[0, 0, 0, 0]), 1, 2, False),
-        (ma.masked_array([1, 1, 2, 1], mask=[0, 0, 0, 0]), 1, 2, True),
-        (ma.masked_array([1, 2, 1, 1], mask=[0, 0, 0, 0]), 1, 2, False),
-        (ma.masked_array([1, 1, 2, 3], mask=[0, 0, 1, 0]), 1, 3, True),
-        (ma.masked_array([1, 2, 3, 4], mask=[0, 1, 1, 1]), 1, 3, False),
+        (ma.masked_array([1, 1, 1, 1], mask=[False, False, False, False]), 1, 2, False),
+        (ma.masked_array([1, 1, 2, 1], mask=[False, False, False, False]), 1, 2, True),
+        (ma.masked_array([1, 2, 1, 1], mask=[False, False, False, False]), 1, 2, False),
+        (ma.masked_array([1, 1, 2, 3], mask=[False, False, True, False]), 1, 3, True),
+        (ma.masked_array([1, 2, 3, 4], mask=[False, True, True, True]), 1, 3, False),
     ],
 )
 def test_is_z_increasing(z, ind_top, ind_base, result):

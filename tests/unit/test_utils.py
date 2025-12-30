@@ -69,7 +69,10 @@ def test_seconds2hours(input, output):
     "input, output",
     [
         (np.array([1, 2, 3]), 1),
-        (ma.array([1, 2, 3, 4, 5, 6], mask=[0, 1, 0, 1, 0, 0]), 1),
+        (
+            ma.array([1, 2, 3, 4, 5, 6], mask=[False, True, False, True, False, False]),
+            1,
+        ),
         (np.array([1, 2, 10, 11, 12, 13, 14, 16]), 1),
     ],
 )
@@ -82,7 +85,7 @@ def test_mdiff(input, output):
     [
         (np.array([2, 3]), np.array([3, 4]), np.sqrt([13, 25])),
         (np.array([2, 3]), ma.array([3, 4], mask=True), [2, 3]),
-        (np.array([2, 3]), ma.array([3, 4], mask=[0, 1]), [np.sqrt(13), 3]),
+        (np.array([2, 3]), ma.array([3, 4], mask=[False, True]), [np.sqrt(13), 3]),
         (
             np.array([[2, 2], [2, 2]]),
             3,
@@ -250,27 +253,35 @@ def test_interp_2d(x_new, y_new, result):
         (
             [1.1, 1.9],
             [10.0, 20],
-            ma.array([[0.5, 1], [0.5, 1]], mask=[[0, 0], [0, 0]]),
+            ma.array([[0.5, 1], [0.5, 1]], mask=[[False, False], [False, False]]),
         ),
         (
             [1.0, 2.1],
             [15.0, 25],
-            ma.array([[0.75, 1.25], [np.nan, np.nan]], mask=[[0, 0], [1, 1]]),
+            ma.array(
+                [[0.75, 1.25], [np.nan, np.nan]], mask=[[False, False], [True, True]]
+            ),
         ),
         (
             [1.0, 10],
             [15.0, 25],
-            ma.array([[0.75, 1.25], [np.nan, np.nan]], mask=[[0, 0], [1, 1]]),
+            ma.array(
+                [[0.75, 1.25], [np.nan, np.nan]], mask=[[False, False], [True, True]]
+            ),
         ),
         (
             [1.5, 1.9],
             [10.0, 31],
-            ma.array([[0.5, np.nan], [0.5, np.nan]], mask=[[0, 1], [0, 1]]),
+            ma.array(
+                [[0.5, np.nan], [0.5, np.nan]], mask=[[False, True], [False, True]]
+            ),
         ),
         (
             [1, 2],
             [9, 30],
-            ma.array([[np.nan, 1.5], [np.nan, 1.5]], mask=[[1, 0], [1, 0]]),
+            ma.array(
+                [[np.nan, 1.5], [np.nan, 1.5]], mask=[[True, False], [True, False]]
+            ),
         ),
     ],
 )
@@ -279,7 +290,7 @@ def test_interpolate_2d_mask_edge(x_new, y_new, expected: ma.MaskedArray):
     y = np.array([10.0, 20, 30])
     z = ma.array(
         [[0.5, 1, 1.5], [0.5, 1, 1.5], [0.5, 1, 1.5]],
-        mask=[[0, 0, 0], [0, 0, 0], [1, 1, 1]],
+        mask=[[False, False, False], [False, False, False], [True, True, True]],
     )
     result = utils.interpolate_2d_mask(x, y, z, x_new, y_new)
     assert_array_almost_equal(result.data, expected.data)
@@ -292,22 +303,22 @@ def test_interpolate_2d_mask_edge(x_new, y_new, expected: ma.MaskedArray):
         (
             [1.1, 1.4],
             [10.0, 20],
-            ma.array([[0.5, 1], [0.5, 1]], mask=[[0, 0], [0, 0]]),
+            ma.array([[0.5, 1], [0.5, 1]], mask=[[False, False], [False, False]]),
         ),
         (
             [1.1, 1.6],
             [10.0, 20],
-            ma.array([[0.5, 1], [0.5, 1]], mask=[[0, 0], [0, 1]]),
+            ma.array([[0.5, 1], [0.5, 1]], mask=[[False, False], [False, True]]),
         ),
         (
             [1.1, 2.4],
             [9.0, 20],
-            ma.array([[np.nan, 1], [np.nan, 1]], mask=[[1, 0], [1, 1]]),
+            ma.array([[np.nan, 1], [np.nan, 1]], mask=[[True, False], [True, True]]),
         ),
         (
             [1.7, 2.3],
             [12.0, 28],
-            ma.array([[0.6, 1.4], [0.6, 1.4]], mask=[[0, 0], [0, 0]]),
+            ma.array([[0.6, 1.4], [0.6, 1.4]], mask=[[False, False], [False, False]]),
         ),
     ],
 )
@@ -316,7 +327,7 @@ def test_interpolate_2d_mask_middle(x_new, y_new, expected):
     y = np.array([10.0, 20, 30])
     z = ma.array(
         [[0.5, 1, 1.5], [0.5, 1e-5, 1.5], [0.5, 1, 1.5]],
-        mask=[[0, 0, 0], [0, 1, 0], [0, 0, 0]],
+        mask=[[False, False, False], [False, True, False], [False, False, False]],
     )
     result = utils.interpolate_2d_mask(x, y, z, x_new, y_new)
     assert_array_almost_equal(result.data, expected.data)
@@ -329,22 +340,22 @@ def test_interpolate_2d_mask_middle(x_new, y_new, expected):
         (
             np.array([1.51, 2.49]),
             np.array([10, 10]),
-            ma.array([[3, 3], [3, 3]], mask=[[0, 0], [0, 0]]),
+            ma.array([[3, 3], [3, 3]], mask=[[False, False], [False, False]]),
         ),
         (
             np.array([2.1, 2.9]),
             np.array([15.1, 14.9]),
-            ma.array([[4, 3], [6, 5]], mask=[[0, 0], [0, 0]]),
+            ma.array([[4, 3], [6, 5]], mask=[[False, False], [False, False]]),
         ),
         (
             np.array([2.9, 3.1]),
             np.array([10, 10]),
-            ma.array([[5, 5], [5, 5]], mask=[[0, 0], [1, 1]]),
+            ma.array([[5, 5], [5, 5]], mask=[[False, False], [True, True]]),
         ),
         (
             np.array([2.9, 2.9]),
             np.array([19, 21]),
-            ma.array([[6, 6], [6, 6]], mask=[[0, 1], [0, 1]]),
+            ma.array([[6, 6], [6, 6]], mask=[[False, True], [False, True]]),
         ),
     ],
 )
@@ -364,12 +375,12 @@ def test_interpolate_2d_nearest(x_new, y_new, expected):
         (
             np.array([2.4, 3.6]),
             np.array([10, 10]),
-            ma.array([[3, 3], [7, 7]], mask=[[0, 0], [0, 0]]),
+            ma.array([[3, 3], [7, 7]], mask=[[False, False], [False, False]]),
         ),
         (
             np.array([2.6, 3.4]),
             np.array([10, 20]),
-            ma.array([[5, 6], [5, 6]], mask=[[1, 1], [1, 1]]),
+            ma.array([[5, 6], [5, 6]], mask=[[True, True], [True, True]]),
         ),
     ],
 )
@@ -378,7 +389,13 @@ def test_interpolate_2d_nearest_2(x_new, y_new, expected):
     y = np.array([10, 20])
     z = ma.array(
         [[1, 2], [3, 4], [5, 6], [7, 8], [9, 10]],
-        mask=[[0, 0], [0, 0], [1, 1], [0, 0], [0, 0]],
+        mask=[
+            [False, False],
+            [False, False],
+            [True, True],
+            [False, False],
+            [False, False],
+        ],
     )
 
     result = utils.interpolate_2d_nearest(x, y, z, x_new, y_new)
@@ -509,10 +526,10 @@ def test_lin2db(input, result):
 @pytest.mark.parametrize(
     "input_array, expected",
     [
-        (np.array([1e-10, 1e-10]), ma.array([-100.0, -100.0], mask=[0, 0])),
+        (np.array([1e-10, 1e-10]), ma.array([-100.0, -100.0], mask=[False, False])),
         (
-            ma.array([1e-10, 1e-10], mask=[0, 1]),
-            ma.array([-100.0, -100.0], mask=[0, 1]),
+            ma.array([1e-10, 1e-10], mask=[False, True]),
+            ma.array([-100.0, -100.0], mask=[False, True]),
         ),
     ],
 )
@@ -538,10 +555,10 @@ def test_db2lin(data, result):
 @pytest.mark.parametrize(
     "data, expected",
     [
-        (np.array([-100.0, -100.0]), ma.array([1e-10, 1e-10], mask=[0, 0])),
+        (np.array([-100.0, -100.0]), ma.array([1e-10, 1e-10], mask=[False, False])),
         (
-            ma.array([-100.0, -100.0], mask=[0, 1]),
-            ma.array([1e-10, 1e-10], mask=[0, 1]),
+            ma.array([-100.0, -100.0], mask=[False, True]),
+            ma.array([1e-10, 1e-10], mask=[False, True]),
         ),
     ],
 )
@@ -773,9 +790,9 @@ def test_time2decimal_hours(data, result):
     "data, result",
     [
         ([np.array([1, 2, 3]), False]),
-        ([ma.array([1, 2, 3], mask=[1, 0, 0]), False]),
-        ([ma.array([1, 2, 3], mask=[1, 1, 1]), True]),
-        ([ma.array([1, 2, 3], mask=[0, 0, 0]), False]),
+        ([ma.array([1, 2, 3], mask=[False, False, False]), False]),
+        ([ma.array([1, 2, 3], mask=[True, True, True]), True]),
+        ([ma.array([1, 2, 3], mask=[False, False, False]), False]),
         ([ma.array([1, 2, 3], mask=False), False]),
         ([ma.array([1, 2, 3], mask=True), True]),
         (3, False),

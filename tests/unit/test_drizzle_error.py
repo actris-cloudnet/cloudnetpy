@@ -76,7 +76,9 @@ def test_calc_error():
 
 def test_stack_errors():
     DRIZZLE_INDICES["drizzle"] = np.array([[0, 1, 1], [1, 1, 0]], dtype=bool)
-    expected = np.ma.array(ERROR_INPUT[0], mask=[[1, 0, 0], [0, 0, 1]])
+    expected = np.ma.array(
+        ERROR_INPUT[0], mask=[[True, False, False], [False, False, True]]
+    )
     x = de._stack_errors(ERROR_INPUT[0], DRIZZLE_INDICES)
     testing.assert_array_almost_equal(x, expected)
 

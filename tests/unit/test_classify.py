@@ -13,7 +13,7 @@ class Obs:
     def __init__(self):
         self.beta = ma.array(
             [[1, 1], [1, 1], [1, 1], [1, 1]],
-            mask=[[0, 0], [0, 0], [1, 1], [1, 1]],
+            mask=[[False, False], [False, False], [True, True], [True, True]],
         )
 
 

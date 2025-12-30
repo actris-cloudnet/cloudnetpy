@@ -24,8 +24,8 @@ def test_relative_error_mask() -> None:
     x, _ = sts.relative_error(model, observation)
     compare = ma.array(
         [
-            ma.array([-99, 0.0, -60.0, -99], mask=[1, 0, 0, 1]),
-            ma.array([-50.0, -83.33, 25.0, -99], mask=[0, 0, 0, 1]),
+            ma.array([-99, 0.0, -60.0, -99], mask=[True, False, False, True]),
+            ma.array([-50.0, -83.33, 25.0, -99], mask=[False, False, False, True]),
         ],
     )
     testing.assert_array_almost_equal(x, compare)
@@ -37,8 +37,8 @@ def test_relative_error_nan() -> None:
     x, _ = sts.relative_error(model, observation)
     compare = ma.array(
         [
-            ma.array([-66.67, 0.0, -60.0, -99], mask=[0, 0, 0, 1]),
-            ma.array([-50.0, -99, 25.0, -75.0], mask=[0, 1, 0, 0]),
+            ma.array([-66.67, 0.0, -60.0, -99], mask=[False, False, False, True]),
+            ma.array([-50.0, -99, 25.0, -75.0], mask=[False, True, False, False]),
         ],
     )
     testing.assert_array_almost_equal(x, compare)
@@ -58,8 +58,8 @@ def test_absolute_error_nan() -> None:
     x, _ = sts.absolute_error(model, observation)
     compare = ma.array(
         [
-            ma.array([10.0, -99, -10.0, 10.0], mask=[0, 1, 0, 0]),
-            ma.array([-99, 20.0, -20.0, 20.0], mask=[1, 0, 0, 0]),
+            ma.array([10.0, -99, -10.0, 10.0], mask=[False, True, False, False]),
+            ma.array([-99, 20.0, -20.0, 20.0], mask=[True, False, False, False]),
         ],
     )
     testing.assert_array_almost_equal(x, compare)
@@ -73,8 +73,8 @@ def test_absolute_error_mask() -> None:
     x, _ = sts.absolute_error(model, observation)
     compare = ma.array(
         [
-            ma.array([10.0, 0.0, -10.0, -99], mask=[0, 0, 0, 1]),
-            ma.array([20.0, -99, -20.0, -99], mask=[0, 1, 0, 1]),
+            ma.array([10.0, 0.0, -10.0, -99], mask=[False, False, False, True]),
+            ma.array([20.0, -99, -20.0, -99], mask=[False, True, False, True]),
         ],
     )
     testing.assert_array_almost_equal(x, compare)
@@ -97,14 +97,14 @@ def test_combine_masked_indices_min() -> None:
 
     compare_m = ma.array(
         [
-            ma.array([-99, 2, 2, 3], mask=[1, 0, 0, 0]),
-            ma.array([2, 4, 10, -99], mask=[1, 0, 0, 1]),
+            ma.array([-99, 2, 2, 3], mask=[True, False, False, False]),
+            ma.array([2, 4, 10, -99], mask=[True, False, False, True]),
         ],
     )
     compare_o = ma.array(
         [
-            ma.array([-99, 2, 5, 4], mask=[1, 0, 0, 0]),
-            ma.array([4, 6, 8, -99], mask=[0, 0, 0, 1]),
+            ma.array([-99, 2, 5, 4], mask=[True, False, False, False]),
+            ma.array([4, 6, 8, -99], mask=[True, False, False, True]),
         ],
     )
 
@@ -120,14 +120,14 @@ def test_combine_masked_indices_mask() -> None:
     x, y = sts.combine_masked_indices(model, observation)
     model = ma.array(
         [
-            ma.array([-99, -99, -99, 3], mask=[1, 1, 1, 0]),
-            ma.array([-99, 4, 10, -99], mask=[1, 0, 0, 1]),
+            ma.array([-99, -99, -99, 3], mask=[True, True, True, False]),
+            ma.array([-99, 4, 10, -99], mask=[True, False, False, True]),
         ],
     )
     observation = ma.array(
         [
-            ma.array([-99, -99, -99, 4], mask=[1, 1, 1, 0]),
-            ma.array([-99, 6, 8, -99], mask=[1, 0, 0, 1]),
+            ma.array([-99, -99, -99, 4], mask=[True, True, True, False]),
+            ma.array([-99, 6, 8, -99], mask=[True, False, False, True]),
         ],
     )
     testing.assert_array_almost_equal(x, model)
@@ -140,8 +140,8 @@ def test_combine_masked_indices_nan() -> None:
     x, y = sts.combine_masked_indices(model, observation)
     model = ma.array(
         [
-            ma.array([-99, 2, 2, 3], mask=[1, 0, 0, 0]),
-            ma.array([2, 4, -99, 1], mask=[0, 0, 1, 0]),
+            ma.array([-99, 2, 2, 3], mask=[True, False, False, False]),
+            ma.array([2, 4, -99, 1], mask=[False, False, True, False]),
         ],
     )
     testing.assert_array_almost_equal(x, model)
@@ -241,7 +241,7 @@ def test_vertical_profile_mask() -> None:
     observation.mask = ma.array([[0, 1, 0, 0], [0, 1, 0, 1], [0, 1, 0, 0]])
     x, y = sts.vertical_profile(model, observation)
     model = ma.array([3, 4, 6, 5.5])
-    observation = ma.array([4, -99, 4, 3], mask=[0, 1, 0, 0])
+    observation = ma.array([4, -99, 4, 3], mask=[False, True, False, False])
     testing.assert_array_almost_equal(x, model)
     testing.assert_array_almost_equal(y, observation)
 

@@ -8,7 +8,9 @@ from cloudnetpy.categorize import droplet
 
 class TestIndBase:
     x = ma.array([0, 0.5, 1, -99, 4, 8, 5])
-    mx: ma.MaskedArray = ma.masked_array(x, mask=[0, 0, 0, 1, 0, 0, 0])
+    mx: ma.MaskedArray = ma.masked_array(
+        x, mask=[False, False, False, True, False, False, False]
+    )
     diffu = np.diff(mx)
     assert isinstance(diffu, ma.MaskedArray)
     dx = diffu.filled(0)
@@ -59,7 +61,9 @@ class TestIndBase:
         )
 
     def test_ind_base_4(self):
-        mx: ma.MaskedArray = ma.masked_array(self.x, mask=[1, 0, 1, 1, 1, 0, 0])
+        mx: ma.MaskedArray = ma.masked_array(
+            self.x, mask=[True, False, True, True, True, False, False]
+        )
         diffu = ma.diff(mx)
         assert isinstance(diffu, ma.MaskedArray)
         dx = diffu.filled(0)
@@ -69,7 +73,9 @@ class TestIndBase:
 
 class TestIndTop:
     x = np.array([1, 3, 8, 4, -99, 1, 0.5, 0])
-    mx: ma.MaskedArray = ma.masked_array(x, mask=[0, 0, 0, 0, 1, 0, 0, 0])
+    mx: ma.MaskedArray = ma.masked_array(
+        x, mask=[False, False, False, False, True, False, False, False]
+    )
     diffu = np.diff(mx)
     assert isinstance(diffu, ma.MaskedArray)
     dx = diffu.filled(0)
@@ -130,7 +136,9 @@ class TestIndTop:
         )
 
     def test_ind_top_4(self):
-        mx: ma.MaskedArray = ma.masked_array(self.x, mask=[1, 0, 1, 0, 1, 0, 1, 0])
+        mx: ma.MaskedArray = ma.masked_array(
+            self.x, mask=[True, False, True, False, True, False, True, False]
+        )
         diffu = ma.diff(mx)
         assert isinstance(diffu, ma.MaskedArray)
         dx = diffu.filled(0)
@@ -198,9 +206,31 @@ def test_correct_liquid_top():
             self.z: ma.MaskedArray = ma.masked_array(
                 np.random.random((3, 10)),
                 mask=[
-                    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-                    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-                    [0, 0, 0, 0, 0, 0, 0, 0, 1, 0],
+                    [
+                        False,
+                        False,
+                        False,
+                        False,
+                        False,
+                        False,
+                        False,
+                        False,
+                        False,
+                        False,
+                    ],
+                    [True, True, True, True, True, True, True, True, True, True],
+                    [
+                        False,
+                        False,
+                        False,
+                        False,
+                        False,
+                        False,
+                        False,
+                        False,
+                        True,
+                        False,
+                    ],
                 ],
             )  # Here one masked value
 
@@ -232,17 +262,17 @@ def test_find_liquid():
         def __init__(self):
             self.height = np.arange(6) * 100
             self.time = np.arange(3)
-            self.lwp = ma.array(range(3))
-            self.beta = ma.array(
+            self.lwp: ma.MaskedArray = ma.array(range(3))
+            self.beta: ma.MaskedArray = ma.array(
                 [
                     [1e-8, 1e-8, 2e-6, 1e-3, 5e-6, 1e-8],
                     [1e-8, 1e-8, 1e-5, 1e-3, 1e-5, 1e-8],
                     [1e-8, 1e-8, 1e-5, 1e-3, 1e-5, 1e-8],
                 ],
                 mask=[
-                    [0, 0, 0, 0, 0, 0],
-                    [0, 0, 0, 0, 0, 0],
-                    [0, 0, 0, 0, 0, 0],
+                    [False, False, False, False, False, False],
+                    [False, False, False, False, False, False],
+                    [False, False, False, False, False, False],
                 ],
             )
 

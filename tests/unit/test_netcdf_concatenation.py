@@ -16,7 +16,7 @@ def _create_test_file(
     scalar: ma.MaskedArray | float | None = None,
     data1: ma.MaskedArray | None = None,
     data2: ma.MaskedArray | None = None,
-    chirp_ind: list[float] | None = None,
+    chirp_ind: list[float] | ma.MaskedArray | None = None,
     range_var: ma.MaskedArray | None = None,
     char_scalar: str | None = None,
     char_array: list[str] | None = None,
@@ -81,7 +81,7 @@ def test_basic_concatenation_without_masked_values(tmp_path):
         arr = nc.variables["time"][:]
         assert_array_equal(arr, [0, 1, 2, 3])
 
-        expected = ma.array(
+        expected: ma.MaskedArray = ma.array(
             [[0, 1], [2, 3], [4, 5], [6, 7]],
             mask=False,
             dtype="f4",
@@ -102,7 +102,7 @@ def test_basic_concatenation_with_masked_values(tmp_path):
     concatenate_files([f1, f2], str(out))
 
     with netCDF4.Dataset(out) as nc:
-        expected = ma.array(
+        expected: ma.MaskedArray = ma.array(
             [[0, 1], [2, 3], [4, 5], [6, 7]],
             mask=[[False, False], [False, True], [False, False], [True, False]],
             dtype="f4",
@@ -148,7 +148,7 @@ def test_scalar_broadcasting_with_masked_values(tmp_path):
 
     with netCDF4.Dataset(out) as nc:
         data = nc.variables["scalar"][:]
-        expected = ma.array(
+        expected: ma.MaskedArray = ma.array(
             [5.0, 5.0, 15.0, 15.0],
             mask=[False, False, True, True],
             dtype="f4",
@@ -172,7 +172,7 @@ def test_scalar_broadcasting_with_missing_variable(tmp_path):
 
     with netCDF4.Dataset(out) as nc:
         data = nc.variables["scalar"][:]
-        expected = ma.array(
+        expected: ma.MaskedArray = ma.array(
             [5.0, 5.0, np.nan, np.nan],
             mask=[False, False, True, True],
             dtype="f4",
@@ -253,7 +253,9 @@ def test_interpolation(tmp_path):
 
     with netCDF4.Dataset(out) as nc:
         data = nc.variables["data1"][:]
-        expected = ma.array([[0, 1], [2, 3], [4, 5], [7, 8]], mask=False, dtype="f4")
+        expected: ma.MaskedArray = ma.array(
+            [[0, 1], [2, 3], [4, 5], [7, 8]], mask=False, dtype="f4"
+        )
         assert_allclose(data, expected)
 
 
@@ -277,7 +279,7 @@ def test_interpolation_II(tmp_path):
 
     with netCDF4.Dataset(out) as nc:
         data = nc.variables["data1"][:]
-        expected = ma.array(
+        expected: ma.MaskedArray = ma.array(
             [[0, 1, 2], [3, 4, 5], [6, 7, 7], [8, 9, 9]],
             mask=[
                 [False, False, False],
@@ -312,7 +314,7 @@ def test_interpolation_III(tmp_path):
 
     with netCDF4.Dataset(out) as nc:
         data = nc.variables["data1"][:]
-        expected = ma.array(
+        expected: ma.MaskedArray = ma.array(
             [[0, 1, 2], [3, 4, 5], [6, 6, 7], [8, 8, 9]],
             mask=[
                 [False, True, False],
@@ -382,7 +384,7 @@ def test_extra_dimension_broadcasting_with_masked_values(tmp_path):
 
     with netCDF4.Dataset(out) as nc:
         data = nc.variables["chirp_ind"][:]
-        expected = ma.array(
+        expected: ma.MaskedArray = ma.array(
             [[1, 2, 3], [1, 2, 3], [4, 5, 6], [4, 5, 6]],
             mask=[
                 [False, True, False],

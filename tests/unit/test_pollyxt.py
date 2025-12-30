@@ -105,10 +105,10 @@ def test_broken_channel():
 @pytest.mark.parametrize(
     "data, output",
     [
-        (ma.array([1, 2, 3], mask=[1, 1, 1]), True),
-        (ma.array([1, 2, 3], mask=[1, 1, 0]), False),
-        (ma.array([0, 0, 0], mask=[0, 0, 0]), True),
-        (ma.array([0, 2, 0], mask=[0, 0, 0]), False),
+        (ma.array([1, 2, 3], mask=[True, True, True]), True),
+        (ma.array([1, 2, 3], mask=[True, True, False]), False),
+        (ma.array([0, 0, 0], mask=[False, False, False]), True),
+        (ma.array([0, 2, 0], mask=[False, False, False]), False),
     ],
 )
 def test_is_zeros_or_masked(data, output):

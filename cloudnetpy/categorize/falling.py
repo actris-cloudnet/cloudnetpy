@@ -124,7 +124,7 @@ def _is_z_missing_above_liquid(z: ma.MaskedArray, ind_top: int) -> bool:
 
 def _is_z_increasing(z: ma.MaskedArray, ind_base: int, ind_top: int) -> bool:
     """Checks is z is increasing inside the liquid cloud."""
-    z = z[ind_base : ind_top + 1].compressed()
-    if len(z) > 1:
-        return z[-1] > z[0]
+    z_valid = z[ind_base : ind_top + 1].compressed()
+    if len(z_valid) > 1:
+        return z_valid[-1] > z_valid[0]
     return False

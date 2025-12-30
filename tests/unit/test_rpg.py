@@ -304,16 +304,16 @@ class TestRPG2ncSTSR35GHz(Check):
 @pytest.mark.parametrize(
     "data, expected",
     [
-        ([ma.array([0, 0, 0], mask=[0, 0, 0]), ma.array([1, 1, 1])]),
-        ([ma.array([0, 0, 0], mask=[0, 0, 1]), ma.array([1, 1, 0])]),
-        ([ma.array([0, 0, 1], mask=[0, 0, 0]), ma.array([1, 1, 0])]),
-        ([ma.array([16, 16, 16], mask=[0, 0, 0]), ma.array([0, 0, 0])]),
-        ([ma.array([-4, -4, -4], mask=[0, 0, 0]), ma.array([1, 1, 1])]),
-        ([ma.array([-6, -6, -6], mask=[0, 0, 0]), ma.array([0, 0, 0])]),
-        ([ma.array([-34, 233, 21214], mask=[1, 1, 1]), ma.array([0, 0, 0])]),
+        ([ma.array([0, 0, 0], mask=[False, False, False]), ma.array([1, 1, 1])]),
+        ([ma.array([0, 0, 0], mask=[False, False, True]), ma.array([1, 1, 0])]),
+        ([ma.array([0, 0, 1], mask=[False, False, False]), ma.array([1, 1, 0])]),
+        ([ma.array([16, 16, 16], mask=[False, False, False]), ma.array([0, 0, 0])]),
+        ([ma.array([-4, -4, -4], mask=[False, False, False]), ma.array([1, 1, 1])]),
+        ([ma.array([-6, -6, -6], mask=[False, False, False]), ma.array([0, 0, 0])]),
+        ([ma.array([-34, 233, 21214], mask=[True, True, True]), ma.array([0, 0, 0])]),
         (
             [
-                ma.array([0, 0, 50, 50, 50], mask=[0, 0, 0, 0, 0]),
+                ma.array([0, 0, 50, 50, 50], mask=[False, False, False, False, False]),
                 ma.array([1, 1, 0, 0, 0]),
             ]
         ),

@@ -341,8 +341,8 @@ def test_regrid_iwc(model_file, obs_file) -> None:
     obj = ProductGrid(model, obs)
     obj._obs_data = ma.array([[1, 1, 1, 1], [2, 2, 2, 2], [3, 3, 3, 3], [4, 4, 4, 3]])
     d = {"iwc": ma.zeros((1, 1))}
-    ind = ma.array([[0, 1, 1, 1]], dtype=bool)
-    no_rain = ma.array(
+    ind: ma.MaskedArray = ma.array([[0, 1, 1, 1]], dtype=bool)
+    no_rain: ma.MaskedArray = ma.array(
         [[0, 1, 1, 1], [0, 0, 1, 1], [0, 0, 0, 0], [0, 0, 0, 0]],
         dtype=bool,
     )
@@ -360,8 +360,8 @@ def test_regrid_iwc_nan(model_file, obs_file) -> None:
     )
     obj._obs_data = ma.masked_where(obj._obs_data == 99, obj._obs_data)
     d = {"iwc": ma.zeros((1, 1))}
-    ind = ma.array([[0, 1, 1, 1]], dtype=bool)
-    no_rain = ma.array(
+    ind: ma.MaskedArray = ma.array([[0, 1, 1, 1]], dtype=bool)
+    no_rain: ma.MaskedArray = ma.array(
         [[0, 1, 1, 1], [0, 0, 1, 1], [0, 0, 0, 0], [0, 0, 0, 0]],
         dtype=bool,
     )
@@ -384,8 +384,8 @@ def test_regrid_iwc_all_nan(model_file, obs_file) -> None:
     )
     obj._obs_data = ma.masked_where(obj._obs_data == 99, obj._obs_data)
     d = {"iwc": ma.zeros((1, 1))}
-    ind = ma.array([[0, 1, 1, 1]], dtype=bool)
-    no_rain = ma.array(
+    ind: ma.MaskedArray = ma.array([[0, 1, 1, 1]], dtype=bool)
+    no_rain: ma.MaskedArray = ma.array(
         [[0, 1, 1, 1], [0, 0, 1, 1], [0, 0, 0, 0], [0, 0, 0, 0]],
         dtype=bool,
     )
@@ -400,8 +400,8 @@ def test_regrid_iwc_masked(model_file, obs_file) -> None:
     obj._obs_data = ma.array([[1, 1, 1, 1], [2, 2, 2, 2], [3, 3, 3, 3], [4, 4, 4, 4]])
     obj._obs_data[1, :] = ma.masked
     d = {"iwc": ma.zeros((1, 1))}
-    ind = ma.array([[0, 1, 1, 1]], dtype=bool)
-    no_rain = ma.array(
+    ind: ma.MaskedArray = ma.array([[0, 1, 1, 1]], dtype=bool)
+    no_rain: ma.MaskedArray = ma.array(
         [[0, 1, 1, 1], [0, 0, 1, 1], [0, 0, 0, 0], [0, 0, 0, 0]],
         dtype=bool,
     )
@@ -418,8 +418,8 @@ def test_regrid_iwc_all_masked(model_file, obs_file) -> None:
         [[1, 1, 1, 1], [2, 2, 2, 2], [3, 3, 3, 3], [4, 4, 4, 4]], mask=True
     )
     d = {"iwc": ma.zeros((1, 1))}
-    ind = ma.array([[0, 1, 1, 1]], dtype=bool)
-    no_rain = ma.array(
+    ind: ma.MaskedArray = ma.array([[0, 1, 1, 1]], dtype=bool)
+    no_rain: ma.MaskedArray = ma.array(
         [[0, 1, 1, 1], [0, 0, 1, 1], [0, 0, 0, 0], [0, 0, 0, 0]],
         dtype=bool,
     )
@@ -433,8 +433,8 @@ def test_regrid_iwc_none(model_file, obs_file) -> None:
     obj = ProductGrid(model, obs)
     obj._obs_data = ma.array([[1, 1, 1, 1], [2, 2, 2, 2], [3, 3, 3, 3], [4, 4, 4, 4]])
     d = {"iwc": ma.zeros((1, 1))}
-    ind = ma.array([[0, 1, 1, 1]], dtype=bool)
-    no_rain = ma.array(
+    ind: ma.MaskedArray = ma.array([[0, 1, 1, 1]], dtype=bool)
+    no_rain: ma.MaskedArray = ma.array(
         [[0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]],
         dtype=bool,
     )
@@ -447,8 +447,8 @@ def test_regrid_iwc_att(model_file, obs_file) -> None:
     model = ModelManager(str(model_file), MODEL, OUTPUT_FILE, PRODUCT)
     obj = ProductGrid(model, obs)
     d = {"iwc_att": ma.zeros((1, 1))}
-    ind = ma.array([[0, 1, 1, 1]], dtype=bool)
-    no_rain = ma.array(
+    ind: ma.MaskedArray = ma.array([[0, 1, 1, 1]], dtype=bool)
+    no_rain: ma.MaskedArray = ma.array(
         [
             [0, 1, 1, 1],
             [0, 0, 1, 1],
@@ -480,8 +480,8 @@ def test_regrid_iwc_att_masked(model_file, obs_file) -> None:
         dtype=bool,
     )
     d = {"iwc_att": ma.zeros((1, 1))}
-    ind = ma.array([[0, 1, 1, 1]], dtype=bool)
-    no_rain = ma.array(
+    ind: ma.MaskedArray = ma.array([[0, 1, 1, 1]], dtype=bool)
+    no_rain: ma.MaskedArray = ma.array(
         [
             [0, 1, 1, 1],
             [0, 0, 1, 1],
@@ -513,8 +513,8 @@ def test_regrid_iwc_att_all_masked(model_file, obs_file) -> None:
         dtype=bool,
     )
     d = {"iwc_att": ma.zeros((1, 1))}
-    ind = ma.array([[0, 1, 1, 1]], dtype=bool)
-    no_rain = ma.array(
+    ind: ma.MaskedArray = ma.array([[0, 1, 1, 1]], dtype=bool)
+    no_rain: ma.MaskedArray = ma.array(
         [
             [0, 1, 1, 1],
             [0, 0, 1, 1],
@@ -536,8 +536,8 @@ def test_regrid_iwc_att_none(model_file, obs_file) -> None:
     model = ModelManager(str(model_file), MODEL, OUTPUT_FILE, PRODUCT)
     obj = ProductGrid(model, obs)
     d = {"iwc_att": ma.zeros((1, 1))}
-    ind = ma.array([[0, 1, 1, 1]], dtype=bool)
-    no_rain = ma.array(
+    ind: ma.MaskedArray = ma.array([[0, 1, 1, 1]], dtype=bool)
+    no_rain: ma.MaskedArray = ma.array(
         [
             [0, 0, 0, 0],
             [0, 0, 0, 0],
@@ -559,8 +559,10 @@ def test_regrid_iwc_rain(model_file, obs_file) -> None:
     obj = ProductGrid(model, obs)
     obj._obs_data = ma.array([[1, 1, 1, 1], [2, 2, 2, 2], [3, 3, 3, 3], [4, 4, 4, 3]])
     d = {"iwc_rain": ma.zeros((1, 1))}
-    ind = ma.array([[0, 1, 1, 1], [0, 0, 1, 1], [0, 1, 1, 1], [0, 0, 1, 1]], dtype=bool)
-    no_rain = ma.array(
+    ind: ma.MaskedArray = ma.array(
+        [[0, 1, 1, 1], [0, 0, 1, 1], [0, 1, 1, 1], [0, 0, 1, 1]], dtype=bool
+    )
+    no_rain: ma.MaskedArray = ma.array(
         [[0, 1, 1, 1], [0, 0, 1, 1], [0, 1, 1, 1], [0, 0, 1, 1]],
         dtype=bool,
     )
@@ -583,8 +585,10 @@ def test_regrid_iwc_rain_nan(model_file, obs_file) -> None:
     )
     obj._obs_data = ma.masked_where(obj._obs_data == 99, obj._obs_data)
     d = {"iwc_rain": ma.zeros((1, 1))}
-    ind = ma.array([[0, 1, 1, 1], [0, 0, 1, 1], [0, 1, 1, 1], [0, 0, 1, 1]], dtype=bool)
-    no_rain = ma.array(
+    ind: ma.MaskedArray = ma.array(
+        [[0, 1, 1, 1], [0, 0, 1, 1], [0, 1, 1, 1], [0, 0, 1, 1]], dtype=bool
+    )
+    no_rain: ma.MaskedArray = ma.array(
         [[0, 1, 1, 1], [0, 0, 1, 1], [0, 1, 1, 1], [0, 0, 1, 1]],
         dtype=bool,
     )
@@ -607,8 +611,10 @@ def test_regrid_iwc_rain_all_nan(model_file, obs_file) -> None:
     )
     obj._obs_data = ma.masked_where(obj._obs_data == 99, obj._obs_data)
     d = {"iwc_rain": ma.zeros((1, 1))}
-    ind = ma.array([[0, 1, 1, 1], [0, 0, 1, 1], [0, 1, 1, 1], [0, 0, 1, 1]], dtype=bool)
-    no_rain = ma.array(
+    ind: ma.MaskedArray = ma.array(
+        [[0, 1, 1, 1], [0, 0, 1, 1], [0, 1, 1, 1], [0, 0, 1, 1]], dtype=bool
+    )
+    no_rain: ma.MaskedArray = ma.array(
         [[0, 1, 1, 1], [0, 0, 1, 1], [0, 1, 1, 1], [0, 0, 1, 1]],
         dtype=bool,
     )
@@ -624,8 +630,10 @@ def test_regrid_iwc_rain_masked(model_file, obs_file) -> None:
     obj._obs_data = ma.array([[1, 1, 1, 1], [2, 2, 2, 2], [3, 3, 3, 3], [4, 4, 4, 4]])
     obj._obs_data[2, :] = ma.masked
     d = {"iwc_rain": ma.zeros((1, 1))}
-    ind = ma.array([[0, 1, 1, 1], [0, 0, 1, 1], [0, 1, 1, 1], [0, 0, 1, 1]], dtype=bool)
-    no_rain = ma.array(
+    ind: ma.MaskedArray = ma.array(
+        [[0, 1, 1, 1], [0, 0, 1, 1], [0, 1, 1, 1], [0, 0, 1, 1]], dtype=bool
+    )
+    no_rain: ma.MaskedArray = ma.array(
         [[0, 1, 1, 1], [0, 0, 1, 1], [0, 1, 1, 1], [0, 0, 1, 1]],
         dtype=bool,
     )
@@ -641,8 +649,10 @@ def test_regrid_iwc_rain_all_masked(model_file, obs_file) -> None:
     obj._obs_data = ma.array([[1, 3, 1, 1], [2, 2, 2, 2], [3, 3, 3, 3], [4, 4, 4, 4]])
     obj._obs_data[:, :] = ma.masked
     d = {"iwc_rain": ma.zeros((1, 1))}
-    ind = ma.array([[0, 1, 1, 1], [0, 0, 1, 1], [0, 1, 1, 1], [0, 0, 1, 1]], dtype=bool)
-    no_rain = ma.array(
+    ind: ma.MaskedArray = ma.array(
+        [[0, 1, 1, 1], [0, 0, 1, 1], [0, 1, 1, 1], [0, 0, 1, 1]], dtype=bool
+    )
+    no_rain: ma.MaskedArray = ma.array(
         [[0, 1, 1, 1], [0, 0, 1, 1], [0, 1, 1, 1], [0, 0, 1, 1]],
         dtype=bool,
     )
@@ -657,7 +667,9 @@ def test_regrid_product(model_file, obs_file) -> None:
     obj = ProductGrid(model, obs)
     obj._obs_data = ma.array([[1, 1, 1, 1], [2, 1, 2, 2], [3, 3, 3, 3], [4, 4, 4, 4]])
     d = {"lwc": ma.zeros((1, 1))}
-    ind = ma.array([[0, 1, 1, 1], [0, 0, 1, 1], [0, 0, 0, 0], [0, 0, 0, 0]], dtype=bool)
+    ind: ma.MaskedArray = ma.array(
+        [[0, 1, 1, 1], [0, 0, 1, 1], [0, 0, 0, 0], [0, 0, 0, 0]], dtype=bool
+    )
     d = obj._regrid_product(d, 0, 0, ind)
     x = d["lwc"]
     testing.assert_almost_equal(x[0, 0], 1.4)
@@ -677,7 +689,9 @@ def test_regrid_product_nan(model_file, obs_file) -> None:
     )
     obj._obs_data = ma.masked_where(obj._obs_data == 99, obj._obs_data)
     d = {"lwc": ma.zeros((1, 1))}
-    ind = ma.array([[0, 1, 1, 1], [0, 0, 1, 1], [0, 0, 0, 0], [0, 0, 0, 0]], dtype=bool)
+    ind: ma.MaskedArray = ma.array(
+        [[0, 1, 1, 1], [0, 0, 1, 1], [0, 0, 0, 0], [0, 0, 0, 0]], dtype=bool
+    )
     d = obj._regrid_product(d, 0, 0, ind)
     x = d["lwc"]
     testing.assert_almost_equal(x[0, 0], 1.5)

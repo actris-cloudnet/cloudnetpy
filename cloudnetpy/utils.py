@@ -443,11 +443,8 @@ def interpolate_2D_along_y(
     )
     idx[~choose_right] = left[~choose_right]
     z_interp = ma.array(z[:, idx])
+    z_mask = ma.getmaskarray(z_interp)
     mask = (y_new < y.min()) | (y_new > y.max())
-    if z_interp.mask is ma.nomask:
-        z_mask = np.zeros(z_interp.shape, dtype=bool)
-    else:
-        z_mask = z_interp.mask.copy()
     z_mask[:, mask] = True
     return ma.MaskedArray(z_interp, mask=z_mask)
 
@@ -543,7 +540,8 @@ def l2norm(*args: npt.NDArray | float) -> ma.MaskedArray:
         The l2 norm.
 
     """
-    ss = 0
+    arg_cpy: float | npt.NDArray
+    ss: float | npt.NDArray = 0
     for arg in args:
         if isinstance(arg, ma.MaskedArray):
             # Raise only non-masked values, not sure if this is needed...
@@ -578,7 +576,7 @@ def l2norm_weighted(
     TODO: Use masked arrays instead of tuples.
 
     """
-    generic_values = ma.array(values, dtype=object)
+    generic_values: ma.MaskedArray = ma.array(values, dtype=object)
     weighted_values = ma.multiply(generic_values, term_weights)
     return overall_scale * l2norm(*weighted_values)
 
@@ -722,7 +720,7 @@ def isscalar(array: npt.NDArray | float | list | netCDF4.Variable) -> bool:
             True
 
     """
-    arr = ma.array(array)
+    arr: ma.MaskedArray = ma.array(array)
     return not hasattr(arr, "__len__") or arr.shape == () or len(arr) == 1
 
 
@@ -1023,7 +1021,7 @@ def get_files_with_variables(filenames: list, variables: list[str]) -> list:
 
 def is_all_masked(array: npt.NDArray) -> bool:
     """Tests if all values are masked."""
-    return ma.isMaskedArray(array) and hasattr(array, "mask") and array.mask.all()
+    return bool(ma.isMaskedArray(array) and hasattr(array, "mask") and array.mask.all())
 
 
 def find_masked_profiles_indices(array: ma.MaskedArray) -> list:
@@ -1068,6 +1066,7 @@ def add_site_geolocation(
 ) -> None:
     tmp_data = {}
     tmp_source = {}
+    value: npt.NDArray | float | None
 
     for key in ("latitude", "longitude", "altitude"):
         value = None
@@ -1089,7 +1088,7 @@ def add_site_geolocation(
                 source = "GPS"
         # User-supplied site coordinate.
         if value is None and site_meta is not None and key in site_meta:
-            value = float(site_meta[key])
+            value = np.array(float(site_meta[key]))
             source = "site coordinates"
         # From source data (CHM15k, CL61, MRR-PRO, Copernicus, Galileo...).
         # Assume value is manually set, so cannot trust it.

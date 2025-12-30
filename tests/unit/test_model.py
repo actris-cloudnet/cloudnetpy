@@ -36,9 +36,13 @@ def test_calc_mean_height():
     assert_array_equal(model._calc_mean_height(height), result)
 
 
-EMPTY_ARRAY = ma.array(
+EMPTY_ARRAY: ma.MaskedArray = ma.array(
     [[0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]],
-    mask=[[0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]],
+    mask=[
+        [False, False, False, False],
+        [False, False, False, False],
+        [False, False, False, False],
+    ],
     dtype=float,
 )
 MASKED_ONE = ma.copy(EMPTY_ARRAY)
@@ -132,7 +136,7 @@ def test_calculate_attenuations(fake_model_file):
         (
             ma.array(
                 [[1, 2], [1, 2], [1, 2], [1, 2]],
-                mask=[[1, 1], [1, 0], [0, 0], [0, 1]],
+                mask=[[True, True], [True, False], [False, False], [False, True]],
             ),
             3,
         ),

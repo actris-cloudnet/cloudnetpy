@@ -52,8 +52,8 @@ def find_freezing_region(obs: ClassData, melting_layer: npt.NDArray) -> npt.NDAr
     for n in range(len(obs.time) - win):
         if mean_melting_alt[n : n + win].mask.all():
             freezing_alt[n + mid_win] = t0_alt[n + mid_win]
-    ind = ~freezing_alt.mask
-    f = interp1d(obs.time[ind], freezing_alt[ind])
+    ind_valid = ~freezing_alt.mask
+    f = interp1d(obs.time[ind_valid], freezing_alt[ind_valid])
     freezing_alt_interpolated = f(obs.time) - 1
     for ii, alt in enumerate(freezing_alt_interpolated):
         is_freezing[ii, obs.height > alt] = True

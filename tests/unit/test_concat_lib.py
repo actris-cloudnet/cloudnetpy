@@ -177,7 +177,7 @@ class TestCommonVariables:
 
         with concat_lib._Concat(self.files, str(self.output)) as concat:
             concat.concat_data()
-            expected = ma.array([1] * self.n_time + [2] * self.n_time)
+            expected: ma.MaskedArray = ma.array([1] * self.n_time + [2] * self.n_time)
             assert_array_equal(concat.concatenated_file["kissa"][:], expected)
 
     def test_consistent_arrays(self):
@@ -210,24 +210,24 @@ class TestCommonVariables:
         self._write_array(
             self.file1,
             "kissa",
-            ma.masked_array([1, 2, 3], mask=[1, 0, 1]),
+            ma.masked_array([1, 2, 3], mask=[True, False, True]),
         )
         self._write_array(
             self.file2,
             "kissa",
-            ma.masked_array([3, 2, 1], mask=[1, 0, 1]),
+            ma.masked_array([3, 2, 1], mask=[True, False, True]),
         )
 
         with concat_lib._Concat(self.files, str(self.output)) as concat:
             concat.concat_data()
             assert ma.allequal(
                 concat.concatenated_file["kissa"][:],
-                ma.masked_array([1, 2, 3], mask=[1, 0, 1]),
+                ma.masked_array([1, 2, 3], mask=[True, False, True]),
             )
 
     def test_inconsistent_masked_arrays(self):
-        arr1: npt.NDArray = ma.masked_array([1, 2, 3], mask=[1, 0, 1])
-        arr2: npt.NDArray = ma.masked_array([3, 2, 1], mask=[1, 0, 1])
+        arr1: npt.NDArray = ma.masked_array([1, 2, 3], mask=[True, False, True])
+        arr2: npt.NDArray = ma.masked_array([3, 2, 1], mask=[True, False, True])
         self._write_array(
             self.file1,
             "kissa",

@@ -259,9 +259,11 @@ def test_fill_error_array():
     error_in = np.array([[0, 0.1, 0.1], [0.2, 0.4, 0.15]])
     ERROR_OBJ.lwc = ma.array(
         [[0.1, 0.2, 0.1], [0.1, 0.2, 0.2]],
-        mask=[[0, 1, 0], [1, 0, 0]],
+        mask=[[False, True, False], [True, False, False]],
     )
-    expected = ma.array([[0, 0, 0], [0, 0, 0]], mask=[[0, 1, 0], [1, 0, 0]])
+    expected = ma.array(
+        [[0, 0, 0], [0, 0, 0]], mask=[[False, True, False], [True, False, False]]
+    )
     ERROR_OBJ._fill_error_array(error_in)
     error = ERROR_OBJ._fill_error_array(error_in)
     assert_array_almost_equal(error.mask, expected.mask)

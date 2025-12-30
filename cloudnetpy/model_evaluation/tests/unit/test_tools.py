@@ -46,24 +46,24 @@ def test_rebin_edges() -> None:
 def test_calculate_advection_time_hour(model_file) -> None:
     obj = ModelManager(str(model_file), MODEL, OUTPUT_FILE, PRODUCT)
     h = obj.resolution_h
-    v = ma.array([[1, 2, 3], [2, 3, 4], [3, 4, 5]])
+    v = np.array([[1, 2, 3], [2, 3, 4], [3, 4, 5]])
     s = 1
     compare = h * 1000 / v / 60**2
     compare[compare > 1 / s] = 1 / s
     compare = np.asarray([[timedelta(hours=float(t)) for t in tt] for tt in compare])
-    x = tools.calculate_advection_time(int(h), v, s)
+    x = tools.calculate_advection_time(int(h), ma.masked_array(v), s)
     assert x.all() == compare.all()
 
 
 def test_calculate_advection_time_10min(model_file) -> None:
     obj = ModelManager(str(model_file), MODEL, OUTPUT_FILE, PRODUCT)
     h = obj.resolution_h
-    v = ma.array([[1, 2, 3], [2, 3, 4], [3, 4, 5]])
+    v = np.array([[1, 2, 3], [2, 3, 4], [3, 4, 5]])
     s = 6
     compare = h * 1000 / v / 60**2
     compare[compare > 1 / s] = 1 / s
     compare = np.asarray([[timedelta(hours=float(t)) for t in tt] for tt in compare])
-    x = tools.calculate_advection_time(int(h), v, s)
+    x = tools.calculate_advection_time(int(h), ma.masked_array(v), s)
     assert x.all() == compare.all()
 
 
@@ -81,7 +81,10 @@ def test_get_1d_indices_mask() -> None:
     m = np.array([0, 0, 1, 0, 0, 1, 0, 1], dtype=bool)
     x = tools.get_1d_indices(w, d, m)
     d[m] = ma.masked
-    compare = ma.array([0, 1, -99, 1, 1, -99, 0, -99], mask=[0, 0, 1, 0, 0, 1, 0, 1])
+    compare = ma.array(
+        [0, 1, -99, 1, 1, -99, 0, -99],
+        mask=[False, False, True, False, False, True, False, True],
+    )
     testing.assert_array_almost_equal(x, compare)
 
 
@@ -89,7 +92,7 @@ def test_get_adv_indices() -> None:
     mt = 3
     at = 4
     d = ma.array([0, 1, 2, 3, 4, 5, 6, 7])
-    compare = ma.array([0, 1, 1, 1, 1, 0, 0, 0], dtype=bool)
+    compare: ma.MaskedArray = ma.array([0, 1, 1, 1, 1, 0, 0, 0], dtype=bool)
     x = tools.get_adv_indices(mt, at, d)
     testing.assert_array_almost_equal(x, compare)
 
@@ -97,11 +100,14 @@ def test_get_adv_indices() -> None:
 def test_get_adv_indices_mask() -> None:
     mt = 3
     at = 4
-    d = ma.array([0, 1, 2, 3, 4, 5, 6, 7])
-    m = ma.array([0, 0, 1, 0, 0, 1, 0, 1], dtype=bool)
+    d: ma.MaskedArray = ma.array([0, 1, 2, 3, 4, 5, 6, 7])
+    m: ma.MaskedArray = ma.array([0, 0, 1, 0, 0, 1, 0, 1], dtype=bool)
     x = tools.get_adv_indices(mt, at, d, m)
     d[m] = ma.masked
-    compare = ma.array([0, 1, -99, 1, 1, -99, 0, 0], mask=[0, 0, 1, 0, 0, 1, 0, 0])
+    compare = ma.array(
+        [0, 1, -99, 1, 1, -99, 0, 0],
+        mask=[False, False, True, False, False, True, False, False],
+    )
     testing.assert_array_almost_equal(x, compare)
 
 

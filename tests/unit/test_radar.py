@@ -9,9 +9,13 @@ from cloudnetpy.categorize import radar
 from cloudnetpy.categorize.radar import Radar
 
 FOLDING_VELOCITY = 8.7
-EMPTY_ARRAY = ma.array(
+EMPTY_ARRAY: ma.MaskedArray = ma.array(
     [[0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]],
-    mask=[[0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]],
+    mask=[
+        [False, False, False, False],
+        [False, False, False, False],
+        [False, False, False, False],
+    ],
     dtype=float,
 )
 MASKED_ONE = ma.copy(EMPTY_ARRAY)
@@ -106,7 +110,10 @@ def test_filter_1st_gate_artifact(fake_radar_file):
     obj = Radar(fake_radar_file)
     obj.data["v"] = ma.array(
         [[4, 1, 2], [0, 6, 2], [5, 1, 2]],
-        mask=[[0, 0, 0], [0, 0, 0], [0, 0, 0]],
+        mask=[[False, False, False], [False, False, False], [False, False, False]],
     )
     obj.filter_1st_gate_artifact()
-    assert_array_equal(obj.data["v"].mask, [[0, 0, 0], [0, 0, 0], [1, 0, 0]])
+    assert_array_equal(
+        obj.data["v"].mask,
+        [[False, False, False], [False, False, False], [True, False, False]],
+    )

@@ -148,8 +148,8 @@ def histogram(
             decimals=1,
         ).flatten()
     else:
-        model = np.round(model[~model.mask].data, decimals=6).flatten()
-        observation = np.round(
+        model = ma.round(model[~model.mask].data, decimals=6).flatten()
+        observation = ma.round(
             observation[~observation.mask].data,
             decimals=6,
         ).flatten()
