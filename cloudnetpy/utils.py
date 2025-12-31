@@ -16,6 +16,7 @@ import numpy as np
 import numpy.typing as npt
 from numpy import ma
 from scipy import ndimage, stats
+from scipy import ndimage as ndi
 from scipy.interpolate import (
     RectBivariateSpline,
     RegularGridInterpolator,
@@ -246,6 +247,17 @@ def _filter(array: npt.NDArray, structure: npt.NDArray) -> npt.NDArray:
     area_mask = id_sizes == 1
     filtered_array[area_mask[id_regions]] = 0
     return filtered_array
+
+
+def remove_small_objects(
+    mask: npt.NDArray, max_size: int, connectivity: int
+) -> npt.NDArray:
+    """Removes small connected components from boolean mask."""
+    structure = ndi.generate_binary_structure(mask.ndim, connectivity)
+    labels, num = ndi.label(mask, structure=structure)
+    sizes = ndi.sum(mask, labels, index=np.arange(1, num + 1))
+    keep_labels = np.where(sizes > max_size)[0] + 1
+    return np.isin(labels, keep_labels)
 
 
 def isbit(array: npt.NDArray, nth_bit: int) -> npt.NDArray:

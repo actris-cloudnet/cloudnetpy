@@ -1035,3 +1035,69 @@ def test_interpolate_2D_along_y(y, z, y_new, expected_values, expected_mask):
     result = utils.interpolate_2D_along_y(y, z, y_new)
     assert_array_equal(result.data, expected_values)
     assert_array_equal(result.mask, expected_mask)
+
+
+def test_remove_small_objects_single_small():
+    mask = np.zeros((5, 5), dtype=bool)
+    mask[2, 2] = True
+    result = utils.remove_small_objects(mask, max_size=2, connectivity=1)
+    assert not result.any()
+    assert mask[2, 2]
+
+
+def test_remove_small_objects_keeps_large():
+    mask = np.zeros((5, 5), dtype=bool)
+    mask[1:3, 1:3] = True  # 4 pixels
+    result = utils.remove_small_objects(mask, max_size=2, connectivity=1)
+    assert np.array_equal(result, mask)
+
+
+def test_remove_small_objects_mixed_sizes_keeps_only_large_components():
+    mask = np.zeros((5, 5), dtype=bool)
+    mask[0:2, 0:2] = True  # large component
+    mask[4, 4] = True  # small component
+    result = utils.remove_small_objects(mask, max_size=2, connectivity=1)
+    expected = np.zeros_like(mask)
+    expected[0:2, 0:2] = True
+    assert np.array_equal(result, expected)
+
+
+def test_remove_small_objects_threshold_is_strictly_greater_than_max_size():
+    mask = np.array([False, True, True, True, False], dtype=bool)
+    result = utils.remove_small_objects(mask, max_size=3, connectivity=1)
+    assert not result.any()
+
+
+def test_remove_small_objects_connectivity_changes_component_count():
+    mask = np.zeros((3, 3), dtype=bool)
+    mask[0, 0] = True
+    mask[1, 1] = True
+    result_conn1 = utils.remove_small_objects(mask, max_size=1, connectivity=1)
+    assert not result_conn1.any()
+    result_conn2 = utils.remove_small_objects(mask, max_size=1, connectivity=2)
+    assert np.array_equal(result_conn2, mask)
+
+
+def test_remove_small_objects_3d_support():
+    mask = np.zeros((3, 3, 3), dtype=bool)
+    mask[0, 0, 0] = True
+    mask[0, 0, 1] = True
+    mask[0, 1, 0] = True
+    mask[0, 1, 1] = True
+    mask[2, 2, 1] = True
+    mask[2, 2, 2] = True
+    result = utils.remove_small_objects(mask, max_size=3, connectivity=1)
+    expected = np.zeros_like(mask)
+    expected[0, 0, 0] = True
+    expected[0, 0, 1] = True
+    expected[0, 1, 0] = True
+    expected[0, 1, 1] = True
+    assert np.array_equal(result, expected)
+
+
+def test_remove_small_objects_input_mask_not_modified():
+    mask = np.zeros((4, 4), dtype=bool)
+    mask[1:3, 1:3] = True
+    mask_before = mask.copy()
+    _ = utils.remove_small_objects(mask, max_size=1, connectivity=1)
+    assert np.array_equal(mask, mask_before)

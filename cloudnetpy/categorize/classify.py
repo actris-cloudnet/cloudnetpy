@@ -1,6 +1,5 @@
 import numpy as np
 import numpy.typing as npt
-import skimage
 from numpy import ma
 
 from cloudnetpy import utils
@@ -229,9 +228,9 @@ def _filter_falling(bits: CategoryBits) -> tuple:
     # filter falling ice speckle noise
     is_freezing = bits.freezing
     is_falling = bits.falling
-    is_falling_filtered = skimage.morphology.remove_small_objects(
+    is_falling_filtered = utils.remove_small_objects(
         is_falling,
-        min_size=10,
+        max_size=10,
         connectivity=1,
     )
     is_filtered = is_falling & ~np.array(is_falling_filtered)
