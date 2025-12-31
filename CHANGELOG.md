@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.87.0 – 2025-12-31
+
+- Plot minor ticks and height above ground by default
+- Drop scikit-image
+- Use cloudnet-api-client
+- Support filepaths in PollyXT processing
+
 ## 1.86.23 – 2025-12-11
 
 - Fix xticklabels in cpr plots
