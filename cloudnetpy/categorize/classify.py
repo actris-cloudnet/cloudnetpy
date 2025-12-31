@@ -231,7 +231,7 @@ def _filter_falling(bits: CategoryBits) -> tuple:
     is_falling = bits.falling
     is_falling_filtered = skimage.morphology.remove_small_objects(
         is_falling,
-        10,
+        min_size=10,
         connectivity=1,
     )
     is_filtered = is_falling & ~np.array(is_falling_filtered)

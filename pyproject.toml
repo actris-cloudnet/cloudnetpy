@@ -21,7 +21,7 @@ dependencies = [
   "netCDF4",
   "requests",
   "rpgpy>=0.14.5",
-  "scikit-image",
+  "scikit-image==0.25.2",
   "scipy",
   "typing-extensions",
 ]
