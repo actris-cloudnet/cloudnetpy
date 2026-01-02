@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.87.1 – 2026-01-02
+
+- Fix filepath bug
+
 ## 1.87.0 – 2025-12-31
 
 - Plot minor ticks and height above ground by default
