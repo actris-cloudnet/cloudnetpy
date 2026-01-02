@@ -196,9 +196,10 @@ def _process_instrument_product(
             input_files = input_folder
         case ("mwr-l1c", _id):
             fun = instruments.hatpro2l1c
-            coefficients = _fetch_coefficient_files(calibration, tmpdir)
             site_meta = {**site_meta, **calibration}
-            site_meta["coefficientLinks"] = coefficients
+            coefficients, links = _fetch_coefficient_files(calibration, tmpdir)
+            site_meta["coefficientFiles"] = coefficients
+            site_meta["coefficientLinks"] = links
             input_files = input_folder
         case ("mrr", _id):
             fun = instruments.mrr2nc
@@ -221,7 +222,9 @@ def _concatenate_(input_files: list[Path], tmpdir: str) -> Path:
     return input_files[0]
 
 
-def _fetch_coefficient_files(calibration: dict, tmpdir: str) -> list[str]:
+def _fetch_coefficient_files(
+    calibration: dict, tmpdir: str
+) -> tuple[list[str], list[str]]:
     msg = "No calibration coefficients found"
     if not (coeffs := calibration.get("retrieval_coefficients")):
         raise ValueError(msg)
@@ -234,7 +237,7 @@ def _fetch_coefficient_files(calibration: dict, tmpdir: str) -> list[str]:
         filepath = Path(tmpdir) / Path(filename).name
         filepath.write_bytes(res.content)
         coefficient_paths.append(str(filepath))
-    return coefficient_paths
+    return coefficient_paths, links
 
 
 def _get_calibration(
