@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.87.2 – 2026-01-13
+
+- Fix mask in `interpolate_2d_nearest` in SciPy 1.17.0
+
 ## 1.87.1 – 2026-01-02
 
 - Fix filepath bug
