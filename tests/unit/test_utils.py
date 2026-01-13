@@ -362,11 +362,11 @@ def test_interpolate_2d_mask_middle(x_new, y_new, expected):
 def test_interpolate_2d_nearest(x_new, y_new, expected):
     x = np.array([1, 2, 3])
     y = np.array([10, 20])
-    z = ma.array([[1, 2], [3, 4], [5, 6]], mask=False)
+    z = ma.array([[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]], mask=False)
 
     result = utils.interpolate_2d_nearest(x, y, z, x_new, y_new)
-    assert_array_almost_equal(expected.data, result.data)
     assert_array_equal(expected.mask, result.mask)
+    assert_array_almost_equal(expected, result)
 
 
 @pytest.mark.parametrize(
@@ -388,7 +388,7 @@ def test_interpolate_2d_nearest_2(x_new, y_new, expected):
     x = np.array([1, 2, 3, 4, 5])
     y = np.array([10, 20])
     z = ma.array(
-        [[1, 2], [3, 4], [5, 6], [7, 8], [9, 10]],
+        [[1.0, 2.0], [3.0, 4.0], [5.0, 6.0], [7.0, 8.0], [9.0, 10.0]],
         mask=[
             [False, False],
             [False, False],
@@ -399,8 +399,8 @@ def test_interpolate_2d_nearest_2(x_new, y_new, expected):
     )
 
     result = utils.interpolate_2d_nearest(x, y, z, x_new, y_new)
-    assert_array_almost_equal(expected.data, result.data)
-    assert_array_almost_equal(expected.mask, result.mask)
+    assert_array_equal(expected.mask, result.mask)
+    assert_array_almost_equal(expected, result)
 
 
 class TestArrayToProbability:

@@ -417,16 +417,16 @@ def interpolate_2d_nearest(
         Points outside the original range will be interpolated but masked.
 
     """
-    data = ma.copy(z)
+    data = ma.filled(z, np.nan)
     fun = RegularGridInterpolator(
         (x, y),
         data,
         method="nearest",
         bounds_error=False,
-        fill_value=ma.masked,
     )
     xx, yy = np.meshgrid(x_new, y_new)
-    return fun((xx, yy)).T
+    zz = fun((xx, yy)).T
+    return ma.masked_where(np.isnan(zz), zz)
 
 
 def interpolate_2D_along_y(
