@@ -79,18 +79,16 @@ ignore = [
   "D213", # conflicting documentation rule
   "DTZ00", # do not check timezone info
   "FIX002", # TODOs
-  "ISC001", # Formatter wants me
   "LOG015", # call on root logger
   "N8", # uppercase variable names
-  "PD011", # false positive
   "PERF", # try except in loop
   "PLC0206", # dict.items not used
   "PLR", # too many arguments etc.
   "PTH", # use pathlib, fix me later
-  "RUF002", # unicode in doc string
   "TD002", # TODOs
   "TD003", # TODOs
 ]
+allowed-confusables = ["–", "’"]
 
 [tool.ruff.lint.extend-per-file-ignores]
 "__init__.py" = ["F401"]

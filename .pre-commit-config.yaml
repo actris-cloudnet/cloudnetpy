@@ -1,3 +1,4 @@
+exclude: ^tests/unit/data/
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v6.0.0
@@ -7,17 +8,12 @@ repos:
       - id: check-merge-conflict
       - id: check-shebang-scripts-are-executable
       - id: end-of-file-fixer
-        exclude: ^tests/unit/data/
       - id: fix-byte-order-marker
-        exclude: ^tests/unit/data/
       - id: mixed-line-ending
         args: ["--fix", "lf"]
-        exclude: ^tests/unit/data/
-      - id: requirements-txt-fixer
       - id: trailing-whitespace
-        exclude: ^tests/unit/data/
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.14.2
+    rev: v0.14.11
     hooks:
       - id: ruff-check
         args: ["--fix"]
@@ -40,7 +36,7 @@ repos:
     hooks:
       - id: toml-sort-fix
   - repo: https://github.com/crate-ci/typos
-    rev: v1.38.1
+    rev: v1.42.0
     hooks:
       - id: typos
         args: ["--force-exclude"]

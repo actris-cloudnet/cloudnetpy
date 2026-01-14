@@ -30,7 +30,7 @@ MODELS = {
     ),
     "harmonie-fmi-6-11": ModelMetaData(
         model_name="HARMONIE-AROME",
-        long_name="the HIRLAM–ALADIN Research on Mesoscale Operational NWP in Euromed",  # noqa: RUF001
+        long_name="the HIRLAM–ALADIN Research on Mesoscale Operational NWP in Euromed",
         level=65,
         cycle="6-11",
     ),

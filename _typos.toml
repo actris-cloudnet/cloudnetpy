@@ -1,6 +1,3 @@
 [default]
 extend-ignore-re = ["TYP OP4A", "Winddirection\\(degres\\)"]
 extend-ignore-identifiers-re = ["LinearNDInterpolator", "MOR", "NearestNDInterpolator", "morVisibility", "mor_visibility", "reshape_1d2nd", "typ_op4a"]
-
-[files]
-extend-exclude = ["tests/unit/data"]
