@@ -16,6 +16,7 @@ class MetaData(NamedTuple):
     axis: str | None = None
     calendar: str | None = None
     source: str | None = None
+    source_instrument_pid: str | None = None
 
 
 COMMON_ATTRIBUTES = {

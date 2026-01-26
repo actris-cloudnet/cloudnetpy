@@ -109,7 +109,15 @@ def save_product_file(
         copy_global(
             obj.dataset,
             nc,
-            ("location", "day", "month", "year", "source", "voodoonet_version"),
+            (
+                "location",
+                "day",
+                "month",
+                "year",
+                "source",
+                "source_instrument_pids",
+                "voodoonet_version",
+            ),
         )
         merge_history(nc, human_readable_file_type, obj)
         nc.references = get_references(short_id)
@@ -243,6 +251,14 @@ def add_source_instruments(nc: netCDF4.Dataset, data: Observations) -> None:
     }
     if sources:
         nc.source = "\n".join(sorted(sources))
+    source_pids = {
+        obj.instrument_pid
+        for field in fields(data)
+        for obj in [getattr(data, field.name)]
+        if getattr(obj, "instrument_pid", "")
+    }
+    if source_pids:
+        nc.source_instrument_pids = "\n".join(sorted(source_pids))
 
 
 def init_file(
@@ -359,10 +375,13 @@ def add_source_attribute(attributes: dict, data: Observations) -> dict:
         if getattr(data, instrument) is None:
             continue
         source = getattr(data, instrument).dataset.source
+        source_pid = getattr(getattr(data, instrument).dataset, "instrument_pid", None)
         for key in keys:
             if key not in attributes:
                 attributes[key] = COMMON_ATTRIBUTES[key]
-            attributes[key] = attributes[key]._replace(source=source)
+            attributes[key] = attributes[key]._replace(
+                source=source, source_instrument_pid=source_pid
+            )
     return attributes
 
 
