@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.87.3 – 2026-01-26
+
+- Add source instrument PID attributes
+
 ## 1.87.2 – 2026-01-13
 
 - Fix mask in `interpolate_2d_nearest` in SciPy 1.17.0
