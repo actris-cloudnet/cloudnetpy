@@ -235,7 +235,7 @@ def interpolate_lwp(obs: ClassData) -> npt.NDArray:
         Liquid water path where the masked values are filled by interpolation.
 
     """
-    if obs.lwp.all() is ma.masked:
+    if obs.lwp.all() is ma.masked or ma.sum(obs.lwp) == 0:
         return np.zeros(obs.time.shape)
     ind = ma.where(obs.lwp)
     return np.interp(obs.time, obs.time[ind], obs.lwp[ind])
