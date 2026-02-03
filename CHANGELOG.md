@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.87.4 – 2026-02-03
+
+- Fix lwp interpolation when all zero values
+
 ## 1.87.3 – 2026-01-26
 
 - Add source instrument PID attributes
