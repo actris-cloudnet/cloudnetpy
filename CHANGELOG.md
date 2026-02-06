@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.87.5 – 2026-02-06
+
+- Increase max gap for epsilon-lidar plot
+
 ## 1.87.4 – 2026-02-03
 
 - Fix lwp interpolation when all zero values
