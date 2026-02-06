@@ -1192,6 +1192,7 @@ def _get_max_gap_in_minutes(figure_data: FigureData) -> float:
         "weather-station": 12,
         "doppler-lidar-wind": 75,
         "doppler-lidar": 75,
+        "epsilon-lidar": 75,
         "radar": 5,
         "cpr-simulation": 60,
     }
