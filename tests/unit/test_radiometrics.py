@@ -263,8 +263,8 @@ class TestOldDWDMP3039AFileFormat(Check):
 
 
 class TestRadiometricsAlternatingProcWhere301before401(Check):
-    test_input = f"{SCRIPT_PATH}/data/radiometrics/2025-09-30_00-00-45_lv2.csv"
-    date = "2025-09-30"
+    test_input = f"{SCRIPT_PATH}/data/radiometrics/2026-02-20_00-02-09_lv2.csv"
+    date = "2026-02-20"
     temp_dir = TemporaryDirectory()
     temp_path = temp_dir.name + "/radiometrics.nc"
     site_meta = SITE_META
@@ -272,7 +272,7 @@ class TestRadiometricsAlternatingProcWhere301before401(Check):
 
     def test_time(self):
         time = self.nc.variables["time"][:]
-        assert_allclose(time, [4 / 60 + 18 / 60 / 60])
+        assert_allclose(time, [2 / 60 + 52 / 60 / 60])
 
     def test_lwp(self):
         lwp = self.nc.variables["lwp"][:]
@@ -280,4 +280,4 @@ class TestRadiometricsAlternatingProcWhere301before401(Check):
 
     def test_iwv(self):
         iwv = self.nc.variables["iwv"][:]
-        assert_allclose(iwv, [11.14])
+        assert_allclose(iwv, [4.33])

@@ -175,7 +175,7 @@ class RadiometricsMP:
             for record in superblock:
                 if record.block_type == 400 and record.block_index == 1:
                     procs.append(record.values["LV2 Processor"])
-            good_procs = ["0.00:19.80", "Zenith", "Zenith16", "Zenith18"]
+            good_procs = ["0.00:90.00", "Zenith", "Zenith16", "Zenith18"]
             curr_proc = 0
             for record in superblock:
                 if record.block_type == 100:
