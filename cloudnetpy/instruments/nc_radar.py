@@ -122,6 +122,10 @@ class NcRadar(DataSource, CloudnetInstrument):
         elevation_diff = ma.diff(elevation, prepend=elevation[1])
         azimuth_diff = ma.diff(azimuth, prepend=azimuth[1])
 
+        # if azimuth_diff is large, it can be due to wrapping around 360 degrees
+        azimuth_diff[azimuth_diff > 180] -= 360
+        azimuth_diff[azimuth_diff < -180] += 360
+
         is_stable = np.abs(elevation - 90) < elevation_threshold
         is_stable &= np.abs(elevation_diff) < elevation_diff_threshold
         is_stable &= np.abs(azimuth_diff) < azimuth_diff_threshold
