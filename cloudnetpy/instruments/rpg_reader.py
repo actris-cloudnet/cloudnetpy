@@ -7,7 +7,8 @@ import numpy as np
 import numpy.typing as npt
 from numpy import ma
 from numpy.lib import recfunctions as rfn
-from rpgpy import read_rpg
+from rpgpy import read_rpg, spectra2moments
+from rpgpy.spcutil import scale_spectra
 
 from cloudnetpy.constants import G_TO_KG
 from cloudnetpy.exceptions import ValidTimeStampError
@@ -18,11 +19,100 @@ class Fmcw94Bin:
 
     def __init__(self, filename: str | PathLike) -> None:
         self.filename = filename
+        print("Read", filename)
         self.header, self.data = read_rpg(filename)
+        if Path(filename).suffix == ".LV0":
+            # TODO: unfold spectra here!
+            print("Spec")
+            extra = spectra2moments(self.data, self.header)
+            if self.header["DualPol"] == 1:  # LDR mode
+                print("LDR")
+                if self.header["CompEna"] != 2:
+                    # bins_per_chirp = np.diff(np.hstack((self.header["RngOffs"], self.header["RAltN"])))
+                    # noise_h_per_bin = (self.data["HNoisePow"] / np.repeat(self.header["SpecN"], bins_per_chirp))[
+                    #     :,
+                    #     :,
+                    #     np.newaxis,
+                    # ]
+                    # noise_v_per_bin = (self.data["TotNoisePow"] / np.repeat(self.header["SpecN"], bins_per_chirp))[
+                    #     :,
+                    #     :,
+                    #     np.newaxis,
+                    # ]
+                    # Avoid division by zero
+                    # noise_v_per_bin[noise_v_per_bin == 0] = 1e-10
+                    # noise_h_per_bin[noise_h_per_bin == 0] = 1e-10
+
+                    spec_H = self.data["HSpec"]
+                    spec_V = self.data["TotSpec"]
+
+                    Bhv = np.sum(
+                        self.data["ReVHSpec"] + 1j * self.data["ImVHSpec"], axis=2
+                    )
+                    Bhh = np.sum(spec_H, axis=2)
+                    Bvv = np.sum(spec_V, axis=2)
+
+                    extra["RefRat"] = 10 * np.log10(Bhh / Bvv)
+                    extra["CorrCoeff"] = np.abs(Bhv) / np.sqrt(Bhh * Bvv)
+                    extra["DiffPh"] = np.angle(Bhv)
+            elif self.header["DualPol"] == 2:
+                bins_per_chirp = np.diff(
+                    np.hstack((self.header["RngOffs"], self.header["RAltN"]))
+                )
+                noise_H = self.data["HNoisePow"]
+                noise_V = self.data["TotNoisePow"]
+                noise_h_per_bin = (
+                    noise_H / np.repeat(self.header["SpecN"], bins_per_chirp)
+                )[
+                    :,
+                    :,
+                    np.newaxis,
+                ]
+                noise_v_per_bin = (
+                    noise_V / np.repeat(self.header["SpecN"], bins_per_chirp)
+                )[
+                    :,
+                    :,
+                    np.newaxis,
+                ]
+
+                spec_H = self.data["HSpec"]
+                spec_tot = scale_spectra(self.data["TotSpec"], self.header["SWVersion"])
+                spec_V = spec_tot - spec_H - 2 * self.data["ReVHSpec"]
+
+                # SNRv = spec_V / np.where(noise_v_per_bin == 0, 1e-10, noise_v_per_bin)
+                # SNRh = spec_H / np.where(noise_h_per_bin == 0, 1e-10, noise_h_per_bin)
+                # snr_mask = np.all((SNRv < 1000) | (SNRh < 1000), axis=2)
+
+                ReBhv = self.data["ReVHSpec"]
+                Bhh = spec_H  # + noise_h_per_bin
+                Bvv = spec_V  # + noise_v_per_bin
+                sldr = np.sum(Bhh + Bvv - 2 * ReBhv, axis=2) / np.sum(
+                    Bhh + Bvv + 2 * ReBhv, axis=2
+                )
+                # extra["SLDR"] = ma.masked_where(snr_mask, 10 * np.log10(sldr))
+                extra["SLDR"] = 10 * np.log10(sldr)
+
+                # extra["SLDR"] = calc_spectral_LDR(self.header, self.data)
+            self.data |= extra
+
+            for key in (
+                "TotSpec",
+                "HSpec",
+                "ReVHSpec",
+                "ImVHSpec",
+                "SLv",
+                "SLh",
+                "TotNoisePow",
+                "HNoisePow",
+            ):
+                if key in self.data:
+                    del self.data[key]
 
         is_strs_mode = self.header.get("DualPol") == 2
 
         header_keymap = {
+            # LV0 & LV1
             "StartTime": "_start_time",
             "StopTime": "_stop_time",
             "SupPowLev": "_is_power_levelling",
@@ -63,9 +153,30 @@ class Fmcw94Bin:
             "dR": "range_resolution",
             "MaxVel": "nyquist_velocity",
             "InstCalPar": "_calibration_period",
+            # LV0
+            "Cr": "_Cr",
+            "CompEna": "_CompEna",
+            "AntiAlias": "_AntiAlias",
+            "Fr": "_Fr",
+            "ChanBW": "_ChanBW",
+            "ChirpLowIF": "_ChirpLowIF",
+            "ChirpHighIF": "_ChirpHighIF",
+            "RangeMin": "_RangeMin",
+            "RangeMax": "_RangeMax",
+            "ChirpFFTSize": "_ChirpFFTSize",
+            "ChirpInvSamples": "_ChirpInvSamples",
+            "ChirpCenterFr": "_ChirpCenterFr",
+            "ChirpBWFr": "_ChirpBWFr",
+            "FFTStartInd": "_FFTStartInd",
+            "FFTStopInd": "_FFTStopInd",
+            "ChirpFFTNo": "_ChirpFFTNo",
+            "SampRate": "_SampRate",
+            "MaxRange": "_MaxRange",
+            "velocity_vectors": "_velocity_vectors",
         }
 
         data_keymap = {
+            # LV0 & LV1
             "RefRat": "zdr" if is_strs_mode else "ldr",
             "CorrCoeff": "rho_hv" if is_strs_mode else "rho_cx",
             "DiffPh": "phi_dp" if is_strs_mode else "phi_cx",
@@ -98,6 +209,15 @@ class Fmcw94Bin:
             "SCorrCoeff": "srho_hv",
             "KDP": "kdp",
             "DiffAtt": "differential_attenuation",
+            # LV0
+            # "TotSpec": "_TotSpec",
+            # "HSpec": "_HSpec",
+            # "ReVHSpec": "_ReVHSpec",
+            # "ImVHSpec": "_ImVHSpec",
+            # "SLv": "_SLv",
+            # "SLh": "_SLh",
+            # "TotNoisePow": "_TotNoisePow",
+            # "HNoisePow": "_HNoisePow",
         }
 
         self.replace_keys(self.header, header_keymap)

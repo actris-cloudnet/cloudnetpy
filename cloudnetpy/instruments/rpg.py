@@ -1,8 +1,9 @@
 import datetime
 import logging
 import math
-from collections.abc import Sequence
+from collections.abc import Iterable, Sequence
 from os import PathLike
+from pathlib import Path
 from uuid import UUID
 
 import numpy as np
@@ -22,7 +23,7 @@ from cloudnetpy.metadata import MetaData
 
 
 def rpg2nc(
-    path_to_l1_files: str | PathLike,
+    path_to_l1_files: str | PathLike | Iterable[str | PathLike],
     output_file: str | PathLike,
     site_meta: dict,
     uuid: str | UUID | None = None,
@@ -63,15 +64,24 @@ def rpg2nc(
     if isinstance(date, str):
         date = datetime.date.fromisoformat(date)
     uuid = utils.get_uuid(uuid)
-    l1_files = utils.get_sorted_filenames(path_to_l1_files, ".LV1")
+    if isinstance(path_to_l1_files, str | PathLike):
+        l1_files = utils.get_sorted_filenames(path_to_l1_files, ".LV0")
+        if not l1_files:
+            l1_files = utils.get_sorted_filenames(path_to_l1_files, ".LV1")
+    else:
+        suffixes = {Path(p).suffix for p in path_to_l1_files}
+        valid_suffixes = {".LV0", ".LV1"}
+        if len(suffixes & valid_suffixes) != 1:
+            raise ValueError("Expected .LV0 or .LV1 files")
+        l1_files = path_to_l1_files
     fmcw94_objects, valid_files = _get_fmcw94_objects(l1_files, date)
     one_day_of_data = create_one_day_data_record(fmcw94_objects)
     one_day_of_data["nyquist_velocity"] = _expand_nyquist(one_day_of_data)
     _print_info(one_day_of_data)
     fmcw = Fmcw(one_day_of_data, site_meta)
     fmcw.convert_time_to_fraction_hour()
-    fmcw.mask_invalid_ldr()
-    fmcw.mask_invalid_width()
+    # fmcw.mask_invalid_ldr()
+    # fmcw.mask_invalid_width()
     fmcw.sort_timestamps()
     fmcw.remove_duplicate_timestamps()
     fmcw.linear_to_db(("Zh", "antenna_gain"))
@@ -207,8 +217,11 @@ def _get_fmcw94_objects(
     if not objects:
         msg = "No valid files found"
         raise ValidTimeStampError(msg)
+    print("Interp")
     objects = _interpolate_to_common_height(objects)
+    print("Pad")
     objects = _pad_chirp_related_fields(objects)
+    print("Expand")
     objects = _expand_time_related_fields(objects)
     return objects, valid_files
 
@@ -339,6 +352,11 @@ class Fmcw(Rpg):
         if "ldr" in self.data:
             self.data["ldr"].data = ma.masked_less_equal(
                 self.data["ldr"].data,
+                threshold,
+            )
+        if "sldr" in self.data:
+            self.data["sldr"].data = ma.masked_less_equal(
+                self.data["sldr"].data,
                 threshold,
             )
 
