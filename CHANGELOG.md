@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.87.7 – 2026-02-26
+
+- Fix azimuth wrapping around 360
+
 ## 1.87.6 – 2026-02-26
 
 - Update allowed LV2 processor values in Radiometrics reader
