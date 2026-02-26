@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.87.6 – 2026-02-26
+
+- Update allowed LV2 processor values in Radiometrics reader
+
 ## 1.87.5 – 2026-02-06
 
 - Increase max gap for epsilon-lidar plot
