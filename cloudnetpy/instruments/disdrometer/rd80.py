@@ -19,7 +19,7 @@ from .common import ATTRIBUTES
 
 
 def rd802nc(
-    input_file: str | PathLike | list[str | PathLike],
+    input_file: str | PathLike | Iterable[str | PathLike],
     output_file: str | PathLike,
     site_meta: dict,
     uuid: str | UUID | None = None,
