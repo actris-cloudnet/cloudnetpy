@@ -439,3 +439,24 @@ class TestInvalidCharacters(Check):
 
     def test_skips_invalid_row(self):
         assert len(self.nc.variables["time"]) == 4
+
+
+class TestRd80(Check):
+    date = "2022-01-01"
+    temp_dir = TemporaryDirectory()
+    temp_path = temp_dir.name + "/test.nc"
+    filename = f"{SCRIPT_PATH}/data/rd80/RD-211231-181400.txt"
+    site_meta = SITE_META
+    uuid = disdrometer.rd802nc(filename, temp_path, site_meta, date=date)
+
+    def test_processing(self):
+        assert self.nc.title == f"RD-80 disdrometer from {self.site_meta['name']}"
+        assert self.nc.year == "2022"
+        assert self.nc.month == "01"
+        assert self.nc.day == "01"
+        assert self.nc.location == "Kumpula"
+        assert self.nc.cloudnet_file_type == "disdrometer"
+        assert np.allclose(
+            self.nc["rainfall_rate"][:],
+            [0.0284 / 3600000, 0.1546 / 3600000, 1.8136 / 3600000],
+        )

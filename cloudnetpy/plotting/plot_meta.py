@@ -424,7 +424,9 @@ ATTRIBUTES = {
             plot_range=(1e-5, 1e-2),
             log_scale=True,
         ),
-        "number_concentration": PlotMeta(plot_range=(1e-2, 1e3), log_scale=True),
+        "number_concentration": PlotMeta(
+            plot_range=(1e-2, 1e3), log_scale=True, mask_zeros=True
+        ),
         "fall_velocity": PlotMeta(
             plot_range=(0, 10),
             mask_zeros=True,
