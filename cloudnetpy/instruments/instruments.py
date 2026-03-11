@@ -207,7 +207,7 @@ THIES = Instrument(
 )
 
 RD80 = Instrument(
-    manufacturer="Disdromet",
+    manufacturer="Distromet",
     domain="disdrometer",
     category="disdrometer",
     model="RD-80",
