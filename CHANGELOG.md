@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.88.1 – 2026-03-11
+
+- Fix type hint in `rd802nc` function
+
 ## 1.88.0 – 2026-03-11
 
 - Add support for RD-80 disdrometer
