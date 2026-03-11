@@ -6,14 +6,14 @@ from numpy import ma
 
 def convert_to_numpy(
     data: dict,
-    fill_values: dict,
+    fill_values: dict | None = None,
     int_keys: Container | None = None,
     float_keys: Container | None = None,
 ) -> dict:
     output = {}
     for key, value in data.items():
         arr = np.array(value)
-        if key in fill_values:
+        if fill_values is not None and key in fill_values:
             arr = ma.masked_where(arr == fill_values[key], arr)
         if int_keys is not None and key in int_keys:
             new_arr = np.astype(arr, np.int32)

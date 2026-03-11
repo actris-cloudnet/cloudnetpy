@@ -206,6 +206,13 @@ THIES = Instrument(
     model="LNM",
 )
 
+RD80 = Instrument(
+    manufacturer="Disdromet",
+    domain="disdrometer",
+    category="disdrometer",
+    model="RD-80",
+)
+
 PLUVIO2 = Instrument(
     manufacturer="OTT HydroMet",
     domain="rain-gauge",
