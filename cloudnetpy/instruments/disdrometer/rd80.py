@@ -129,7 +129,7 @@ class Rd80(CloudnetInstrument):
         self.data["diameter"] = CloudnetArray(Dmid / mm_to_m, "diameter")
         self.data["diameter_spread"] = CloudnetArray(Dspr / mm_to_m, "diameter_spread")
         self.data["diameter_bnds"] = CloudnetArray(
-            np.dstack([Dlow, Dupp]) / mm_to_m, "diameter_bnds"
+            np.stack((Dlow, Dupp), axis=1) / mm_to_m, "diameter_bnds"
         )
         self.data["time"] = CloudnetArray(hour.astype(np.float32), "time")
         self.data["interval"] = CloudnetArray(dt, "interval")
