@@ -16,12 +16,12 @@ def convert_to_numpy(
         if fill_values is not None and key in fill_values:
             arr = ma.masked_where(arr == fill_values[key], arr)
         if int_keys is not None and key in int_keys:
-            new_arr = np.astype(arr, np.int32)
+            new_arr = arr.astype(np.int32)
             if not np.all(arr == new_arr):
                 msg = "Cannot convert non-integer float to integer"
                 raise ValueError(msg)
             arr = new_arr
         elif float_keys is not None and key in float_keys:
-            arr = np.astype(arr, np.float32)
+            arr = arr.astype(np.float32)
         output[key] = arr
     return output
