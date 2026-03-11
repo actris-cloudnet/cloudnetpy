@@ -129,4 +129,4 @@ def read_lpm(filename: str | PathLike) -> tuple[npt.NDArray, dict[int, npt.NDArr
         time, data = _read_lampedusa(filename)
     else:
         time, data = _read_raw(filename)
-    return np.ndarray(time), convert_to_numpy(data, FILL_VALUES)
+    return np.array(time), convert_to_numpy(data, FILL_VALUES)
