@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.88.0 – 2026-03-11
+
+- Add support for RD-80 disdrometer
+
 ## 1.87.7 – 2026-02-26
 
 - Fix azimuth wrapping around 360
