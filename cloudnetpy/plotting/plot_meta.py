@@ -19,7 +19,7 @@ class PlotMeta(NamedTuple):
         moving_average: Whether to plot a moving average in a 1d plot.
         contour: Whether to plot contours on top of a filled colormap.
         zero_line: Whether to plot a zero line in a 1d plot.
-        mask_zero: Whether to mask zero values in the plot.
+        mask_zeros: Whether to mask zero values in the plot.
         time_smoothing_duration: The duration of the time smoothing window
             (in 2d plots) in minutes.
     """
