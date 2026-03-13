@@ -1184,10 +1184,11 @@ def _reformat_units(unit: str) -> str:
 
 
 def _get_max_gap_in_minutes(figure_data: FigureData) -> float:
-    source = getattr(figure_data.file, "source", "").lower()
     file_type = getattr(figure_data.file, "cloudnet_file_type", "")
+    if file_type == "model":
+        res_h = np.min(np.diff(figure_data.time))
+        return round(60 * res_h)
     max_allowed_gap = {
-        "model": 181 if "gdas1" in source or "ecmwf open" in source else 61,
         "mwr-multi": 35,
         "weather-station": 12,
         "doppler-lidar-wind": 75,
