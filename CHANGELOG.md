@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.88.2 – 2026-03-16
+
+- Handle plotting of model data with any resolution
+
 ## 1.88.1 – 2026-03-11
 
 - Fix type hint in `rd802nc` function
