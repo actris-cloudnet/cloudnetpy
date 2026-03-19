@@ -773,7 +773,7 @@ class Plot2D(Plot):
                 linewidths=0.5,
             )
 
-        if self.sub_plot.variable.name == "Tw":
+        if self._plot_meta.freezing_alt:
             self._plot_contour(
                 figure_data,
                 alt,
