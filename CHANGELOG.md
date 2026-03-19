@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.88.3 – 2026-03-19
+
+- Plot freezing temperature line
+
 ## 1.88.2 – 2026-03-16
 
 - Handle plotting of model data with any resolution
