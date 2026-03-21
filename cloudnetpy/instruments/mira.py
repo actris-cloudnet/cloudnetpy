@@ -189,6 +189,7 @@ class Mira(NcRadar):
             return
         logging.info("Correcting tpow by factor 100 for old FZK instrument firmware")
         self.data["tpow"].data[:] *= 100
+        self.data["tpow"].correction_factor = 100
 
     def screen_invalid_ldr(self) -> None:
         """Masks LDR in MIRA STSR mode data.

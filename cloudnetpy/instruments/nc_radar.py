@@ -58,6 +58,8 @@ class NcRadar(DataSource, CloudnetInstrument):
             range_instru = range_instru * range_correction_factor
         time = np.array(self.time)
         self.append_data(range_instru, "range")
+        if range_correction_factor is not None:
+            self.data["range"].correction_factor = range_correction_factor
         self.append_data(time, "time", dtype=time_dtype)
 
     def screen_by_snr(self, snr_limit: float) -> None:
