@@ -53,7 +53,10 @@ def test_get_detection_status():
 
 
 def test_find_cloud_mask():
-    target_classification = np.array([0, 1, 2, 3, 4, 5, 6, 7])
+    # Single row with cloud targets repeated enough to survive small-object filter
+    row = np.array([0, 1, 2, 3, 4, 5, 6, 7])
+    target_classification = np.tile(row, (25, 1))
     cloud_mask = classification._find_cloud_mask(target_classification)
-    expected = np.array([0, 1, 0, 1, 1, 1, 0, 0])
+    expected_row = np.array([0, 1, 0, 1, 1, 1, 0, 0])
+    expected = np.tile(expected_row, (25, 1))
     assert_array_equal(cloud_mask, expected)

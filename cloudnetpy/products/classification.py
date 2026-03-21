@@ -317,7 +317,11 @@ def _find_cloud_mask(classification: npt.NDArray) -> npt.NDArray:
         Target.ICE_AND_SUPERCOOLED,
     ]:
         cloud_mask[classification == value] = 1
-    return cloud_mask
+    return utils.remove_small_objects(
+        cloud_mask.astype(bool),
+        max_size=20,
+        connectivity=1,
+    ).astype(int)
 
 
 COMMENTS = {
