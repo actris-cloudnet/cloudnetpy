@@ -53,6 +53,9 @@ class NcRadar(DataSource, CloudnetInstrument):
         range_instru = np.array(
             self.getvar("range", "height"),
         )  # "height" in old BASTA files
+        range_correction_factor = self.site_meta.get("range_correction_factor")
+        if range_correction_factor is not None:
+            range_instru = range_instru * range_correction_factor
         time = np.array(self.time)
         self.append_data(range_instru, "range")
         self.append_data(time, "time", dtype=time_dtype)
