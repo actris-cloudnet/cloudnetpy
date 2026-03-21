@@ -156,6 +156,7 @@ class Mira(NcRadar):
         if "tpow" not in self.data:
             logging.warning("Variable tpow is missing")
             return
+        self._correct_fzk_tpow()
         tpow = self.data["tpow"][:]
         # Threshold for abnormally low power e.g. Limassol 2024-10-20. Average
         # power should 30 to 60 W according to MIRA-35 data sheet. Based on a
@@ -168,6 +169,26 @@ class Mira(NcRadar):
                 "Filtering %s profiles due to low average transmit power", n_removed
             )
             self.screen_time_indices(~is_low)
+
+    def _correct_fzk_tpow(self) -> None:
+        """Corrects tpow for old FZK-serial instruments missing the FZK100 fix.
+
+        Some MIRA-35 instruments with serial number 'fzk' had a firmware bug
+        where tpow was reported 100x too small. Files produced after the
+        firmware fix contain 'FZK100' in the 'hrd' global attribute. Files
+        without this field need tpow multiplied by 100.
+        """
+        hrd = getattr(self.dataset, "hrd", "")
+        if "FZK100" in hrd:
+            return
+        sn_lines = [line for line in hrd.split("\n") if line.strip().startswith("SN:")]
+        if not sn_lines:
+            return
+        sn = sn_lines[0].split(":", 1)[1].strip()
+        if sn != "fzk":
+            return
+        logging.info("Correcting tpow by factor 100 for old FZK instrument firmware")
+        self.data["tpow"].data[:] *= 100
 
     def screen_invalid_ldr(self) -> None:
         """Masks LDR in MIRA STSR mode data.

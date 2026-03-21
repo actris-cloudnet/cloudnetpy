@@ -270,6 +270,28 @@ class TestFilesHavingNyquistVelocityVector(Check):
                 getattr(radar_fun, name)()
 
 
+class TestFzkTpowCorrection(Check):
+    """Tests that old FZK instruments with tpow reported 100x too small are corrected."""
+
+    site_meta = SITE_META
+    date = "2010-05-11"
+    temp_dir = TemporaryDirectory()
+    temp_path = temp_dir.name + "/mira.nc"
+    filepath = f"{SCRIPT_PATH}/data/mira-fzk/"
+    uuid = mira.mira2nc(
+        f"{filepath}20100511_0000-trunc.mmclx", temp_path, site_meta, date=date
+    )
+
+    def test_tpow_corrected(self):
+        tpow = self.nc.variables["tpow"][:]
+        assert np.all(tpow > 1), "tpow should be corrected by factor 100"
+        assert np.all(tpow > 20), f"Expected tpow ~27 W, got {tpow}"
+        assert np.all(tpow < 40), f"tpow unreasonably high: {tpow}"
+
+    def test_profiles_not_filtered(self):
+        assert len(self.nc.variables["time"][:]) > 0, "All profiles were filtered out"
+
+
 def test_masked_mira():
     filepath = f"{SCRIPT_PATH}/data/mira-masked/"
     with pytest.raises(ValidTimeStampError):
