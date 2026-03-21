@@ -91,6 +91,7 @@ def classify_measurements(data: Observations) -> ClassificationResult:
     bits.aerosol = _find_aerosols(obs, bits)
     bits.aerosol[filtered_ice] = False
     _fix_super_cold_liquid(obs, bits)
+    _reclassify_ice_with_high_ldr(obs, bits)
 
     return ClassificationResult(
         category_bits=bits,
@@ -120,6 +121,27 @@ def fetch_quality(
         corrected_melting=attenuations.melting.attenuated
         & ~attenuations.melting.uncorrected,
     )
+
+
+def _reclassify_ice_with_high_ldr(obs: ClassData, bits: CategoryBits) -> None:
+    """Reclassifies ice pixels with high LDR as insects.
+
+    Ice particles typically have LDR below -13 dB. Higher values in the
+    freezing region (excluding the melting layer) indicate insects, which
+    can be present in temperatures down to about -10 C.
+    """
+    if not hasattr(obs, "ldr"):
+        return
+    ldr_limit = -13
+    temp_limit = T0 - 10
+    is_ice = bits.falling & bits.freezing & ~bits.droplet & ~bits.melting
+    high_ldr = ~ma.getmaskarray(obs.ldr) & (obs.ldr > ldr_limit)
+    warm_enough = obs.tw > temp_limit
+    reclassify = is_ice & high_ldr & warm_enough
+    bits.insect[reclassify] = True
+    bits.falling[reclassify] = False
+    has_lidar = ~obs.beta.mask
+    bits.aerosol[reclassify & has_lidar] = True
 
 
 def _fix_super_cold_liquid(obs: ClassData, bits: CategoryBits) -> None:
