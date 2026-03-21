@@ -354,6 +354,8 @@ def interpolate_2d_mask(
     z: ma.MaskedArray,
     x_new: npt.NDArray,
     y_new: npt.NDArray,
+    *,
+    extrapolate: bool = False,
 ) -> ma.MaskedArray:
     """2D linear interpolation preserving the mask.
 
@@ -363,13 +365,14 @@ def interpolate_2d_mask(
         z: 2D masked array, data values.
         x_new: 1D array, new x-coordinates.
         y_new: 1D array, new y-coordinates.
+        extrapolate: If True, linearly extrapolate along the y-axis for points
+            outside the original range. Default is False (NaN / masked).
 
     Returns:
         Interpolated 2D masked array.
 
     Notes:
-        Points outside the original range will be nans (and masked). Uses linear
-        interpolation. Input data may contain nan-values.
+        Uses linear interpolation. Input data may contain nan-values.
 
     """
     z = ma.array(ma.masked_invalid(z, copy=True))
@@ -386,6 +389,15 @@ def interpolate_2d_mask(
         (xx_new, yy_new),
         method="linear",
     )
+    if extrapolate:
+        y_new_arr = np.asarray(y_new)
+        for i in range(data.shape[0]):
+            row = data[i, :]
+            nans = np.isnan(row)
+            if nans.any() and np.sum(~nans) >= 2:
+                valid = ~nans
+                f = interp1d(y_new_arr[valid], row[valid], fill_value="extrapolate")
+                data[i, nans] = f(y_new_arr[nans])
     # Preserve mask:
     mask_fun = RectBivariateSpline(x, y, ma.getmaskarray(z), kx=1, ky=1)
     mask = mask_fun(x_new, y_new)

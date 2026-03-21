@@ -100,6 +100,35 @@ def test_get_model_heights(fake_model_file):
     )
 
 
+def test_get_model_heights_with_geopotential(tmpdir):
+    """Model heights should use sfc_geopotential instead of alt_site."""
+    model_surface_alt = 500.0
+    geopotential = model_surface_alt * 9.80665
+    file_name = tmpdir.join("ecmwf_file.nc")
+    with netCDF4.Dataset(file_name, "w", format="NETCDF4_CLASSIC") as root_grp:
+        n_time, n_height = 3, 4
+        root_grp.createDimension("time", n_time)
+        root_grp.createDimension("height", n_height)
+        root_grp.createDimension("wl", 2)
+        root_grp.createVariable("time", "f8", "time")[:] = np.arange(n_time)
+        var = root_grp.createVariable("height", "f8", ("time", "height"))
+        var[:] = np.array([[100, 200, 300, 400]] * n_time)
+        var.units = "m"
+        geopot_var = root_grp.createVariable("sfc_geopotential", "f8", "time")
+        geopot_var[:] = np.full(n_time, geopotential)
+        geopot_var.units = "m2 s-2"
+        _create_var(root_grp, "temperature")
+        _create_var(root_grp, "pressure")
+        _create_var(root_grp, "uwind")
+        _create_var(root_grp, "vwind")
+        _create_var(root_grp, "q")
+        _create_var(root_grp, "rh")
+    alt_site = 2650.0  # Very different from model surface
+    obj = model.Model(str(file_name), alt_site)
+    expected = model_surface_alt + np.array([[100, 200, 300, 400]] * n_time)
+    np.testing.assert_allclose(obj.model_heights, expected, atol=0.01)
+
+
 def test_mean_height(fake_model_file):
     obj = model.Model(str(fake_model_file), ALT_SITE)
     assert_array_equal(obj.mean_height, ALT_SITE + np.array([1000, 2000, 3000, 4000]))
