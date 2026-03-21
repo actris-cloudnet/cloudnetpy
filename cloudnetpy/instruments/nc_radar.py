@@ -120,23 +120,18 @@ class NcRadar(DataSource, CloudnetInstrument):
             raise ValidTimeStampError(msg)
 
         elevation_diff = ma.diff(elevation, prepend=elevation[1])
-        azimuth_diff = ma.diff(azimuth, prepend=azimuth[1])
-
-        # if azimuth_diff is large, it can be due to wrapping around 360 degrees
-        azimuth_diff[azimuth_diff > 180] -= 360
-        azimuth_diff[azimuth_diff < -180] += 360
-
         is_stable = np.abs(elevation - 90) < elevation_threshold
         is_stable &= np.abs(elevation_diff) < elevation_diff_threshold
-        is_stable &= np.abs(azimuth_diff) < azimuth_diff_threshold
 
-        # If scanning unit is broken, data are missing
-        # (assume it's vertically pointing)
-        missing_info = elevation.mask & azimuth.mask
-        is_stable[missing_info] = True
+        if not ma.getmaskarray(azimuth).all():
+            azimuth_diff = ma.diff(azimuth, prepend=azimuth[1])
+            azimuth_diff[azimuth_diff > 180] -= 360
+            azimuth_diff[azimuth_diff < -180] += 360
+            is_stable &= np.abs(azimuth_diff) < azimuth_diff_threshold
 
-        if ma.isMaskedArray(is_stable):
-            is_stable[is_stable.mask] = False
+        # Masked values indicate missing scanning info
+        # (assume vertically pointing)
+        is_stable = np.array(ma.filled(is_stable, fill_value=True))
         n_removed = np.count_nonzero(~is_stable)
 
         if n_removed >= len(elevation) - 1:
