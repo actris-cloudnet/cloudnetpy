@@ -388,7 +388,7 @@ def _fetch_product(
         meta = [meta[0]]
     suffix = "geophysical" if "geophysical" in meta[0].product.type else "instrument"
     folder = _create_output_folder(suffix, args)
-    return _download_product_file(meta, folder, client)
+    return _download_product_file(meta, folder, client, force=args.force_download)
 
 
 def _fetch_model(args: argparse.Namespace, client: APIClient) -> str | None:
@@ -397,7 +397,7 @@ def _fetch_model(args: argparse.Namespace, client: APIClient) -> str | None:
         logging.info("No model data available for this date")
         return None
     folder = _create_output_folder("instrument", args)
-    return _download_product_file(files, folder, client)
+    return _download_product_file(files, folder, client, force=args.force_download)
 
 
 def _fetch_raw(
@@ -406,19 +406,32 @@ def _fetch_raw(
     pid = _shorten_pid(metadata[0].instrument.pid)
     instrument = f"{metadata[0].instrument.instrument_id}_{pid}"
     folder = _create_input_folder(instrument, args)
+    if args.force_download:
+        for meta in metadata:
+            filepath = folder / meta.download_url.split("/")[-1]
+            if filepath.exists():
+                logging.info("Removing existing file: %s", filepath)
+                filepath.unlink()
     return client.download(metadata, output_directory=folder)
 
 
 def _download_product_file(
-    meta: list[ProductMetadata], folder: Path, client: APIClient
+    meta: list[ProductMetadata],
+    folder: Path,
+    client: APIClient,
+    *,
+    force: bool = False,
 ) -> str:
     if len(meta) > 1:
         msg = "Multiple product files found"
         raise ValueError(msg)
     filepath = folder / meta[0].filename
-    if filepath.exists():
+    if filepath.exists() and not force:
         logging.info("Existing file found: %s", filepath)
         return str(filepath)
+    if filepath.exists():
+        logging.info("Removing existing file: %s", filepath)
+        filepath.unlink()
     logging.info("Downloading file: %s", filepath)
     return str(client.download(meta, output_directory=folder)[0])
 
@@ -534,6 +547,12 @@ def main() -> None:
     parser.add_argument(
         "--dl",
         help="Download raw data only",
+        default=False,
+        action=argparse.BooleanOptionalAction,
+    )
+    parser.add_argument(
+        "--force-download",
+        help="Force re-download of input files even if they exist locally",
         default=False,
         action=argparse.BooleanOptionalAction,
     )
