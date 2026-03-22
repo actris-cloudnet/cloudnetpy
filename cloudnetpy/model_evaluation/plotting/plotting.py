@@ -348,6 +348,8 @@ def plot_colormesh(
     ax: Axes, data: npt.NDArray, axes: tuple, variable_info: PlotMeta
 ) -> None:
     vmin, vmax = variable_info.plot_range
+    if variable_info.clabel == "\u00b0C":
+        data = data - 273.15
     if variable_info.plot_scale == "logarithmic":
         data, vmin, vmax = lin2log(data, vmin, vmax)
     cmap = plt.get_cmap(variable_info.cbar, 22)

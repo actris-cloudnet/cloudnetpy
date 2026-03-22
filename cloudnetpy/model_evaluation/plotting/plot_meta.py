@@ -61,8 +61,8 @@ ATTRIBUTES = {
     "temperature": PlotMeta(
         name="Model temperature",
         cbar="RdBu_r",
-        clabel="K",
-        plot_range=(223.15, 323.15),
+        clabel="\u00b0C",
+        plot_range=(-50, 50),
         plot_scale=_LIN,
         plot_type="model",
     ),

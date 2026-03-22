@@ -16,6 +16,7 @@ from matplotlib.axes import Axes
 from matplotlib.colorbar import Colorbar
 from matplotlib.colorizer import ColorizingArtist
 from matplotlib.colors import ListedColormap
+from matplotlib.contour import QuadContourSet
 from matplotlib.pyplot import Figure
 from matplotlib.ticker import AutoMinorLocator
 from matplotlib.transforms import Affine2D, Bbox
@@ -402,6 +403,7 @@ class Plot:
 
     def _convert_units(self) -> str:
         multiply, add = "multiply", "add"
+        k_to_c = (add, -273.15, "\u00b0C")
         units_conversion = {
             "rainfall_rate": (multiply, 3600000, "mm h$^{-1}$"),
             "snowfall_rate": (multiply, 3600000, "mm h$^{-1}$"),
@@ -411,7 +413,16 @@ class Plot:
             "rainfall_amount": (multiply, 1000, "mm"),
             "snowfall_amount": (multiply, 1000, "mm"),
             "precipitation_amount": (multiply, 1000, "mm"),
-            "air_temperature": (add, -273.15, "\u00b0C"),
+            "air_temperature": k_to_c,
+            "temperature": k_to_c,
+            "Tw": k_to_c,
+            "T_sensor": k_to_c,
+            "T_ambient": k_to_c,
+            "T_interior": k_to_c,
+            "T_laser_driver": k_to_c,
+            "transmitter_temperature": k_to_c,
+            "receiver_temperature": k_to_c,
+            "pc_temperature": k_to_c,
             "r_accum_RT": (multiply, 1000, "mm"),
             "r_accum_NRT": (multiply, 1000, "mm"),
             "cloud_top_height_agl": (multiply, con.M_TO_KM, "Height (km AGL)"),
@@ -773,32 +784,37 @@ class Plot2D(Plot):
                 linewidths=0.5,
             )
 
-        if self._plot_meta.freezing_alt:
-            self._plot_contour(
+        if self._plot_meta.contour_levels is not None:
+            cs = self._plot_contour(
                 figure_data,
                 alt,
-                levels=np.array([con.T0]),
+                levels=np.array(self._plot_meta.contour_levels),
                 colors="gray",
                 linewidths=1.25,
                 linestyles="dashed",
             )
+            if cs is not None:
+                self._ax.clabel(cs, fmt="%g \u00b0C", fontsize=8)
 
     def _plot_contour(
         self,
         figure_data: FigureData,
         alt: npt.NDArray,
         **options,  # noqa: ANN003
-    ) -> None:
+    ) -> QuadContourSet | None:
         time_length = len(figure_data.time_including_gaps)
         step = max(1, time_length // 200)
         ind_time = np.arange(0, time_length, step)
-        self._ax.contour(
-            figure_data.time_including_gaps[ind_time],
-            alt,
-            self._data[ind_time, :].T,
-            **options,
-            zorder=_get_zorder("contour"),
-        )
+        try:
+            return self._ax.contour(
+                figure_data.time_including_gaps[ind_time],
+                alt,
+                self._data[ind_time, :].T,
+                **options,
+                zorder=_get_zorder("contour"),
+            )
+        except ValueError:
+            return None
 
     def _screen_data_by_max_y(self, figure_data: FigureData) -> ndarray:
         if figure_data.height is None:

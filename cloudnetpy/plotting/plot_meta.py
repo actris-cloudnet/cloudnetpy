@@ -19,7 +19,7 @@ class PlotMeta(NamedTuple):
         moving_average: Whether to plot a moving average in a 1d plot.
         contour: Whether to plot contours on top of a filled colormap.
         zero_line: Whether to plot a zero line in a 1d plot.
-        freezing_alt: Whether to plot a zero line in a 2d plot.
+        contour_levels: Specific contour levels to draw on 2D plots.
         mask_zeros: Whether to mask zero values in the plot.
         time_smoothing_duration: The duration of the time smoothing window
             (in 2d plots) in minutes.
@@ -32,7 +32,7 @@ class PlotMeta(NamedTuple):
     moving_average: bool = True
     contour: bool = False
     zero_line: bool = False
-    freezing_alt: bool = False
+    contour_levels: tuple[float, ...] | None = None
     mask_zeros: bool = False
     time_smoothing_duration: int = 0
 
@@ -187,7 +187,7 @@ ATTRIBUTES = {
     "mwr": {
         "temperature": PlotMeta(
             cmap="coolwarm",
-            plot_range=(223.15, 323.15),
+            plot_range=(-50, 50),
             contour=True,
             time_smoothing_duration=_MWR_SINGLE_SMOOTHING,
         ),
@@ -206,7 +206,7 @@ ATTRIBUTES = {
     "mwr-single": {
         "temperature": PlotMeta(
             cmap="coolwarm",
-            plot_range=(223.15, 323.15),
+            plot_range=(-50, 50),
             contour=True,
             time_smoothing_duration=_MWR_SINGLE_SMOOTHING,
         ),
@@ -237,7 +237,7 @@ ATTRIBUTES = {
     "mwr-multi": {
         "temperature": PlotMeta(
             cmap="coolwarm",
-            plot_range=(223.15, 323.15),
+            plot_range=(-50, 50),
             contour=True,
             time_smoothing_duration=_MWR_MULTI_SMOOTHING,
         ),
@@ -408,8 +408,8 @@ ATTRIBUTES = {
         ),
         "temperature": PlotMeta(
             cmap="RdBu_r",
-            plot_range=(223.15, 323.15),
-            freezing_alt=True,
+            plot_range=(-50, 50),
+            contour_levels=(-38, -10, 0),
         ),
         "cloud_fraction": PlotMeta(
             cmap="Blues",
@@ -417,8 +417,8 @@ ATTRIBUTES = {
         ),
         "Tw": PlotMeta(
             cmap="RdBu_r",
-            plot_range=(223.15, 323.15),
-            freezing_alt=True,
+            plot_range=(-50, 50),
+            contour_levels=(-38, -10, 0),
         ),
         "specific_humidity": PlotMeta(
             plot_range=(1e-5, 1e-2),
