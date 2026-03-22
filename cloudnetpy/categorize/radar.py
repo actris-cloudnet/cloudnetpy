@@ -123,26 +123,12 @@ class Radar(DataSource):
         if variable not in self.data:
             return
         data = ma.copy(self.data[variable][:])
-        n_points_in_profiles = ma.count(data, axis=1)
-        n_profiles_with_data = np.count_nonzero(n_points_in_profiles)
+        n_profiles_with_data = np.count_nonzero(ma.count(data, axis=1))
         if n_profiles_with_data < 300:
             return
-        n_vertical = self._filter(
-            data,
-            axis=1,
-            min_coverage=0.5,
-            z_limit=10,
-            distance=4,
-            n_blocks=100,
-        )
-        n_horizontal = self._filter(
-            data,
-            axis=0,
-            min_coverage=0.3,
-            z_limit=-30,
-            distance=3,
-            n_blocks=20,
-        )
+
+        n_vertical = self._filter_stripes_axis(data, variable, axis=1)
+        n_horizontal = self._filter_stripes_axis(data, variable, axis=0)
         if n_vertical > 0 or n_horizontal > 0:
             logging.debug(
                 "Filtered %s vertical and %s horizontal stripes "
@@ -152,57 +138,74 @@ class Radar(DataSource):
                 variable,
             )
 
-    def _filter(
+    def _filter_stripes_axis(
         self,
         data: npt.NDArray,
+        variable: str,
         axis: int,
-        min_coverage: float,
-        z_limit: float,
-        distance: float,
-        n_blocks: int,
     ) -> int:
+        n_values = ma.count(data, axis=axis)
+        n = len(n_values)
+        margin = 5
+
+        spike_indices: set[int] = set()
+        for i in range(margin, n - margin):
+            window = [n_values[i + j] for j in range(-margin, margin + 1) if j != 0]
+            q1, q3 = np.percentile(window, [25, 75])
+            iqr = q3 - q1
+            if iqr == 0 and q3 > 0:
+                continue
+            threshold = q3 + 3 * max(iqr, 1)
+            if n_values[i] > max(threshold, 20):
+                spike_indices.add(i)
+
+        for ind in sorted(spike_indices):
+            below = ind - 1
+            while below >= 0 and below in spike_indices:
+                below -= 1
+            above = ind + 1
+            while above < n and above in spike_indices:
+                above += 1
+            self._mask_stripe_pixels(variable, ind, axis, below, above, n)
+
+        return len(spike_indices)
+
+    def _mask_stripe_pixels(
+        self,
+        variable: str,
+        ind: int,
+        axis: int,
+        below: int,
+        above: int,
+        dim_size: int,
+    ) -> None:
+        self._mask_isolated("v", "Z", ind, axis, below, above, dim_size)
+        if variable != "v" and variable in self.data:
+            self._mask_isolated(variable, variable, ind, axis, below, above, dim_size)
+
+    def _mask_isolated(
+        self,
+        target: str,
+        source: str,
+        ind: int,
+        axis: int,
+        below: int,
+        above: int,
+        dim_size: int,
+    ) -> None:
+        mask = ma.getmaskarray(self.data[source][:])
+        has = ~mask[:, ind] if axis == 0 else ~mask[ind, :]
+        lo = (mask[:, below] if axis == 0 else mask[below, :]) if below >= 0 else True
+        hi = (
+            (mask[:, above] if axis == 0 else mask[above, :])
+            if above < dim_size
+            else True
+        )
+        isolated = has & lo & hi
         if axis == 0:
-            data = data.T
-            echo = self.data["Z"][:].T
+            self.data[target][:][isolated, ind] = ma.masked
         else:
-            echo = self.data["Z"][:]
-
-        len_block = int(np.floor(data.shape[0] / n_blocks))
-        block_indices = np.arange(len_block)
-        n_removed_total = 0
-
-        for block_number in range(n_blocks):
-            data_block = data[block_indices, :]
-            n_values = ma.count(data_block, axis=1)
-            try:
-                q1 = np.quantile(n_values, 0.25)
-                q3 = np.quantile(n_values, 0.75)
-            except IndexError:
-                continue
-
-            if q1 == q3:
-                continue
-
-            threshold = distance * (q3 - q1) + q3
-
-            indices = np.where(
-                (n_values > threshold) & (n_values > (min_coverage * data.shape[1])),
-            )[0]
-            true_ind = [int(x) for x in (block_number * len_block + indices)]
-            n_removed = len(indices)
-
-            if n_removed > 5:
-                continue
-
-            if n_removed > 0:
-                n_removed_total += n_removed
-                for ind in true_ind:
-                    ind2 = np.where(echo[ind, :] < z_limit)
-                    bad_indices = (ind, ind2) if axis == 1 else (ind2, ind)
-                    self.data["v"][:][bad_indices] = ma.masked
-            block_indices += len_block
-
-        return n_removed_total
+            self.data[target][:][ind, isolated] = ma.masked
 
     def correct_atten(self, attenuations: RadarAttenuation) -> None:
         """Corrects radar echo for liquid and gas attenuation.
