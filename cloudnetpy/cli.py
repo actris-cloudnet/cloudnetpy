@@ -438,10 +438,13 @@ def _plot(
 ) -> None:
     if filepath is None or (not args.plot and not args.show):
         return
-    res = requests.get(f"{cloudnet_api_url}products/variables", timeout=60)
-    res.raise_for_status()
-    variables = next(var["variables"] for var in res.json() if var["id"] == product)
-    variables = [var["id"].split("-")[-1] for var in variables]
+    if args.variables is not None:
+        variables = args.variables.split(",")
+    else:
+        res = requests.get(f"{cloudnet_api_url}products/variables", timeout=60)
+        res.raise_for_status()
+        variables = next(var["variables"] for var in res.json() if var["id"] == product)
+        variables = [var["id"].split("-")[-1] for var in variables]
     image_name = str(filepath).replace(".nc", ".png") if args.plot else None
     try:
         generate_figure(
@@ -533,6 +536,13 @@ def main() -> None:
         help="Download raw data only",
         default=False,
         action=argparse.BooleanOptionalAction,
+    )
+    parser.add_argument(
+        "-v",
+        "--variables",
+        type=str,
+        help="Variables to plot (comma-separated), e.g. 'target_classification'",
+        default=None,
     )
     args = parser.parse_args()
 
