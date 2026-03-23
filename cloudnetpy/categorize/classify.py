@@ -1,6 +1,7 @@
 import numpy as np
 import numpy.typing as npt
 from numpy import ma
+from scipy import ndimage
 
 from cloudnetpy import utils
 from cloudnetpy.categorize import (
@@ -84,19 +85,21 @@ def classify_measurements(data: Observations) -> ClassificationResult:
     bits.droplet = droplet.correct_liquid_top(obs, is_liquid, bits.freezing, limit=500)
     bits.insect, insect_prob = insects.find_insects(obs, bits.melting, bits.droplet)
     bits.falling = falling.find_falling_hydrometeors(obs, bits.droplet, bits.insect)
-    filtered_ice = _filter_falling(bits)
     for _ in range(5):
         _fix_undetected_melting_layer(bits)
         _filter_insects(bits)
     bits.aerosol = _find_aerosols(obs, bits)
-    bits.aerosol[filtered_ice] = False
     _fix_super_cold_liquid(obs, bits)
     _reclassify_ice_with_high_ldr(obs, bits)
+    _filter_insects_in_falling(bits)
+    _filter_falling(bits, obs)
+
+    is_clutter = _remove_clutter_in_liquid(obs.is_clutter, bits)
 
     return ClassificationResult(
         category_bits=bits,
         is_rain=obs.is_rain,
-        is_clutter=obs.is_clutter,
+        is_clutter=is_clutter,
         insect_prob=insect_prob,
         liquid_prob=liquid_prob,
     )
@@ -137,11 +140,48 @@ def _reclassify_ice_with_high_ldr(obs: ClassData, bits: CategoryBits) -> None:
     is_ice = bits.falling & bits.freezing & ~bits.droplet & ~bits.melting
     high_ldr = ~ma.getmaskarray(obs.ldr) & (obs.ldr > ldr_limit)
     warm_enough = obs.tw > temp_limit
-    reclassify = is_ice & high_ldr & warm_enough
+    above_melting = utils.ffill(bits.melting)
+    reclassify = is_ice & high_ldr & warm_enough & ~above_melting
     bits.insect[reclassify] = True
     bits.falling[reclassify] = False
     has_lidar = ~obs.beta.mask
     bits.aerosol[reclassify & has_lidar] = True
+
+
+def _filter_insects_in_falling(
+    bits: CategoryBits,
+    min_falling_size: int = 100,
+    dilation: int = 2,
+) -> None:
+    """Reclassifies insect pixels in freezing regions near large falling ice.
+
+    Insect pixels in freezing temperatures near sufficiently large falling
+    hydrometeor regions are almost certainly false positives. Real insects
+    cannot survive in freezing conditions, so the freezing constraint
+    protects legitimate warm-region insects from being reclassified.
+
+    Args:
+        bits: A :class:`CategoryBits` instance.
+        min_falling_size: Minimum size of nearby falling regions required
+            to trigger reclassification.
+        dilation: Number of pixels to dilate around falling regions.
+    """
+    structure = ndimage.generate_binary_structure(2, 1)
+    falling_labels, n_falling = ndimage.label(bits.falling, structure=structure)
+    if n_falling == 0:
+        return
+    falling_ids = np.arange(1, n_falling + 1)
+    falling_sizes = ndimage.sum(bits.falling, falling_labels, falling_ids)
+    large_falling = np.isin(
+        falling_labels, falling_ids[falling_sizes >= min_falling_size]
+    )
+    near_large_falling = ndimage.binary_dilation(
+        large_falling, structure, iterations=dilation
+    )
+    reclassify = bits.insect & bits.freezing & near_large_falling
+    bits.falling[reclassify] = True
+    bits.insect[reclassify] = False
+    bits.aerosol[reclassify] = False
 
 
 def _fix_super_cold_liquid(obs: ClassData, bits: CategoryBits) -> None:
@@ -246,21 +286,44 @@ def _filter_insects(bits: CategoryBits) -> None:
     bits.insect = is_insects
 
 
-def _filter_falling(bits: CategoryBits) -> tuple:
+def _remove_clutter_in_liquid(
+    is_clutter: npt.NDArray,
+    bits: CategoryBits,
+) -> npt.NDArray:
+    """Removes clutter that is inside liquid or falling hydrometeor layers.
+
+    Clutter detection based on near-zero velocity can produce false positives
+    inside cloud and drizzle layers. This function removes clutter flags from
+    pixels that are adjacent to droplet or falling hydrometeor pixels, and
+    reclassifies them as falling hydrometeors.
+    """
+    is_clutter = is_clutter.copy()
+    liquid_or_falling = bits.droplet | bits.falling
+    structure = ndimage.generate_binary_structure(2, 1)
+    near_liquid = ndimage.binary_dilation(liquid_or_falling, structure)
+    false_clutter = is_clutter & near_liquid
+    is_clutter[false_clutter] = False
+    bits.falling[false_clutter] = True
+    return is_clutter
+
+
+def _filter_falling(bits: CategoryBits, obs: ClassData) -> None:
     # filter falling ice speckle noise
+    is_beta = ~obs.beta.mask
     is_freezing = bits.freezing
     is_falling = bits.falling
-    is_falling_filtered = utils.remove_small_objects(
-        is_falling,
-        max_size=10,
-        connectivity=1,
+    filtered_out = is_falling & ~np.asarray(
+        utils.remove_small_objects(
+            is_falling,
+            max_size=10,
+            connectivity=1,
+        ),
+        dtype=bool,
     )
-    is_filtered = is_falling & ~np.array(is_falling_filtered)
-    ice_ind = np.where(is_freezing & is_filtered)
-    is_falling[ice_ind] = False
-    # in warm these are (probably) insects
-    insect_ind = np.where(~is_freezing & is_filtered)
-    is_falling[insect_ind] = False
+    is_falling[filtered_out] = False
+    # In warm conditions, these are likely insects
+    bits.insect[filtered_out & ~is_freezing] = True
+    bits.aerosol[filtered_out & ~is_freezing & is_beta] = True
+    # In cold conditions, classify as aerosol if lidar signal is present
+    bits.aerosol[filtered_out & is_freezing & is_beta] = True
     bits.falling = is_falling
-    bits.insect[insect_ind] = True
-    return ice_ind
