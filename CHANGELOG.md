@@ -1,5 +1,22 @@
 # Changelog
 
+## 1.89.0 – 2026-03-23
+
+- Fix tpow correction for old FZK-serial MIRA-35 instruments reporting transmit power 100x too low
+- Handle fully masked azimuth angles in zenith/azimuth screening
+- Read radar range correction factor from site_meta
+- Improve detection of horizontal stripe artifacts in radar data
+- Record correction_factor in variable metadata when corrections are applied
+- Filter small cloud clusters from cloud mask before computing cloud boundaries
+- Convert temperature plots from Kelvin to Celsius and add contour levels at -38, -10, and 0 °C
+- Use model surface geopotential for height axis instead of site altitude
+- Reclassify ice with high LDR as insects
+- Support `range_correction_factor` in CLI
+- Set current date as default for --date CLI option
+- Add --variables option to CLI
+- Add --force-download option to CLI
+- Add `--model` option to CLI
+
 ## 1.88.3 – 2026-03-19
 
 - Plot freezing temperature line
