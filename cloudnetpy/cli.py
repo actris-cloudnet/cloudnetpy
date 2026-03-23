@@ -395,7 +395,9 @@ def _fetch_product(
 
 
 def _fetch_model(args: argparse.Namespace, client: APIClient) -> str | None:
-    files = client.files(product_id="model", date=args.date, site_id=args.site)
+    files = client.files(
+        product_id="model", model_id=args.model, date=args.date, site_id=args.site
+    )
     if not files:
         logging.info("No model data available for this date")
         return None
@@ -505,6 +507,21 @@ def _parse_products(product_argument: str, client: APIClient) -> list[str]:
     return valid_products
 
 
+def _parse_model(model_id: str, client: APIClient) -> str:
+    models = client.models()
+    found = False
+    for model in models:
+        if model_id == model.source_model_id and model.id != model.source_model_id:
+            msg = f"Use {model.id} or similar instead of {model_id}"
+            raise argparse.ArgumentTypeError(msg)
+        if model_id == model.id:
+            found = True
+    if not found:
+        msg = f"Invalid model: {model_id}"
+        raise argparse.ArgumentTypeError(msg)
+    return model_id
+
+
 def main() -> None:
     client = APIClient()
     parser = argparse.ArgumentParser(
@@ -536,6 +553,12 @@ def main() -> None:
             "e.g. radar[mira-35]."
         ),
         required=True,
+    )
+    parser.add_argument(
+        "-m",
+        "--model",
+        type=lambda arg: _parse_model(arg, client),
+        help="Model to use in categorize.",
     )
     parser.add_argument("--input", type=Path, help="Input path", default="input/")
     parser.add_argument("--output", type=Path, help="Output path", default="output/")
