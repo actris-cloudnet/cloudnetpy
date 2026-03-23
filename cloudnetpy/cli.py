@@ -94,9 +94,13 @@ def _process_categorize(
         logging.info("No model data available for this date.")
         return None
 
+    instrument_prefs = _parse_instrument_preferences(args.instrument)
+
     for product in ("radar", "lidar", "disdrometer"):
         if product not in input_files and (
-            filepath := _fetch_product(args, product, client)
+            filepath := _fetch_product(
+                args, product, client, source=instrument_prefs.get(product)
+            )
         ):
             input_files[product] = filepath
 
@@ -338,6 +342,20 @@ def _get_product_sources(
     return source_products
 
 
+def _parse_instrument_preferences(args: list[str] | None) -> dict[str, str]:
+    """Parses instrument preferences like 'radar:mira-35' into a dict."""
+    if not args:
+        return {}
+    prefs = {}
+    for arg in args:
+        if ":" not in arg:
+            msg = f"Invalid instrument format '{arg}', expected 'product:instrument_id'"
+            raise argparse.ArgumentTypeError(msg)
+        product, instrument_id = arg.split(":", 1)
+        prefs[product] = instrument_id
+    return prefs
+
+
 def _parse_instrument(s: str) -> tuple[str, str | None]:
     if "[" in s and s.endswith("]"):
         name = s[: s.index("[")]
@@ -376,11 +394,19 @@ def _fetch_product(
 ) -> str | None:
     meta = client.files(product_id=product, date=args.date, site_id=args.site)
     if source:
-        meta = [
+        filtered = [
             m
             for m in meta
             if m.instrument is not None and m.instrument.instrument_id == source
         ]
+        if filtered:
+            meta = filtered
+        elif meta:
+            logging.info(
+                "Preferred instrument '%s' not found for %s, using available",
+                source,
+                product,
+            )
     if not meta:
         logging.info("No data available for %s", product)
         return None
@@ -559,6 +585,17 @@ def main() -> None:
         "--model",
         type=lambda arg: _parse_model(arg, client),
         help="Model to use in categorize.",
+    )
+    parser.add_argument(
+        "-i",
+        "--instrument",
+        type=str,
+        action="append",
+        help=(
+            "Preferred instrument for categorize input, e.g. "
+            "'radar:mira-35' or 'lidar:cl61d'. Can be specified multiple times."
+        ),
+        default=None,
     )
     parser.add_argument("--input", type=Path, help="Input path", default="input/")
     parser.add_argument("--output", type=Path, help="Output path", default="output/")
