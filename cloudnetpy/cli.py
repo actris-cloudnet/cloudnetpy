@@ -517,7 +517,11 @@ def main() -> None:
         metavar="SITE",
     )
     parser.add_argument(
-        "-d", "--date", type=str, help="Date in YYYY-MM-DD", required=True
+        "-d",
+        "--date",
+        type=str,
+        help="Date in YYYY-MM-DD (default: today)",
+        default=datetime.datetime.now(tz=datetime.timezone.utc).date().isoformat(),
     )
     parser.add_argument(
         "-p",
