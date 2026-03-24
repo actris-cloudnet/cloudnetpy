@@ -66,7 +66,7 @@ def _get_probabilities(obs: ClassData) -> dict:
     smooth_v = _get_smoothed_v(obs)
     lwp_interp = droplet.interpolate_lwp(obs)
     fun = utils.array_to_probability
-    return {
+    prob: dict = {
         "width": fun(obs.width, 1, 0.3, invert=True) if hasattr(obs, "width") else 1,
         "z_strong": fun(obs.z, 0, 8, invert=True),
         "z_weak": fun(obs.z, -20, 8, invert=True),
@@ -78,6 +78,19 @@ def _get_probabilities(obs: ClassData) -> dict:
         "lwp": utils.transpose(fun(lwp_interp, 0.15, 0.05, invert=True)),
         "v_sigma": fun(obs.v_sigma, 0.01, 0.1),
     }
+    if hasattr(obs, "sldr"):
+        prob.update(
+            {
+                "width_narrow": fun(obs.width, 0.3, 0.1, invert=True)
+                if hasattr(obs, "width")
+                else 1,
+                "z_insect": fun(obs.z, -30, 5, invert=True),
+                "temp_sldr": fun(obs.tw, 265, 3),
+                "v_sigma_sldr": fun(obs.v_sigma, 0.2, 0.15),
+                "v_sigma_mask": ma.getmaskarray(obs.v_sigma),
+            }
+        )
+    return prob
 
 
 def _get_smoothed_v(
@@ -92,12 +105,26 @@ def _calc_prob_from_ldr(prob: dict) -> npt.NDArray:
     """This is the most reliable proxy for insects."""
     if prob["ldr"] is not None:
         return prob["ldr"] * prob["temp_loose"]
-    if (
-        prob["sldr"] is not None
-    ):  # Strong SLDR values are probably insects, weak CAN be but not necessarily
-        p = prob["sldr"]
-        p[p < 0.9] = ma.masked
-        return p * prob["temp_loose"]
+    if prob["sldr"] is not None:
+        # SLDR alone is unreliable at low SNR. Use v_sigma * width as
+        # alternative proxy (insects show erratic motion + narrow width).
+        # When v_sigma is also unavailable, fall back to weak echo * narrow
+        # width -- temperature provides the main discrimination.
+        p_sldr = prob["sldr"]
+        p_vsig = prob["v_sigma_sldr"]
+        p_wn = prob["width_narrow"]
+        p_zi = prob["z_insect"]
+        # Echo fallback only where v_sigma is unavailable -- if v_sigma
+        # exists and is low, that's evidence against insects.
+        p_echo = np.where(prob["v_sigma_mask"], p_zi, 0)
+        p_proxy = np.maximum(p_sldr, np.maximum(p_vsig, p_echo))
+        p_total = p_proxy * p_wn * prob["temp_sldr"]
+        # High SLDR at warm temperatures are reliable as is
+        p_high_sldr = p_sldr * prob["temp_loose"]
+        high = p_high_sldr > 0.9
+        p_total[high] = p_high_sldr[high]
+        return p_total
+
     return np.zeros(prob["z_strong"].shape)
 
 
