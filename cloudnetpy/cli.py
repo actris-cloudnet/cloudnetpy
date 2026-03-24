@@ -1,5 +1,6 @@
 import argparse
 import base64
+import concurrent.futures
 import datetime
 import gzip
 import hashlib
@@ -88,33 +89,50 @@ def _process_categorize(
     input_files: dict, args: argparse.Namespace, client: APIClient
 ) -> str | None:
     cat_filepath = _create_categorize_filepath(args)
-
-    input_files["model"] = _fetch_model(args, client)
-    if input_files["model"] is None:
-        logging.info("No model data available for this date.")
-        return None
-
     instrument_prefs = _parse_instrument_preferences(args.instrument)
 
-    for product in ("radar", "lidar", "disdrometer"):
-        if product not in input_files:
-            source = instrument_prefs.get(product)
-            filepath = _fetch_product(args, product, client, source=source)
-            if filepath is None and source:
-                logging.info(
-                    "Preferred instrument '%s' not found for %s, using available",
-                    source,
-                    product,
-                )
-                filepath = _fetch_product(args, product, client)
+    def fetch_instrument(product: str) -> tuple[str, str | None]:
+        source = instrument_prefs.get(product)
+        filepath = _fetch_product(args, product, client, source=source)
+        if filepath is None and source:
+            logging.info(
+                "Preferred instrument '%s' not found for %s, using available",
+                source,
+                product,
+            )
+            filepath = _fetch_product(args, product, client)
+        return product, filepath
+
+    def fetch_mwr() -> tuple[str, str | None]:
+        try:
+            return "mwr", _fetch_mwr(args, client)
+        except (CloudnetAPIError, KeyError, ValueError):
+            logging.info("LWP data not available, continuing without it")
+            return "mwr", None
+
+    def fetch_model() -> tuple[str, str | None]:
+        return "model", _fetch_model(args, client)
+
+    with concurrent.futures.ThreadPoolExecutor() as executor:
+        futures = [executor.submit(fetch_model)]
+        for product in ("radar", "lidar", "disdrometer"):
+            if product not in input_files:
+                futures.append(executor.submit(fetch_instrument, product))
+
+        for future in concurrent.futures.as_completed(futures):
+            product, filepath = future.result()
             if filepath:
                 input_files[product] = filepath
 
-    try:
-        if mwr := _fetch_mwr(args, client):
-            input_files["mwr"] = mwr
-    except (CloudnetAPIError, KeyError, ValueError):
-        logging.info("LWP data not available, continuing without it")
+    # MWR runs after other downloads because its fallback chain may
+    # try to download the same radar file fetched above.
+    mwr_key, mwr_path = fetch_mwr()
+    if mwr_path:
+        input_files[mwr_key] = mwr_path
+
+    if "model" not in input_files:
+        logging.info("No model data available for this date.")
+        return None
 
     try:
         logging.info("Processing categorize...")
@@ -409,7 +427,6 @@ def _fetch_product(
             if m.instrument is not None and m.instrument.instrument_id == source
         ]
     if not meta:
-        logging.info("No data available for %s", product)
         return None
     if len(meta) > 1:
         logging.info(
