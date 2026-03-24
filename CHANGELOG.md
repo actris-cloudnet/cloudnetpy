@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.89.1 – 2026-03-24
+
+- Reclassify false insects embedded in falling hydrometeor regions
+- Fix missing aerosol flag for LDR-reclassified insects
+- Add --instrument CLI option for selecting preferred categorize inputs
+- Download categorize input files in parallel in CLI
+
 ## 1.89.0 – 2026-03-23
 
 - Fix tpow correction for old FZK-serial MIRA-35 instruments reporting transmit power 100x too low
