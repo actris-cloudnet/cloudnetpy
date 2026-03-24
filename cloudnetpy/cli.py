@@ -97,15 +97,24 @@ def _process_categorize(
     instrument_prefs = _parse_instrument_preferences(args.instrument)
 
     for product in ("radar", "lidar", "disdrometer"):
-        if product not in input_files and (
-            filepath := _fetch_product(
-                args, product, client, source=instrument_prefs.get(product)
-            )
-        ):
-            input_files[product] = filepath
+        if product not in input_files:
+            source = instrument_prefs.get(product)
+            filepath = _fetch_product(args, product, client, source=source)
+            if filepath is None and source:
+                logging.info(
+                    "Preferred instrument '%s' not found for %s, using available",
+                    source,
+                    product,
+                )
+                filepath = _fetch_product(args, product, client)
+            if filepath:
+                input_files[product] = filepath
 
-    if mwr := _fetch_mwr(args, client):
-        input_files["mwr"] = mwr
+    try:
+        if mwr := _fetch_mwr(args, client):
+            input_files["mwr"] = mwr
+    except (CloudnetAPIError, KeyError, ValueError):
+        logging.info("LWP data not available, continuing without it")
 
     try:
         logging.info("Processing categorize...")
@@ -394,19 +403,11 @@ def _fetch_product(
 ) -> str | None:
     meta = client.files(product_id=product, date=args.date, site_id=args.site)
     if source:
-        filtered = [
+        meta = [
             m
             for m in meta
             if m.instrument is not None and m.instrument.instrument_id == source
         ]
-        if filtered:
-            meta = filtered
-        elif meta:
-            logging.info(
-                "Preferred instrument '%s' not found for %s, using available",
-                source,
-                product,
-            )
     if not meta:
         logging.info("No data available for %s", product)
         return None
