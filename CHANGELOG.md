@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.89.2 – 2026-03-25
+
+- Improve insect detection for SLDR radar using v_sigma and spectral width as alternative proxies
+
 ## 1.89.1 – 2026-03-24
 
 - Reclassify false insects embedded in falling hydrometeor regions
