@@ -59,10 +59,10 @@ class Lidar(DataSource):
     ) -> None:
         prefix = f"Unable to interpolate lidar for {len(ind)}"
         if dim == "time" and ind:
-            logging.warning("%s time steps", prefix)
+            logging.debug("%s time steps", prefix)
             data[ind, :] = ma.masked
         elif dim == "height" and ind:
-            logging.warning("%s altitudes", prefix)
+            logging.debug("%s altitudes", prefix)
             data[:, ind] = ma.masked
 
     def _add_meta(self) -> None:

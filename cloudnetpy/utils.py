@@ -504,7 +504,7 @@ def interpolate_1d(
 
     if len(bad_idx) > 0:
         msg = f"Unable to interpolate for {len(bad_idx)} time steps"
-        logging.warning(msg)
+        logging.debug(msg)
         interpolated[bad_idx] = ma.masked
 
     return interpolated
