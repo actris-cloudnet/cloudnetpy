@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.90.0 – 2026-03-27
+
+- Use maximum of LDR and non-LDR insect probabilities
+- Require LWP above threshold when adding undetected melting layer pixels
+- Add --options flag to CLI for passing categorize options
+
 ## 1.89.2 – 2026-03-25
 
 - Improve insect detection for SLDR radar using v_sigma and spectral width as alternative proxies
