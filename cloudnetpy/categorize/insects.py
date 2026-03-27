@@ -151,10 +151,7 @@ def _fill_missing_pixels(
     prob_from_ldr: npt.NDArray,
     prob_from_others: npt.NDArray,
 ) -> npt.NDArray:
-    prob_combined = np.copy(prob_from_ldr)
-    no_ldr = np.where(prob_from_ldr == 0)
-    prob_combined[no_ldr] = prob_from_others[no_ldr]
-    return prob_combined
+    return np.maximum(prob_from_ldr, prob_from_others)
 
 
 def _screen_insects(
