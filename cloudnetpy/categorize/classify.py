@@ -86,7 +86,7 @@ def classify_measurements(data: Observations) -> ClassificationResult:
     bits.insect, insect_prob = insects.find_insects(obs, bits.melting, bits.droplet)
     bits.falling = falling.find_falling_hydrometeors(obs, bits.droplet, bits.insect)
     for _ in range(5):
-        _fix_undetected_melting_layer(bits)
+        _fix_undetected_melting_layer(bits, obs.lwp)
         _filter_insects(bits)
     bits.aerosol = _find_aerosols(obs, bits)
     _fix_super_cold_liquid(obs, bits)
@@ -223,10 +223,16 @@ def _find_aerosols(
     return is_beta & ~bits.falling & ~bits.droplet
 
 
-def _fix_undetected_melting_layer(bits: CategoryBits) -> None:
+def _fix_undetected_melting_layer(
+    bits: CategoryBits,
+    lwp: npt.NDArray,
+    lwp_threshold: float = 0.005,
+) -> None:
     drizzle_and_falling = _find_drizzle_and_falling(bits)
     transition = ma.diff(drizzle_and_falling, axis=1) == -1
-    bits.melting[:, 1:][transition] = True
+    masked = ma.getmaskarray(lwp)
+    allow = masked | (np.asarray(lwp) > lwp_threshold)
+    bits.melting[:, 1:][transition & allow[:, np.newaxis]] = True
 
 
 def _find_drizzle_and_falling(bits: CategoryBits) -> npt.NDArray:
