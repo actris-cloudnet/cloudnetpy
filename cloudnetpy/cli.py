@@ -5,6 +5,7 @@ import datetime
 import gzip
 import hashlib
 import importlib
+import json
 import logging
 import re
 import shutil
@@ -136,7 +137,11 @@ def _process_categorize(
 
     try:
         logging.info("Processing categorize...")
-        generate_categorize(cast("CategorizeInput", input_files), cat_filepath)
+        generate_categorize(
+            cast("CategorizeInput", input_files),
+            cat_filepath,
+            options=args.options,
+        )
         logging.info("Processed categorize to %s", cat_filepath)
     except NameError:
         logging.info("No data available for this date.")
@@ -646,6 +651,16 @@ def main() -> None:
         "--variables",
         type=str,
         help="Variables to plot (comma-separated), e.g. 'target_classification'",
+        default=None,
+    )
+    parser.add_argument(
+        "-o",
+        "--options",
+        type=json.loads,
+        help=(
+            "Options for categorize processing as a JSON string, "
+            "e.g. '{\"temperature_offset\": 3}'"
+        ),
         default=None,
     )
     args = parser.parse_args()
