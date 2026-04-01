@@ -399,7 +399,7 @@ class KenttarovaWS(WS):
 
 
 class HyytialaWS(WS):
-    """Hyytiälä rain-gauge variables: a = Pluvio400 and b = Pluvio200.
+    """Hyytiälä rain gauge variables: a = Pluvio400 and b = Pluvio200.
     E.g.
     - AaRNRT/mm = amount of non-real-time rain total (Pluvio400) [mm]
     - BbRT/mm = Bucket content in real-time (Pluvio200) [mm].

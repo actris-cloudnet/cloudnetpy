@@ -19,7 +19,7 @@ def rain_e_h32nc(
     uuid: str | UUID | None = None,
     date: str | datetime.date | None = None,
 ) -> UUID:
-    """Converts rain_e_h3 rain-gauge into Cloudnet Level 1b netCDF file.
+    """Converts rain_e_h3 rain gauge into Cloudnet Level 1b netCDF file.
 
     Args:
         input_file: Filename of rain_e_h3 CSV file.
