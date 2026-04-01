@@ -471,12 +471,6 @@ RPG_ATTRIBUTES = {
         dimensions=("time", "range"),
     ),
     # STSR-mode radars
-    "zdr": MetaData(
-        long_name="Differential reflectivity", units="dB", dimensions=("time", "range")
-    ),
-    "rho_hv": MetaData(
-        long_name="Correlation coefficient", units="1", dimensions=("time", "range")
-    ),
     "phi_dp": MetaData(
         long_name="Differential phase", units="rad", dimensions=("time", "range")
     ),

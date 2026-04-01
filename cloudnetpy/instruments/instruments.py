@@ -241,6 +241,13 @@ RAIN_E_H3 = Instrument(
     model="rain[e]H3",
 )
 
+WRM200 = Instrument(
+    manufacturer="Vaisala",
+    domain="weather-radar",
+    category="weather radar",
+    model="WRM200",
+)
+
 GENERIC_WEATHER_STATION = Instrument(
     domain="weather-station",
     category="weather station",

@@ -1,0 +1,163 @@
+import datetime
+from collections import defaultdict
+from collections.abc import Iterable, Sequence
+from os import PathLike
+from uuid import UUID
+
+import netCDF4
+import numpy as np
+import numpy.typing as npt
+from numpy import ma
+
+from cloudnetpy import output, utils
+from cloudnetpy.cloudnetarray import CloudnetArray
+from cloudnetpy.constants import CM_TO_M, HZ_TO_GHZ, SPEED_OF_LIGHT
+from cloudnetpy.instruments import instruments
+from cloudnetpy.instruments.cloudnet_instrument import CloudnetInstrument
+
+
+def wr2nc(
+    input_files: str | PathLike | Sequence[str | PathLike],
+    output_file: str | PathLike,
+    site_meta: dict,
+    uuid: str | UUID | None = None,
+    date: str | datetime.date | None = None,
+) -> UUID:
+    """Converts OPERA HDF5 weather radar data into Cloudnet Level 1b netCDF file.
+
+    Args:
+        input_files: List of OPERA HDF5 files.
+        output_file: Output filename.
+        site_meta: Dictionary containing information about the site. Required
+            keys are `name`, `latitude`, `longitude` and `altitude`.
+        uuid: Set specific UUID for the file.
+        date: Expected date as YYYY-MM-DD.
+
+    Returns:
+        UUID of the generated file.
+    """
+    if isinstance(date, str):
+        date = datetime.date.fromisoformat(date)
+    uuid = utils.get_uuid(uuid)
+    if isinstance(input_files, str | PathLike):
+        input_files = [input_files]
+    wr = WeatherRadar(input_files, site_meta, date)
+    wr.sort_and_dedup_timestamps()
+    wr.convert_to_cloudnet_arrays()
+    wr.screen_noise()
+    wr.add_meta()
+    attributes = output.add_time_attribute({}, wr.date)
+    output.update_attributes(wr.data, attributes)
+    output.save_level1b(wr, output_file, uuid)
+    return uuid
+
+
+class WeatherRadar(CloudnetInstrument):
+    def __init__(
+        self,
+        filenames: Iterable[str | PathLike],
+        site_meta: dict,
+        expected_date: datetime.date | None = None,
+    ) -> None:
+        super().__init__()
+        self.site_meta = site_meta
+        self._read_data(filenames)
+        self._screen_time(expected_date)
+        self.instrument = instruments.WRM200
+
+    def _read_data(self, filenames: Iterable[str | PathLike]) -> None:
+        times = []
+        data = defaultdict(list)
+        for filename in filenames:
+            file_time, file_range, file_data, file_freq = _read_opera_h5(filename)
+            times.append(file_time)
+            for key, value in file_data.items():
+                data[key].append(value)
+        self.raw_time = np.array(times)
+        self.raw_range = file_range
+        self.raw_data = {key: ma.concatenate(value) for key, value in data.items()}
+        self.radar_frequency = file_freq
+
+    def _screen_time(self, expected_date: datetime.date | None = None) -> None:
+        if expected_date is None:
+            self.date = self.raw_time[0].date()
+        else:
+            is_valid = [dt.date() == expected_date for dt in self.raw_time]
+            self.raw_time = self.raw_time[is_valid]
+            for key in self.raw_data:
+                self.raw_data[key] = self.raw_data[key][is_valid]
+            self.date = expected_date
+
+    def sort_and_dedup_timestamps(self) -> None:
+        self.raw_time, time_ind = np.unique(self.raw_time, return_index=True)
+        for key in self.raw_data:
+            self.raw_data[key] = self.raw_data[key][time_ind]
+
+    def add_meta(self) -> None:
+        valid_keys = ("latitude", "longitude", "altitude")
+        for key, value in self.site_meta.items():
+            name = key.lower()
+            if name in valid_keys:
+                self.data[name] = CloudnetArray(float(value), name)
+
+    def convert_to_cloudnet_arrays(self) -> None:
+        epoch = datetime.datetime.combine(self.date, datetime.time())
+        hour = (self.raw_time - epoch) / datetime.timedelta(hours=1)
+        height = self.site_meta["altitude"] + self.raw_range
+        self.data["time"] = CloudnetArray(hour.astype(np.float32), "time")
+        self.data["range"] = CloudnetArray(self.raw_range, "range")
+        self.data["height"] = CloudnetArray(height, "height")
+        self.data["SNR"] = CloudnetArray(self.raw_data["SNR"], "SNR")
+        self.data["v"] = CloudnetArray(self.raw_data["VRADH"], "v")
+        self.data["width"] = CloudnetArray(self.raw_data["WRADH"], "width")
+        self.data["zdr"] = CloudnetArray(self.raw_data["ZDR"], "zdr")
+        self.data["rho_hv"] = CloudnetArray(self.raw_data["RHOHV"], "rho_hv")
+        self.data["radar_frequency"] = CloudnetArray(
+            self.radar_frequency, "radar_frequency"
+        )
+
+    def screen_noise(self) -> None:
+        is_noise = self.data["SNR"].data < -5
+        for cloudnet_array in self.data.values():
+            if cloudnet_array.data.ndim == 2:
+                cloudnet_array.mask_indices(is_noise)
+
+
+def _read_opera_h5(
+    file: str | PathLike,
+) -> tuple[datetime.datetime, npt.NDArray, dict[str, list], float]:
+    all_data = defaultdict(list)
+    with netCDF4.Dataset(file) as rootgrp:
+        date = rootgrp["what"].date
+        time = rootgrp["what"].time
+        dt = datetime.datetime.strptime(date + time, "%Y%m%d%H%M%S")
+
+        wavelength = rootgrp["how"].wavelength * CM_TO_M
+        frequency = HZ_TO_GHZ * SPEED_OF_LIGHT / wavelength
+
+        dataset = rootgrp["dataset1"]
+        nbins = dataset["where"].nbins
+        rstart = dataset["where"].nbins
+        rscale = dataset["where"].rscale
+        rng = rstart + rscale * np.arange(nbins)
+
+        grpnames = [group for group in dataset.groups if group.startswith("data")]
+        for grpname in grpnames:
+            grp = dataset[grpname]
+            quantity = grp["what"].quantity
+            is_db = quantity in ("ZDR", "SNR")
+            offset = grp["what"].offset
+            gain = grp["what"].gain
+            nodata = grp["what"].nodata
+            undetect = grp["what"].undetect
+            grpdata = grp["data"][:]
+            is_masked = (grpdata == nodata) | (grpdata == undetect)
+            grpdata = offset + gain * ma.masked_where(is_masked, grpdata)
+            if is_db:
+                grpdata = utils.db2lin(grpdata)
+            grpdata = ma.mean(grpdata, axis=0)
+            if is_db:
+                grpdata = utils.lin2db(grpdata)
+            all_data[quantity].append(grpdata)
+
+    return dt, rng, all_data, frequency
