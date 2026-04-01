@@ -22,7 +22,6 @@ from cloudnetpy.categorize.mwr import Mwr
 from cloudnetpy.categorize.radar import Radar
 from cloudnetpy.datasource import DataSource
 from cloudnetpy.exceptions import DisdrometerDataError, ValidTimeStampError
-from cloudnetpy.instruments.rpg import RPG_ATTRIBUTES
 from cloudnetpy.metadata import COMMON_ATTRIBUTES, MetaData
 from cloudnetpy.products.product_tools import CategoryBits, QualityBits
 
@@ -436,7 +435,7 @@ CATEGORIZE_ATTRIBUTES = {
         units="m s-1",
         dimensions=("time", "height"),
     ),
-    "zdr": RPG_ATTRIBUTES["zdr"]._replace(dimensions=("time", "height")),
+    "zdr": COMMON_ATTRIBUTES["zdr"]._replace(dimensions=("time", "height")),
     "nyquist_velocity": COMMON_ATTRIBUTES["nyquist_velocity"]._replace(
         dimensions=("time", "height")
     ),

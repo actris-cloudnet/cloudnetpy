@@ -170,6 +170,12 @@ COMMON_ATTRIBUTES = {
     "SNR": MetaData(
         long_name="Signal-to-noise ratio", units="dB", dimensions=("time", "range")
     ),
+    "zdr": MetaData(
+        long_name="Differential reflectivity", units="dB", dimensions=("time", "range")
+    ),
+    "rho_hv": MetaData(
+        long_name="Correlation coefficient", units="1", dimensions=("time", "range")
+    ),
     "relative_humidity": MetaData(
         long_name="Relative humidity",
         standard_name="relative_humidity",
