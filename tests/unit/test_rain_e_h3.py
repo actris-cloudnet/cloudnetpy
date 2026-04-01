@@ -30,7 +30,7 @@ class RainEH3(Check):
 
     def test_global_attributes(self):
         assert self.nc.cloudnet_file_type == "rain-gauge"
-        assert self.nc.title == f"rain[e]H3 rain-gauge from {self.site_meta['name']}"
+        assert self.nc.title == f"rain[e]H3 rain gauge from {self.site_meta['name']}"
         assert self.nc.source == "LAMBRECHT meteo GmbH rain[e]H3"
         assert self.nc.year == self.date[:4]
         assert self.nc.month == self.date[5:7]
