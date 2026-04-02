@@ -710,9 +710,9 @@ class Plot2D(Plot):
         cbar, clabel = _hide_segments()
         alt = self._screen_data_by_max_y(figure_data)
         image = self._ax.pcolorfast(
-            figure_data.time_including_gaps,
-            alt,
-            self._data.T[:-1, :-1],
+            _make_edges(figure_data.time_including_gaps),
+            _make_edges(alt),
+            self._data.T,
             cmap=ListedColormap(cbar),
             vmin=-0.5,
             vmax=len(cbar) - 0.5,
@@ -752,21 +752,12 @@ class Plot2D(Plot):
             "zorder": _get_zorder("data"),
         }
         image: Any
-        if getattr(figure_data.file, "cloudnet_file_type", "") == "model":
-            image = self._ax.pcolor(
-                figure_data.time_including_gaps,
-                alt,
-                self._data.T,
-                **pcolor_kwargs,
-                shading="nearest",
-            )
-        else:
-            image = self._ax.pcolorfast(
-                figure_data.time_including_gaps,
-                alt,
-                self._data.T[:-1, :-1],
-                **pcolor_kwargs,
-            )
+        image = self._ax.pcolorfast(
+            _make_edges(figure_data.time_including_gaps),
+            _make_edges(alt),
+            self._data.T,
+            **pcolor_kwargs,
+        )
         cbar = self._init_colorbar(image)
         cbar.set_label(str(self._plot_meta.clabel), fontsize=13)
 
@@ -1224,6 +1215,14 @@ def _get_zorder(name: str) -> int:
         "flags": 2,
     }
     return zorder.get(name, -1)
+
+
+def _make_edges(centers: npt.NDArray) -> npt.NDArray:
+    edges = np.empty(len(centers) + 1)
+    edges[0] = centers[0] - (centers[1] - centers[0]) / 2
+    edges[1:-1] = (centers[:-1] + centers[1:]) / 2
+    edges[-1] = centers[-1] + (centers[-1] - centers[-2]) / 2
+    return edges
 
 
 def find_batches_of_ones(array: ndarray) -> list[tuple[int, int]]:
