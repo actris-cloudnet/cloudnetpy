@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.90.1 – 2026-04-07
+
+- Add wr2nc for converting weather radar data
+
 ## 1.90.0 – 2026-03-27
 
 - Use maximum of LDR and non-LDR insect probabilities
