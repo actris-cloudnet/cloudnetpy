@@ -67,15 +67,24 @@ class WeatherRadar(CloudnetInstrument):
 
     def _read_data(self, filenames: Iterable[str | PathLike]) -> None:
         times = []
-        data = defaultdict(list)
+        ranges = []
+        data = []
         for filename in filenames:
             file_time, file_range, file_data, file_freq = _read_opera_h5(filename)
             times.append(file_time)
-            for key, value in file_data.items():
-                data[key].append(value)
+            ranges.append(file_range)
+            data.append(file_data)
+        target_range = max(ranges, key=lambda rng: rng[-1])
+        all_data = defaultdict(list)
+        for src_range, values in zip(ranges, data, strict=True):
+            for key, value in values.items():
+                block = ma.array([value])
+                if not np.array_equal(src_range, target_range):
+                    block = utils.interpolate_2D_along_y(src_range, block, target_range)
+                all_data[key].append(block)
         self.raw_time = np.array(times)
-        self.raw_range = file_range
-        self.raw_data = {key: ma.concatenate(value) for key, value in data.items()}
+        self.raw_range = target_range
+        self.raw_data = {key: ma.concatenate(value) for key, value in all_data.items()}
         self.radar_frequency = file_freq
 
     def _screen_time(self, expected_date: datetime.date | None = None) -> None:
@@ -125,8 +134,8 @@ class WeatherRadar(CloudnetInstrument):
 
 def _read_opera_h5(
     file: str | PathLike,
-) -> tuple[datetime.datetime, npt.NDArray, dict[str, list], float]:
-    all_data = defaultdict(list)
+) -> tuple[datetime.datetime, npt.NDArray, dict[str, npt.NDArray], float]:
+    all_data = {}
     with netCDF4.Dataset(file) as rootgrp:
         date = rootgrp["what"].date
         time = rootgrp["what"].time
@@ -158,6 +167,6 @@ def _read_opera_h5(
             grpdata = ma.mean(grpdata, axis=0)
             if is_db:
                 grpdata = utils.lin2db(grpdata)
-            all_data[quantity].append(grpdata)
+            all_data[quantity] = grpdata
 
     return dt, rng, all_data, frequency
