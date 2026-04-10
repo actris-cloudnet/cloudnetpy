@@ -92,9 +92,9 @@ class WeatherRadar(CloudnetInstrument):
                         block = utils.interpolate_2D_along_y(
                             src_range, block, target_range
                         )
-                    all_data[key].append(block)
                 else:
-                    all_data[key].append(ma.masked_all((1, len(src_range))))
+                    block = ma.masked_all((1, len(target_range)))
+                all_data[key].append(block)
         self.raw_time = np.array(times)
         self.raw_range = target_range
         self.raw_data = {key: ma.concatenate(value) for key, value in all_data.items()}
