@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.90.3 – 2026-04-10
+
+- Fixes for weather radar processing
+
 ## 1.90.2 – 2026-04-10
 
 - Calculate reflectivity for weather radar
