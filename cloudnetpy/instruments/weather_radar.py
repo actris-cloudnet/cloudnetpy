@@ -1,5 +1,4 @@
 import datetime
-from collections import defaultdict
 from collections.abc import Iterable, Sequence
 from os import PathLike
 from uuid import UUID
@@ -84,13 +83,18 @@ class WeatherRadar(CloudnetInstrument):
         if not times:
             raise ValidTimeStampError
         target_range = max(ranges, key=lambda rng: rng[-1])
-        all_data = defaultdict(list)
+        all_data: dict = {key: [] for d in data for key in d}
         for src_range, values in zip(ranges, data, strict=True):
-            for key, value in values.items():
-                block = ma.array([value])
-                if not np.array_equal(src_range, target_range):
-                    block = utils.interpolate_2D_along_y(src_range, block, target_range)
-                all_data[key].append(block)
+            for key in all_data:
+                if key in values:
+                    block = ma.array([values[key]])
+                    if not np.array_equal(src_range, target_range):
+                        block = utils.interpolate_2D_along_y(
+                            src_range, block, target_range
+                        )
+                    all_data[key].append(block)
+                else:
+                    all_data[key].append(ma.masked_all((1, len(src_range))))
         self.raw_time = np.array(times)
         self.raw_range = target_range
         self.raw_data = {key: ma.concatenate(value) for key, value in all_data.items()}
