@@ -25,6 +25,7 @@ SEC_IN_DAY: Final = 86400
 MM_TO_M: Final = 1e-3
 G_TO_KG: Final = 1e-3
 M_TO_KM: Final = 1e-3
+KM_TO_M: Final = 1e3
 KG_TO_G: Final = 1e3
 M_TO_MM: Final = 1e3
 CM_TO_M: Final = 1e-2

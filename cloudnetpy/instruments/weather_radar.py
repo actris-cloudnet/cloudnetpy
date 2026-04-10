@@ -11,7 +11,8 @@ from numpy import ma
 
 from cloudnetpy import output, utils
 from cloudnetpy.cloudnetarray import CloudnetArray
-from cloudnetpy.constants import CM_TO_M, HZ_TO_GHZ, M_TO_KM, SPEED_OF_LIGHT
+from cloudnetpy.constants import CM_TO_M, HZ_TO_GHZ, KM_TO_M, M_TO_KM, SPEED_OF_LIGHT
+from cloudnetpy.exceptions import CloudnetException, ValidTimeStampError
 from cloudnetpy.instruments import instruments
 from cloudnetpy.instruments.cloudnet_instrument import CloudnetInstrument
 from cloudnetpy.metadata import MetaData
@@ -71,10 +72,17 @@ class WeatherRadar(CloudnetInstrument):
         ranges = []
         data = []
         for filename in filenames:
-            file_time, file_range, file_data, file_scalars = _read_opera_h5(filename)
+            try:
+                file_time, file_range, file_data, file_scalars = _read_opera_h5(
+                    filename
+                )
+            except InvalidRangeError:
+                continue
             times.append(file_time)
             ranges.append(file_range)
             data.append(file_data)
+        if not times:
+            raise ValidTimeStampError
         target_range = max(ranges, key=lambda rng: rng[-1])
         all_data = defaultdict(list)
         for src_range, values in zip(ranges, data, strict=True):
@@ -140,6 +148,10 @@ class WeatherRadar(CloudnetInstrument):
                 cloudnet_array.mask_indices(is_noise)
 
 
+class InvalidRangeError(CloudnetException):
+    pass
+
+
 def _read_opera_h5(
     file: str | PathLike,
 ) -> tuple[datetime.datetime, npt.NDArray, dict[str, npt.NDArray], dict[str, float]]:
@@ -151,12 +163,14 @@ def _read_opera_h5(
 
         dataset = rootgrp["dataset1"]
         nbins = dataset["where"].nbins
-        # NOTE: rstart is documented to be in km, but it's actually in m at
-        # least for FMI radars.
-        rstart = dataset["where"].nbins
+        rstart = dataset["where"].rstart * KM_TO_M
         rscale = dataset["where"].rscale  # m
         halfbin = rscale / 2
         rng = rstart + halfbin + rscale * np.arange(nbins)
+        # Sometimes nbins is larger than normal (e.g. 119 vs 8274), leading to
+        # very long range and data that looks like garbage.
+        if rng[-1] > 100_000:
+            raise InvalidRangeError
 
         nez = dataset["how"].NEZH
         ni = dataset["how"].NI
