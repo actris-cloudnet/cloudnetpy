@@ -11,9 +11,10 @@ from numpy import ma
 
 from cloudnetpy import output, utils
 from cloudnetpy.cloudnetarray import CloudnetArray
-from cloudnetpy.constants import CM_TO_M, HZ_TO_GHZ, SPEED_OF_LIGHT
+from cloudnetpy.constants import CM_TO_M, HZ_TO_GHZ, M_TO_KM, SPEED_OF_LIGHT
 from cloudnetpy.instruments import instruments
 from cloudnetpy.instruments.cloudnet_instrument import CloudnetInstrument
+from cloudnetpy.metadata import MetaData
 
 
 def wr2nc(
@@ -46,7 +47,7 @@ def wr2nc(
     wr.convert_to_cloudnet_arrays()
     wr.screen_noise()
     wr.add_meta()
-    attributes = output.add_time_attribute({}, wr.date)
+    attributes = output.add_time_attribute(ATTRIBUTES, wr.date)
     output.update_attributes(wr.data, attributes)
     output.save_level1b(wr, output_file, uuid)
     return uuid
@@ -70,7 +71,7 @@ class WeatherRadar(CloudnetInstrument):
         ranges = []
         data = []
         for filename in filenames:
-            file_time, file_range, file_data, file_freq = _read_opera_h5(filename)
+            file_time, file_range, file_data, file_scalars = _read_opera_h5(filename)
             times.append(file_time)
             ranges.append(file_range)
             data.append(file_data)
@@ -85,7 +86,7 @@ class WeatherRadar(CloudnetInstrument):
         self.raw_time = np.array(times)
         self.raw_range = target_range
         self.raw_data = {key: ma.concatenate(value) for key, value in all_data.items()}
-        self.radar_frequency = file_freq
+        self.scalars = file_scalars
 
     def _screen_time(self, expected_date: datetime.date | None = None) -> None:
         if expected_date is None:
@@ -117,16 +118,23 @@ class WeatherRadar(CloudnetInstrument):
         self.data["range"] = CloudnetArray(self.raw_range, "range")
         self.data["height"] = CloudnetArray(height, "height")
         self.data["SNR"] = CloudnetArray(self.raw_data["SNR"], "SNR")
+        self.data["Zh"] = CloudnetArray(self.raw_data["ZH"], "Zh")
         self.data["v"] = CloudnetArray(self.raw_data["VRADH"], "v")
         self.data["width"] = CloudnetArray(self.raw_data["WRADH"], "width")
         self.data["zdr"] = CloudnetArray(self.raw_data["ZDR"], "zdr")
         self.data["rho_hv"] = CloudnetArray(self.raw_data["RHOHV"], "rho_hv")
         self.data["radar_frequency"] = CloudnetArray(
-            self.radar_frequency, "radar_frequency"
+            self.scalars["FREQ"], "radar_frequency"
+        )
+        self.data["nyquist_velocity"] = CloudnetArray(
+            self.scalars["NI"], "nyquist_velocity"
+        )
+        self.data["calibration_reflectivity_factor"] = CloudnetArray(
+            self.scalars["NEZ"], "calibration_reflectivity_factor"
         )
 
     def screen_noise(self) -> None:
-        is_noise = self.data["SNR"].data < -5
+        is_noise = self.data["SNR"].data < 0
         for cloudnet_array in self.data.values():
             if cloudnet_array.data.ndim == 2:
                 cloudnet_array.mask_indices(is_noise)
@@ -134,21 +142,27 @@ class WeatherRadar(CloudnetInstrument):
 
 def _read_opera_h5(
     file: str | PathLike,
-) -> tuple[datetime.datetime, npt.NDArray, dict[str, npt.NDArray], float]:
+) -> tuple[datetime.datetime, npt.NDArray, dict[str, npt.NDArray], dict[str, float]]:
     all_data = {}
     with netCDF4.Dataset(file) as rootgrp:
         date = rootgrp["what"].date
         time = rootgrp["what"].time
         dt = datetime.datetime.strptime(date + time, "%Y%m%d%H%M%S")
 
-        wavelength = rootgrp["how"].wavelength * CM_TO_M
-        frequency = HZ_TO_GHZ * SPEED_OF_LIGHT / wavelength
-
         dataset = rootgrp["dataset1"]
         nbins = dataset["where"].nbins
+        # NOTE: rstart is documented to be in km, but it's actually in m at
+        # least for FMI radars.
         rstart = dataset["where"].nbins
-        rscale = dataset["where"].rscale
-        rng = rstart + rscale * np.arange(nbins)
+        rscale = dataset["where"].rscale  # m
+        halfbin = rscale / 2
+        rng = rstart + halfbin + rscale * np.arange(nbins)
+
+        nez = dataset["how"].NEZH
+        ni = dataset["how"].NI
+        wavelength = rootgrp["how"].wavelength * CM_TO_M
+        frequency = HZ_TO_GHZ * SPEED_OF_LIGHT / wavelength
+        scalars = {"NEZ": nez, "NI": ni, "FREQ": frequency}
 
         grpnames = [group for group in dataset.groups if group.startswith("data")]
         for grpname in grpnames:
@@ -169,4 +183,17 @@ def _read_opera_h5(
                 grpdata = utils.lin2db(grpdata)
             all_data[quantity] = grpdata
 
-    return dt, rng, all_data, frequency
+        all_data["ZH"] = all_data["SNR"] + nez + 20 * np.log10(rng * M_TO_KM)
+
+    return dt, rng, all_data, scalars
+
+
+ATTRIBUTES = {
+    "calibration_reflectivity_factor": MetaData(
+        long_name="Calibration reflectivity factor",
+        comment="This parameter is the equivalent radar reflectivity factor at 1 km\n"
+        "when the return signal power is equal to the noise power (SNR=0 dB).",
+        units="dBZ",
+        dimensions=(),
+    )
+}

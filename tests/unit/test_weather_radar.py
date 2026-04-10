@@ -29,12 +29,15 @@ class TestWr2nc:
             assert "time" in nc.variables
             assert "range" in nc.variables
             assert "height" in nc.variables
+            assert "Zh" in nc.variables
             assert "SNR" in nc.variables
             assert "v" in nc.variables
             assert "width" in nc.variables
             assert "zdr" in nc.variables
             assert "rho_hv" in nc.variables
             assert "radar_frequency" in nc.variables
+            assert "nyquist_velocity" in nc.variables
+            assert "calibration_reflectivity_factor" in nc.variables
 
             assert "time" in nc.dimensions
             assert "range" in nc.dimensions
