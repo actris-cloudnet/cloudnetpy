@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.90.2 – 2026-04-10
+
+- Calculate reflectivity for weather radar
+- Interpolate weather radar data if range changes
+
 ## 1.90.1 – 2026-04-07
 
 - Add wr2nc for converting weather radar data
