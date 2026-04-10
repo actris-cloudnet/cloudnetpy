@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.90.4 – 2026-04-10
+
+- More weather radar fixes
+
 ## 1.90.3 – 2026-04-10
 
 - Fixes for weather radar processing
