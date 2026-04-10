@@ -201,9 +201,10 @@ def _read_opera_h5(
                 grpdata = utils.lin2db(grpdata)
             all_data[quantity] = grpdata
 
-        # Usually DBZH is not available, so we need to calculate it from SNR.
-        if "DBZH" not in all_data and "SNR" in all_data:
-            all_data["DBZH"] = all_data["SNR"] + nez + 20 * np.log10(rng * M_TO_KM)
+        # DBZH is available in some files for some days, but for consistency,
+        # always recalculate it from SNR. The value calculated from SNR is close
+        # to DBZH but not exactly for some unknown reason.
+        all_data["DBZH"] = all_data["SNR"] + nez + 20 * np.log10(rng * M_TO_KM)
 
     return dt, rng, all_data, scalars
 
