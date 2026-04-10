@@ -130,7 +130,7 @@ class WeatherRadar(CloudnetInstrument):
         self.data["range"] = CloudnetArray(self.raw_range, "range")
         self.data["height"] = CloudnetArray(height, "height")
         self.data["SNR"] = CloudnetArray(self.raw_data["SNR"], "SNR")
-        self.data["Zh"] = CloudnetArray(self.raw_data["ZH"], "Zh")
+        self.data["Zh"] = CloudnetArray(self.raw_data["DBZH"], "Zh")
         self.data["v"] = CloudnetArray(self.raw_data["VRADH"], "v")
         self.data["width"] = CloudnetArray(self.raw_data["WRADH"], "width")
         self.data["zdr"] = CloudnetArray(self.raw_data["ZDR"], "zdr")
@@ -201,7 +201,9 @@ def _read_opera_h5(
                 grpdata = utils.lin2db(grpdata)
             all_data[quantity] = grpdata
 
-        all_data["ZH"] = all_data["SNR"] + nez + 20 * np.log10(rng * M_TO_KM)
+        # Usually DBZH is not available, so we need to calculate it from SNR.
+        if "DBZH" not in all_data and "SNR" in all_data:
+            all_data["DBZH"] = all_data["SNR"] + nez + 20 * np.log10(rng * M_TO_KM)
 
     return dt, rng, all_data, scalars
 
