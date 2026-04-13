@@ -92,7 +92,7 @@ def generate_categorize(
         if data.disdrometer is not None:
             data.disdrometer.interpolate_to_grid(time)
         if data.mwr is not None:
-            data.mwr.interpolate_to_grid(time)
+            data.mwr.interpolate_to_grid(time, max_time=2)
         data.model.calc_attenuations(data.radar.radar_frequency)
         data.model.interpolate_to_common_height()
         model_gap_ind = data.model.interpolate_to_grid(time, height)

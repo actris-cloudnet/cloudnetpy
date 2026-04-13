@@ -24,7 +24,14 @@ class Mwr(DataSource):
         self._init_lwp_data()
         self._init_lwp_error()
 
-    def interpolate_to_grid(self, time_grid: npt.NDArray, max_time: float = 1) -> None:
+    def interpolate_to_grid(self, time_grid: npt.NDArray, max_time: float) -> None:
+        """Interpolate LWP using linear interpolation.
+
+        Args:
+            time_grid: 1D array, new time coordinates.
+            max_time: Maximum allowed gap in minutes. Values outside this gap will
+                be masked.
+        """
         for key, array in self.data.items():
             self.data[key].data = interpolate_1d(
                 self.time, array.data, time_grid, max_time=max_time
