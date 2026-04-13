@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.90.5 – 2026-04-13
+
+- Increase allowed gap in LWP interpolation
+
 ## 1.90.4 – 2026-04-10
 
 - More weather radar fixes
