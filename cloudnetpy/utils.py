@@ -498,6 +498,8 @@ def interpolate_1d(
             return ma.masked_all(time_new.shape)
         time = time[~y.mask]
         y = y[~y.mask]
+    time, unique_idx = np.unique(time, return_index=True)
+    y = y[unique_idx]
     fun = interp1d(time, y, kind=method, fill_value=(y[0], y[-1]), bounds_error=False)
     interpolated = ma.array(fun(time_new))
     bad_idx = get_gap_ind(time, time_new, max_time / 60)

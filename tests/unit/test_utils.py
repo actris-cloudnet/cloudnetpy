@@ -940,7 +940,7 @@ def _brute_force_gap_ind(
         ),
         (
             np.array([0.0, 1.0, 2.0]),
-            ma.array([0.0, ma.masked, 2.0]),
+            ma.array([0.0, 0.0, 2.0], mask=[False, True, False]),
             np.array([0.5, 1.5]),
             60,
             [0.5, 1.5],

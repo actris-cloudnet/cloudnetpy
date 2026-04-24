@@ -55,6 +55,11 @@ check_untyped_defs = true
 module = ["cftime.*", "mpl_toolkits.*", "scipy.*", "voodoonet.*"]
 ignore_missing_imports = true
 
+[tool.pytest.ini_options]
+filterwarnings = [
+  "ignore::scipy.stats.ConstantInputWarning",
+]
+
 [tool.release-version]
 filename = "cloudnetpy/version.py"
 pattern = ["MAJOR = (?P<major>\\d+)", "MINOR = (?P<minor>\\d+)", "PATCH = (?P<patch>\\d+)"]
