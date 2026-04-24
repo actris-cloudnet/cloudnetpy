@@ -335,12 +335,13 @@ class Fmcw(Rpg):
 
     def mask_invalid_ldr(self) -> None:
         """Removes ldr outliers."""
-        threshold = -35
-        if "ldr" in self.data:
-            self.data["ldr"].data = ma.masked_less_equal(
-                self.data["ldr"].data,
-                threshold,
-            )
+        thresholds = {"ldr": -35, "sldr": -40}
+        for key, threshold in thresholds.items():
+            if key in self.data:
+                self.data[key].data = ma.masked_less_equal(
+                    self.data[key].data,
+                    threshold,
+                )
 
     def mask_invalid_width(self) -> None:
         """Removes very low width values.
