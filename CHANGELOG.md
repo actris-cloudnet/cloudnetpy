@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.90.6 – 2026-04-24
+
+- Mask invalid sldr values in RPG FMCW data
+- Deduplicate time values in interpolate_1d
+
 ## 1.90.5 – 2026-04-13
 
 - Increase allowed gap in LWP interpolation
