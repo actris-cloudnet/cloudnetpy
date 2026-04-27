@@ -439,8 +439,15 @@ def _select_instrument(
         logging.info("Multiple instruments found for %s", product)
         logging.info("Please specify which one to use")
         for i, instrument in enumerate(instruments):
-            logging.info("%d: %s", i + 1, instrument.name)
-        ind = int(input("Select: ")) - 1
+            logging.info("%d: %s (%s)", i + 1, instrument.name, instrument.pid)
+        try:
+            ind = int(input("Select: ")) - 1
+        except (ValueError, EOFError, KeyboardInterrupt):
+            logging.info("Selection cancelled")
+            return None
+        if not 0 <= ind < len(instruments):
+            logging.info("Invalid selection")
+            return None
         selected_instrument = instruments[ind]
     else:
         selected_instrument = instruments[0]
