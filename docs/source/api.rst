@@ -19,6 +19,9 @@ containing harmonized units and other metadata. This initial processing step
 is necessary to ensure that the subsequent processing steps work with
 all supported instrument combinations.
 
+Cloud radars
+~~~~~~~~~~~~
+
 .. autofunction:: instruments.mira2nc
 
 .. autofunction:: instruments.rpg2nc
@@ -29,19 +32,45 @@ all supported instrument combinations.
 
 .. autofunction:: instruments.copernicus2nc
 
+.. autofunction:: instruments.bowtie2nc
+
+.. autofunction:: instruments.mrr2nc
+
+.. autofunction:: instruments.wr2nc
+
+Lidars
+~~~~~~
+
 .. autofunction:: instruments.ceilo2nc
 
 .. autofunction:: instruments.pollyxt2nc
 
+Microwave radiometers
+~~~~~~~~~~~~~~~~~~~~~
+
 .. autofunction:: instruments.hatpro2nc
 
+.. autofunction:: instruments.hatpro2l1c
+
 .. autofunction:: instruments.radiometrics2nc
+
+Disdrometers
+~~~~~~~~~~~~
 
 .. autofunction:: instruments.parsivel2nc
 
 .. autofunction:: instruments.thies2nc
 
+.. autofunction:: instruments.rd802nc
+
+Other instruments
+~~~~~~~~~~~~~~~~~
+
 .. autofunction:: instruments.ws2nc
+
+.. autofunction:: instruments.fd12p2nc
+
+.. autofunction:: instruments.rain_e_h32nc
 
 
 The categorize file
@@ -71,12 +100,20 @@ generated.
 
 .. autofunction:: products.generate_ier
 
+.. autofunction:: products.generate_mwr_single
+
+.. autofunction:: products.generate_mwr_multi
+
+.. autofunction:: products.generate_mwr_lhumpro
+
 Visualizing results
 ...................
 
 CloudnetPy offers an easy-to-use plotting interface:
 
 .. autofunction:: plotting.generate_figure
+
+.. autofunction:: plotting.plot_2d
 
 .. autoclass:: plotting.PlotParameters
 
@@ -148,10 +185,17 @@ insects
    :members:
 
 
-atmos
-.....
+atmos_utils
+...........
 
-.. automodule:: categorize.atmos
+.. automodule:: categorize.atmos_utils
+   :members:
+
+
+attenuation
+...........
+
+.. automodule:: categorize.attenuation
    :members:
 
 
@@ -159,6 +203,20 @@ droplet
 .......
 
 .. automodule:: categorize.droplet
+   :members:
+
+
+disdrometer
+...........
+
+.. automodule:: categorize.disdrometer
+   :members:
+
+
+containers
+..........
+
+.. automodule:: categorize.containers
    :members:
 
 
@@ -208,6 +266,13 @@ ier
 ...
 
 .. automodule:: products.ier
+   :members:
+
+
+mwr_tools
+.........
+
+.. automodule:: products.mwr_tools
    :members:
 
 

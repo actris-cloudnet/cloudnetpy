@@ -33,10 +33,10 @@ def mira2nc(
     steps.
 
     Args:
-        raw_mira: Filename of a daily MIRA .mmclx or .zncfile. Can be also a folder
-            containing several non-concatenated .mmclx or .znc files from one day
-            or list of files. znc files take precedence because they are the newer
-            filetype
+        raw_mira: Filename of a daily MIRA ``.mmclx`` or ``.znc`` file. Can also
+            be a folder containing several non-concatenated ``.mmclx`` or
+            ``.znc`` files from one day, or a list of files. ``.znc`` files take
+            precedence because they are the newer filetype.
         output_file: Output filename.
         site_meta: Dictionary containing information about the site. Required key
             value pair is `name`.

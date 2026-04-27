@@ -1,4 +1,4 @@
-"""Mwr module, containing the :class:`Mwr` class."""
+"""Disdrometer module, containing the :class:`Disdrometer` class."""
 
 from os import PathLike
 
@@ -10,12 +10,10 @@ from cloudnetpy.utils import interpolate_1d
 
 
 class Disdrometer(DataSource):
-    """Disdrometer class, child of DataSource.
+    """Disdrometer class, child of :class:`DataSource`.
 
     Args:
-    ----
-         full_path: Cloudnet Level 1b disdrometer file.
-
+        full_path: Cloudnet Level 1b disdrometer file.
     """
 
     def __init__(self, full_path: str | PathLike) -> None:

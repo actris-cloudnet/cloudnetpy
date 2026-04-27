@@ -32,8 +32,7 @@ def parsivel2nc(
     telegram: Sequence[int | None] | None = None,
     timestamps: Sequence[datetime.datetime] | None = None,
 ) -> UUID:
-    """Converts OTT Parsivel-2 disdrometer data into Cloudnet Level 1b netCDF
-    file.
+    """Converts OTT Parsivel-2 disdrometer data into Cloudnet Level 1b netCDF file.
 
     Args:
         disdrometer_file: Filename of disdrometer file or list of filenames.

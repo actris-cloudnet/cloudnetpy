@@ -19,7 +19,6 @@ implementation of the Cloudnet processing scheme.
    quickstart
    api
    model-evaluation/overview
-   guide
 
 
 

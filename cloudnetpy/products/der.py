@@ -37,21 +37,19 @@ def generate_der(
     uuid: str | UUID | None = None,
     parameters: Parameters | None = None,
 ) -> UUID:
-    """Generates Cloudnet effective radius of liquid water droplets
-        product according to Frisch et al. 2002.
+    """Generates Cloudnet droplet effective radius product (Frisch et al. 2002).
 
-    This function calculates liquid droplet effective radius def
-    using the Frisch method. In this method, def is calculated
-    from radar reflectivity factor and microwave radiometer
-    liquid water path. The results are written in a netCDF file.
+    This function calculates the liquid droplet effective radius using the
+    Frisch method. In this method, the effective radius is calculated from
+    the radar reflectivity factor and microwave radiometer liquid water path.
+    The results are written in a netCDF file.
 
     Args:
         categorize_file: Categorize file name.
         output_file: Output file name.
         uuid: Set specific UUID for the file.
         parameters: Tuple of specific fixed parameters
-            (ddBZ, N, dN, sigma_x, dsigma_x, dQ)
-        used in Frisch approach.
+            (ddBZ, N, dN, sigma_x, dsigma_x, dQ) used in the Frisch approach.
 
     Returns:
         UUID of the generated file.

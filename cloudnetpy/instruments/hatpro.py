@@ -1,4 +1,4 @@
-"""This module contains RPG Cloud Radar related functions."""
+"""Module for reading RPG HATPRO microwave radiometer data."""
 
 import datetime
 import logging
@@ -51,7 +51,7 @@ def hatpro2l1c(
     Args:
         mwr_dir: Folder containing one day of HATPRO files.
         output_file: Output file name.
-        site_meta: Dictionary containing information about the site and instrument
+        site_meta: Dictionary containing information about the site and instrument.
         instrument_type: Specific type of the RPG microwave radiometer.
         lidar_file: Path to a lidar file.
         uuid: Set specific UUID for the file.
@@ -162,8 +162,7 @@ def hatpro2nc(
     uuid: str | UUID | None = None,
     date: str | datetime.date | None = None,
 ) -> tuple[UUID, list[Path]]:
-    """Converts RPG HATPRO microwave radiometer data into Cloudnet Level 1b
-    netCDF file.
+    """Converts RPG HATPRO microwave radiometer data into Cloudnet Level 1b netCDF file.
 
     This function reads one day of RPG HATPRO .LWP and .IWV binary files,
     concatenates the data and writes it into netCDF file.

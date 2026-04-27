@@ -25,7 +25,7 @@ On Linux and macOS these files can be downloaded using the following commands:
     curl -O https://cloudnet.fmi.fi/api/download/raw/490704b2-7533-4137-979b-f197a6c72e17/230729.LWP
     curl -O https://cloudnet.fmi.fi/api/download/product/856b5a84-155b-427d-b914-09238c206c02/20230729_munich_ecmwf.nc
 
-More raw files can be found using `Cloudnet data portal API <https://docs.cloudnet.fmi.fi/api/data-portal.html#get-apiraw-files--upload>`_.
+More raw files can be found using `Cloudnet data portal API <https://docs.cloudnet.fmi.fi/api/data-portal.html#get-apiraw-files--upload>`__.
 
 Radar processing
 ~~~~~~~~~~~~~~~~
@@ -108,7 +108,7 @@ Model data
 ~~~~~~~~~~
 
 Model files needed in the next processing step can be downloaded
-from the `Cloudnet data portal API <https://docs.cloudnet.fmi.fi/api/data-portal.html#get-apimodel-files--modelfile>`_.
+from the `Cloudnet data portal API <https://docs.cloudnet.fmi.fi/api/data-portal.html#get-apimodel-files--modelfile>`__.
 Several models may be available depending on the site and date.
 The list of different model models can be found `here <https://cloudnet.fmi.fi/api/models/>`_.
 
@@ -165,7 +165,7 @@ use a categorize file as an input.
 
 Variable ``uuid`` contains an unique identifier for the generated ``classification.nc`` file.
 Corresponding functions are available for other products
-(see :ref:`Product generation`).
+(see :ref:`quickstart:Product generation`).
 
 You can plot variables such as target classification from the newly generated file.
 

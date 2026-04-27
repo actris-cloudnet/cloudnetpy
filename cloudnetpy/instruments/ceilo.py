@@ -30,8 +30,7 @@ def ceilo2nc(
     uuid: str | UUID | None = None,
     date: str | datetime.date | None = None,
 ) -> UUID:
-    """Converts Vaisala, Lufft and Campbell Scientific ceilometer data into
-    Cloudnet Level 1b netCDF file.
+    """Converts ceilometer data into Cloudnet Level 1b netCDF file.
 
     This function reads raw Vaisala (CT25k, CL31, CL51, CL61, DA10), Lufft
     (CHM 15k, CHM 15k-x) and Campbell Scientific (CS135) ceilometer files and writes
