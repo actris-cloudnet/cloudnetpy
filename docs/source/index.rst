@@ -17,6 +17,7 @@ implementation of the Cloudnet processing scheme.
    overview
    installation
    quickstart
+   cli
    api
    model-evaluation/overview
 

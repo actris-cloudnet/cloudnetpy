@@ -4,6 +4,12 @@ Quickstart
 
 In this tutorial products are created from raw data using CloudnetPy's high level API.
 
+.. tip::
+
+    If you only want to run CloudnetPy on data already published in the
+    Cloudnet data portal, you can skip the Python API and use the
+    :doc:`command-line tool <cli>` instead.
+
 Raw data conversion
 -------------------
 
