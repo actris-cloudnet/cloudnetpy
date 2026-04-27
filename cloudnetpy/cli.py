@@ -32,18 +32,23 @@ cloudnet_api_url: Final = "https://cloudnet.fmi.fi/api/"
 
 def run(args: argparse.Namespace, tmpdir: str, client: APIClient) -> None:
     cat_files = {}
+    instrument_prefs = _parse_instrument_preferences(args.instrument)
 
     # Instrument based products
-    if source_instruments := _get_source_instruments(args.products, client):
+    if source_instruments := _get_source_instruments(
+        args.products, instrument_prefs, client
+    ):
         for product, possible_instruments in source_instruments.items():
             if not possible_instruments:
                 continue
             meta = _fetch_raw_meta(possible_instruments, args, client)
-            instrument = _select_instrument(meta, product)
+            instrument = _select_instrument(
+                meta, product, instrument_prefs.get(product)
+            )
             if not instrument:
                 logging.info("No instrument found for %s", product)
                 continue
-            meta = _filter_by_instrument(meta, instrument)
+            meta = _filter_by_pid(meta, instrument)
             meta = _filter_by_suffix(meta, product)
             if not meta:
                 logging.info("No suitable data available for %s", product)
@@ -58,7 +63,7 @@ def run(args: argparse.Namespace, tmpdir: str, client: APIClient) -> None:
 
     # Categorize based products
     if "categorize" in args.products:
-        cat_filepath = _process_categorize(cat_files, args, client)
+        cat_filepath = _process_categorize(cat_files, instrument_prefs, args, client)
         _plot(cat_filepath, "categorize", args)
     else:
         cat_filepath = None
@@ -87,10 +92,12 @@ def run(args: argparse.Namespace, tmpdir: str, client: APIClient) -> None:
 
 
 def _process_categorize(
-    input_files: dict, args: argparse.Namespace, client: APIClient
+    input_files: dict,
+    instrument_prefs: dict[str, str],
+    args: argparse.Namespace,
+    client: APIClient,
 ) -> str | None:
     cat_filepath = _create_categorize_filepath(args)
-    instrument_prefs = _parse_instrument_preferences(args.instrument)
 
     def fetch_instrument(product: str) -> tuple[str, str | None]:
         source = instrument_prefs.get(product)
@@ -332,7 +339,7 @@ def _fetch_raw_meta(
     )
 
 
-def _filter_by_instrument(
+def _filter_by_pid(
     meta: list[RawMetadata], instrument: Instrument
 ) -> list[RawMetadata]:
     return [m for m in meta if m.instrument.pid == instrument.pid]
@@ -349,17 +356,31 @@ def _filter_by_suffix(meta: list[RawMetadata], product: str) -> list[RawMetadata
 
 
 def _get_source_instruments(
-    products: list[str], client: APIClient
+    products: list[str], instrument_prefs: dict[str, str], client: APIClient
 ) -> dict[str, list[str]]:
     source_instruments = {}
     for product in products:
         prod, model = _parse_instrument(product)
+        if model is None:
+            pref = instrument_prefs.get(prod)
+            if pref is not None and not _is_pid(pref):
+                model = pref
         all_possible = client.product(prod).source_instrument_ids
         if all_possible and (match := [i for i in all_possible if i == model]):
             source_instruments[prod] = match
         else:
             source_instruments[prod] = list(all_possible)
     return source_instruments
+
+
+def _is_pid(value: str) -> bool:
+    return value.startswith("https://hdl.handle.net/")
+
+
+def _instrument_matches(instrument: Instrument, value: str) -> bool:
+    if _is_pid(value):
+        return instrument.pid == value
+    return instrument.instrument_id == value
 
 
 def _get_product_sources(
@@ -381,10 +402,13 @@ def _parse_instrument_preferences(args: list[str] | None) -> dict[str, str]:
     prefs = {}
     for arg in args:
         if ":" not in arg:
-            msg = f"Invalid instrument format '{arg}', expected 'product:instrument_id'"
+            msg = (
+                f"Invalid instrument format '{arg}', "
+                "expected 'product:instrument_id' or 'product:pid'"
+            )
             raise argparse.ArgumentTypeError(msg)
-        product, instrument_id = arg.split(":", 1)
-        prefs[product] = instrument_id
+        product, value = arg.split(":", 1)
+        prefs[product] = value
     return prefs
 
 
@@ -398,11 +422,19 @@ def _parse_instrument(s: str) -> tuple[str, str | None]:
     return name, value
 
 
-def _select_instrument(meta: list[RawMetadata], product: str) -> Instrument | None:
+def _select_instrument(
+    meta: list[RawMetadata], product: str, pref: str | None = None
+) -> Instrument | None:
     instruments = _get_unique_instruments(meta)
     if len(instruments) == 0:
         logging.info("No instruments found")
         return None
+    if pref:
+        matches = [i for i in instruments if _instrument_matches(i, pref)]
+        if matches:
+            logging.info("Selected instrument by preference: %s", matches[0].name)
+            return matches[0]
+        logging.info("Preferred instrument '%s' not found, falling back", pref)
     if len(instruments) > 1:
         logging.info("Multiple instruments found for %s", product)
         logging.info("Please specify which one to use")
@@ -429,7 +461,7 @@ def _fetch_product(
         meta = [
             m
             for m in meta
-            if m.instrument is not None and m.instrument.instrument_id == source
+            if m.instrument is not None and _instrument_matches(m.instrument, source)
         ]
     if not meta:
         return None
@@ -615,8 +647,11 @@ def main() -> None:
         type=str,
         action="append",
         help=(
-            "Preferred instrument for categorize input, e.g. "
-            "'radar:mira-35' or 'lidar:cl61d'. Can be specified multiple times."
+            "Preferred instrument for a product, e.g. 'radar:mira-35', "
+            "'lidar:cl61d', or 'radar:https://hdl.handle.net/<pid>'. The "
+            "value is either an instrument_id or an instrument PID. Applies "
+            "both to instrument processing and categorize input. Can be "
+            "specified multiple times."
         ),
         default=None,
     )
