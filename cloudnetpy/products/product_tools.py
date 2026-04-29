@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from os import PathLike
 from typing import NamedTuple
 
+import atmoslib
 import netCDF4
 import numpy as np
 import numpy.typing as npt
@@ -11,7 +12,6 @@ from numpy import ma
 from numpy.typing import NDArray
 
 from cloudnetpy import constants, utils
-from cloudnetpy.categorize import atmos_utils
 from cloudnetpy.datasource import DataSource
 
 
@@ -318,4 +318,4 @@ def _read_nc_fields(nc_file: str | PathLike, names: list[str]) -> list[ma.Masked
 def _get_temperature(categorize_file: str | PathLike) -> npt.NDArray:
     """Returns interpolated temperatures in Celsius."""
     atmosphere = interpolate_model(categorize_file, "temperature")
-    return atmos_utils.k2c(atmosphere["temperature"])
+    return atmoslib.k2c(atmosphere["temperature"])
