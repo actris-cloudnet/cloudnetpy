@@ -10,10 +10,6 @@ from numpy import ma
 from scipy.interpolate import interp1d
 
 from cloudnetpy import utils
-from cloudnetpy.categorize.itu import (
-    calc_gas_specific_attenuation,
-    calc_liquid_specific_attenuation,
-)
 from cloudnetpy.cloudnetarray import CloudnetArray
 from cloudnetpy.constants import G
 from cloudnetpy.datasource import DataSource
@@ -176,16 +172,16 @@ class Model(DataSource):
         pressure = self.getvar("pressure")
         specific_humidity = self.getvar("q")
 
-        self.data_sparse["specific_liquid_atten"] = calc_liquid_specific_attenuation(
-            temperature, frequency
+        self.data_sparse["specific_liquid_atten"] = (
+            atmoslib.liquid_water_specific_attenuation(temperature, frequency)
         )
         vp = atmoslib.vapor_pressure(pressure, specific_humidity)
         svp = atmoslib.saturation_vapor_pressure(temperature, phase="mixed")
-        self.data_sparse["specific_gas_atten"] = calc_gas_specific_attenuation(
+        self.data_sparse["specific_gas_atten"] = atmoslib.gas_specific_attenuation(
             pressure, vp, temperature, frequency
         )
         self.data_sparse["specific_saturated_gas_atten"] = (
-            calc_gas_specific_attenuation(pressure, svp, temperature, frequency)
+            atmoslib.gas_specific_attenuation(pressure, svp, temperature, frequency)
         )
 
 
