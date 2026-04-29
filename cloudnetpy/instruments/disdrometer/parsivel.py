@@ -136,10 +136,10 @@ class Parsivel(Disdrometer):
             self.data[name] = CloudnetArray(values_out, name, dimensions=dimensions)
         if "_sensor_id" in self.raw_data:
             first_id = self.raw_data["_sensor_id"][0]
-            for sensor_id in self.raw_data["_sensor_id"]:
-                if sensor_id != first_id:
-                    msg = "Multiple sensor IDs are not supported"
-                    raise DisdrometerDataError(msg)
+            # for sensor_id in self.raw_data["_sensor_id"]:
+            #     if sensor_id != first_id:
+            #         msg = "Multiple sensor IDs are not supported"
+            #         raise DisdrometerDataError(msg)
             self.serial_number = first_id
 
     def _create_velocity_vectors(self) -> None:
@@ -686,6 +686,34 @@ def _read_fmi(content: str) -> dict[str, list]:
     return output
 
 
+def _read_esa_inoe(content: str) -> dict[str, list]:
+    output: dict[str, list] = {"_datetime": []}
+    parts = re.split(r"(\d+\.\d+)TYP OP4A\r?\n", content)
+    total = 0
+    valid = 0
+    for i in range(1, len(parts), 2):
+        total += 1
+        try:
+            record = _read_typ_op4a(parts[i + 1].splitlines())
+        except ValueError:
+            continue
+
+        for key, value in record.items():
+            if key not in output:
+                output[key] = [None] * len(output["_datetime"])
+            output[key].append(value)
+        for key in output:
+            if key not in record and key != "_datetime":
+                output[key].append(None)
+
+        output["_datetime"].append(
+            datetime.datetime.strptime(parts[i], "%Y%m%d%H%M%S.%f")
+        )
+        valid += 1
+    print("valid", round(100 * valid / total), "%")
+    return output
+
+
 def _read_parsivel(
     filenames: Iterable[str | PathLike],
     telegram: Sequence[int | None] | None = None,
@@ -703,6 +731,8 @@ def _read_parsivel(
             data = _read_toa5(filename)
         elif "N00" in lines[0]:
             data = _read_pyatmoslogger_file(filename)
+        elif re.match(r"\d+\.\d+TYP OP4A", lines[0]):
+            data = _read_esa_inoe(content)
         elif "TYP OP4A" in lines[0]:
             data = _read_typ_op4a(lines)
             data = {key: [value] for key, value in data.items()}
