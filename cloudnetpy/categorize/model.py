@@ -3,17 +3,16 @@
 import os.path
 from os import PathLike
 
+import atmoslib
 import numpy as np
 import numpy.typing as npt
 from numpy import ma
 from scipy.interpolate import interp1d
 
 from cloudnetpy import utils
-from cloudnetpy.categorize import atmos_utils
 from cloudnetpy.categorize.itu import (
     calc_gas_specific_attenuation,
     calc_liquid_specific_attenuation,
-    calc_saturation_vapor_pressure,
 )
 from cloudnetpy.cloudnetarray import CloudnetArray
 from cloudnetpy.constants import G
@@ -123,7 +122,12 @@ class Model(DataSource):
 
     def calc_wet_bulb(self) -> None:
         """Calculates wet-bulb temperature in dense grid."""
-        wet_bulb_temp = atmos_utils.calc_wet_bulb_temperature(self.data_dense)
+        t, p, q = (
+            self.data_dense["temperature"],
+            self.data_dense["pressure"],
+            self.data_dense["q"],
+        )
+        wet_bulb_temp = atmoslib.wet_bulb_temperature(t, p, q)
         offset = (self.options or {}).get("temperature_offset", 0)
         wet_bulb_temp += offset
         self.append_data(wet_bulb_temp, "Tw", units="K")
@@ -175,8 +179,8 @@ class Model(DataSource):
         self.data_sparse["specific_liquid_atten"] = calc_liquid_specific_attenuation(
             temperature, frequency
         )
-        vp = atmos_utils.calc_vapor_pressure(pressure, specific_humidity)
-        svp = calc_saturation_vapor_pressure(temperature)
+        vp = atmoslib.vapor_pressure(pressure, specific_humidity)
+        svp = atmoslib.saturation_vapor_pressure(temperature, phase="mixed")
         self.data_sparse["specific_gas_atten"] = calc_gas_specific_attenuation(
             pressure, vp, temperature, frequency
         )

@@ -1,5 +1,6 @@
 """This module contains unit tests for atmos-module."""
 
+import atmoslib
 import numpy as np
 import pytest
 from numpy.testing import assert_array_almost_equal
@@ -16,7 +17,7 @@ from cloudnetpy.categorize import atmos_utils
 )
 def test_saturation_vapor_pressure(t, res):
     """Unit tests for atmos.saturation_vapor_pressure()."""
-    cnet = atmos_utils.calc_saturation_vapor_pressure(np.array(t))
+    cnet = atmoslib.saturation_vapor_pressure(np.array(t))
     assert_array_almost_equal(cnet, res, decimal=0)
 
 
@@ -29,12 +30,7 @@ def test_saturation_vapor_pressure(t, res):
 )
 def test_wet_bulb(t, p, q, res):
     """Unit tests for atmos.wet_bulb()."""
-    model = {
-        "temperature": np.array(t),
-        "pressure": np.array(p),
-        "q": np.array(q),
-    }
-    cnet = atmos_utils.calc_wet_bulb_temperature(model)
+    cnet = atmoslib.wet_bulb_temperature(t, p, q)
     assert_array_almost_equal(cnet / 10, res / 10, decimal=1)
 
 

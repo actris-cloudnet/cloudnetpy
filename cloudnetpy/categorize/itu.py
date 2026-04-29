@@ -131,28 +131,6 @@ def _calc_vapor_refractivity(
     return np.sum(strength * shape, axis=0)
 
 
-def calc_saturation_vapor_pressure(temperature: npt.NDArray) -> npt.NDArray:
-    """Calculate saturation vapor pressure using Tetens equation with respect to
-    water or ice depending on whether the temperature is above freezing or not.
-
-    Args:
-        temperature: Temperature (K)
-
-    Returns:
-        Saturation vapor pressure (Pa)
-
-    References:
-        Murray, F. W. (1967). On the Computation of Saturation Vapor Pressure.
-        Journal of Applied Meteorology and Climatology, 6(1), 203-204.
-        https://doi.org/10.1175/1520-0450(1967)006<0203:OTCOSV>2.0.CO;2
-    """
-    freezing = 273.16
-    is_freezing = temperature < freezing
-    a = np.where(is_freezing, 21.8745584, 17.2693882)
-    b = np.where(is_freezing, 7.66, 35.86)
-    return 610.78 * np.exp(a * (temperature - freezing) / (temperature - b))
-
-
 OXYGEN_TABLE = np.array(
     [
         [50.474214, 0.975, 9.651, 6.690, 0.0, 2.566, 6.850],
