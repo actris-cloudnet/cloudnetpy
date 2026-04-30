@@ -8,11 +8,11 @@ from collections.abc import Iterable, Sequence
 from os import PathLike
 from uuid import UUID
 
+import atmoslib
 import numpy as np
 from numpy import ma
 
 from cloudnetpy import output
-from cloudnetpy.categorize import atmos_utils
 from cloudnetpy.cloudnetarray import CloudnetArray
 from cloudnetpy.constants import HPA_TO_PA, MM_H_TO_M_S, SEC_IN_HOUR
 from cloudnetpy.exceptions import ValidTimeStampError
@@ -135,7 +135,7 @@ class WS(CSVFile):
         return data
 
     def convert_temperature_and_humidity(self) -> None:
-        temperature_kelvins = atmos_utils.c2k(self.data["air_temperature"][:])
+        temperature_kelvins = atmoslib.c2k(self.data["air_temperature"][:])
         self.data["air_temperature"].data = temperature_kelvins
         self.data["relative_humidity"].data = self.data["relative_humidity"][:] / 100
 

@@ -7,6 +7,7 @@ from datetime import date, datetime, timedelta, timezone
 from os import PathLike
 from typing import Any
 
+import atmoslib
 import matplotlib.pyplot as plt
 import netCDF4
 import numpy as np
@@ -25,7 +26,6 @@ from numpy import ma, ndarray
 from scipy.ndimage import uniform_filter
 
 from cloudnetpy import constants as con
-from cloudnetpy.categorize.atmos_utils import calc_altitude
 from cloudnetpy.exceptions import PlottingError
 from cloudnetpy.instruments.ceilometer import calc_sigma_units
 from cloudnetpy.plotting.plot_meta import ATTRIBUTES, PlotMeta
@@ -239,7 +239,7 @@ class FigureData:
             return np.mean(self.file.variables["sfc_geopotential"][:]) / con.G
         pressure = ma.mean(self.file.variables["pressure"][:, 0])
         temperature = ma.mean(self.file.variables["temperature"][:, 0])
-        return calc_altitude(temperature, pressure)
+        return atmoslib.isa_altitude(temperature, pressure)
 
     def is_mwrpy_product(self) -> bool:
         return self.file_type in ("mwr-single", "mwr-multi")

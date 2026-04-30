@@ -6,11 +6,12 @@ from numpy import ma
 from numpy.testing import assert_array_almost_equal, assert_array_equal
 
 from cloudnetpy.categorize import atmos_utils
+import atmoslib
 
 
 @pytest.mark.parametrize("t, p, res", [(270, 85513, 0.001415 * 1e-3)])
 def test_calc_lwc_change_rate(t, p, res):
-    myres = atmos_utils.calc_lwc_change_rate(np.array(t), np.array(p))
+    myres = atmoslib.adiabatic_lwc_gradient(np.array(t), np.array(p))
     assert_array_almost_equal(res, myres, decimal=4)
 
 
