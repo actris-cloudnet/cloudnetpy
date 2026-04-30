@@ -178,10 +178,10 @@ class Model(DataSource):
         vp = atmoslib.vapor_pressure(pressure, specific_humidity)
         svp = atmoslib.saturation_vapor_pressure(temperature, phase="mixed")
         self.data_sparse["specific_gas_atten"] = atmoslib.gas_specific_attenuation(
-            pressure, vp, temperature, frequency
+            temperature, pressure, vp, frequency
         )
         self.data_sparse["specific_saturated_gas_atten"] = (
-            atmoslib.gas_specific_attenuation(pressure, svp, temperature, frequency)
+            atmoslib.gas_specific_attenuation(temperature, pressure, svp, frequency)
         )
 
 

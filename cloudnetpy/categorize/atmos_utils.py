@@ -100,7 +100,7 @@ def get_lwc_change_rate_at_bases(
     """
     liquid_bases = find_cloud_bases(is_liquid)
     lwc_dz = ma.zeros(liquid_bases.shape)
-    lwc_dz[liquid_bases] = atmoslib.adiabatic_dlwc_dz(
+    lwc_dz[liquid_bases] = atmoslib.adiabatic_lwc_gradient(
         temperature[liquid_bases],
         pressure[liquid_bases],
     )
