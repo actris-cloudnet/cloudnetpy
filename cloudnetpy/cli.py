@@ -21,7 +21,7 @@ from cloudnet_api_client.containers import Instrument, ProductMetadata, RawMetad
 from cloudnetpy import concat_lib, instruments
 from cloudnetpy.categorize import CategorizeInput, generate_categorize
 from cloudnetpy.exceptions import PlottingError
-from cloudnetpy.plotting import generate_figure
+from cloudnetpy.plotting import PlotParameters, generate_figure
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -552,12 +552,16 @@ def _plot(
         variables = next(var["variables"] for var in res.json() if var["id"] == product)
         variables = [var["id"].split("-")[-1] for var in variables]
     image_name = str(filepath).replace(".nc", ".png") if args.plot else None
+    options = PlotParameters()
+    if args.max_y is not None:
+        options.max_y = args.max_y
     try:
         generate_figure(
             filepath,
             variables,
             show=args.show,
             output_filename=image_name,
+            options=options,
         )
     except PlottingError as e:
         logging.info("Failed to plot %s: %s", product, e)
@@ -693,6 +697,12 @@ def main() -> None:
         "--variables",
         type=str,
         help="Variables to plot (comma-separated), e.g. 'target_classification'",
+        default=None,
+    )
+    parser.add_argument(
+        "--max-y",
+        type=int,
+        help="Maximum y-axis value (km) in 2D time/height plots (default: 12)",
         default=None,
     )
     parser.add_argument(
