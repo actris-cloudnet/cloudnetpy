@@ -239,7 +239,7 @@ class FigureData:
             return np.mean(self.file.variables["sfc_geopotential"][:]) / con.G
         pressure = ma.mean(self.file.variables["pressure"][:, 0])
         temperature = ma.mean(self.file.variables["temperature"][:, 0])
-        return atmoslib.isa_altitude(temperature, pressure)
+        return float(atmoslib.isa_altitude(temperature, pressure))
 
     def is_mwrpy_product(self) -> bool:
         return self.file_type in ("mwr-single", "mwr-multi")
