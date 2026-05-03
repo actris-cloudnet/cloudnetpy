@@ -1,3 +1,4 @@
+import atmoslib
 import numpy as np
 import numpy.typing as npt
 from numpy import ma
@@ -29,8 +30,8 @@ def calc_rain_attenuation(
     rainfall_rate[classification.is_rain == 0] = ma.masked
     frequency = data.radar.radar_frequency
 
-    specific_attenuation_array = _calc_rain_specific_attenuation(
-        rainfall_rate, frequency
+    specific_attenuation_array = atmoslib.rain_specific_attenuation(
+        rainfall_rate * con.M_S_TO_MM_H, frequency
     )
 
     specific_attenuation = utils.transpose(specific_attenuation_array) * ma.ones(shape)
@@ -60,25 +61,3 @@ def _find_regions(
     affected_region = np.ones_like(warm_region, dtype=bool) * is_rain
     inducing_region = warm_region * is_rain
     return affected_region, inducing_region
-
-
-def _calc_rain_specific_attenuation(
-    rainfall_rate: npt.NDArray, frequency: float
-) -> npt.NDArray:
-    """Calculates specific attenuation due to rain (dB km-1).
-
-    References:
-        Crane, R. (1980). Prediction of Attenuation by Rain.
-        IEEE Transactions on Communications, 28(9), 1717–1733.
-        doi:10.1109/tcom.1980.1094844
-    """
-    if frequency > 8 and frequency < 12:
-        alpha, beta = 0.0125, 1.18
-    if frequency > 34 and frequency < 37:
-        alpha, beta = 0.242, 1.04
-    elif frequency > 93 and frequency < 96:
-        alpha, beta = 0.95, 0.72
-    else:
-        msg = "Radar frequency not supported"
-        raise ValueError(msg)
-    return alpha * (rainfall_rate * con.M_S_TO_MM_H) ** beta
