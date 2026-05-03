@@ -533,7 +533,7 @@ CATEGORIZE_ATTRIBUTES = {
     "radar_rain_atten": MetaData(
         long_name="Two-way radar attenuation due to rain",
         units="dB",
-        references="Crane, R. (1980)",
+        references="ITU-R P.838-3",
         comment=COMMENTS["radar_rain_atten"],
         dimensions=("time", "height"),
     ),
