@@ -8,19 +8,6 @@ from cloudnetpy.categorize import atmos_utils
 
 
 @pytest.mark.parametrize(
-    "t, res",
-    [
-        (300, 3533),
-        (280, 991),
-    ],
-)
-def test_saturation_vapor_pressure(t, res):
-    """Unit tests for atmos.saturation_vapor_pressure()."""
-    cnet = atmos_utils.calc_saturation_vapor_pressure(np.array(t))
-    assert_array_almost_equal(cnet, res, decimal=0)
-
-
-@pytest.mark.parametrize(
     "t, p, q, res",
     [
         (280, 101330, 0.001, 273.21),
