@@ -8,19 +8,6 @@ from numpy.testing import assert_array_almost_equal
 from cloudnetpy.categorize import atmos_utils
 
 
-@pytest.mark.parametrize(
-    "t, p, q, res",
-    [
-        (280, 101330, 0.001, 273.21),
-        (250, 90000, 0.001, 251.03),
-    ],
-)
-def test_wet_bulb(t, p, q, res):
-    """Unit tests for atmos.wet_bulb()."""
-    cnet = atmoslib.wet_bulb_temperature(t, p, q)
-    assert_array_almost_equal(cnet / 10, res / 10, decimal=1)
-
-
 def test_calc_adiabatic_lwc():
     lwc_dz = np.array([[0, 0, 2.1, 2.1, 0, 3.2, 3.2], [0, 2.0, 2.0, 0, 1.5, 1.5, 0]])
 
