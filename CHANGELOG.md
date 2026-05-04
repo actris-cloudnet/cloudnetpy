@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.91.0 – 2026-05-04
+
+- Replace local atmospheric utilities with atmoslib package
+- Use ITU-R P.838-3 from atmoslib for rain attenuation
+- Document missing public API and command-line usage
+- Add -i flag in CLI and accept PID values
+- Add --max-y CLI flag to control plot y-axis limit
+- Show PIDs and handle invalid input in instrument selection prompt
+
 ## 1.90.6 – 2026-04-24
 
 - Mask invalid sldr values in RPG FMCW data
