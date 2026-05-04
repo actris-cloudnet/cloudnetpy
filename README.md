@@ -1,7 +1,7 @@
 # CloudnetPy
 
 [![CloudnetPy CI](https://github.com/actris-cloudnet/cloudnetpy/actions/workflows/test.yml/badge.svg)](https://github.com/actris-cloudnet/cloudnetpy/actions/workflows/test.yml)
-[![PyPI version](https://badge.fury.io/py/cloudnetpy.svg)](https://badge.fury.io/py/cloudnetpy)
+[![PyPI version](https://img.shields.io/pypi/v/cloudnetpy.svg)](https://pypi.org/project/cloudnetpy/)
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.3666030.svg)](https://doi.org/10.5281/zenodo.3666030)
 [![status](https://joss.theoj.org/papers/959971f196f617dddc0e7d8333ff22b7/status.svg)](https://joss.theoj.org/papers/959971f196f617dddc0e7d8333ff22b7)
 
