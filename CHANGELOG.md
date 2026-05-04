@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.91.1 – 2026-05-04
+
+- Set plot range for relative humidity
+
 ## 1.91.0 – 2026-05-04
 
 - Replace local atmospheric utilities with atmoslib package
