@@ -380,4 +380,3 @@ def spec_fit(
         # Perform linear regression
         return linregress(freq_valid, power_valid)
     return (np.nan, np.nan, np.nan, np.nan, np.nan, np.nan)
-
