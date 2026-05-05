@@ -11,7 +11,6 @@ from scipy.interpolate import interp1d
 
 from cloudnetpy import utils
 from cloudnetpy.cloudnetarray import CloudnetArray
-from cloudnetpy.constants import G
 from cloudnetpy.datasource import DataSource
 from cloudnetpy.exceptions import ModelDataError
 
@@ -146,26 +145,8 @@ class Model(DataSource):
         except KeyError as err:
             msg = "No 'height' variable in the model file."
             raise ModelDataError(msg) from err
-        surface_altitude = self._get_model_surface_altitude(alt_site)
+        surface_altitude = utils.get_model_surface_altitude(self.dataset, alt_site)
         return self.to_m(model_heights) + surface_altitude
-
-    def _get_model_surface_altitude(self, alt_site: float) -> float | npt.NDArray:
-        """Returns model surface altitude from geopotential if available.
-
-        For sites in complex terrain (e.g. mountains), the model grid cell
-        surface height can differ significantly from the actual site altitude.
-        Using the model's own surface height ensures that thermodynamic fields
-        are placed at their physically correct absolute heights.
-
-        Note: Model surface altitude might be higher than the site altitude.
-        """
-        if "sfc_height" in self.dataset.variables:
-            sfc_height = self.dataset.variables["sfc_height"][:]
-            return sfc_height[:, np.newaxis]
-        if "sfc_geopotential" in self.dataset.variables:
-            geopotential = self.dataset.variables["sfc_geopotential"][:]
-            return geopotential[:, np.newaxis] / G
-        return alt_site
 
     def calc_attenuations(self, frequency: float) -> None:
         temperature = self.getvar("temperature")
