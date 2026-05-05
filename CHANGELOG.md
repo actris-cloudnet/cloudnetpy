@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.91.2 – 2026-05-05
+
+- Adjust relative humidity plot range
+
 ## 1.91.1 – 2026-05-04
 
 - Set plot range for relative humidity
