@@ -74,6 +74,7 @@ def save_product_file(
     file_name: str | PathLike,
     uuid: UUID,
     copy_from_cat: tuple = (),
+    extra_sources: tuple[DataSource, ...] = (),
 ) -> None:
     """Saves a standard Cloudnet product file.
 
@@ -83,13 +84,18 @@ def save_product_file(
         file_name: Name of the output file to be generated.
         uuid: Set specific UUID for the file.
         copy_from_cat: Variables to be copied from the categorize file.
+        extra_sources: Additional input DataSources whose ``file_uuid`` should
+            also be listed in ``source_file_uuids`` (e.g. a model file used
+            alongside the primary L1b input).
 
     """
     human_readable_file_type = _get_identifier(short_id)
-    dimensions = {
-        "time": len(obj.time),
-        "height": len(obj.dataset.variables["height"]),
-    }
+    height_size = (
+        len(obj.data["height"][:])
+        if "height" in obj.data
+        else len(obj.dataset.variables["height"])
+    )
+    dimensions = {"time": len(obj.time), "height": height_size}
     with init_file(file_name, dimensions, obj.data, uuid) as nc:
         nc.cloudnet_file_type = short_id
         vars_from_source = (
@@ -105,7 +111,7 @@ def save_product_file(
             f"{human_readable_file_type.capitalize()} products from"
             f" {obj.dataset.location}"
         )
-        nc.source_file_uuids = get_source_uuids([nc, obj])
+        nc.source_file_uuids = get_source_uuids([nc, obj, *extra_sources])
         copy_global(
             obj.dataset,
             nc,
@@ -116,11 +122,26 @@ def save_product_file(
                 "year",
                 "source",
                 "source_instrument_pids",
+                "instrument_pid",
                 "voodoonet_version",
             ),
         )
-        merge_history(nc, human_readable_file_type, obj)
+        _append_extra_sources(nc, extra_sources)
+        merge_history(nc, human_readable_file_type, obj, extra_sources=extra_sources)
         nc.references = get_references(short_id)
+
+
+def _append_extra_sources(
+    nc: netCDF4.Dataset, extra_sources: tuple[DataSource, ...]
+) -> None:
+    """Merges ``source`` strings from auxiliary input files into ``nc.source``."""
+    if not extra_sources:
+        return
+    existing = nc.source.split("\n") if "source" in nc.ncattrs() else []
+    extras = [src.dataset.source for src in extra_sources if src.dataset.source]
+    merged = list(dict.fromkeys([*existing, *extras]))
+    if merged:
+        nc.source = "\n".join(merged)
 
 
 def get_l1b_source(instrument: Instrument) -> str:
@@ -173,6 +194,11 @@ def get_references(identifier: str | None = None, extra: list | None = None) -> 
             references += ", https://doi.org/10.1175/JAM2340.1"
         case "drizzle":
             references += ", https://doi.org/10.1175/JAM-2181.1"
+        case "epsilon-radar":
+            references += (
+                ", https://doi.org/10.5194/amt-13-5335-2020"
+                ", https://doi.org/10.1002/2015JD024543"
+            )
     if extra is not None:
         for reference in extra:
             references += f", {reference}"
@@ -203,14 +229,21 @@ def get_source_uuids(data: Observations | list[netCDF4.Dataset | DataSource]) ->
 
 
 def merge_history(
-    nc: netCDF4.Dataset, file_type: str, data: Observations | DataSource
+    nc: netCDF4.Dataset,
+    file_type: str,
+    data: Observations | DataSource,
+    extra_sources: tuple[DataSource, ...] = (),
 ) -> None:
     """Merges history fields from one or several files and creates a new record."""
 
     def extract_history(obj: DataSource | Observations) -> list[str]:
         if hasattr(obj, "dataset") and hasattr(obj.dataset, "history"):
             history = obj.dataset.history
-            if isinstance(obj, Model):
+            is_model_file = (
+                isinstance(obj, Model)
+                or getattr(obj.dataset, "cloudnet_file_type", "") == "model"
+            )
+            if is_model_file:
                 return [history.split("\n")[-1]]
             return history.split("\n")
         return []
@@ -221,6 +254,8 @@ def merge_history(
     elif isinstance(data, Observations):
         for field in fields(data):
             histories.extend(extract_history(getattr(data, field.name)))
+    for src in extra_sources:
+        histories.extend(extract_history(src))
 
     # Remove duplicates
     histories = list(dict.fromkeys(histories))
@@ -298,7 +333,7 @@ def copy_variables(
 
     """
     for key in keys:
-        if key in source.variables:
+        if key in source.variables and key not in target.variables:
             fill_value = getattr(source.variables[key], "_FillValue", False)
             variable = source.variables[key]
             var_out = target.createVariable(
@@ -436,7 +471,7 @@ def _get_identifier(short_id: str) -> str:
         "der",
         "ier",
         "classification-voodoo",
-        "edr",
+        "epsilon-radar",
     )
     if short_id not in valid_ids:
         msg = f"Invalid file identifier: {short_id}"
@@ -449,8 +484,8 @@ def _get_identifier(short_id: str) -> str:
         return "ice effective radius"
     if short_id == "der":
         return "droplet effective radius"
-    if short_id == "edr":
-        return "eddy dissipation rate"
+    if short_id == "epsilon-radar":
+        return "dissipation rate of turbulent kinetic energy"
     return short_id
 
 

@@ -25,7 +25,7 @@ from scipy.interpolate import (
 )
 
 from cloudnetpy.cloudnetarray import CloudnetArray
-from cloudnetpy.constants import SEC_IN_DAY, SEC_IN_HOUR, SEC_IN_MINUTE
+from cloudnetpy.constants import SEC_IN_DAY, SEC_IN_HOUR, SEC_IN_MINUTE, G
 from cloudnetpy.exceptions import ValidTimeStampError
 
 
@@ -873,6 +873,27 @@ def range_to_height(range_los: npt.NDArray, tilt_angle: float) -> npt.NDArray:
 def is_empty_line(line: str) -> bool:
     """Tests if a line (of a text file) is empty."""
     return line in ("\n", "\r\n")
+
+
+def get_model_surface_altitude(
+    dataset: netCDF4.Dataset, alt_site: float
+) -> float | npt.NDArray:
+    """Returns model surface altitude (m), preferring the model's own field.
+
+    For sites in complex terrain (e.g. mountains), the model grid cell
+    surface height can differ significantly from the actual site altitude.
+    Using the model's own surface height ensures that thermodynamic and
+    wind fields are placed at their physically correct absolute heights.
+
+    Returns a (n_time, 1) array when the model provides a per-timestep
+    surface field, otherwise the scalar ``alt_site`` fallback. Both shapes
+    broadcast against (n_time, n_height) model arrays.
+    """
+    if "sfc_height" in dataset.variables:
+        return dataset.variables["sfc_height"][:][:, np.newaxis]
+    if "sfc_geopotential" in dataset.variables:
+        return dataset.variables["sfc_geopotential"][:][:, np.newaxis] / G
+    return alt_site
 
 
 def is_timestamp(timestamp: str) -> bool:

@@ -29,6 +29,16 @@ if TYPE_CHECKING:
 
 cloudnet_api_url: Final = "https://cloudnet.fmi.fi/api/"
 
+# Products implemented in cloudnetpy that are not (yet) registered in the
+# Cloudnet API. The CLI handles them with explicit branches below since the
+# API-driven dispatch (source_product_ids, source_instrument_ids) doesn't
+# know about them.
+LOCAL_PRODUCTS: Final = frozenset({"epsilon-radar"})
+
+# Default plotted variables for products that aren't yet known to the API's
+# /products/variables endpoint.
+LOCAL_PRODUCT_VARS: Final = {"epsilon-radar": ["epsilon"]}
+
 
 def run(args: argparse.Namespace, tmpdir: str, client: APIClient) -> None:
     cat_files = {}
@@ -89,6 +99,33 @@ def run(args: argparse.Namespace, tmpdir: str, client: APIClient) -> None:
             break
         l2_filename = _process_mwrpy_product(product, mwrpy_filepath, args)
         _plot(l2_filename, product, args)
+
+    # Radar + model based products (e.g. epsilon-radar)
+    if "epsilon-radar" in args.products:
+        epsilon_filepath = _process_epsilon_radar(cat_files, args, client)
+        if epsilon_filepath is not None:
+            _plot(epsilon_filepath, "epsilon-radar", args)
+
+
+def _process_epsilon_radar(
+    cat_files: dict, args: argparse.Namespace, client: APIClient
+) -> str | None:
+    radar_filepath = cat_files.get("radar") or _fetch_product(args, "radar", client)
+    if radar_filepath is None:
+        logging.info("No radar data available for epsilon-radar")
+        return None
+    model_filepath = _fetch_model(args, client)
+    if model_filepath is None:
+        logging.info("No model data available for epsilon-radar")
+        return None
+    filename = f"{args.date.replace('-', '')}_{args.site}_epsilon-radar.nc"
+    output_file = _create_output_folder("geophysical", args) / filename
+    products = importlib.import_module("cloudnetpy.products")
+    products.generate_epsilon_from_radar(
+        str(radar_filepath), model_filepath, str(output_file)
+    )
+    logging.info("Processed epsilon-radar: %s", output_file)
+    return str(output_file)
 
 
 def _process_categorize(
@@ -361,6 +398,8 @@ def _get_source_instruments(
     source_instruments = {}
     for product in products:
         prod, model = _parse_instrument(product)
+        if prod in LOCAL_PRODUCTS:
+            continue
         if model is None:
             pref = instrument_prefs.get(prod)
             if pref is not None and not _is_pid(pref):
@@ -389,6 +428,8 @@ def _get_product_sources(
     source_products = {}
     for product in products:
         prod, _ = _parse_instrument(product)
+        if prod in LOCAL_PRODUCTS:
+            continue
         product_obj = client.product(prod)
         if product_obj.source_product_ids:
             source_products[prod] = list(product_obj.source_product_ids)
@@ -546,6 +587,8 @@ def _plot(
         return
     if args.variables is not None:
         variables = args.variables.split(",")
+    elif product in LOCAL_PRODUCT_VARS:
+        variables = LOCAL_PRODUCT_VARS[product]
     else:
         res = requests.get(f"{cloudnet_api_url}products/variables", timeout=60)
         res.raise_for_status()
@@ -590,7 +633,7 @@ def _process_mwrpy_product(
 
 def _parse_products(product_argument: str, client: APIClient) -> list[str]:
     products = product_argument.split(",")
-    valid_options = [p.id for p in client.products()]
+    valid_options = {p.id for p in client.products()} | LOCAL_PRODUCTS
     valid_products = []
     for product in products:
         prod, _ = _parse_instrument(product)
