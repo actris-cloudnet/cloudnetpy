@@ -667,5 +667,10 @@ ATTRIBUTES = {
             plot_range=(1e-7, 1e-1),
             log_scale=True,
         ),
+        "epsilon_error": PlotMeta(
+            cmap="inferno",
+            plot_range=(1e-7, 1e-1),
+            log_scale=True,
+        ),
     },
 }
