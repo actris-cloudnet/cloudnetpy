@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.92.1 – 2026-05-06
+
+- Fix CubicSpline crash on tiny radar windows in epsilon-radar
+- Drop empty time bins from epsilon-radar output
+
 ## 1.92.0 – 2026-05-06
 
 - Add epsilon-lidar product
