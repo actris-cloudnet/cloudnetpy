@@ -127,6 +127,14 @@ class EpsilonRadarSource(DataSource):
         v = np.asarray(v, dtype=np.float64)
 
         product_time = utils.time_grid(time_step=PRODUCT_TIME_STEP_SEC)
+        starts = np.searchsorted(radar_time, product_time, side="right")
+        stops = np.searchsorted(
+            radar_time, product_time + AVERAGING_TIME_HR, side="right"
+        )
+        has_data = stops > starts
+        product_time = product_time[has_data]
+        starts = starts[has_data]
+        stops = stops[has_data]
         self.time = product_time
         wind_at_product = wind_interp(product_time, height)
 
@@ -135,15 +143,8 @@ class EpsilonRadarSource(DataSource):
         epsilon = np.full((n_time, n_height), EPSILON_INVALID, dtype=np.float64)
         epsilon_error = np.full((n_time, n_height), EPSILON_INVALID, dtype=np.float64)
 
-        starts = np.searchsorted(radar_time, product_time, side="right")
-        stops = np.searchsorted(
-            radar_time, product_time + AVERAGING_TIME_HR, side="right"
-        )
-
         for time_idx in range(n_time):
             after, stop = int(starts[time_idx]), int(stops[time_idx])
-            if stop <= after:
-                continue
             time_window = radar_time[after:stop]
             min_valid = max(2, int(MIN_VALID_FRACTION * time_window.size))
 
