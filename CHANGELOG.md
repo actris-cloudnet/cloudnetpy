@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.92.0 – 2026-05-06
+
+- Add epsilon-lidar product
+
 ## 1.91.2 – 2026-05-05
 
 - Adjust relative humidity plot range
