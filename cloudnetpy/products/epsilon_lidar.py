@@ -12,8 +12,8 @@ from doppy.product.turbulence import HorizontalWind, Options, Turbulence, Vertic
 from scipy.interpolate import LinearNDInterpolator, NearestNDInterpolator
 
 import cloudnetpy
+from cloudnetpy import output
 from cloudnetpy.exceptions import ValidTimeStampError
-from cloudnetpy.output import copy_variables
 from cloudnetpy.utils import get_time, get_uuid
 
 
@@ -95,7 +95,7 @@ def generate_epsilon_from_lidar(
         netCDF4.Dataset(doppler_lidar_file, "r") as nc_src_stare,
         netCDF4.Dataset(doppler_lidar_wind_file, "r") as nc_src_wind,
     ):
-        copy_variables(
+        output.copy_variables(
             nc_src_stare, nc_out, ("latitude", "longitude", "altitude", "source")
         )
         nc_out.source_file_uuids = f"{nc_src_stare.file_uuid}, {nc_src_wind.file_uuid}"
