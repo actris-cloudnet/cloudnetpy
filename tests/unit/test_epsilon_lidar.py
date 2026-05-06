@@ -5,7 +5,7 @@ from pathlib import Path
 
 import netCDF4
 
-from cloudnetpy.products.epsilon import generate_epsilon_from_lidar
+from cloudnetpy.products import generate_epsilon_from_lidar
 from tests.unit.all_products_fun import Check
 
 SCRIPT_PATH = path.dirname(path.realpath(__file__))
