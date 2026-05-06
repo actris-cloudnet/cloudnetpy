@@ -145,7 +145,7 @@ class EpsilonRadarSource(DataSource):
             if stop <= after:
                 continue
             time_window = radar_time[after:stop]
-            min_valid = int(MIN_VALID_FRACTION * time_window.size)
+            min_valid = max(2, int(MIN_VALID_FRACTION * time_window.size))
 
             for height_idx in range(n_height):
                 vel = v[after:stop, height_idx]
