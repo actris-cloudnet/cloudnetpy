@@ -44,17 +44,15 @@ def generate_epsilon_from_radar(
         >>> generate_epsilon_from_radar('radar.nc', 'ecmwf.nc', 'epsilon.nc')
 
     References:
-        Griesche, H. J., Seifert, P., Ansmann, A., Baars, H., Barrientos
-        Velasco, C., Bühl, J., Engelmann, R., Radenz, M., Zhenping, Y., and
-        Macke, A. (2020): Application of the shipborne remote sensing
+        Griesche et al. (2020). Application of the shipborne remote sensing
         supersite OCEANET for profiling of Arctic aerosols and clouds during
-        Polarstern cruise PS106, Atmos. Meas. Tech., 13, 5335-5358,
-        https://doi.org/10.5194/amt-13-5335-2020.
+        Polarstern cruise PS106. Atmos. Meas. Tech., 13(10), 5335-5358.
+        https://doi.org/10.5194/amt-13-5335-2020
 
-        Borque, P., Luke, E., and Kollias, P. (2016): On the unified
-        estimation of turbulence eddy dissipation rate using Doppler cloud
-        radars and lidars, J. Geophys. Res. Atmos., 120, 5972-5989,
-        https://doi.org/10.1002/2015JD024543.
+        Borque et al. (2016). On the unified estimation of turbulence eddy
+        dissipation rate using Doppler cloud radars and lidars. JGR Atmospheres,
+        121(10), 5972-5989. https://doi.org/10.1002/2015JD024543
+
     """
     uuid = get_uuid(uuid)
     with (
