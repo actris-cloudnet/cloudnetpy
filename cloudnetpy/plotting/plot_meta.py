@@ -428,7 +428,7 @@ ATTRIBUTES = {
             plot_range=(1e-5, 1e-2),
             log_scale=True,
         ),
-        "rh": PlotMeta(plot_range=(0, 1.2)),
+        "rh": PlotMeta(plot_range=(0, 120)),
         "number_concentration": PlotMeta(
             plot_range=(1e-2, 1e3), log_scale=True, mask_zeros=True
         ),

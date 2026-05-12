@@ -410,6 +410,7 @@ class Plot:
             "precipitation_rate": (multiply, 3600000, "mm h$^{-1}$"),
             "air_pressure": (multiply, 0.01, "hPa"),
             "relative_humidity": (multiply, 100, "%"),
+            "rh": (multiply, 100, "%"),
             "rainfall_amount": (multiply, 1000, "mm"),
             "snowfall_amount": (multiply, 1000, "mm"),
             "precipitation_amount": (multiply, 1000, "mm"),
