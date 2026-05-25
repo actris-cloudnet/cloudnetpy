@@ -414,6 +414,7 @@ ATTRIBUTES = {
         "cloud_fraction": PlotMeta(
             cmap="Blues",
             plot_range=(0, 1),
+            mask_zeros=True,
         ),
         "Tw": PlotMeta(
             cmap="RdBu_r",
