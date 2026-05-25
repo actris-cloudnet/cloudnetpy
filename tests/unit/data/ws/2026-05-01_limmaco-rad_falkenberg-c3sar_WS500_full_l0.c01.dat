@@ -1,0 +1,7 @@
+"TOA5","CR1000X_LIMMACO","CR1000X","63440","CR1000X.Std.08.01","CPU:limmaco-rad_20250320.CR1X","50183","WS500"
+"TIMESTAMP","RECORD","WS500_relative_humidity","WS500_absolute_humidity","WS500_mixing_ratio","WS500_relative_air_pressure","WS500_absolute_air_pressure","WS500_air_temperature","WS500_dewpoint_temperature","WS500_wind_chill_temperature","WS500_wet_bulb_temperature","WS500_specific_enthalpy","WS500_air_density","WS500_wind_speed_min","WS500_wind_speed_max","WS500_wind_speed_avg","WS500_wind_speed_std","WS500_wind_direction_min","WS500_wind_direction_max","WS500_wind_direction_avg","WS500_wind_direction_std","WS500_compass","ResultCodeWS500"
+"TS","RN","%","g m-3","g kg-1","hPa","hPa","degC","degC","degC","degC","kJ kg-1","kg m-3","m s-1","m s-1","m s-1","m s-1","deg","deg","deg","deg","deg",""
+"","","Smp","Smp","Smp","Smp","Smp","Smp","Smp","Smp","Smp","Smp","Smp","Smp","Smp","Smp","Smp","Smp","Smp","Smp","Smp","Smp","Smp"
+"2026-05-01 00:00:00",347,88.4,5.7,4.5,1021,1021,4.2,2.4,3.1,3.3,15.2,1.28,0,0.6,0,0,0,208.5,0,0,6,0
+"2026-05-01 00:10:00",348,88.4,5.6,4.4,1022,1022,4,2.2,2.9,3,14.6,1.282,0,1,0.5,0.15,0,190.6,188.1,11.24,6,0
+"2026-05-01 00:20:00",349,89.1,5.5,4.3,1022,1022,3.4,1.8,2.3,3,14.6,1.282,0,0.8,0,0,0,287.3,0,0,6,0

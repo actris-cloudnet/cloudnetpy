@@ -296,6 +296,18 @@ class TestWeatherStationCluj(WS):
         assert self.nc.dimensions["time"].size == 3
 
 
+class TestWeatherStationFalkenberg(WS):
+    date = "2026-05-01"
+    temp_dir = TemporaryDirectory()
+    temp_path = temp_dir.name + "/test.nc"
+    site_meta = {**SITE_META, "name": "Falkenberg"}
+    filename = f"{SCRIPT_PATH}/data/ws/2026-05-01_limmaco-rad_falkenberg-c3sar_WS500_full_l0.c01.dat"
+    uuid = weather_station.ws2nc(filename, temp_path, site_meta, date=date)
+
+    def test_dimensions(self):
+        assert self.nc.dimensions["time"].size == 3
+
+
 @pytest.mark.parametrize(
     "original, expected",
     [

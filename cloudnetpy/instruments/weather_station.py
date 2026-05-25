@@ -76,6 +76,8 @@ def ws2nc(
         ws = MaidoWS(weather_station_file, site_meta)
     elif site_meta["name"] == "Cluj-Napoca":
         ws = ClujWS(weather_station_file, site_meta)
+    elif site_meta["name"] == "Falkenberg":
+        ws = FalkenbergWS(weather_station_file, site_meta)
     else:
         msg = "Unsupported site"
         raise ValueError(msg)
@@ -822,6 +824,54 @@ class ClujWS(WS):
         self.data["rainfall_rate"].data = rainfall_rate / (
             1000 * 600
         )  # mm/10min => m/s
+
+
+class FalkenbergWS(WS):
+    def __init__(self, filenames: Sequence[str | PathLike], site_meta: dict) -> None:
+        if len(filenames) != 1:
+            raise ValueError
+        super().__init__(site_meta)
+        self.filename = filenames[0]
+        self._data = self._read_data()
+
+    def _read_data(self) -> dict:
+        keymap = {
+            "TIMESTAMP": "time",
+            "WS500_air_temperature": "air_temperature",
+            "WS500_relative_humidity": "relative_humidity",
+            "WS500_absolute_air_pressure": "air_pressure",
+            "WS500_wind_speed_avg": "wind_speed",
+            "WS500_wind_direction_avg": "wind_direction",
+        }
+        expected_units = {
+            "WS500_air_temperature": "degC",
+            "WS500_relative_humidity": "%",
+            "WS500_absolute_air_pressure": "hPa",
+            "WS500_wind_speed_avg": "m s-1",
+            "WS500_wind_direction_avg": "deg",
+        }
+        units, _process, rows = read_toa5(self.filename)
+        for key in units:
+            if key in expected_units and expected_units[key] != units[key]:
+                msg = (
+                    f"Expected {key} to have units {expected_units[key]},"
+                    f" got {units[key]} instead"
+                )
+                raise ValueError(msg)
+
+        data: dict[str, list] = {keymap[key]: [] for key in units if key in keymap}
+        for row in rows:
+            for key, value in row.items():
+                if key not in keymap:
+                    continue
+                parsed = value
+                if keymap[key] != "time":
+                    try:
+                        parsed = float(value)
+                    except ValueError:
+                        parsed = math.nan
+                data[keymap[key]].append(parsed)
+        return self.format_data(data)
 
 
 ATTRIBUTES = {
