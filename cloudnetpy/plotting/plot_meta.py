@@ -317,7 +317,7 @@ ATTRIBUTES = {
             log_scale=True,
         ),
         "N_scaled": PlotMeta(
-            plot_range=(1.0e0, 1e3),
+            plot_range=(1.0e6, 1.0e9),
             log_scale=True,
         ),
         "der_error": PlotMeta(

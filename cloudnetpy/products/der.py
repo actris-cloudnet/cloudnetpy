@@ -199,7 +199,7 @@ class DerSource(DataSource):
                 A * A + B * B + C * C,
             )
 
-        N_scaled = ma.masked_less_equal(ma.masked_invalid(N_scaled), 0.0) * 1.0e-6
+        N_scaled = ma.masked_less_equal(ma.masked_invalid(N_scaled), 0.0)
         der = ma.masked_less_equal(ma.masked_invalid(der), 0.0) * 1.0e-3
         der_error = ma.masked_less_equal(ma.masked_invalid(der_error), 0.0) * 1.0e-3
         der_scaled = ma.masked_less_equal(ma.masked_invalid(der_scaled), 0.0) * 1.0e-3
@@ -328,8 +328,7 @@ REFF_ATTRIBUTES = {
     ),
     "N_scaled": MetaData(
         long_name="Cloud droplet number concentration",
-        units="1",
-        ancillary_variables="der_error der_scaled der_scaled_error",
+        units="m-3",
         comment=COMMENTS["N_scaled"],
         dimensions=("time", "height"),
     ),
