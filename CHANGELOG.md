@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.92.2 – 2026-05-27
+
+- Fix `N_scaled` units in DER output
+- Fix `rh` plotting to use percentage scale
+- Add support for Falkenberg weather station
+
 ## 1.92.1 – 2026-05-06
 
 - Fix CubicSpline crash on tiny radar windows in epsilon-radar
