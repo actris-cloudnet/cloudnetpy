@@ -263,7 +263,7 @@ def merge_history(
     def parse_time(line: str) -> datetime.datetime:
         try:
             return datetime.datetime.strptime(
-                line.split(" - ")[0].strip(), "%Y-%m-%d %H:%M:%S %z"
+                line.split(" - ", maxsplit=1)[0].strip(), "%Y-%m-%d %H:%M:%S %z"
             )
         except ValueError:
             return datetime.datetime.min.replace(

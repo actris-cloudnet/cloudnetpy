@@ -557,7 +557,7 @@ def _download_product_file(
 
 
 def _shorten_pid(pid: str) -> str:
-    return pid.split(".")[-1][:8]
+    return pid.rsplit(".", maxsplit=1)[-1][:8]
 
 
 def _check_input(files: list) -> None:

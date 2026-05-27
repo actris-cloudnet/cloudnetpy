@@ -294,7 +294,7 @@ def _read_lines(
 def _expand_spectrum(m: re.Match) -> bytes:
     if m[1] == b"ZERO":
         return b"0;" * 1024
-    return b";".join([x if x else b"0" for x in m[1].split(b";")])
+    return b";".join([x or b"0" for x in m[1].split(b";")])
 
 
 def _read_typ_op4a(content: bytes) -> dict:

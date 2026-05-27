@@ -87,7 +87,7 @@ def save_downsampled_file(
     dimensions = {"time": len(obj.time), "level": len(obj.data["level"][:])}
     with output.init_file(file_name, dimensions, obj.data, uuid) as root_group:
         _augment_global_attributes(root_group)
-        root_group.cloudnet_file_type = "l3-" + id_mark.split("_")[0]
+        root_group.cloudnet_file_type = "l3-" + id_mark.split("_", maxsplit=1)[0]
         root_group.title = (
             f"Downsampled {id_mark.capitalize().replace('_', ' of ')} "
             f"from {obj.dataset.location}"

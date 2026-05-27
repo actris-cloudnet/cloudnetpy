@@ -566,16 +566,16 @@ def l2norm(*args: npt.NDArray | float) -> ma.MaskedArray:
         The l2 norm.
 
     """
-    arg_cpy: float | npt.NDArray
+    arg_copy: float | npt.NDArray
     ss: float | npt.NDArray = 0
     for arg in args:
         if isinstance(arg, ma.MaskedArray):
             # Raise only non-masked values, not sure if this is needed...
-            arg_cpy = ma.copy(arg)
-            arg_cpy[~arg.mask] = arg_cpy[~arg.mask] ** 2
+            arg_copy = ma.copy(arg)
+            arg_copy[~arg.mask] = arg_copy[~arg.mask] ** 2
         else:
-            arg_cpy = arg**2
-        ss = ss + arg_cpy
+            arg_copy = arg**2
+        ss = ss + arg_copy
     return ma.sqrt(ss)
 
 
