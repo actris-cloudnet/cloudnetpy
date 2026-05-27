@@ -24,11 +24,11 @@ from cloudnetpy.products.product_tools import (
 
 class Parameters(NamedTuple):
     ddBZ: float
-    N: float
-    dN: float
+    N: float  # m-3
+    dN: float  # m-3
     sigma_x: float
     dsigma_x: float
-    dQ: float
+    dQ: float  # kg m-2
 
 
 def generate_der(
@@ -76,8 +76,8 @@ def generate_der(
         der_source.append_der()
         der_source.append_retrieval_status(droplet_classification)
         date = der_source.get_date()
-        attributes = output.add_time_attribute(REFF_ATTRIBUTES, date)
-        attributes = _add_der_error_comment(attributes, der_source)
+        attributes = output.add_time_attribute(DER_ATTRIBUTES, date)
+        attributes = _add_der_error_comments(attributes, der_source)
         output.update_attributes(der_source.data, attributes)
         output.save_product_file("der", der_source, output_file, uuid)
     return uuid
@@ -132,7 +132,7 @@ class DerSource(DataSource):
     def append_der(self) -> None:
         """Estimate liquid droplet effective radius using Frisch et al. 2002."""
         params = self.parameters
-        rho_l = 1000  # density of liquid water(kg m-3)
+        rho_l = 1000  # density of liquid water (kg m-3)
 
         var_x = params.sigma_x * params.sigma_x
 
@@ -140,7 +140,7 @@ class DerSource(DataSource):
         Z = utils.db2lin(Z)
         dZ = ma.abs(utils.db2lin(params.ddBZ)) * Z
 
-        lwp = self.getvar("lwp")
+        lwp = self.getvar("lwp")  # kg m-2
         lwp[lwp < 0] = 0
 
         der = np.zeros(Z.shape)
@@ -172,7 +172,7 @@ class DerSource(DataSource):
             # der formula (5)
             A = (Z[ind_t, idx_layer] / params.N) ** (1 / 6)
             B = ma.exp(-0.5 * var_x)
-            der[ind_t, idx_layer] = 0.5 * A * B
+            der[ind_t, idx_layer] = 0.5 * A * B  # mm
 
             # der error formula (7)
             A = params.dN / (6 * params.N)
@@ -180,24 +180,26 @@ class DerSource(DataSource):
             C = dZ[ind_t, idx_layer] / (6 * Z[ind_t, idx_layer])
             der_error[ind_t, idx_layer] = der[ind_t, idx_layer] * ma.sqrt(
                 A * A + B * B + C * C,
-            )
+            )  # mm
 
             # der scaled formula (6)
             A = Z[ind_t, idx_layer] ** (1 / 6) / (2 * lwp[ind_t] ** (1 / 3))
             B = (np.pi * rho_l / 6) ** (1 / 3)
             C = integral ** (1 / 3) * ma.exp(-2 * var_x)
-            der_scaled[ind_t, idx_layer] = 1.0e-3 * A * B * C
+            der_scaled[ind_t, idx_layer] = 1.0e-3 * A * B * C  # μm => mm
 
-            # der scaled formula (9)
+            # solve N in der formula (5) assuming rₑ from der scaled formula (6)
             N_scaled[ind_t, idx_layer] = Z[ind_t, idx_layer] / (
                 ((2 * der_scaled[ind_t, idx_layer]) / (ma.exp(-0.5 * var_x))) ** 6
-            )
+            )  # m-3
+
+            # der scaled error formula (9)
             A = dZ[ind_t, idx_layer] / (6 * Z[ind_t, idx_layer])
             B = 4 * params.sigma_x * params.dsigma_x
             C = params.dQ / (3 * lwp[ind_t])
             der_scaled_error[ind_t, idx_layer] = der_scaled[ind_t, idx_layer] * ma.sqrt(
                 A * A + B * B + C * C,
-            )
+            )  # mm
 
         N_scaled = ma.masked_less_equal(ma.masked_invalid(N_scaled), 0.0)
         der = ma.masked_less_equal(ma.masked_invalid(der), 0.0) * 1.0e-3
@@ -263,22 +265,20 @@ COMMENTS = {
     ),
     "der": (
         "This variable was calculated for the profiles where the categorization\n"
-        "data has diagnosed that liquid water is present the cloud droplet\n"
-        "effective radius is calculated after Frisch et al (2002), relating Z\n"
-        "with def by assuming a lognormal size distribution its width and the\n"
-        "number concentration of the cloud droplets."
+        "data has diagnosed that liquid water is present. The cloud droplet\n"
+        "effective radius is calculated using the method 1 of Frisch et al.\n"
+        "(2002), relating Z with effective radius by assuming a lognormal size\n"
+        "distribution and its width and the number concentration of the cloud\n"
+        "droplets."
     ),
     "der_scaled": (
-        "This variable was calculated for the profiles where the\n"
-        "categorization data has diagnosed that liquid water is present\n"
-        "the cloud droplet effective radius is calculated after\n"
-        "Frisch et al. (2002), relating Z with def by assuming a lognormal\n"
-        "size distribution and its width. The number concentration required\n"
-        "to represent the size distribution is derived by scaling the LWP\n "
-        "measured with microwave radiometer over the observed (single) cloud layer."
-    ),
-    "der_scaled_error": (
-        "This variable was calculated for the profiles where the categorization data"
+        "This variable was calculated for the profiles where the categorization\n"
+        "data has diagnosed that liquid water is present. The cloud droplet\n"
+        "effective radius is calculated using the method 2 of Frisch et al.\n"
+        "(2002), relating Z with effective radius by assuming a lognormal size\n"
+        "distribution and its width. The number concentration required to\n"
+        "represent the size distribution is derived by scaling the LWP measured\n"
+        "with microwave radiometer over the observed (single) cloud layer."
     ),
     "N_scaled": (
         "From scaled Frisch method the cloud droplet number concentration\n"
@@ -287,21 +287,28 @@ COMMENTS = {
 }
 
 
-def _add_der_error_comment(attributes: dict, der_source: DerSource) -> dict:
+def _add_der_error_comments(attributes: dict, der_source: DerSource) -> dict:
     params = der_source.parameters
     attributes["der_error"] = attributes["der_error"]._replace(
         comment="This variable is an estimate of the random error in effective\n"
-        f"radius assuming an error in Z of ddBZ = {params.ddBZ} in N of\n"
-        f"dN = {params.dN} and in the spectral width dsigma_x = {params.dsigma_x}\n"
-        f"and in the LWP Q of {params.dQ} kg m-3.",
+        f"radius assuming an error in Z of dZ = {params.ddBZ} dBZ, in N of\n"
+        f"dN = {params.dN} m-3, and in the spectral width of "
+        f"dsigma_x = {params.dsigma_x}."
+    )
+    attributes["der_scaled_error"] = attributes["der_scaled_error"]._replace(
+        comment="This variable is an estimate of the random error in scaled effective\n"
+        f"radius assuming an error in Z of dZ = {params.ddBZ} dBZ, in the spectral\n"
+        f"width of dsigma_x = {params.dsigma_x}, and in the LWP of dQ = {params.dQ} "
+        "kg m-2."
     )
     return attributes
 
 
-REFF_ATTRIBUTES = {
+DER_ATTRIBUTES = {
     "comment": COMMENTS["general"],
     "der": MetaData(
         long_name="Droplet effective radius",
+        standard_name="effective_radius_of_cloud_liquid_water_particles",
         units="m",
         ancillary_variables="der_error",
         comment=COMMENTS["der"],
@@ -315,6 +322,7 @@ REFF_ATTRIBUTES = {
     ),
     "der_scaled": MetaData(
         long_name="Droplet effective radius (scaled to LWP)",
+        standard_name="effective_radius_of_cloud_liquid_water_particles",
         units="m",
         ancillary_variables="der_scaled_error",
         comment=COMMENTS["der_scaled"],
@@ -323,11 +331,12 @@ REFF_ATTRIBUTES = {
     "der_scaled_error": MetaData(
         long_name="Absolute error in droplet effective radius (scaled to LWP)",
         units="m",
-        comment=COMMENTS["der_scaled_error"],
+        comment="",
         dimensions=("time", "height"),
     ),
     "N_scaled": MetaData(
         long_name="Cloud droplet number concentration",
+        standard_name="number_concentration_of_cloud_liquid_water_particles_in_air",
         units="m-3",
         comment=COMMENTS["N_scaled"],
         dimensions=("time", "height"),
