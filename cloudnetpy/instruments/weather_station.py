@@ -78,6 +78,8 @@ def ws2nc(
         ws = ClujWS(weather_station_file, site_meta)
     elif site_meta["name"] == "Falkenberg":
         ws = FalkenbergWS(weather_station_file, site_meta)
+    elif site_meta["name"] == "Potenza":
+        ws = PotenzaWS(weather_station_file, site_meta)
     else:
         msg = "Unsupported site"
         raise ValueError(msg)
@@ -285,6 +287,35 @@ class MaidoWS(PalaiseauWS):
         "relative_humidity",
         "_air_temperature_min",
         "air_temperature",
+    )
+
+    def convert_rainfall_amount(self) -> None:
+        pass
+
+
+class PotenzaWS(PalaiseauWS):
+    expected_header_identifiers = (
+        "DateTime(yyyy-mm-ddThh:mm:ssZ)",
+        "WindspeedMaximumvalue(m/s)",
+        "WindspeedAveragevalue(m/s)",
+        "Winddirection(degres)",
+        "Airtemperature(°C)",
+        "Relativehumidity(%)",
+        "Pressure(hPa)",
+        "Precipitationrate(mm/min)",
+        "24-hrcumulatedprecipitation(mm)",
+    )
+
+    keys = (
+        "_wind_speed_max",
+        "wind_speed",
+        "wind_direction",
+        "air_temperature",
+        "relative_humidity",
+        "air_pressure",
+        # Skip rainfall as they seem to contain strange values:
+        "_rainfall_rate",
+        "_rainfall_amount",
     )
 
     def convert_rainfall_amount(self) -> None:
