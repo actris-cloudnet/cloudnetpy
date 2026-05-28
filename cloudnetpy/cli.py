@@ -120,23 +120,34 @@ def _process_epsilon_radar(
 
 def _process_categorize(
     input_files: dict,
-    instrument_prefs: dict[str, str],
+    instrument_prefs: dict[str, list[str]],
     args: argparse.Namespace,
     client: APIClient,
 ) -> str | None:
     cat_filepath = _create_categorize_filepath(args)
 
     def fetch_instrument(product: str) -> tuple[str, str | None]:
-        source = instrument_prefs.get(product)
-        filepath = _fetch_product(args, product, client, source=source)
-        if filepath is None and source:
+        prefs = instrument_prefs.get(product, [])
+        for source in prefs:
+            filepath = _fetch_product(args, product, client, source=source)
+            if filepath is None and product == "lidar":
+                # Doppler lidars (e.g. halo) upload as "doppler-lidar" product,
+                # but categorize can use those files as lidar input.
+                filepath = _fetch_product(args, "doppler-lidar", client, source=source)
+                if filepath:
+                    logging.info(
+                        "Using doppler-lidar product from '%s' as lidar input",
+                        source,
+                    )
+            if filepath:
+                return product, filepath
+        if prefs:
             logging.info(
-                "Preferred instrument '%s' not found for %s, using available",
-                source,
+                "Preferred instruments for %s not found (%s), using available",
                 product,
+                ", ".join(prefs),
             )
-            filepath = _fetch_product(args, product, client)
-        return product, filepath
+        return product, _fetch_product(args, product, client)
 
     def fetch_mwr() -> tuple[str, str | None]:
         try:
@@ -383,17 +394,17 @@ def _filter_by_suffix(meta: list[RawMetadata], product: str) -> list[RawMetadata
 
 
 def _get_source_instruments(
-    products: list[str], instrument_prefs: dict[str, str], client: APIClient
+    products: list[str], instrument_prefs: dict[str, list[str]], client: APIClient
 ) -> dict[str, list[str]]:
     source_instruments = {}
     for product in products:
         prod, model = _parse_instrument(product)
-        if model is None:
-            pref = instrument_prefs.get(prod)
-            if pref is not None and not _is_pid(pref):
-                model = pref
+        if model is not None:
+            models = [model]
+        else:
+            models = [p for p in instrument_prefs.get(prod, []) if not _is_pid(p)]
         all_possible = client.product(prod).source_instrument_ids
-        if all_possible and (match := [i for i in all_possible if i == model]):
+        if all_possible and (match := [m for m in models if m in all_possible]):
             source_instruments[prod] = match
         else:
             source_instruments[prod] = list(all_possible)
@@ -422,11 +433,16 @@ def _get_product_sources(
     return source_products
 
 
-def _parse_instrument_preferences(args: list[str] | None) -> dict[str, str]:
-    """Parses instrument preferences like 'radar:mira-35' into a dict."""
+def _parse_instrument_preferences(args: list[str] | None) -> dict[str, list[str]]:
+    """Parses instrument preferences into ordered preference lists per product.
+
+    Each argument has the form 'product:value' where value is an instrument_id,
+    a PID, or a comma-separated list of these. Repeated flags for the same
+    product accumulate; ordering reflects user preference (first match wins).
+    """
     if not args:
         return {}
-    prefs = {}
+    prefs: dict[str, list[str]] = {}
     for arg in args:
         if ":" not in arg:
             msg = (
@@ -435,7 +451,15 @@ def _parse_instrument_preferences(args: list[str] | None) -> dict[str, str]:
             )
             raise argparse.ArgumentTypeError(msg)
         product, value = arg.split(":", 1)
-        prefs[product] = value
+        values = [v.strip() for v in value.split(",") if v.strip()]
+        for v in values:
+            if ":" in v and not _is_pid(v):
+                msg = (
+                    f"Invalid instrument value '{v}'; did you forget to "
+                    "repeat -i for the next product?"
+                )
+                raise argparse.ArgumentTypeError(msg)
+        prefs.setdefault(product, []).extend(values)
     return prefs
 
 
@@ -450,18 +474,21 @@ def _parse_instrument(s: str) -> tuple[str, str | None]:
 
 
 def _select_instrument(
-    meta: list[RawMetadata], product: str, pref: str | None = None
+    meta: list[RawMetadata], product: str, prefs: list[str] | None = None
 ) -> Instrument | None:
     instruments = _get_unique_instruments(meta)
     if len(instruments) == 0:
         logging.info("No instruments found")
         return None
-    if pref:
-        matches = [i for i in instruments if _instrument_matches(i, pref)]
-        if matches:
-            logging.info("Selected instrument by preference: %s", matches[0].name)
-            return matches[0]
-        logging.info("Preferred instrument '%s' not found, falling back", pref)
+    if prefs:
+        for pref in prefs:
+            matches = [i for i in instruments if _instrument_matches(i, pref)]
+            if matches:
+                logging.info("Selected instrument by preference: %s", matches[0].name)
+                return matches[0]
+        logging.info(
+            "Preferred instruments not found (%s), falling back", ", ".join(prefs)
+        )
     if len(instruments) > 1:
         logging.info("Multiple instruments found for %s", product)
         logging.info("Please specify which one to use")
@@ -687,9 +714,11 @@ def main() -> None:
         help=(
             "Preferred instrument for a product, e.g. 'radar:mira-35', "
             "'lidar:cl61d', or 'radar:https://hdl.handle.net/<pid>'. The "
-            "value is either an instrument_id or an instrument PID. Applies "
-            "both to instrument processing and categorize input. Can be "
-            "specified multiple times."
+            "value is either an instrument_id or an instrument PID. Multiple "
+            "preferences can be given as a comma-separated list (first match "
+            "wins), e.g. 'lidar:halo-doppler-lidar,cl61d'. Applies both to "
+            "instrument processing and categorize input. Can be specified "
+            "multiple times."
         ),
         default=None,
     )
