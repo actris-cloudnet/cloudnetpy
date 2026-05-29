@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.92.4 – 2026-05-29
+
+- Fix plotting of cloud fraction
+
 ## 1.92.3 – 2026-05-29
 
 - Add support for Potenza weather station
