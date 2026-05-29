@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.92.3 – 2026-05-29
+
+- Add support for Potenza weather station
+- Support comma-separated instrument preferences in CLI
+
 ## 1.92.2 – 2026-05-27
 
 - Fix `N_scaled` units in DER output
