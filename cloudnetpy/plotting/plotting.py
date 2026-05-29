@@ -636,6 +636,8 @@ class Plot2D(Plot):
         else:
             min_x, max_x = 0, 24
         self._mark_gaps(figure_data, min_x=min_x, max_x=max_x)
+        if self.sub_plot.variable.name == "cloud_fraction":
+            self._data[self._data == 0] = ma.masked
         if any(
             key in self.sub_plot.variable.name for key in ("status", "classification")
         ):
