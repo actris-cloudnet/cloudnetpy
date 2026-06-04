@@ -466,6 +466,26 @@ class Plot:
                 zorder=_get_zorder("data_gap"),
             )
 
+    def _fill_out_of_range(
+        self, figure_data: FigureData, min_x: float, max_x: float
+    ) -> None:
+        if figure_data.height is None:
+            return
+        max_y = self.sub_plot.options.max_y
+        max_height = figure_data.height[-1]
+        if max_height >= max_y:
+            return
+        self._ax.fill_between(
+            (min_x, max_x),
+            max_height,
+            max_y,
+            hatch="//",
+            facecolor="whitesmoke",
+            edgecolor="lightgrey",
+            label="_nolegend_",
+            zorder=_get_zorder("data_gap"),
+        )
+
     def _mark_gaps(
         self, figure_data: FigureData, min_x: float = 0, max_x: float = 24
     ) -> None:
@@ -647,6 +667,7 @@ class Plot2D(Plot):
 
         if figure_data.options.mark_data_gaps:
             self._fill_between_data_gaps(figure_data)
+            self._fill_out_of_range(figure_data, min_x, max_x)
 
         if figure_data.is_mwrpy_product():
             self._fill_flagged_data(figure_data)
