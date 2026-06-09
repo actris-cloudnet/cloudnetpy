@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.92.5 – 2026-06-09
+
+- Plot hatches over out-of-range areas
+
 ## 1.92.4 – 2026-05-29
 
 - Fix plotting of cloud fraction
