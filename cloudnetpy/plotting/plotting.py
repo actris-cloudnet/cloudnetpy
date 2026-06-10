@@ -1206,10 +1206,10 @@ def get_log_cbar_tick_labels(value_min: float, value_max: float) -> list[str]:
     return [f"10$^{{{int(i)}}}$" for i in np.arange(value_min, value_max + 1)]
 
 
-def _reformat_units(unit: str) -> str:
-    if not isinstance(unit, str) or unit == "1":
+def _reformat_units(units: str) -> str:
+    if not isinstance(units, str) or units == "1":
         return ""
-    return re.sub(r"([a-z])(-?\d+)", r"\1$^{\2}$", unit, flags=re.IGNORECASE)
+    return re.sub(r"([a-z])(-?\d+)", r"\1$^{\2}$", units, flags=re.IGNORECASE)
 
 
 def _get_max_gap_in_minutes(figure_data: FigureData) -> float:
