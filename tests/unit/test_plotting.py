@@ -147,6 +147,7 @@ def test_screen_completely_masked_profiles_with_all_masked_2():
         ("rad km-1", "rad km$^{-1}$"),
         ("m2", "m$^{2}$"),
         ("dB-1", "dB$^{-1}$"),
+        (np.array([]), ""),  # Empty units in some legacy files.
     ],
 )
 def test_reformat_units(units, result):

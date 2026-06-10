@@ -1207,7 +1207,7 @@ def get_log_cbar_tick_labels(value_min: float, value_max: float) -> list[str]:
 
 
 def _reformat_units(unit: str) -> str:
-    if unit == "1":
+    if not isinstance(unit, str) or unit == "1":
         return ""
     return re.sub(r"([a-z])(-?\d+)", r"\1$^{\2}$", unit, flags=re.IGNORECASE)
 
