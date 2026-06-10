@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.92.6 – 2026-06-10
+
+- Handle empty units in plotting of legacy files
+
 ## 1.92.5 – 2026-06-09
 
 - Plot hatches over out-of-range areas
