@@ -8,21 +8,7 @@ from cloudnetpy.model_evaluation.products import tools
 from cloudnetpy.model_evaluation.products.model_products import ModelManager
 
 MODEL = "ecmwf"
-OUTPUT_FILE = "/"
 PRODUCT = "iwc"
-
-
-def test_model_file_list() -> None:
-    name = "ec"
-    models = ["00_ec_1", "00_ec_2", "00_ec_3"]
-    tools.check_model_file_list(name, models)
-
-
-def test_model_file_list_fail() -> None:
-    name = "ec"
-    models = ["00_ec_1", "ac_1", "00_ec_2", "00_ec_3"]
-    with pytest.raises(AttributeError):
-        tools.check_model_file_list(name, models)
 
 
 def test_time2datetime() -> None:
@@ -44,7 +30,7 @@ def test_rebin_edges() -> None:
 
 
 def test_calculate_advection_time_hour(model_file) -> None:
-    obj = ModelManager(str(model_file), MODEL, OUTPUT_FILE, PRODUCT)
+    obj = ModelManager(str(model_file), MODEL, PRODUCT)
     h = obj.resolution_h
     v = np.array([[1, 2, 3], [2, 3, 4], [3, 4, 5]])
     s = 1
@@ -56,7 +42,7 @@ def test_calculate_advection_time_hour(model_file) -> None:
 
 
 def test_calculate_advection_time_10min(model_file) -> None:
-    obj = ModelManager(str(model_file), MODEL, OUTPUT_FILE, PRODUCT)
+    obj = ModelManager(str(model_file), MODEL, PRODUCT)
     h = obj.resolution_h
     v = np.array([[1, 2, 3], [2, 3, 4], [3, 4, 5]])
     s = 6

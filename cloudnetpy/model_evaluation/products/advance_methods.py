@@ -10,6 +10,7 @@ from numpy import ma
 
 import cloudnetpy.utils as cl_tools
 from cloudnetpy.datasource import DataSource
+from cloudnetpy.model_evaluation.model_metadata import MODEL_PREFIX
 from cloudnetpy.model_evaluation.products.model_products import ModelManager
 from cloudnetpy.model_evaluation.products.observation_products import ObservationManager
 
@@ -93,15 +94,11 @@ class AdvanceProductMethods(DataSource):
 
         cf_filtered[cf_filtered < 0.05] = ma.masked
 
-        self._model_obj.append_data(
-            cf_filtered,
-            f"{self._model_obj.model}{self._model_obj.cycle}_cf_cirrus",
-        )
+        self._model_obj.append_data(cf_filtered, f"{MODEL_PREFIX}cf_cirrus")
 
     def getvar_from_object(self, arg: str) -> npt.NDArray:
         v_name = arg if arg == "cf" else self._model_obj.get_model_var_names((arg,))[0]
-        key = f"{self._model_obj.model}{self._model_obj.cycle}_{v_name}"
-        return self._model_obj.data[key][:]
+        return self._model_obj.data[f"{MODEL_PREFIX}{v_name}"][:]
 
     def remove_extra_levels(self, arg: npt.NDArray) -> npt.NDArray:
         return self._model_obj.cut_off_extra_levels(arg)

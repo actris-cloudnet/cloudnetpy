@@ -18,6 +18,12 @@ MODEL_VARIABLE_NAMES = {
     "cf": "cloud_fraction",
 }
 
+# Prefix for the model's own (simulated) fields in the L3 output. Observation
+# fields downsampled to the model grid are stored without a prefix. The model
+# identity itself is stored in the file's global attributes, not in variable
+# names, so one L3 file holds exactly one model run.
+MODEL_PREFIX = "model_"
+
 # Coordinate / metadata variables that are identical between forecast cycles.
 COMMON_VARIABLES = (
     "time",

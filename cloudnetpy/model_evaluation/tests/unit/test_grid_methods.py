@@ -7,7 +7,6 @@ from cloudnetpy.model_evaluation.products.model_products import ModelManager
 from cloudnetpy.model_evaluation.products.observation_products import ObservationManager
 
 MODEL = "ecmwf"
-OUTPUT_FILE = ""
 PRODUCT = "iwc"
 
 
@@ -17,31 +16,31 @@ PRODUCT = "iwc"
         (
             "iwc",
             (
-                "ecmwf_iwc",
-                "iwc_ecmwf",
-                "iwc_att_ecmwf",
-                "iwc_rain_ecmwf",
-                "iwc_adv_ecmwf",
-                "iwc_att_adv_ecmwf",
-                "iwc_rain_adv_ecmwf",
+                "model_iwc",
+                "iwc",
+                "iwc_att",
+                "iwc_rain",
+                "iwc_adv",
+                "iwc_att_adv",
+                "iwc_rain_adv",
             ),
         ),
         (
             "cf",
             (
-                "ecmwf_cf",
-                "cf_A_ecmwf",
-                "cf_V_ecmwf",
-                "cf_A_adv_ecmwf",
-                "cf_V_adv_ecmwf",
+                "model_cf",
+                "cf_A",
+                "cf_V",
+                "cf_A_adv",
+                "cf_V_adv",
             ),
         ),
-        ("lwc", ("lwc_ecmwf", "lwc_ecmwf", "lwc_adv_ecmwf")),
+        ("lwc", ("model_lwc", "lwc", "lwc_adv")),
     ],
 )
 def test_generate_regrid_product(model_file, obs_file, product, variables) -> None:
     obs = ObservationManager(product, str(obs_file))
-    model = ModelManager(str(model_file), MODEL, OUTPUT_FILE, product)
+    model = ModelManager(str(model_file), MODEL, product)
     ProductGrid(model, obs)
     for var in variables:
         assert var in model.data
@@ -50,7 +49,7 @@ def test_generate_regrid_product(model_file, obs_file, product, variables) -> No
 @pytest.mark.parametrize("key, value", [("iwc", 3), ("lwc", 1), ("cf", 2)])
 def test_get_method_storage(key, value, model_file, obs_file) -> None:
     obs = ObservationManager(key, str(obs_file))
-    model = ModelManager(str(model_file), MODEL, OUTPUT_FILE, key)
+    model = ModelManager(str(model_file), MODEL, key)
     obj = ProductGrid(model, obs)
     x, y = obj._get_method_storage()
     assert len(x.keys()) == value
@@ -59,7 +58,7 @@ def test_get_method_storage(key, value, model_file, obs_file) -> None:
 @pytest.mark.parametrize("key, value", [("iwc", 3), ("lwc", 1), ("cf", 2)])
 def test_get_method_storage_adv(key, value, model_file, obs_file) -> None:
     obs = ObservationManager(key, str(obs_file))
-    model = ModelManager(str(model_file), MODEL, OUTPUT_FILE, key)
+    model = ModelManager(str(model_file), MODEL, key)
     obj = ProductGrid(model, obs)
     x, y = obj._get_method_storage()
     assert len(y.keys()) == value
@@ -68,7 +67,7 @@ def test_get_method_storage_adv(key, value, model_file, obs_file) -> None:
 @pytest.mark.parametrize("name", ["cf_V", "cf_A"])
 def test_cf_method_storage(name, model_file, obs_file) -> None:
     obs = ObservationManager(PRODUCT, str(obs_file))
-    model = ModelManager(str(model_file), MODEL, OUTPUT_FILE, PRODUCT)
+    model = ModelManager(str(model_file), MODEL, PRODUCT)
     obj = ProductGrid(model, obs)
     x, y = obj._cf_method_storage()
     assert name in x
@@ -77,7 +76,7 @@ def test_cf_method_storage(name, model_file, obs_file) -> None:
 @pytest.mark.parametrize("name", ["cf_V_adv", "cf_A_adv"])
 def test_cf_method_storage_adv(name, model_file, obs_file) -> None:
     obs = ObservationManager(PRODUCT, str(obs_file))
-    model = ModelManager(str(model_file), MODEL, OUTPUT_FILE, PRODUCT)
+    model = ModelManager(str(model_file), MODEL, PRODUCT)
     obj = ProductGrid(model, obs)
     x, y = obj._cf_method_storage()
     assert name in y
@@ -86,7 +85,7 @@ def test_cf_method_storage_adv(name, model_file, obs_file) -> None:
 @pytest.mark.parametrize("name", ["iwc", "iwc_att", "iwc_rain"])
 def test_iwc_method_storage(name, model_file, obs_file) -> None:
     obs = ObservationManager(PRODUCT, str(obs_file))
-    model = ModelManager(str(model_file), MODEL, OUTPUT_FILE, PRODUCT)
+    model = ModelManager(str(model_file), MODEL, PRODUCT)
     obj = ProductGrid(model, obs)
     x, y = obj._iwc_method_storage()
     assert name in x
@@ -95,7 +94,7 @@ def test_iwc_method_storage(name, model_file, obs_file) -> None:
 @pytest.mark.parametrize("name", ["iwc_adv", "iwc_att_adv", "iwc_rain_adv"])
 def test_iwc_method_storage_adv(name, model_file, obs_file) -> None:
     obs = ObservationManager(PRODUCT, str(obs_file))
-    model = ModelManager(str(model_file), MODEL, OUTPUT_FILE, PRODUCT)
+    model = ModelManager(str(model_file), MODEL, PRODUCT)
     obj = ProductGrid(model, obs)
     x, y = obj._iwc_method_storage()
     assert name in y
@@ -103,7 +102,7 @@ def test_iwc_method_storage_adv(name, model_file, obs_file) -> None:
 
 def test_product_method_storage(model_file, obs_file) -> None:
     obs = ObservationManager("lwc", str(obs_file))
-    model = ModelManager(str(model_file), MODEL, OUTPUT_FILE, "lwc")
+    model = ModelManager(str(model_file), MODEL, "lwc")
     obj = ProductGrid(model, obs)
     x, y = obj._product_method_storage()
     assert "lwc" in x
@@ -111,7 +110,7 @@ def test_product_method_storage(model_file, obs_file) -> None:
 
 def test_product_method_storage_adv(model_file, obs_file) -> None:
     obs = ObservationManager("lwc", str(obs_file))
-    model = ModelManager(str(model_file), MODEL, OUTPUT_FILE, "lwc")
+    model = ModelManager(str(model_file), MODEL, "lwc")
     obj = ProductGrid(model, obs)
     _, y = obj._product_method_storage()
     assert "lwc_adv" in y
@@ -119,7 +118,7 @@ def test_product_method_storage_adv(model_file, obs_file) -> None:
 
 def test_regrid_cf_area(model_file, obs_file) -> None:
     obs = ObservationManager(PRODUCT, str(obs_file))
-    model = ModelManager(str(model_file), MODEL, OUTPUT_FILE, PRODUCT)
+    model = ModelManager(str(model_file), MODEL, PRODUCT)
     obj = ProductGrid(model, obs)
     data = ma.array([[1, 1, 1], [0, 1, 1], [0, 0, 1], [0, 0, 0]])
     d = {"cf_A": ma.zeros((1, 1))}
@@ -130,7 +129,7 @@ def test_regrid_cf_area(model_file, obs_file) -> None:
 
 def test_regrid_cf_area_masked(model_file, obs_file) -> None:
     obs = ObservationManager(PRODUCT, str(obs_file))
-    model = ModelManager(str(model_file), MODEL, OUTPUT_FILE, PRODUCT)
+    model = ModelManager(str(model_file), MODEL, PRODUCT)
     obj = ProductGrid(model, obs)
     data = ma.array([[1, 1, 1], [0, 1, 1], [0, 0, 1], [0, 0, 0]])
     data[1, :] = ma.masked
@@ -142,7 +141,7 @@ def test_regrid_cf_area_masked(model_file, obs_file) -> None:
 
 def test_regrid_cf_area_all_masked(model_file, obs_file) -> None:
     obs = ObservationManager(PRODUCT, str(obs_file))
-    model = ModelManager(str(model_file), MODEL, OUTPUT_FILE, PRODUCT)
+    model = ModelManager(str(model_file), MODEL, PRODUCT)
     obj = ProductGrid(model, obs)
     data = ma.array([[1, 1, 1], [0, 1, 1], [0, 0, 1], [0, 0, 0]])
     data[:, :] = ma.masked
@@ -154,7 +153,7 @@ def test_regrid_cf_area_all_masked(model_file, obs_file) -> None:
 
 def test_regrid_cf_area_nan(model_file, obs_file) -> None:
     obs = ObservationManager(PRODUCT, str(obs_file))
-    model = ModelManager(str(model_file), MODEL, OUTPUT_FILE, PRODUCT)
+    model = ModelManager(str(model_file), MODEL, PRODUCT)
     obj = ProductGrid(model, obs)
     data = ma.array([[1, 99, 1], [0, 1, 1], [99, 0, 1], [0, 0, 0]])
     data = ma.masked_where(data == 99, data)
@@ -166,7 +165,7 @@ def test_regrid_cf_area_nan(model_file, obs_file) -> None:
 
 def test_regrid_cf_area_all_nan(model_file, obs_file) -> None:
     obs = ObservationManager(PRODUCT, str(obs_file))
-    model = ModelManager(str(model_file), MODEL, OUTPUT_FILE, PRODUCT)
+    model = ModelManager(str(model_file), MODEL, PRODUCT)
     obj = ProductGrid(model, obs)
     data = ma.array(
         [
@@ -185,7 +184,7 @@ def test_regrid_cf_area_all_nan(model_file, obs_file) -> None:
 
 def test_regrid_cf_volume(model_file, obs_file) -> None:
     obs = ObservationManager(PRODUCT, str(obs_file))
-    model = ModelManager(str(model_file), MODEL, OUTPUT_FILE, PRODUCT)
+    model = ModelManager(str(model_file), MODEL, PRODUCT)
     obj = ProductGrid(model, obs)
     data = ma.array([[1, 1, 1], [0, 1, 1], [0, 0, 1], [0, 0, 0]])
     d = {"cf_V": ma.zeros((1, 1))}
@@ -196,7 +195,7 @@ def test_regrid_cf_volume(model_file, obs_file) -> None:
 
 def test_regrid_cf_volume_nan(model_file, obs_file) -> None:
     obs = ObservationManager(PRODUCT, str(obs_file))
-    model = ModelManager(str(model_file), MODEL, OUTPUT_FILE, PRODUCT)
+    model = ModelManager(str(model_file), MODEL, PRODUCT)
     obj = ProductGrid(model, obs)
     data = ma.array([[1, 99, 1], [0, 1, 1], [99, 0, 1], [0, 0, 0]])
     data = ma.masked_where(data == 99, data)
@@ -208,7 +207,7 @@ def test_regrid_cf_volume_nan(model_file, obs_file) -> None:
 
 def test_regrid_cf_volume_all_nan(model_file, obs_file) -> None:
     obs = ObservationManager(PRODUCT, str(obs_file))
-    model = ModelManager(str(model_file), MODEL, OUTPUT_FILE, PRODUCT)
+    model = ModelManager(str(model_file), MODEL, PRODUCT)
     obj = ProductGrid(model, obs)
     data = ma.array(
         [
@@ -227,7 +226,7 @@ def test_regrid_cf_volume_all_nan(model_file, obs_file) -> None:
 
 def test_regrid_cf_volume_masked(model_file, obs_file) -> None:
     obs = ObservationManager(PRODUCT, str(obs_file))
-    model = ModelManager(str(model_file), MODEL, OUTPUT_FILE, PRODUCT)
+    model = ModelManager(str(model_file), MODEL, PRODUCT)
     obj = ProductGrid(model, obs)
     data = ma.array([[1, 1, 1], [0, 1, 1], [0, 0, 1], [0, 0, 0]])
     data[1, :] = ma.masked
@@ -239,7 +238,7 @@ def test_regrid_cf_volume_masked(model_file, obs_file) -> None:
 
 def test_regrid_cf_volume_all_masked(model_file, obs_file) -> None:
     obs = ObservationManager(PRODUCT, str(obs_file))
-    model = ModelManager(str(model_file), MODEL, OUTPUT_FILE, PRODUCT)
+    model = ModelManager(str(model_file), MODEL, PRODUCT)
     obj = ProductGrid(model, obs)
     data = ma.array([[1, 1, 1], [0, 1, 1], [0, 0, 1], [0, 0, 0]])
     data[:, :] = ma.masked
@@ -251,7 +250,7 @@ def test_regrid_cf_volume_all_masked(model_file, obs_file) -> None:
 
 def test_reshape_data_to_window(model_file, obs_file) -> None:
     obs = ObservationManager(PRODUCT, str(obs_file))
-    model = ModelManager(str(model_file), MODEL, OUTPUT_FILE, PRODUCT)
+    model = ModelManager(str(model_file), MODEL, PRODUCT)
     obj = ProductGrid(model, obs)
     xnd = np.array([1, 1, 1, 0, 0, 0])
     ynd = np.array([1, 1, 0, 0])
@@ -284,7 +283,7 @@ def test_reshape_data_to_window(model_file, obs_file) -> None:
 
 def test_reshape_data_to_window_middle(model_file, obs_file) -> None:
     obs = ObservationManager(PRODUCT, str(obs_file))
-    model = ModelManager(str(model_file), MODEL, OUTPUT_FILE, PRODUCT)
+    model = ModelManager(str(model_file), MODEL, PRODUCT)
     obj = ProductGrid(model, obs)
     xnd = np.array([0, 0, 1, 1, 1, 0])
     ynd = np.array([0, 1, 1, 0])
@@ -317,7 +316,7 @@ def test_reshape_data_to_window_middle(model_file, obs_file) -> None:
 
 def test_reshape_data_to_window_empty(model_file, obs_file) -> None:
     obs = ObservationManager(PRODUCT, str(obs_file))
-    model = ModelManager(str(model_file), MODEL, OUTPUT_FILE, PRODUCT)
+    model = ModelManager(str(model_file), MODEL, PRODUCT)
     obj = ProductGrid(model, obs)
     xnd = np.array(
         [
@@ -337,7 +336,7 @@ def test_reshape_data_to_window_empty(model_file, obs_file) -> None:
 
 def test_regrid_iwc(model_file, obs_file) -> None:
     obs = ObservationManager(PRODUCT, str(obs_file))
-    model = ModelManager(str(model_file), MODEL, OUTPUT_FILE, PRODUCT)
+    model = ModelManager(str(model_file), MODEL, PRODUCT)
     obj = ProductGrid(model, obs)
     obj._obs_data = ma.array([[1, 1, 1, 1], [2, 2, 2, 2], [3, 3, 3, 3], [4, 4, 4, 3]])
     d = {"iwc": ma.zeros((1, 1))}
@@ -353,7 +352,7 @@ def test_regrid_iwc(model_file, obs_file) -> None:
 
 def test_regrid_iwc_nan(model_file, obs_file) -> None:
     obs = ObservationManager(PRODUCT, str(obs_file))
-    model = ModelManager(str(model_file), MODEL, OUTPUT_FILE, PRODUCT)
+    model = ModelManager(str(model_file), MODEL, PRODUCT)
     obj = ProductGrid(model, obs)
     obj._obs_data = ma.array(
         [[1, 1, 99, 1], [2, 99, 2, 2], [3, 3, 3, 3], [4, 4, 4, 99]],
@@ -372,7 +371,7 @@ def test_regrid_iwc_nan(model_file, obs_file) -> None:
 
 def test_regrid_iwc_all_nan(model_file, obs_file) -> None:
     obs = ObservationManager(PRODUCT, str(obs_file))
-    model = ModelManager(str(model_file), MODEL, OUTPUT_FILE, PRODUCT)
+    model = ModelManager(str(model_file), MODEL, PRODUCT)
     obj = ProductGrid(model, obs)
     obj._obs_data = ma.array(
         [
@@ -395,7 +394,7 @@ def test_regrid_iwc_all_nan(model_file, obs_file) -> None:
 
 def test_regrid_iwc_masked(model_file, obs_file) -> None:
     obs = ObservationManager(PRODUCT, str(obs_file))
-    model = ModelManager(str(model_file), MODEL, OUTPUT_FILE, PRODUCT)
+    model = ModelManager(str(model_file), MODEL, PRODUCT)
     obj = ProductGrid(model, obs)
     obj._obs_data = ma.array([[1, 1, 1, 1], [2, 2, 2, 2], [3, 3, 3, 3], [4, 4, 4, 4]])
     obj._obs_data[1, :] = ma.masked
@@ -412,7 +411,7 @@ def test_regrid_iwc_masked(model_file, obs_file) -> None:
 
 def test_regrid_iwc_all_masked(model_file, obs_file) -> None:
     obs = ObservationManager(PRODUCT, str(obs_file))
-    model = ModelManager(str(model_file), MODEL, OUTPUT_FILE, PRODUCT)
+    model = ModelManager(str(model_file), MODEL, PRODUCT)
     obj = ProductGrid(model, obs)
     obj._obs_data = ma.array(
         [[1, 1, 1, 1], [2, 2, 2, 2], [3, 3, 3, 3], [4, 4, 4, 4]], mask=True
@@ -429,7 +428,7 @@ def test_regrid_iwc_all_masked(model_file, obs_file) -> None:
 
 def test_regrid_iwc_none(model_file, obs_file) -> None:
     obs = ObservationManager(PRODUCT, str(obs_file))
-    model = ModelManager(str(model_file), MODEL, OUTPUT_FILE, PRODUCT)
+    model = ModelManager(str(model_file), MODEL, PRODUCT)
     obj = ProductGrid(model, obs)
     obj._obs_data = ma.array([[1, 1, 1, 1], [2, 2, 2, 2], [3, 3, 3, 3], [4, 4, 4, 4]])
     d = {"iwc": ma.zeros((1, 1))}
@@ -444,7 +443,7 @@ def test_regrid_iwc_none(model_file, obs_file) -> None:
 
 def test_regrid_iwc_att(model_file, obs_file) -> None:
     obs = ObservationManager(PRODUCT, str(obs_file))
-    model = ModelManager(str(model_file), MODEL, OUTPUT_FILE, PRODUCT)
+    model = ModelManager(str(model_file), MODEL, PRODUCT)
     obj = ProductGrid(model, obs)
     d = {"iwc_att": ma.zeros((1, 1))}
     ind: ma.MaskedArray = ma.array([[0, 1, 1, 1]], dtype=bool)
@@ -466,7 +465,7 @@ def test_regrid_iwc_att(model_file, obs_file) -> None:
 
 def test_regrid_iwc_att_masked(model_file, obs_file) -> None:
     obs = ObservationManager(PRODUCT, str(obs_file))
-    model = ModelManager(str(model_file), MODEL, OUTPUT_FILE, PRODUCT)
+    model = ModelManager(str(model_file), MODEL, PRODUCT)
     obj = ProductGrid(model, obs)
     obj._obs_obj.data["iwc_att"][:].mask = ma.array(
         [
@@ -499,7 +498,7 @@ def test_regrid_iwc_att_masked(model_file, obs_file) -> None:
 
 def test_regrid_iwc_att_all_masked(model_file, obs_file) -> None:
     obs = ObservationManager(PRODUCT, str(obs_file))
-    model = ModelManager(str(model_file), MODEL, OUTPUT_FILE, PRODUCT)
+    model = ModelManager(str(model_file), MODEL, PRODUCT)
     obj = ProductGrid(model, obs)
     obj._obs_obj.data["iwc_att"][:].mask = ma.array(
         [
@@ -533,7 +532,7 @@ def test_regrid_iwc_att_all_masked(model_file, obs_file) -> None:
 
 def test_regrid_iwc_att_none(model_file, obs_file) -> None:
     obs = ObservationManager(PRODUCT, str(obs_file))
-    model = ModelManager(str(model_file), MODEL, OUTPUT_FILE, PRODUCT)
+    model = ModelManager(str(model_file), MODEL, PRODUCT)
     obj = ProductGrid(model, obs)
     d = {"iwc_att": ma.zeros((1, 1))}
     ind: ma.MaskedArray = ma.array([[0, 1, 1, 1]], dtype=bool)
@@ -555,7 +554,7 @@ def test_regrid_iwc_att_none(model_file, obs_file) -> None:
 
 def test_regrid_iwc_rain(model_file, obs_file) -> None:
     obs = ObservationManager(PRODUCT, str(obs_file))
-    model = ModelManager(str(model_file), MODEL, OUTPUT_FILE, PRODUCT)
+    model = ModelManager(str(model_file), MODEL, PRODUCT)
     obj = ProductGrid(model, obs)
     obj._obs_data = ma.array([[1, 1, 1, 1], [2, 2, 2, 2], [3, 3, 3, 3], [4, 4, 4, 3]])
     d = {"iwc_rain": ma.zeros((1, 1))}
@@ -573,7 +572,7 @@ def test_regrid_iwc_rain(model_file, obs_file) -> None:
 
 def test_regrid_iwc_rain_nan(model_file, obs_file) -> None:
     obs = ObservationManager(PRODUCT, str(obs_file))
-    model = ModelManager(str(model_file), MODEL, OUTPUT_FILE, PRODUCT)
+    model = ModelManager(str(model_file), MODEL, PRODUCT)
     obj = ProductGrid(model, obs)
     obj._obs_data = ma.array(
         [
@@ -599,7 +598,7 @@ def test_regrid_iwc_rain_nan(model_file, obs_file) -> None:
 
 def test_regrid_iwc_rain_all_nan(model_file, obs_file) -> None:
     obs = ObservationManager(PRODUCT, str(obs_file))
-    model = ModelManager(str(model_file), MODEL, OUTPUT_FILE, PRODUCT)
+    model = ModelManager(str(model_file), MODEL, PRODUCT)
     obj = ProductGrid(model, obs)
     obj._obs_data = ma.array(
         [
@@ -625,7 +624,7 @@ def test_regrid_iwc_rain_all_nan(model_file, obs_file) -> None:
 
 def test_regrid_iwc_rain_masked(model_file, obs_file) -> None:
     obs = ObservationManager(PRODUCT, str(obs_file))
-    model = ModelManager(str(model_file), MODEL, OUTPUT_FILE, PRODUCT)
+    model = ModelManager(str(model_file), MODEL, PRODUCT)
     obj = ProductGrid(model, obs)
     obj._obs_data = ma.array([[1, 1, 1, 1], [2, 2, 2, 2], [3, 3, 3, 3], [4, 4, 4, 4]])
     obj._obs_data[2, :] = ma.masked
@@ -644,7 +643,7 @@ def test_regrid_iwc_rain_masked(model_file, obs_file) -> None:
 
 def test_regrid_iwc_rain_all_masked(model_file, obs_file) -> None:
     obs = ObservationManager(PRODUCT, str(obs_file))
-    model = ModelManager(str(model_file), MODEL, OUTPUT_FILE, PRODUCT)
+    model = ModelManager(str(model_file), MODEL, PRODUCT)
     obj = ProductGrid(model, obs)
     obj._obs_data = ma.array([[1, 3, 1, 1], [2, 2, 2, 2], [3, 3, 3, 3], [4, 4, 4, 4]])
     obj._obs_data[:, :] = ma.masked
@@ -663,7 +662,7 @@ def test_regrid_iwc_rain_all_masked(model_file, obs_file) -> None:
 
 def test_regrid_product(model_file, obs_file) -> None:
     obs = ObservationManager("lwc", str(obs_file))
-    model = ModelManager(str(model_file), MODEL, OUTPUT_FILE, "lwc")
+    model = ModelManager(str(model_file), MODEL, "lwc")
     obj = ProductGrid(model, obs)
     obj._obs_data = ma.array([[1, 1, 1, 1], [2, 1, 2, 2], [3, 3, 3, 3], [4, 4, 4, 4]])
     d = {"lwc": ma.zeros((1, 1))}
@@ -677,7 +676,7 @@ def test_regrid_product(model_file, obs_file) -> None:
 
 def test_regrid_product_nan(model_file, obs_file) -> None:
     obs = ObservationManager("lwc", str(obs_file))
-    model = ModelManager(str(model_file), MODEL, OUTPUT_FILE, "lwc")
+    model = ModelManager(str(model_file), MODEL, "lwc")
     obj = ProductGrid(model, obs)
     obj._obs_data = ma.array(
         [
@@ -699,7 +698,7 @@ def test_regrid_product_nan(model_file, obs_file) -> None:
 
 def test_regrid_product_all_nan(model_file, obs_file) -> None:
     obs = ObservationManager("lwc", str(obs_file))
-    model = ModelManager(str(model_file), MODEL, OUTPUT_FILE, "lwc")
+    model = ModelManager(str(model_file), MODEL, "lwc")
     obj = ProductGrid(model, obs)
     data = ma.array(
         [
@@ -718,7 +717,7 @@ def test_regrid_product_all_nan(model_file, obs_file) -> None:
 
 def test_regrid_product_masked(model_file, obs_file) -> None:
     obs = ObservationManager("lwc", str(obs_file))
-    model = ModelManager(str(model_file), MODEL, OUTPUT_FILE, "lwc")
+    model = ModelManager(str(model_file), MODEL, "lwc")
     obj = ProductGrid(model, obs)
     obj._obs_data = ma.array([[1, 1, 1, 1], [2, 1, 2, 2], [3, 3, 3, 3], [4, 4, 4, 4]])
     obj._obs_data[2, :] = ma.masked
@@ -731,7 +730,7 @@ def test_regrid_product_masked(model_file, obs_file) -> None:
 
 def test_regrid_product_all_masked(model_file, obs_file) -> None:
     obs = ObservationManager("lwc", str(obs_file))
-    model = ModelManager(str(model_file), MODEL, OUTPUT_FILE, "lwc")
+    model = ModelManager(str(model_file), MODEL, "lwc")
     obj = ProductGrid(model, obs)
     obj._obs_data = ma.array([[1, 1, 1, 1], [2, 1, 2, 2], [3, 3, 3, 3], [4, 4, 4, 4]])
     obj._obs_data[:, :] = ma.masked
@@ -744,7 +743,7 @@ def test_regrid_product_all_masked(model_file, obs_file) -> None:
 
 def test_regrid_product_none(model_file, obs_file) -> None:
     obs = ObservationManager("lwc", str(obs_file))
-    model = ModelManager(str(model_file), MODEL, OUTPUT_FILE, "lwc")
+    model = ModelManager(str(model_file), MODEL, "lwc")
     obj = ProductGrid(model, obs)
     obj._obs_data = ma.array([[1, 1, 1, 1], [2, 1, 2, 2], [3, 3, 3, 3], [4, 4, 4, 4]])
     d = {"lwc": ma.zeros((1, 1))}
@@ -757,9 +756,9 @@ def test_regrid_product_none(model_file, obs_file) -> None:
 @pytest.mark.parametrize("product", ["cf_A", "cf_V", "cf_A_adv", "cf_V_adv"])
 def test_append_data2object_cf(product, model_file, obs_file) -> None:
     obs = ObservationManager("cf", str(obs_file))
-    model = ModelManager(str(model_file), MODEL, OUTPUT_FILE, "cf")
+    model = ModelManager(str(model_file), MODEL, "cf")
     ProductGrid(model, obs)
-    assert product + "_" + MODEL in model.data
+    assert product in model.data
 
 
 @pytest.mark.parametrize(
@@ -768,14 +767,14 @@ def test_append_data2object_cf(product, model_file, obs_file) -> None:
 )
 def test_append_data2object_iwc(product, model_file, obs_file) -> None:
     obs = ObservationManager("iwc", str(obs_file))
-    model = ModelManager(str(model_file), MODEL, OUTPUT_FILE, "iwc")
+    model = ModelManager(str(model_file), MODEL, "iwc")
     ProductGrid(model, obs)
-    assert product + "_" + MODEL in model.data
+    assert product in model.data
 
 
 @pytest.mark.parametrize("product", ["lwc", "lwc_adv"])
 def test_append_data2object_lwc(product, model_file, obs_file) -> None:
     obs = ObservationManager("lwc", str(obs_file))
-    model = ModelManager(str(model_file), MODEL, OUTPUT_FILE, "lwc")
+    model = ModelManager(str(model_file), MODEL, "lwc")
     ProductGrid(model, obs)
-    assert product + "_" + MODEL in model.data
+    assert product in model.data

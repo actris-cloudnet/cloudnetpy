@@ -26,7 +26,7 @@ class TestCloudFractionProcessing:
         nc.close()
 
     @pytest.mark.reprocess()
-    @pytest.mark.parametrize("key", ["lwc_ecmwf", "lwc_adv_ecmwf"])
+    @pytest.mark.parametrize("key", ["lwc", "lwc_adv"])
     def test_that_has_correct_product_variables(self, key) -> None:
         nc = netCDF4.Dataset(self.full_path)
         assert key in nc.variables
@@ -45,7 +45,7 @@ class TestCloudFractionProcessing:
     @pytest.mark.reprocess()
     @pytest.mark.parametrize(
         "key",
-        ["ecmwf_forecast_time", "ecmwf_height", "ecmwf_lwc"],
+        ["model_forecast_time", "model_height", "model_lwc"],
     )
     def test_that_has_correct_cycle_variables(self, key) -> None:
         nc = netCDF4.Dataset(self.full_path)

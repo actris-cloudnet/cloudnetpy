@@ -12,9 +12,9 @@ from cloudnetpy.model_evaluation.model_metadata import (
     ALTITUDE_LIMIT,
     COMMON_VARIABLES,
     CYCLE_VARIABLES,
+    MODEL_PREFIX,
     MODEL_VARIABLE_NAMES,
 )
-from cloudnetpy.model_evaluation.utils import file_exists
 
 
 class ModelManager(DataSource):
@@ -23,7 +23,6 @@ class ModelManager(DataSource):
     Args:
         model_file (str): Path to source model file.
         model (str): Name of model
-        output_file (str): name of output file name and path to save data
         product (str): name of product to generate
 
     Notes:
@@ -32,9 +31,9 @@ class ModelManager(DataSource):
         number of vertical levels, which is derived from the model height and
         the shared `ALTITUDE_LIMIT`.
 
-        Output_file is given for saving all cycles to same nc-file. Some variables
-        are same in control run and cycles so checking existence of output-file
-        prevents duplicates as well as unnecessary processing.
+        One :class:`ModelManager` (and one output file) corresponds to exactly
+        one model run. The model's own fields are stored with the `model_`
+        prefix; the model identity is kept in the file's global attributes.
 
         Class inherits DataSource interface from CloudnetPy.
     """
@@ -43,17 +42,12 @@ class ModelManager(DataSource):
         self,
         model_file: str | PathLike,
         model: str,
-        output_file: str | PathLike,
         product: str,
-        *,
-        check_file: bool = True,
     ) -> None:
         super().__init__(model_file)
         self.model = model
         self._product = product
         self.keys: dict = {}
-        self._is_file = file_exists(output_file) if check_file else False
-        self.cycle = ""
         self._n_levels = self._read_number_of_levels()
         self._add_variables()
         self._generate_products()
@@ -94,20 +88,20 @@ class ModelManager(DataSource):
         cf = self._getvar_checked("cf")
         cf = self.cut_off_extra_levels(cf)
         cf[cf < 0.05] = ma.masked
-        self.append_data(cf, f"{self.model}{self.cycle}_cf")
-        self.keys[self._product] = f"{self.model}{self.cycle}_cf"
+        self.append_data(cf, f"{MODEL_PREFIX}cf")
+        self.keys[self._product] = f"{MODEL_PREFIX}cf"
 
     def _get_iwc(self) -> None:
         iwc = self.get_water_content("iwc")
         iwc[iwc < 1e-7] = ma.masked
-        self.append_data(iwc, f"{self.model}{self.cycle}_iwc")
-        self.keys[self._product] = f"{self.model}{self.cycle}_iwc"
+        self.append_data(iwc, f"{MODEL_PREFIX}iwc")
+        self.keys[self._product] = f"{MODEL_PREFIX}iwc"
 
     def _get_lwc(self) -> None:
         lwc = self.get_water_content("lwc")
         lwc[lwc < 1e-5] = ma.masked
-        self.append_data(lwc, f"{self.model}{self.cycle}_lwc")
-        self.keys[self._product] = f"{self.model}{self.cycle}_lwc"
+        self.append_data(lwc, f"{MODEL_PREFIX}lwc")
+        self.keys[self._product] = f"{MODEL_PREFIX}lwc"
 
     @staticmethod
     def get_model_var_names(args: tuple) -> list:
@@ -141,7 +135,7 @@ class ModelManager(DataSource):
         return q * p / (287 * t)
 
     def _add_variables(self) -> None:
-        """Add basic variables off model and cycle."""
+        """Add common coordinate variables and the model's own fields."""
 
         def _add_variable(var: str, key: str) -> None:
             ncvar = self.dataset.variables[var]
@@ -150,23 +144,14 @@ class ModelManager(DataSource):
                 data = self.cut_off_extra_levels(data)
             self.append_data(data, key)
 
-        def _add_common_variables() -> None:
-            """Model variables that are always the same within cycles."""
-            for var in COMMON_VARIABLES:
-                if var in self.dataset.variables:
-                    _add_variable(var, var)
-
-        def _add_cycle_variables() -> None:
-            """Add cycle depending variables."""
-            for var in CYCLE_VARIABLES:
-                if var in self.dataset.variables:
-                    _add_variable(var, f"{self.model}{self.cycle}_{var}")
-                if var == "height":
-                    self.keys["height"] = f"{self.model}{self.cycle}_{var}"
-
-        if not self._is_file:
-            _add_common_variables()
-        _add_cycle_variables()
+        for var in COMMON_VARIABLES:
+            if var in self.dataset.variables:
+                _add_variable(var, var)
+        for var in CYCLE_VARIABLES:
+            if var in self.dataset.variables:
+                _add_variable(var, f"{MODEL_PREFIX}{var}")
+            if var == "height":
+                self.keys["height"] = f"{MODEL_PREFIX}{var}"
 
     def cut_off_extra_levels(self, data: npt.NDArray) -> npt.NDArray:
         """Remove unused levels (above the altitude limit) from model data."""

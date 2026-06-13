@@ -157,7 +157,7 @@ def _process_l3_product(
         module.process_L3_day_product(
             args.model,
             obs,
-            [model_file],
+            model_file,
             product_file,
             str(output_file),
             overwrite=True,

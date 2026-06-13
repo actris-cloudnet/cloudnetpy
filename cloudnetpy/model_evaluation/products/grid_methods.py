@@ -213,8 +213,4 @@ class ProductGrid:
     def _append_data2object(self, data_storage: list) -> None:
         for storage in data_storage:
             for key in storage:
-                down_sample = storage[key]
-                self.model_obj.append_data(
-                    down_sample,
-                    f"{key}_{self.model_obj.model}{self.model_obj.cycle}",
-                )
+                self.model_obj.append_data(storage[key], key)

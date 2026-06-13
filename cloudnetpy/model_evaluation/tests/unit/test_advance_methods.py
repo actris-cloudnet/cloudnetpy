@@ -8,14 +8,13 @@ from cloudnetpy.model_evaluation.products.model_products import ModelManager
 from cloudnetpy.model_evaluation.products.observation_products import ObservationManager
 
 MODEL = "ecmwf"
-OUTPUT_FILE = ""
 PRODUCT = "cf"
 
 
-@pytest.mark.parametrize("name", ("ecmwf_cf_cirrus",))
+@pytest.mark.parametrize("name", ("model_cf_cirrus",))
 def test_cf_cirrus_filter(obs_file, model_file, name) -> None:
     obs = ObservationManager(PRODUCT, str(obs_file))
-    model = ModelManager(str(model_file), MODEL, OUTPUT_FILE, PRODUCT)
+    model = ModelManager(str(model_file), MODEL, PRODUCT)
     AdvanceProductMethods(model, str(model_file), obs)
     assert name in model.data
 
@@ -35,7 +34,7 @@ def test_cf_cirrus_filter(obs_file, model_file, name) -> None:
 )
 def test_getvar_from_object(obs_file, model_file, name, data) -> None:
     obs = ObservationManager(PRODUCT, str(obs_file))
-    model = ModelManager(str(model_file), MODEL, OUTPUT_FILE, PRODUCT)
+    model = ModelManager(str(model_file), MODEL, PRODUCT)
     adv_pro = AdvanceProductMethods(model, str(model_file), obs)
     x = adv_pro.getvar_from_object(name)
     testing.assert_array_almost_equal(x, data)
@@ -44,7 +43,7 @@ def test_getvar_from_object(obs_file, model_file, name, data) -> None:
 @pytest.mark.parametrize("name", ("T",))
 def test_getvar_from_object_None(obs_file, model_file, name) -> None:
     obs = ObservationManager(PRODUCT, str(obs_file))
-    model = ModelManager(str(model_file), MODEL, OUTPUT_FILE, PRODUCT)
+    model = ModelManager(str(model_file), MODEL, PRODUCT)
     adv_pro = AdvanceProductMethods(model, str(model_file), obs)
     with pytest.raises(KeyError):
         adv_pro.getvar_from_object(name)
@@ -59,7 +58,7 @@ def test_getvar_from_object_None(obs_file, model_file, name) -> None:
 )
 def test_set_frequency_parameters(obs_file, model_file, radar_f, values) -> None:
     obs = ObservationManager(PRODUCT, str(obs_file))
-    model = ModelManager(str(model_file), MODEL, OUTPUT_FILE, PRODUCT)
+    model = ModelManager(str(model_file), MODEL, PRODUCT)
     adv_pro = AdvanceProductMethods(model, str(model_file), obs)
     obs.radar_freq = radar_f
     x = adv_pro.set_frequency_parameters()
@@ -68,7 +67,7 @@ def test_set_frequency_parameters(obs_file, model_file, radar_f, values) -> None
 
 def test_fit_z_sensitivity(obs_file, model_file) -> None:
     obs = ObservationManager(PRODUCT, str(obs_file))
-    model = ModelManager(str(model_file), MODEL, OUTPUT_FILE, PRODUCT)
+    model = ModelManager(str(model_file), MODEL, PRODUCT)
     adv_pro = AdvanceProductMethods(model, str(model_file), obs)
     h = np.array([[5000, 9000, 13000], [10000, 15000, 20000], [8000, 12000, 16000]])
     compare = ma.masked_invalid([[np.nan, 0.15, 0.5], [0.1, 1, np.nan], [0.15, 0, 1]])
@@ -78,7 +77,7 @@ def test_fit_z_sensitivity(obs_file, model_file) -> None:
 
 def test_filter_high_iwc_low_cf(obs_file, model_file) -> None:
     obs = ObservationManager(PRODUCT, str(obs_file))
-    model = ModelManager(str(model_file), MODEL, OUTPUT_FILE, PRODUCT)
+    model = ModelManager(str(model_file), MODEL, PRODUCT)
     adv_pro = AdvanceProductMethods(model, str(model_file), obs)
     cf = ma.array([0.0001, 0.0002, 0, 0.0001, 1, 0.0006])
     iwc = np.array([0.0, 0, 0, 0.2, 0.4, 0])
@@ -93,7 +92,7 @@ def test_filter_high_iwc_low_cf(obs_file, model_file) -> None:
 
 def test_filter_high_iwc_low_cf_no_ice(obs_file, model_file) -> None:
     obs = ObservationManager(PRODUCT, str(obs_file))
-    model = ModelManager(str(model_file), MODEL, OUTPUT_FILE, PRODUCT)
+    model = ModelManager(str(model_file), MODEL, PRODUCT)
     adv_pro = AdvanceProductMethods(model, str(model_file), obs)
     cf = ma.array([0.0001, 0.0002, 0, 0, 0, 0.0006])
     iwc = np.array([0.0, 0, 0, 0.2, 0.4, 0])
@@ -104,7 +103,7 @@ def test_filter_high_iwc_low_cf_no_ice(obs_file, model_file) -> None:
 
 def test_mask_weird_indices(obs_file, model_file) -> None:
     obs = ObservationManager(PRODUCT, str(obs_file))
-    model = ModelManager(str(model_file), MODEL, OUTPUT_FILE, PRODUCT)
+    model = ModelManager(str(model_file), MODEL, PRODUCT)
     adv_pro = AdvanceProductMethods(model, str(model_file), obs)
     cf = ma.array([0.0001, 0.0002, 0, 0.0001, 1, 0.0006])
     compare = ma.copy(cf)
@@ -119,7 +118,7 @@ def test_mask_weird_indices(obs_file, model_file) -> None:
 
 def test_mask_weird_indices_values(obs_file, model_file) -> None:
     obs = ObservationManager(PRODUCT, str(obs_file))
-    model = ModelManager(str(model_file), MODEL, OUTPUT_FILE, PRODUCT)
+    model = ModelManager(str(model_file), MODEL, PRODUCT)
     adv_pro = AdvanceProductMethods(model, str(model_file), obs)
     cf = ma.array([0.0001, 0.0002, 0, 0.0001, 1, 0.0006])
     iwc = np.array([0.0, 0, 0, 0.2, 0.4, 0])
@@ -134,7 +133,7 @@ def test_mask_weird_indices_values(obs_file, model_file) -> None:
 
 def test_find_ice_in_clouds(obs_file, model_file) -> None:
     obs = ObservationManager(PRODUCT, str(obs_file))
-    model = ModelManager(str(model_file), MODEL, OUTPUT_FILE, PRODUCT)
+    model = ModelManager(str(model_file), MODEL, PRODUCT)
     adv_pro = AdvanceProductMethods(model, str(model_file), obs)
     cf_f = np.array(
         [
@@ -161,7 +160,7 @@ def test_find_ice_in_clouds(obs_file, model_file) -> None:
 
 def test_get_ice_indices(obs_file, model_file) -> None:
     obs = ObservationManager(PRODUCT, str(obs_file))
-    model = ModelManager(str(model_file), MODEL, OUTPUT_FILE, PRODUCT)
+    model = ModelManager(str(model_file), MODEL, PRODUCT)
     adv_pro = AdvanceProductMethods(model, str(model_file), obs)
     cf_f = np.array(
         [
@@ -190,7 +189,7 @@ def test_get_ice_indices(obs_file, model_file) -> None:
 
 def test_iwc_variance(obs_file, model_file) -> None:
     obs = ObservationManager(PRODUCT, str(obs_file))
-    model = ModelManager(str(model_file), MODEL, OUTPUT_FILE, PRODUCT)
+    model = ModelManager(str(model_file), MODEL, PRODUCT)
     adv_pro = AdvanceProductMethods(model, str(model_file), obs)
     x = np.array([0, 1, 2])
     y = np.array([0, 0, 1])
@@ -202,7 +201,7 @@ def test_iwc_variance(obs_file, model_file) -> None:
 
 def test_calculate_variance_iwc(obs_file, model_file) -> None:
     obs = ObservationManager(PRODUCT, str(obs_file))
-    model = ModelManager(str(model_file), MODEL, OUTPUT_FILE, PRODUCT)
+    model = ModelManager(str(model_file), MODEL, PRODUCT)
     adv_pro = AdvanceProductMethods(model, str(model_file), obs)
     shear = np.array([[1, 1, 2, 1], [2, 2, 1, 0], [0, 0, 1, 0]])
     ind_arr = np.array([[0, 0, 1, 1], [0, 1, 0, 0], [1, 1, 0, 0]])
@@ -214,7 +213,7 @@ def test_calculate_variance_iwc(obs_file, model_file) -> None:
 
 def test_calculate_wind_shear(obs_file, model_file) -> None:
     obs = ObservationManager(PRODUCT, str(obs_file))
-    model = ModelManager(str(model_file), MODEL, OUTPUT_FILE, PRODUCT)
+    model = ModelManager(str(model_file), MODEL, PRODUCT)
     adv_pro = AdvanceProductMethods(model, str(model_file), obs)
     u = np.array([[1, 2, 0, 1], [-1, 0, 1, -1], [1, 0, 1, -1]])
     v = np.array([[1, 0, 1, -1], [1, 2, -1, 0], [1, 2, 0, 1]])
@@ -227,7 +226,7 @@ def test_calculate_wind_shear(obs_file, model_file) -> None:
 
 def test_calculate_iwc_distribution(obs_file, model_file) -> None:
     obs = ObservationManager(PRODUCT, str(obs_file))
-    model = ModelManager(str(model_file), MODEL, OUTPUT_FILE, PRODUCT)
+    model = ModelManager(str(model_file), MODEL, PRODUCT)
     adv_pro = AdvanceProductMethods(model, str(model_file), obs)
     n_std = 5
     n_dist = 250
@@ -241,7 +240,7 @@ def test_calculate_iwc_distribution(obs_file, model_file) -> None:
 
 def test_gamma_distribution(obs_file, model_file) -> None:
     obs = ObservationManager(PRODUCT, str(obs_file))
-    model = ModelManager(str(model_file), MODEL, OUTPUT_FILE, PRODUCT)
+    model = ModelManager(str(model_file), MODEL, PRODUCT)
     adv_pro = AdvanceProductMethods(model, str(model_file), obs)
     iwc_dist = np.array([0.1, 0.2, 0.3, 0.4, 0.5, 0.6])
     compare = np.zeros(iwc_dist.shape)
@@ -262,7 +261,7 @@ def test_gamma_distribution(obs_file, model_file) -> None:
 
 def test_filter_cirrus(obs_file, model_file) -> None:
     obs = ObservationManager(PRODUCT, str(obs_file))
-    model = ModelManager(str(model_file), MODEL, OUTPUT_FILE, PRODUCT)
+    model = ModelManager(str(model_file), MODEL, PRODUCT)
     adv_pro = AdvanceProductMethods(model, str(model_file), obs)
     cf_f = 0.7
     p = np.array([1, 2, 3, 4, 5, 6])

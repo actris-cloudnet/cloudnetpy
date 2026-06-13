@@ -89,7 +89,7 @@ def generate_L3_day_plots(
     """
     cls = __import__("plotting")
     model_name = p_tools.read_model_name(nc_file, model)
-    name_set = p_tools.parse_wanted_names(nc_file, product, model, var_list)
+    name_set = p_tools.parse_wanted_names(nc_file, product, var_list)
     unique_tuples = {tuple(lst) for lst in name_set}
     name_set_unique = tuple(list(tup) for tup in unique_tuples)
 
@@ -173,7 +173,7 @@ def get_group_plots(
             _set_title(ax[j], name, product, variable_info)
         if j == 0 and title:
             _set_title(ax[j], model, product, variable_info, model_name)
-        data, x, y = p_tools.read_data_characters(nc_file, name, model)
+        data, x, y = p_tools.read_data_characters(nc_file, name)
         plot_colormesh(ax[j], data, (x, y), variable_info)
     casedate = set_labels(fig, ax[j], nc_file)
     if "adv" in name:
@@ -237,8 +237,8 @@ def get_pair_plots(
         if title:
             _set_title(ax[0], model, product, variable_info, model_name)
             _set_title(ax[-1], name, product, variable_info)
-        model_data, mx, my = p_tools.read_data_characters(nc_file, model_ax, model)
-        data, x, y = p_tools.read_data_characters(nc_file, name, model)
+        model_data, mx, my = p_tools.read_data_characters(nc_file, model_ax)
+        data, x, y = p_tools.read_data_characters(nc_file, name)
         plot_colormesh(ax[0], model_data, (mx, my), variable_info)
         plot_colormesh(ax[-1], data, (x, y), variable_info)
         casedate = set_labels(fig, ax[-1], nc_file)
@@ -257,7 +257,7 @@ def get_single_plots(
     product: str,
     names: list,
     nc_file: str,
-    model: str,
+    model: str,  # noqa: ARG001 (kept for a uniform get_*_plots call signature)
     model_name: str,
     save_path: str,
     image_name: str,
@@ -294,7 +294,7 @@ def get_single_plots(
 
         if title:
             _set_title(ax[0], name, product, variable_info)
-        data, x, y = p_tools.read_data_characters(nc_file, name, model)
+        data, x, y = p_tools.read_data_characters(nc_file, name)
         plot_colormesh(ax[0], data, (x, y), variable_info)
         casedate = set_labels(fig, ax[0], nc_file, sub_title=title)
         if title:
@@ -395,11 +395,11 @@ def get_statistic_plots(
             fig, ax = initialize_figure(len(names) - 1, stat)
             figs.append(fig)
             axes.append(ax)
-            model_data, _, _ = p_tools.read_data_characters(nc_file, names[0], model)
+            model_data, _, _ = p_tools.read_data_characters(nc_file, names[0])
             if np.all(model_data.mask is True):
                 model_missing = True
             for j, name in enumerate(names):
-                data, x, y = p_tools.read_data_characters(nc_file, name, model)
+                data, x, y = p_tools.read_data_characters(nc_file, name)
                 if np.all(data.mask is True):
                     obs_missing = True
                 _check_data()

@@ -28,7 +28,7 @@ class TestCloudFractionProcessing:
     @pytest.mark.reprocess()
     @pytest.mark.parametrize(
         "key",
-        ["cf_V_ecmwf", "cf_A_ecmwf", "cf_V_adv_ecmwf", "cf_A_adv_ecmwf"],
+        ["cf_V", "cf_A", "cf_V_adv", "cf_A_adv"],
     )
     def test_that_has_correct_product_variables(self, key) -> None:
         nc = netCDF4.Dataset(self.full_path)
@@ -48,7 +48,7 @@ class TestCloudFractionProcessing:
     @pytest.mark.reprocess()
     @pytest.mark.parametrize(
         "key",
-        ["ecmwf_forecast_time", "ecmwf_height", "ecmwf_cf", "ecmwf_cf_cirrus"],
+        ["model_forecast_time", "model_height", "model_cf", "model_cf_cirrus"],
     )
     def test_that_has_correct_cycle_variables(self, key) -> None:
         nc = netCDF4.Dataset(self.full_path)

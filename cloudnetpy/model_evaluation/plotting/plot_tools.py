@@ -4,6 +4,8 @@ import numpy.typing as npt
 from matplotlib.axes import Axes
 from numpy import ma
 
+from cloudnetpy.model_evaluation.model_metadata import MODEL_PREFIX
+
 
 def read_model_name(nc_file: str, model: str) -> str:
     """Returns a human-readable model name for plot titles.
@@ -19,17 +21,16 @@ def read_model_name(nc_file: str, model: str) -> str:
 def parse_wanted_names(
     nc_file: str,
     name: str,
-    model: str,
     variables: list | None = None,
     *,
     advance: bool = False,
 ) -> tuple[list, list]:
     """Returns standard and advection lists of product types to plot."""
-    names = variables or parse_dataset_keys(nc_file, name, advance=advance, model=model)
+    names = variables or parse_dataset_keys(nc_file, name, advance=advance)
     standard_n = [n for n in names if name in n and "adv" not in n]
-    standard_n = sort_model2first_element(standard_n, model)
+    standard_n = sort_model2first_element(standard_n)
     advection_n = [n for n in names if name in n and "adv" in n]
-    model_names = [n for n in names if f"{model}_" in n and f"_{model}_" not in n]
+    model_names = [n for n in names if n.startswith(MODEL_PREFIX)]
     for i, model_n in enumerate(model_names):
         advection_n.insert(0 + i, model_n)
     if len(advection_n) < len(standard_n):
@@ -39,38 +40,22 @@ def parse_wanted_names(
     return standard_n, advection_n
 
 
-def parse_dataset_keys(
-    nc_file: str,
-    product: str,
-    *,
-    advance: bool,
-    model: str,
-) -> list:
-    names = list(netCDF4.Dataset(nc_file).variables.keys())
-    a_names = ["cirrus", "snow"]
-    model_vars = []
-    for n in names:
-        if model not in n or (model in n and product not in n):
-            model_vars.append(n)
+def parse_dataset_keys(nc_file: str, product: str, *, advance: bool) -> list:
+    names = [n for n in netCDF4.Dataset(nc_file).variables if product in n]
     if not advance:
-        for a in a_names:
-            for n in names:
-                if a in n:
-                    model_vars.append(n)
-    for m in model_vars:
-        names.remove(m)
+        names = [n for n in names if "cirrus" not in n and "snow" not in n]
     return names
 
 
-def sort_model2first_element(a: list, model: str) -> list:
-    mm = [n for n in a if f"{model}_" in n and f"_{model}_" not in n]
+def sort_model2first_element(a: list) -> list:
+    mm = [n for n in a if n.startswith(MODEL_PREFIX)]
     for i, m in enumerate(mm):
         a.remove(m)
         a.insert(0 + i, m)
     return a
 
 
-def read_data_characters(nc_file: str, name: str, model: str) -> tuple:
+def read_data_characters(nc_file: str, name: str) -> tuple:
     """Gets dimensions and data for plotting."""
     nc = netCDF4.Dataset(nc_file)
     data = nc.variables[name][:]
@@ -78,9 +63,9 @@ def read_data_characters(nc_file: str, name: str, model: str) -> tuple:
     x = nc.variables["time"][:]
     x = reshape_1d2nd(x, data)
     try:
-        y = nc.variables[f"{model}_height"][:]
+        y = nc.variables[f"{MODEL_PREFIX}height"][:]
     except KeyError as err:
-        msg = f"Missing variable {model}_height"
+        msg = f"Missing variable {MODEL_PREFIX}height"
         raise RuntimeError(msg) from err
     y = y / 1000
     try:

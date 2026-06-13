@@ -4,9 +4,9 @@ from os import PathLike
 from uuid import UUID
 
 import netCDF4
-import numpy.typing as npt
 
-from cloudnetpy import output, utils
+from cloudnetpy import output
+from cloudnetpy.model_evaluation.model_metadata import MODEL_PREFIX
 
 from .metadata import (
     CYCLE_ATTRIBUTES,
@@ -14,53 +14,31 @@ from .metadata import (
     MODEL_L3_ATTRIBUTES,
     REGRID_PRODUCT_ATTRIBUTES,
 )
-from .products.model_products import ModelManager
 
 
 def update_attributes(model_downsample_variables: dict, attributes: dict) -> None:
-    """Overrides existing Cloudnet-ME Array-attributes.
-        Overrides existing attributes using hard-coded values.
-        New attributes are added.
+    """Sets variable attributes for the L3 downsampled file.
+
+    Model (simulated) fields are prefixed with ``model_``; observation fields
+    downsampled to the model grid use the bare product key.
 
     Args:
         model_downsample_variables (dict): Array instances.
-        attributes (dict): Product-specific attributes.
+        attributes (dict): Product-specific attributes (e.g. time units).
     """
-    for key in model_downsample_variables:
-        x = len(key.split("_")) - 1
-        key_parts = key.split("_", x)
-        if key in list(attributes.keys()):
-            model_downsample_variables[key].set_attributes(attributes[key])
+    for key, variable in model_downsample_variables.items():
+        if key in attributes:
+            variable.set_attributes(attributes[key])
         if key in MODEL_ATTRIBUTES:
-            model_downsample_variables[key].set_attributes(MODEL_ATTRIBUTES[key])
-        elif "_".join(key_parts[0:-1]) in REGRID_PRODUCT_ATTRIBUTES:
-            model_downsample_variables[key].set_attributes(
-                REGRID_PRODUCT_ATTRIBUTES["_".join(key_parts[0:-1])],
-            )
-        elif "_".join(key_parts[0:-2]) in REGRID_PRODUCT_ATTRIBUTES:
-            model_downsample_variables[key].set_attributes(
-                REGRID_PRODUCT_ATTRIBUTES["_".join(key_parts[0:-2])],
-            )
-        elif (
-            "_".join(key_parts[1:]) in MODEL_L3_ATTRIBUTES
-            or "_".join(key_parts[2:]) in MODEL_L3_ATTRIBUTES
-        ):
-            try:
-                model_downsample_variables[key].set_attributes(
-                    MODEL_L3_ATTRIBUTES["_".join(key_parts[1:])],
-                )
-            except KeyError:
-                model_downsample_variables[key].set_attributes(
-                    MODEL_L3_ATTRIBUTES["_".join(key_parts[2:])],
-                )
-        elif "_".join(key_parts[1:]) in CYCLE_ATTRIBUTES:
-            model_downsample_variables[key].set_attributes(
-                CYCLE_ATTRIBUTES["_".join(key_parts[1:])],
-            )
-        elif "_".join(key_parts[2:]) in CYCLE_ATTRIBUTES:
-            model_downsample_variables[key].set_attributes(
-                CYCLE_ATTRIBUTES["_".join(key_parts[2:])],
-            )
+            variable.set_attributes(MODEL_ATTRIBUTES[key])
+        elif key.startswith(MODEL_PREFIX):
+            base = key.removeprefix(MODEL_PREFIX)
+            if base in MODEL_L3_ATTRIBUTES:
+                variable.set_attributes(MODEL_L3_ATTRIBUTES[base])
+            elif base in CYCLE_ATTRIBUTES:
+                variable.set_attributes(CYCLE_ATTRIBUTES[base])
+        elif key in REGRID_PRODUCT_ATTRIBUTES:
+            variable.set_attributes(REGRID_PRODUCT_ATTRIBUTES[key])
 
 
 def save_downsampled_file(
@@ -93,6 +71,7 @@ def save_downsampled_file(
             f"Downsampled {id_mark.capitalize().replace('_', ' of ')} "
             f"from {obj.dataset.location}"
         )
+        root_group.model = obj.model
         if obj.source:
             root_group.model_name = obj.source
         _add_source(root_group, objects, files)
@@ -102,43 +81,6 @@ def save_downsampled_file(
         if not hasattr(obj.dataset, "day"):
             root_group.year, root_group.month, root_group.day = obj.date
         output.merge_history(root_group, id_mark, obj)
-
-
-def add_var2ncfile(obj: ModelManager, file_name: str | PathLike) -> None:
-    with netCDF4.Dataset(file_name, "r+", format="NETCDF4_CLASSIC") as nc_file:
-        _write_vars2nc(nc_file, obj.data)
-
-
-def _write_vars2nc(rootgrp: netCDF4.Dataset, cloudnet_variables: dict) -> None:
-    """Iterates over Cloudnet-ME instances and write to given rootgrp."""
-
-    def _get_dimensions(array: npt.NDArray) -> tuple:
-        """Finds correct dimensions for a variable."""
-        if utils.isscalar(array):
-            return ()
-        variable_size: tuple = ()
-        file_dims = rootgrp.dimensions
-        array_dims = array.shape
-        for length in array_dims:
-            dim = [key for key in file_dims if file_dims[key].size == length][0]  # noqa: RUF015
-            variable_size = (*variable_size, dim)
-        return variable_size
-
-    for key in cloudnet_variables:
-        obj = cloudnet_variables[key]
-        size = _get_dimensions(obj.data)
-        try:
-            nc_variable = rootgrp.createVariable(
-                obj.name,
-                obj.data_type,
-                size,
-                zlib=True,
-            )
-            nc_variable[:] = obj.data
-            for attr in obj.fetch_attributes():
-                setattr(nc_variable, attr, getattr(obj, attr))
-        except RuntimeError:
-            continue
 
 
 def _augment_global_attributes(root_group: netCDF4.Dataset) -> None:

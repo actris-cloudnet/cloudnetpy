@@ -5,62 +5,57 @@ from cloudnetpy.model_evaluation.plotting import plot_tools as plt
 
 
 def test_parse_wanted_names(regrid_file) -> None:
-    """nc_file: str, name: str, model: str,
-    vars: list | None = None,
-    advance: bool = False
-    """
-    compare = ["ecmwf_cf", "cf_ecmwf"]
-    x, _ = plt.parse_wanted_names(regrid_file, "cf", "ecmwf")
+    compare = ["model_cf", "cf_V"]
+    x, _ = plt.parse_wanted_names(regrid_file, "cf")
     assert x == compare
 
 
 def test_parse_wanted_names_adv(regrid_file) -> None:
-    compare = ["ecmwf_cf", "cf_adv_ecmwf"]
-    _, x_adv = plt.parse_wanted_names(regrid_file, "cf", "ecmwf")
+    compare = ["model_cf", "cf_V_adv"]
+    _, x_adv = plt.parse_wanted_names(regrid_file, "cf")
     assert x_adv == compare
 
 
 def test_parse_wanted_names_advance_False(regrid_file) -> None:
-    compare = ["ecmwf_cf", "cf_ecmwf"]
-    x, _ = plt.parse_wanted_names(regrid_file, "cf", "ecmwf", advance=False)
+    compare = ["model_cf", "cf_V"]
+    x, _ = plt.parse_wanted_names(regrid_file, "cf", advance=False)
     assert x == compare
 
 
 def test_parse_wanted_names_advance_True(regrid_file) -> None:
-    compare = ["ecmwf_cf", "ecmwf_cf_cirrus", "ecmwf_cf_snow", "cf_ecmwf"]
-    x, _ = plt.parse_wanted_names(regrid_file, "cf", "ecmwf", advance=True)
+    compare = ["model_cf", "model_cf_cirrus", "model_cf_snow", "cf_V"]
+    x, _ = plt.parse_wanted_names(regrid_file, "cf", advance=True)
     assert x == compare
 
 
 def test_parse_wanted_names_adv_advance_True(regrid_file) -> None:
-    compare = ["ecmwf_cf", "ecmwf_cf_cirrus", "ecmwf_cf_snow", "cf_adv_ecmwf"]
-    _, x_adv = plt.parse_wanted_names(regrid_file, "cf", "ecmwf", advance=True)
+    compare = ["model_cf", "model_cf_cirrus", "model_cf_snow", "cf_V_adv"]
+    _, x_adv = plt.parse_wanted_names(regrid_file, "cf", advance=True)
     assert x_adv == compare
 
 
 def test_parse_wanted_names_adv_advance_False(regrid_file) -> None:
-    compare = ["ecmwf_cf", "cf_adv_ecmwf"]
-    _, x_adv = plt.parse_wanted_names(regrid_file, "cf", "ecmwf", advance=False)
+    compare = ["model_cf", "cf_V_adv"]
+    _, x_adv = plt.parse_wanted_names(regrid_file, "cf", advance=False)
     assert x_adv == compare
 
 
 def test_parse_wanted_names_fixed_list(regrid_file) -> None:
-    compare = ["ecmwf_cf", "ecmwf_cf_cirrus"]
-    x, _ = plt.parse_wanted_names(regrid_file, "cf", "ecmwf", variables=compare)
+    compare = ["model_cf", "model_cf_cirrus"]
+    x, _ = plt.parse_wanted_names(regrid_file, "cf", variables=compare)
     assert x == compare
 
 
 def test_parse_wanted_names_adv_fixed_list(regrid_file) -> None:
-    compare = ["ecmwf_cf_cirrus", "cf_adv_ecmwf"]
-    x_adv, _ = plt.parse_wanted_names(regrid_file, "cf", "ecmwf", variables=compare)
+    compare = ["model_cf_cirrus", "cf_V_adv"]
+    x_adv, _ = plt.parse_wanted_names(regrid_file, "cf", variables=compare)
     assert x_adv == compare
 
 
 def test_sort_model2first_element() -> None:
-    a = ["ec_i", "cf_ec_i", "cf_ec_ii", "ec_ii"]
-    e = "ec"
-    compare = ["ec_i", "ec_ii", "cf_ec_i", "cf_ec_ii"]
-    x = plt.sort_model2first_element(a, e)
+    a = ["model_cf", "cf_V", "cf_A", "model_cf_cirrus"]
+    compare = ["model_cf", "model_cf_cirrus", "cf_V", "cf_A"]
+    x = plt.sort_model2first_element(a)
     assert x == compare
 
 
@@ -68,7 +63,7 @@ def test_read_data_characters(regrid_file) -> None:
     t = np.array([[2, 2], [6, 6], [10, 10]])
     h = np.array([[0.01, 0.014], [0.008, 0.014], [0.009, 0.015]])
     data = np.array([[0, 2], [3, 6], [5, 8]])
-    x, y, z = plt.read_data_characters(regrid_file, "ecmwf_cf", "ecmwf")
+    x, y, z = plt.read_data_characters(regrid_file, "model_cf")
     compare = [data, t, h]
     test = [x, y, z]
     for i in range(3):
