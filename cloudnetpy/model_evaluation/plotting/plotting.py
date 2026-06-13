@@ -81,9 +81,6 @@ def generate_L3_day_plots(
     Notes:
         In case of 'group' and 'statistic' fig_type advection timegrid is
         separated from standard timegrid to their own figures.
-        In case of model cycles, cycles are visualized in their on figures same
-        way as an individual model run would be visualized in its own in a group
-        figure.
 
     Examples:
         >>> from cloudnetpy.model_evaluation.plotting.plotting
@@ -164,14 +161,13 @@ def get_group_plots(
     image_name: str,
     *,
     show: bool,
-    cycle: str = "",
     title: bool = True,
     include_xlimits: bool = False,
 ) -> tuple:
     """Group subplot visualization for both standard and advection downsampling.
     Generates group subplot figure for product with model and all different
     downsampling methods. Generates separated figures for standard and advection
-    timegrids. All model cycles if any will be generated to their own figures.
+    timegrids.
 
     Args:
         product (str): Name of the product
@@ -182,12 +178,10 @@ def get_group_plots(
         save_path (str): Path for saving figures
         image_name (str, optional): Saving name of generated fig
         show (bool): Show figure before saving if True
-        cycle (str): Name of cycle if exists
         title (bool): True or False if wanted to add title to subfig
         include_xlimits (bool): Show labels at the ends of x-axis
     """
     fig, ax = initialize_figure(len(names))
-    model_run = model
     name = ""
     j = 0
     for j, name in enumerate(names):
@@ -203,14 +197,11 @@ def get_group_plots(
     casedate = set_labels(fig, ax[j], nc_file)
     if "adv" in name:
         product = product + "_adv"
-    if len(cycle) > 1:
-        fig.text(0.64, 0.885, f"Cycle: {cycle}", fontsize=13)
-        model_run = f"{model}_{cycle}"
     handle_saving(
         image_name,
         save_path,
         casedate,
-        [product, model_run, "group"],
+        [product, model, "group"],
         show=show,
     )
     return fig, ax
@@ -224,7 +215,6 @@ def get_pair_plots(
     model_name: str,
     save_path: str,
     image_name: str,
-    cycle: str = "",
     *,
     show: bool = False,
     title: bool = True,
@@ -244,7 +234,6 @@ def get_pair_plots(
         save_path (str): Path for saving figures
         image_name (str, optional): Saving name of generated fig
         show (bool): Show figure before saving if True
-        cycle (str): Name of cycle if exists
         title (bool): True or False if wanted add title to subfig
         include_xlimits (bool): Show labels at the ends of x-axis
     """
@@ -267,8 +256,6 @@ def get_pair_plots(
         plot_colormesh(ax[0], model_data, (mx, my), variable_info)
         plot_colormesh(ax[-1], data, (x, y), variable_info)
         casedate = set_labels(fig, ax[-1], nc_file)
-        if len(cycle) > 1:
-            fig.text(0.64, 0.889, f"Cycle: {cycle}", fontsize=13)
         handle_saving(
             image_name,
             save_path,
@@ -288,7 +275,6 @@ def get_single_plots(
     image_name: str,
     *,
     show: bool,
-    cycle: str = "",
     title: bool = True,
     include_xlimits: bool = False,
 ) -> tuple[list, list]:
@@ -303,7 +289,6 @@ def get_single_plots(
         save_path (str): Path for saving figures
         image_name (str, optional): Saving name of generated fig
         show (bool): Show figure before saving if True
-        cycle (str): Name of cycle if exists
         title (bool): True or False if wanted to add title to subfig
         include_xlimits (bool): Show labels at the ends of x-axis
     """
@@ -323,10 +308,7 @@ def get_single_plots(
         plot_colormesh(ax[0], data, (x, y), variable_info)
         casedate = set_labels(fig, ax[0], nc_file, sub_title=title)
         if title:
-            if len(cycle) > 1:
-                fig.text(0.64, 0.9, f"{model_name} cycle: {cycle}", fontsize=13)
-            else:
-                fig.text(0.64, 0.9, f"{model_name}", fontsize=13)
+            fig.text(0.64, 0.9, f"{model_name}", fontsize=13)
         handle_saving(
             image_name,
             save_path,
@@ -377,7 +359,6 @@ def get_statistic_plots(
     image_name: str,
     *,
     show: bool,
-    cycle: str = "",
     title: bool = True,
 ) -> tuple:
     """Statistical subplots for day scale products.
@@ -385,8 +366,7 @@ def get_statistic_plots(
     total data area analysis ('area'), histogram ('hist') or vertical profiles
     ('vertical'). Each given stats are looped through and generated as one figure
     per statistical method for a select product. All different downsampled method
-    are in a same fig. Standard and advection timegrids are separated to own figs
-    as well as different cycle runs.
+    are in a same fig. Standard and advection timegrids are separated to own figs.
 
     Args:
         product (str): Name of the product
@@ -399,10 +379,8 @@ def get_statistic_plots(
         save_path (str): Path for saving figures
         image_name (str, optional): Saving name of generated fig
         show (bool): Show figure before saving if True
-        cycle (str): Name of cycle if exists
         title (bool): True or False if wanted to add title to subfig
     """
-    model_run = model
     name = ""
     j = 0
 
@@ -468,14 +446,11 @@ def get_statistic_plots(
             _name = read_location(nc_file)
             if title:
                 add_subtitle(fig, casedate, _name.capitalize())
-        if len(cycle) > 1:
-            fig.text(0.64, 0.885, f"Cycle: {cycle}", fontsize=13)
-            model_run = f"{model}_{cycle}"
         handle_saving(
             image_name,
             save_path,
             casedate,
-            [name, stat, model_run],
+            [name, stat, model],
             show=show,
         )
     return figs, axes
