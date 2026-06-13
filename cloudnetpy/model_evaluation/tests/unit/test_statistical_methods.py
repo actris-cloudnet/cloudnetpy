@@ -11,9 +11,9 @@ PRODUCT_iwc = ["iwc", "ECMWF", "Ice water content"]
 def test_relative_error() -> None:
     model = ma.array([[1, 2, 2, 3], [2, 4, 10, 1]])
     observation = ma.array([[3, 2, 5, 4], [4, 6, 8, 4]])
-    x, _ = sts.relative_error(model, observation)
-    compare = ma.array([[-66.67, 0.0, -60.0, -25.0], [-50.0, -33.33, 25.0, -75.0]])
-    testing.assert_array_almost_equal(x, compare)
+    result_model, _ = sts.relative_error(model, observation)
+    expected = ma.array([[-66.67, 0.0, -60.0, -25.0], [-50.0, -33.33, 25.0, -75.0]])
+    testing.assert_array_almost_equal(result_model, expected)
 
 
 def test_relative_error_mask() -> None:
@@ -21,48 +21,48 @@ def test_relative_error_mask() -> None:
     model.mask = np.array([[0, 0, 0, 1], [0, 1, 0, 1]])
     observation = ma.array([[1, 2, 5, 4], [4, 6, 8, 1]])
     observation.mask = np.array([[1, 0, 0, 1], [0, 0, 0, 1]])
-    x, _ = sts.relative_error(model, observation)
-    compare = ma.array(
+    result_model, _ = sts.relative_error(model, observation)
+    expected = ma.array(
         [
             ma.array([-99, 0.0, -60.0, -99], mask=[True, False, False, True]),
             ma.array([-50.0, -83.33, 25.0, -99], mask=[False, False, False, True]),
         ],
     )
-    testing.assert_array_almost_equal(x, compare)
+    testing.assert_array_almost_equal(result_model, expected)
 
 
 def test_relative_error_nan() -> None:
     model = ma.array([[1, 2, 2, 3], [2, 4, 10, 1]])
     observation = ma.array([[3, 2, 5, np.nan], [4, np.nan, 8, 4]])
-    x, _ = sts.relative_error(model, observation)
-    compare = ma.array(
+    result_model, _ = sts.relative_error(model, observation)
+    expected = ma.array(
         [
             ma.array([-66.67, 0.0, -60.0, -99], mask=[False, False, False, True]),
             ma.array([-50.0, -99, 25.0, -75.0], mask=[False, True, False, False]),
         ],
     )
-    testing.assert_array_almost_equal(x, compare)
+    testing.assert_array_almost_equal(result_model, expected)
 
 
 def test_absolute_error() -> None:
     model = ma.array([[0.1, 0.2, 0.2, 0.3], [0.2, 0.4, 1.0, 0.0]])
     observation = ma.array([[0.2, 0.2, 0.1, 0.4], [0.4, 0.6, 0.8, 0.2]])
-    x, _ = sts.absolute_error(model, observation)
-    compare = ma.array([[10.0, 0.0, -10.0, 10.0], [20.0, 20.0, -20.0, 20.0]])
-    testing.assert_array_almost_equal(x, compare)
+    result_model, _ = sts.absolute_error(model, observation)
+    expected = ma.array([[10.0, 0.0, -10.0, 10.0], [20.0, 20.0, -20.0, 20.0]])
+    testing.assert_array_almost_equal(result_model, expected)
 
 
 def test_absolute_error_nan() -> None:
     model = ma.array([[0.1, 0.2, 0.2, 0.3], [0.2, 0.4, 1.0, 0.0]])
     observation = ma.array([[0.2, np.nan, 0.1, 0.4], [np.nan, 0.6, 0.8, 0.2]])
-    x, _ = sts.absolute_error(model, observation)
-    compare = ma.array(
+    result_model, _ = sts.absolute_error(model, observation)
+    expected = ma.array(
         [
             ma.array([10.0, -99, -10.0, 10.0], mask=[False, True, False, False]),
             ma.array([-99, 20.0, -20.0, 20.0], mask=[True, False, False, False]),
         ],
     )
-    testing.assert_array_almost_equal(x, compare)
+    testing.assert_array_almost_equal(result_model, expected)
 
 
 def test_absolute_error_mask() -> None:
@@ -70,46 +70,46 @@ def test_absolute_error_mask() -> None:
     model.mask = np.array([[0, 0, 0, 1], [0, 1, 0, 1]])
     observation = ma.array([[0.2, 0.2, 0.1, 0.4], [0.4, 0.6, 0.8, 0.2]])
     observation.mask = np.array([[0, 0, 0, 0], [0, 1, 0, 0]])
-    x, _ = sts.absolute_error(model, observation)
-    compare = ma.array(
+    result_model, _ = sts.absolute_error(model, observation)
+    expected = ma.array(
         [
             ma.array([10.0, 0.0, -10.0, -99], mask=[False, False, False, True]),
             ma.array([20.0, -99, -20.0, -99], mask=[False, True, False, True]),
         ],
     )
-    testing.assert_array_almost_equal(x, compare)
+    testing.assert_array_almost_equal(result_model, expected)
 
 
 def test_combine_masked_indices() -> None:
     model = ma.array([[1, 2, 2, 3], [2, 4, 10, 1]])
     observation = ma.array([[3, 2, 5, 4], [4, 6, 8, 4]])
-    x, y = sts.combine_masked_indices(model, observation)
-    compare_m = ma.array([[4, 2, 2, 3], [2, 4, 10, 6]])
-    compare_o = ma.array([[3, 2, 5, 4], [4, 6, 8, 4]])
-    testing.assert_array_almost_equal(x, compare_m)
-    testing.assert_array_almost_equal(y, compare_o)
+    result_model, result_obs = sts.combine_masked_indices(model, observation)
+    expected_model = ma.array([[4, 2, 2, 3], [2, 4, 10, 6]])
+    expected_obs = ma.array([[3, 2, 5, 4], [4, 6, 8, 4]])
+    testing.assert_array_almost_equal(result_model, expected_model)
+    testing.assert_array_almost_equal(result_obs, expected_obs)
 
 
 def test_combine_masked_indices_min() -> None:
     model = ma.array([[1, 2, 2, 3], [2, 4, 10, 1]])
     observation = ma.array([[3, 2, 5, 4], [4, 6, 8, 4]])
-    x, y = sts.combine_masked_indices(model, observation)
+    result_model, result_obs = sts.combine_masked_indices(model, observation)
 
-    compare_m = ma.array(
+    expected_model = ma.array(
         [
             ma.array([-99, 2, 2, 3], mask=[True, False, False, False]),
             ma.array([2, 4, 10, -99], mask=[True, False, False, True]),
         ],
     )
-    compare_o = ma.array(
+    expected_obs = ma.array(
         [
             ma.array([-99, 2, 5, 4], mask=[True, False, False, False]),
             ma.array([4, 6, 8, -99], mask=[True, False, False, True]),
         ],
     )
 
-    testing.assert_array_almost_equal(x, compare_m)
-    testing.assert_array_almost_equal(y, compare_o)
+    testing.assert_array_almost_equal(result_model, expected_model)
+    testing.assert_array_almost_equal(result_obs, expected_obs)
 
 
 def test_combine_masked_indices_mask() -> None:
@@ -117,42 +117,42 @@ def test_combine_masked_indices_mask() -> None:
     model.mask = ma.array([[1, 0, 0, 0], [0, 0, 0, 1]])
     observation = ma.array([[3, 2, 1, 4], [4, 6, 8, 4]])
     observation.mask = ma.array([[0, 1, 1, 0], [1, 0, 0, 0]])
-    x, y = sts.combine_masked_indices(model, observation)
-    model = ma.array(
+    result_model, result_obs = sts.combine_masked_indices(model, observation)
+    expected_model = ma.array(
         [
             ma.array([-99, -99, -99, 3], mask=[True, True, True, False]),
             ma.array([-99, 4, 10, -99], mask=[True, False, False, True]),
         ],
     )
-    observation = ma.array(
+    expected_obs = ma.array(
         [
             ma.array([-99, -99, -99, 4], mask=[True, True, True, False]),
             ma.array([-99, 6, 8, -99], mask=[True, False, False, True]),
         ],
     )
-    testing.assert_array_almost_equal(x, model)
-    testing.assert_array_almost_equal(y, observation)
+    testing.assert_array_almost_equal(result_model, expected_model)
+    testing.assert_array_almost_equal(result_obs, expected_obs)
 
 
 def test_combine_masked_indices_nan() -> None:
     model = ma.array([[1, 2, 2, 3], [2, 4, 10, 1]])
     observation = ma.array([[np.nan, 2, 5, 4], [4, 6, np.nan, 4]])
-    x, y = sts.combine_masked_indices(model, observation)
-    model = ma.array(
+    result_model, result_obs = sts.combine_masked_indices(model, observation)
+    expected_model = ma.array(
         [
             ma.array([-99, 2, 2, 3], mask=[True, False, False, False]),
             ma.array([2, 4, -99, 1], mask=[False, False, True, False]),
         ],
     )
-    testing.assert_array_almost_equal(x, model)
-    testing.assert_array_almost_equal(y, observation)
+    testing.assert_array_almost_equal(result_model, expected_model)
+    testing.assert_array_almost_equal(result_obs, observation)
 
 
 def test_calc_common_area_sum() -> None:
     model = ma.array([[1, 2, 2, 3], [2, 4, 10, 1]])
     observation = ma.array([[3, 2, 1, 4], [4, 6, 8, 4]])
-    x, _ = sts.calc_common_area_sum(model, observation)
-    testing.assert_almost_equal(x, 100)
+    result, _ = sts.calc_common_area_sum(model, observation)
+    testing.assert_almost_equal(result, 100)
 
 
 def test_calc_common_area_sum_min() -> None:
@@ -160,8 +160,8 @@ def test_calc_common_area_sum_min() -> None:
     model.mask = ma.array([[1, 0, 0, 0], [0, 0, 0, 1]])
     observation = ma.array([[3, 2, 1, 4], [4, 6, 8, 4]])
     observation.mask = ma.array([[0, 1, 1, 0], [1, 0, 0, 0]])
-    x, _ = sts.calc_common_area_sum(model, observation)
-    testing.assert_almost_equal(x, 60.0)
+    result, _ = sts.calc_common_area_sum(model, observation)
+    testing.assert_almost_equal(result, 60.0)
 
 
 def test_calc_common_area_sum_nan() -> None:
@@ -169,8 +169,8 @@ def test_calc_common_area_sum_nan() -> None:
     model.mask = ma.array([[1, 0, 0, 0], [0, 0, 0, 1]])
     observation = ma.array([[3, 2, 1, 4], [4, 6, np.nan, 4]])
     observation.mask = ma.array([[0, 0, 1, 0], [1, 0, 0, 0]])
-    x, _ = sts.calc_common_area_sum(model, observation)
-    testing.assert_almost_equal(x, 25.0)
+    result, _ = sts.calc_common_area_sum(model, observation)
+    testing.assert_almost_equal(result, 25.0)
 
 
 def test_calc_common_area_sum_mask() -> None:
@@ -178,18 +178,18 @@ def test_calc_common_area_sum_mask() -> None:
     model.mask = ma.array([[1, 0, 0, 0], [0, 0, 0, 0]])
     observation = ma.array([[3, 2, 1, 4], [4, 6, 8, 4]])
     observation.mask = ma.array([[0, 0, 1, 0], [1, 0, 0, 0]])
-    x, _ = sts.calc_common_area_sum(model, observation)
-    testing.assert_almost_equal(x, 50.0)
+    result, _ = sts.calc_common_area_sum(model, observation)
+    testing.assert_almost_equal(result, 50.0)
 
 
 def test_histogram() -> None:
     model = ma.array([[1, 2, 2, 3], [2, 4, 10, 1]])
     observation = ma.array([[3, 2, 1, 4], [4, 6, 8, 4]])
-    compare_x = np.array([1, 2, 2, 3, 2, 4, 8, 1])
-    compare_y = np.array([3, 2, 1, 4, 4, 6, 8, 4])
-    x, y = sts.histogram(PRODUCT_iwc, model, observation)
-    testing.assert_array_almost_equal(x, compare_x)
-    testing.assert_array_almost_equal(y, compare_y)
+    expected_x = np.array([1, 2, 2, 3, 2, 4, 8, 1])
+    expected_y = np.array([3, 2, 1, 4, 4, 6, 8, 4])
+    result_x, result_y = sts.histogram(PRODUCT_iwc, model, observation)
+    testing.assert_array_almost_equal(result_x, expected_x)
+    testing.assert_array_almost_equal(result_y, expected_y)
 
 
 def test_histogram_mask() -> None:
@@ -197,41 +197,41 @@ def test_histogram_mask() -> None:
     model.mask = ma.array([[1, 0, 0, 0], [0, 0, 0, 1]])
     observation = ma.array([[3, 2, 1, 4], [4, 6, 8, 4]])
     observation.mask = ma.array([[0, 1, 1, 0], [1, 0, 0, 0]])
-    compare_x = ma.array([2, 2, 3, 2, 4, 8])
-    compare_y = ma.array([3, 4, 6, 8, 4])
-    x, y = sts.histogram(PRODUCT_iwc, model, observation)
-    testing.assert_array_almost_equal(x, compare_x)
-    testing.assert_array_almost_equal(y, compare_y)
+    expected_x = ma.array([2, 2, 3, 2, 4, 8])
+    expected_y = ma.array([3, 4, 6, 8, 4])
+    result_x, result_y = sts.histogram(PRODUCT_iwc, model, observation)
+    testing.assert_array_almost_equal(result_x, expected_x)
+    testing.assert_array_almost_equal(result_y, expected_y)
 
 
 def test_histogram_nan() -> None:
     model = ma.array([[1, 2, 2, 3], [2, 4, 10, 1]])
     observation = ma.array([[3, np.nan, 1, 4], [np.nan, 6, np.nan, 4]])
-    compare_x = np.array([1, 2, 2, 3, 2, 4, 6, 1])
-    compare_y = np.array([3, 1, 4, 6, 4])
-    x, y = sts.histogram(PRODUCT_iwc, model, observation)
-    testing.assert_array_almost_equal(x, compare_x)
-    testing.assert_array_almost_equal(y, compare_y)
+    expected_x = np.array([1, 2, 2, 3, 2, 4, 6, 1])
+    expected_y = np.array([3, 1, 4, 6, 4])
+    result_x, result_y = sts.histogram(PRODUCT_iwc, model, observation)
+    testing.assert_array_almost_equal(result_x, expected_x)
+    testing.assert_array_almost_equal(result_y, expected_y)
 
 
 def test_vertical_profile() -> None:
     model = ma.array([[0, 2, 2, 3], [2, 4, 10, 1], [4, 6, 6, 8]])
     observation = ma.array([[3, 1, 1, 4], [4, 3, 8, 0], [5, 5, 3, 2]])
-    x, y = sts.vertical_profile(model, observation)
-    model = ma.array([2, 4, 6, 4])
-    observation = ma.array([4, 3, 4, 2])
-    testing.assert_array_almost_equal(x, model)
-    testing.assert_array_almost_equal(y, observation)
+    result_model, result_obs = sts.vertical_profile(model, observation)
+    expected_model = ma.array([2, 4, 6, 4])
+    expected_obs = ma.array([4, 3, 4, 2])
+    testing.assert_array_almost_equal(result_model, expected_model)
+    testing.assert_array_almost_equal(result_obs, expected_obs)
 
 
 def test_vertical_profile_nan() -> None:
     model = ma.array([[0, 2, 2, 3], [2, 4, 10, 1], [4, 6, 6, 8]])
     observation = ma.array([[3, 1, 1, np.nan], [np.nan, 3, 8, 0], [5, 5, 3, 2]])
-    x, y = sts.vertical_profile(model, observation)
-    model = ma.array([2, 4, 6, 4])
-    observation = ma.array([4, 3, 4, 1])
-    testing.assert_array_almost_equal(x, model)
-    testing.assert_array_almost_equal(y, observation)
+    result_model, result_obs = sts.vertical_profile(model, observation)
+    expected_model = ma.array([2, 4, 6, 4])
+    expected_obs = ma.array([4, 3, 4, 1])
+    testing.assert_array_almost_equal(result_model, expected_model)
+    testing.assert_array_almost_equal(result_obs, expected_obs)
 
 
 def test_vertical_profile_mask() -> None:
@@ -239,11 +239,11 @@ def test_vertical_profile_mask() -> None:
     model.mask = ma.array([[1, 0, 0, 0], [0, 0, 0, 1], [0, 0, 1, 0]])
     observation = ma.array([[3, 1, 1, 4], [4, 3, 8, 0], [5, 5, 3, 2]])
     observation.mask = ma.array([[0, 1, 0, 0], [0, 1, 0, 1], [0, 1, 0, 0]])
-    x, y = sts.vertical_profile(model, observation)
-    model = ma.array([3, 4, 6, 5.5])
-    observation = ma.array([4, -99, 4, 3], mask=[False, True, False, False])
-    testing.assert_array_almost_equal(x, model)
-    testing.assert_array_almost_equal(y, observation)
+    result_model, result_obs = sts.vertical_profile(model, observation)
+    expected_model = ma.array([3, 4, 6, 5.5])
+    expected_obs = ma.array([4, -99, 4, 3], mask=[False, True, False, False])
+    testing.assert_array_almost_equal(result_model, expected_model)
+    testing.assert_array_almost_equal(result_obs, expected_obs)
 
 
 @pytest.mark.parametrize(
@@ -254,5 +254,5 @@ def test_vertical_profile_mask() -> None:
     ],
 )
 def test_day_stat_title(method, title) -> None:
-    x = sts.day_stat_title(method, PRODUCT_cf)
-    assert x == title
+    result = sts.day_stat_title(method, PRODUCT_cf)
+    assert result == title

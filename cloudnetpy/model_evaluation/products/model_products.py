@@ -1,6 +1,4 @@
-import importlib
 import logging
-import os.path
 from os import PathLike
 
 import numpy as np
@@ -8,9 +6,16 @@ import numpy.typing as npt
 from numpy import ma
 
 from cloudnetpy.datasource import DataSource
-from cloudnetpy.model_evaluation.model_metadata import MODELS, VARIABLES
-from cloudnetpy.model_evaluation.utils import file_exists
-from cloudnetpy.utils import isscalar
+from cloudnetpy.exceptions import ModelDataError
+from cloudnetpy.model_evaluation.model_metadata import (
+    ALTITUDE_LIMIT,
+    COMMON_VARIABLES,
+    CYCLE_VARIABLES,
+    LEVEL_DIMENSION,
+    MODEL_PREFIX,
+    MODEL_VARIABLE_NAMES,
+    OPTIONAL_IWC_VARIABLES,
+)
 
 
 class ModelManager(DataSource):
@@ -19,16 +24,17 @@ class ModelManager(DataSource):
     Args:
         model_file (str): Path to source model file.
         model (str): Name of model
-        output_file (str): name of output file name and path to save data
         product (str): name of product to generate
 
     Notes:
-        For this class to work, needed information of model in use should be found in
-        model_metadata.py
+        Model files are expected to be harmonized, so all models share the
+        same variable names and units. The only model-specific quantity is the
+        number of vertical levels, which is derived from the model height and
+        the shared `ALTITUDE_LIMIT`.
 
-        Output_file is given for saving all cycles to same nc-file. Some variables
-        are same in control run and cycles so checking existence of output-file
-        prevents duplicates as well as unnecessary processing.
+        One :class:`ModelManager` (and one output file) corresponds to exactly
+        one model run. The model's own fields are stored with the `model_`
+        prefix; the model identity is kept in the file's global attributes.
 
         Class inherits DataSource interface from CloudnetPy.
     """
@@ -37,90 +43,118 @@ class ModelManager(DataSource):
         self,
         model_file: str | PathLike,
         model: str,
-        output_file: str | PathLike,
         product: str,
-        *,
-        check_file: bool = True,
     ) -> None:
         super().__init__(model_file)
         self.model = model
-        self.model_info = MODELS[model]
-        self.model_vars = VARIABLES["variables"]
         self._product = product
         self.keys: dict = {}
-        self._is_file = file_exists(output_file) if check_file else False
-        self.cycle = self._read_cycle_name(model_file)
+        self._n_levels = self._read_number_of_levels()
         self._add_variables()
         self._generate_products()
         self.date: list = []
         self.wind = self._calculate_wind_speed()
         self.resolution_h = self._get_horizontal_resolution()
 
-    def _read_cycle_name(self, model_file: str | PathLike) -> str:
-        """Get cycle name from model_metadata.py for saving variable name(s)."""
-        basename = os.path.basename(model_file)
-        try:
-            cycles = self.model_info.cycle
-            if cycles is None:
-                return ""
-            cycles_split = [x.strip() for x in cycles.split(",")]
-            for cycle in cycles_split:
-                if cycle in basename:
-                    return f"_{cycle}"
-        except AttributeError:
-            return ""
-        return ""
+    def _read_number_of_levels(self) -> int:
+        """Number of vertical levels below the altitude limit.
+
+        Model heights are ground-first and increase with level index, and the
+        number of levels below the limit is constant in time, so a single level
+        count can be used to drop the unused upper levels for any model.
+        """
+        if "height" not in self.dataset.variables:
+            msg = (
+                f"Model '{self.model}' is missing the 'height' variable. "
+                "It needs to be added to the model file."
+            )
+            raise ModelDataError(msg)
+        height_var = self.dataset.variables["height"]
+        if LEVEL_DIMENSION not in height_var.dimensions:
+            msg = (
+                f"Model '{self.model}' height is missing the "
+                f"'{LEVEL_DIMENSION}' dimension. It needs to be fixed in the "
+                "model file."
+            )
+            raise ModelDataError(msg)
+        height = self.to_m(height_var)
+        below_limit = (
+            np.any(height < ALTITUDE_LIMIT, axis=0)
+            if height.ndim > 1
+            else height < ALTITUDE_LIMIT
+        )
+        return int(np.sum(below_limit))
 
     def _generate_products(self) -> None:
         """Process needed data of model to a ModelManager object."""
-        cls = importlib.import_module(__name__).ModelManager
+        methods = {"cf": self._get_cf, "iwc": self._get_iwc, "lwc": self._get_lwc}
         try:
-            name = f"_get_{self._product}"
-            getattr(cls, name)(self)
-        except AttributeError:
+            method = methods[self._product]
+        except KeyError:
             msg = f"Invalid product name: {self._product}"
             logging.exception(msg)
             raise
+        method()
 
     def _get_cf(self) -> None:
         """Collect cloud fraction straight from model file."""
-        cf_name = self.get_model_var_names(("cf",))[0]
-        cf = self.getvar(cf_name)
+        cf = self._getvar_checked("cf")
         cf = self.cut_off_extra_levels(cf)
         cf[cf < 0.05] = ma.masked
-        self.append_data(cf, f"{self.model}{self.cycle}_cf")
-        self.keys[self._product] = f"{self.model}{self.cycle}_cf"
+        self.append_data(cf, f"{MODEL_PREFIX}cf")
+        self.keys[self._product] = f"{MODEL_PREFIX}cf"
 
     def _get_iwc(self) -> None:
         iwc = self.get_water_content("iwc")
         iwc[iwc < 1e-7] = ma.masked
-        self.append_data(iwc, f"{self.model}{self.cycle}_iwc")
-        self.keys[self._product] = f"{self.model}{self.cycle}_iwc"
+        self.append_data(iwc, f"{MODEL_PREFIX}iwc")
+        self.keys[self._product] = f"{MODEL_PREFIX}iwc"
 
     def _get_lwc(self) -> None:
         lwc = self.get_water_content("lwc")
         lwc[lwc < 1e-5] = ma.masked
-        self.append_data(lwc, f"{self.model}{self.cycle}_lwc")
-        self.keys[self._product] = f"{self.model}{self.cycle}_lwc"
+        self.append_data(lwc, f"{MODEL_PREFIX}lwc")
+        self.keys[self._product] = f"{MODEL_PREFIX}lwc"
 
     @staticmethod
     def get_model_var_names(args: tuple) -> list:
-        var = []
-        for arg in args:
-            var.append(VARIABLES[arg].long_name)
-        return var
+        return [MODEL_VARIABLE_NAMES[arg] for arg in args]
+
+    def _getvar_checked(self, *internal_keys: str) -> npt.NDArray:
+        """Fetch a model variable, raising a clear error if it is missing."""
+        names = [MODEL_VARIABLE_NAMES[key] for key in internal_keys]
+        try:
+            return self.getvar(*names)
+        except KeyError as err:
+            msg = (
+                f"Model '{self.model}' is missing variable '{names[0]}' "
+                f"required for product '{self._product}'."
+            )
+            raise ModelDataError(msg) from err
 
     def get_water_content(self, var: str) -> npt.NDArray:
-        p_name = self.get_model_var_names(("p",))[0]
-        t_name = self.get_model_var_names(("T",))[0]
-        lwc_name = self.get_model_var_names((var,))[0]
-        p = self.getvar(p_name)
-        t = self.getvar(t_name)
-        q = self.getvar(lwc_name)
+        p = self._getvar_checked("p")
+        t = self._getvar_checked("T")
+        q = self._get_mixing_ratio(var)
         wc = self._calc_water_content(q, p, t)
         wc = self.cut_off_extra_levels(wc)
         wc[wc < 0.0] = ma.masked
         return wc
+
+    def _get_mixing_ratio(self, var: str) -> npt.NDArray:
+        """Mixing ratio for a water-content product.
+
+        For ice (`iwc`) the total frozen-condensate mixing ratio is returned:
+        the required cloud-ice field plus any snow/graupel categories present in
+        the model file. This keeps the model IWC consistent with the observed
+        IWC, which also includes precipitating ice.
+        """
+        q = self._getvar_checked(var)
+        if var == "iwc":
+            for name in OPTIONAL_IWC_VARIABLES:
+                if name in self.dataset.variables:
+                    q = q + self.getvar(name)
+        return q
 
     @staticmethod
     def _calc_water_content(
@@ -129,50 +163,27 @@ class ModelManager(DataSource):
         return q * p / (287 * t)
 
     def _add_variables(self) -> None:
-        """Add basic variables off model and cycle."""
+        """Add common coordinate variables and the model's own fields."""
 
-        def _add_common_variables() -> None:
-            """Model variables that are always the same within cycles."""
-            wanted_vars = self.model_vars.common_var
-            if wanted_vars is None:
-                msg = f"Model {self.model} has no common variables"
-                raise ValueError(msg)
-            wanted_vars_split = [x.strip() for x in wanted_vars.split(",")]
-            for var in wanted_vars_split:
-                if var in self.dataset.variables:
-                    data = self.dataset.variables[var][:]
-                    if not isscalar(data) and len(data) > 25:
-                        data = self.cut_off_extra_levels(self.dataset.variables[var][:])
-                    self.append_data(data, f"{var}")
+        def _add_variable(var: str, key: str) -> None:
+            ncvar = self.dataset.variables[var]
+            data = ncvar[:]
+            if LEVEL_DIMENSION in ncvar.dimensions:
+                data = self.cut_off_extra_levels(data)
+            self.append_data(data, key)
 
-        def _add_cycle_variables() -> None:
-            """Add cycle depending variables."""
-            wanted_vars = self.model_vars.cycle_var
-            if wanted_vars is None:
-                msg = f"Model {self.model} has no cycle variables"
-                raise ValueError(msg)
-            wanted_vars_split = [x.strip() for x in wanted_vars.split(",")]
-            for var in wanted_vars_split:
-                if var in self.dataset.variables:
-                    data = self.dataset.variables[var][:]
-                    if data.ndim > 1 or len(data) > 25:
-                        data = self.cut_off_extra_levels(self.dataset.variables[var][:])
-                    self.append_data(data, f"{self.model}{self.cycle}_{var}")
-                if var == "height":
-                    self.keys["height"] = f"{self.model}{self.cycle}_{var}"
-
-        if not self._is_file:
-            _add_common_variables()
-        _add_cycle_variables()
+        for var in COMMON_VARIABLES:
+            if var in self.dataset.variables:
+                _add_variable(var, var)
+        for var in CYCLE_VARIABLES:
+            if var in self.dataset.variables:
+                _add_variable(var, f"{MODEL_PREFIX}{var}")
+            if var == "height":
+                self.keys["height"] = f"{MODEL_PREFIX}{var}"
 
     def cut_off_extra_levels(self, data: npt.NDArray) -> npt.NDArray:
-        """Remove unused levels (over 22km) from model data."""
-        try:
-            level = self.model_info.level
-        except KeyError:
-            return data
-
-        return data[:, :level] if data.ndim > 1 else data[:level]
+        """Remove unused levels (above the altitude limit) from model data."""
+        return data[:, : self._n_levels] if data.ndim > 1 else data[: self._n_levels]
 
     def _calculate_wind_speed(self) -> npt.NDArray:
         """Real wind from x- and y-components."""
@@ -183,5 +194,20 @@ class ModelManager(DataSource):
         return np.sqrt(ma.power(u.data, 2) + ma.power(v.data, 2))
 
     def _get_horizontal_resolution(self) -> float:
-        h_res = self.getvar("horizontal_resolution")
-        return float(np.unique(h_res.data)[0])
+        try:
+            h_res = self.getvar("horizontal_resolution")
+        except KeyError as err:
+            msg = (
+                f"Model '{self.model}' is missing 'horizontal_resolution'. "
+                "It needs to be added to the model file."
+            )
+            raise ModelDataError(msg) from err
+        unique = np.unique(ma.masked_invalid(h_res).compressed())
+        if unique.size != 1 or unique[0] <= 0:
+            msg = (
+                f"Model '{self.model}' has invalid horizontal_resolution "
+                f"({unique.tolist()}); expected a single positive value. "
+                "It needs to be fixed in the model file."
+            )
+            raise ModelDataError(msg)
+        return float(unique[0])

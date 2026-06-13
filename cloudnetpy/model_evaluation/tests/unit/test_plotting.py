@@ -33,40 +33,6 @@ def test_get_cf_title_cycle(key) -> None:
     assert x == value
 
 
-@pytest.mark.parametrize(
-    "key, value",
-    [
-        ("iwc", "Product"),
-        ("iwc_att", "Product with good attenuation"),
-        ("iwc_rain", "Product with rain"),
-        ("iwc_adv", "Product"),
-        ("iwc_att_adv", "Product with good attenuation"),
-        ("iwc_rain_adv", "Product with rain"),
-    ],
-)
-def test_get_iwc_title(key, value) -> None:
-    field_name = key + "_" + MODEL
-    x = pl._get_iwc_title(field_name, VARIABLE_INFO)
-    assert x == value
-
-
-@pytest.mark.parametrize(
-    "key, value",
-    [
-        ("iwc", "Product"),
-        ("iwc_att", "Product with good attenuation"),
-        ("iwc_rain", "Product with rain"),
-        ("iwc_adv", "Product"),
-        ("iwc_att_adv", "Product with good attenuation"),
-        ("iwc_rain_adv", "Product with rain"),
-    ],
-)
-def test_get_iwc_title_cycle(key, value) -> None:
-    field_name = key + "_" + MODEL + "_001"
-    x = pl._get_iwc_title(field_name, VARIABLE_INFO)
-    assert x == value
-
-
 def test_get_product_title() -> None:
     value = "Product"
     x = pl._get_product_title(VARIABLE_INFO)
@@ -96,20 +62,6 @@ def test_get_cf_title_stat(key) -> None:
     value = "Product volume"
     if "A" in key:
         value = "Product area"
-    assert x == value
-
-
-@pytest.mark.parametrize(
-    "key, value",
-    [
-        ("iwc", "Product"),
-        ("iwc_att", "Product with good attenuation"),
-        ("iwc_rain", "Product with rain"),
-    ],
-)
-def test_get_iwc_title_stat(key, value) -> None:
-    field_name = key + "_" + MODEL
-    x = pl._get_iwc_title_stat(field_name, VARIABLE_INFO)
     assert x == value
 
 

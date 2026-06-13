@@ -25,6 +25,26 @@ class IceCoefficients(NamedTuple):
     c: float
 
 
+def get_ice_coefficients(product: str, wl_band: str) -> IceCoefficients:
+    """Returns coefficients for ice retrieval.
+
+    References:
+        Hogan et.al. 2006, https://doi.org/10.1175/JAM2340.1
+    """
+    msg = f"Unsupported band: {wl_band}"
+    if product == "ier":
+        if wl_band == "Ka":
+            return IceCoefficients(0.878, -0.000205, -0.0015, 0.0016, -1.52)
+        if wl_band == "W":
+            return IceCoefficients(0.669, -0.000296, -0.00193, -0.000, -1.502)
+        raise ValueError(msg)
+    if wl_band == "Ka":
+        return IceCoefficients(0.878, 0.000242, -0.0186, 0.0699, -1.63)
+    if wl_band == "W":
+        return IceCoefficients(0.669, 0.000580, -0.00706, 0.0923, -0.992)
+    raise ValueError(msg)
+
+
 @dataclass
 class CategoryBits:
     droplet: NDArray[np.bool_]
@@ -214,23 +234,7 @@ class IceSource(DataSource):
         self.append_data(retrieval_status, f"{self.product}_retrieval_status")
 
     def _get_coefficients(self) -> IceCoefficients:
-        """Returns coefficients for ice effective radius retrieval.
-
-        References:
-            Hogan et.al. 2006, https://doi.org/10.1175/JAM2340.1
-        """
-        msg = f"Unsupported band: {self.wl_band}"
-        if self.product == "ier":
-            if self.wl_band == "Ka":
-                return IceCoefficients(0.878, -0.000205, -0.0015, 0.0016, -1.52)
-            if self.wl_band == "W":
-                return IceCoefficients(0.669, -0.000296, -0.00193, -0.000, -1.502)
-            raise ValueError(msg)
-        if self.wl_band == "Ka":
-            return IceCoefficients(0.878, 0.000242, -0.0186, 0.0699, -1.63)
-        if self.wl_band == "W":
-            return IceCoefficients(0.669, 0.000580, -0.00706, 0.0923, -0.992)
-        raise ValueError(msg)
+        return get_ice_coefficients(self.product, self.wl_band)
 
     def _convert_z(self, z_variable: str = "Z") -> npt.NDArray:
         """Calculates temperature weighted z, i.e. ice effective radius [m]."""

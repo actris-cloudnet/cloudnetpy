@@ -8,119 +8,123 @@ from cloudnetpy.model_evaluation.products import tools
 from cloudnetpy.model_evaluation.products.model_products import ModelManager
 
 MODEL = "ecmwf"
-OUTPUT_FILE = "/"
 PRODUCT = "iwc"
 
 
-def test_model_file_list() -> None:
-    name = "ec"
-    models = ["00_ec_1", "00_ec_2", "00_ec_3"]
-    tools.check_model_file_list(name, models)
-
-
-def test_model_file_list_fail() -> None:
-    name = "ec"
-    models = ["00_ec_1", "ac_1", "00_ec_2", "00_ec_3"]
-    with pytest.raises(AttributeError):
-        tools.check_model_file_list(name, models)
-
-
 def test_time2datetime() -> None:
-    time_list = np.array(range(10))
-    d = datetime(2020, 4, 7, 0, 0, 0, tzinfo=timezone.utc)
-    x = tools.time2datetime(time_list, d)
-    compare = [
-        datetime(2020, 4, 7, 0, 0, 0, tzinfo=timezone.utc) + timedelta(hours=1 * x)
-        for x in range(10)
+    time = np.array(range(10))
+    date = datetime(2020, 4, 7, 0, 0, 0, tzinfo=timezone.utc)
+    result = tools.time2datetime(time, date)
+    expected = [
+        datetime(2020, 4, 7, 0, 0, 0, tzinfo=timezone.utc) + timedelta(hours=1 * i)
+        for i in range(10)
     ]
-    assert all(a == b for a, b in zip(x, compare))
+    assert all(a == b for a, b in zip(result, expected))
 
 
 def test_rebin_edges() -> None:
     data = np.array([1, 3, 6, 10, 15, 21, 28])
-    compare = np.array([-1, 2, 4.5, 8, 12.5, 18, 24.5, 35])
-    x = tools.rebin_edges(data)
-    testing.assert_array_almost_equal(x, compare)
+    expected = np.array([-1, 2, 4.5, 8, 12.5, 18, 24.5, 35])
+    result = tools.rebin_edges(data)
+    testing.assert_array_almost_equal(result, expected)
 
 
 def test_calculate_advection_time_hour(model_file) -> None:
-    obj = ModelManager(str(model_file), MODEL, OUTPUT_FILE, PRODUCT)
-    h = obj.resolution_h
-    v = np.array([[1, 2, 3], [2, 3, 4], [3, 4, 5]])
-    s = 1
-    compare = h * 1000 / v / 60**2
-    compare[compare > 1 / s] = 1 / s
-    compare = np.asarray([[timedelta(hours=float(t)) for t in tt] for tt in compare])
-    x = tools.calculate_advection_time(int(h), ma.masked_array(v), s)
-    assert x.all() == compare.all()
+    model = ModelManager(str(model_file), MODEL, PRODUCT)
+    resolution = model.resolution_h
+    wind = np.array([[1, 2, 3], [2, 3, 4], [3, 4, 5]])
+    sampling = 1
+    expected = resolution * 1000 / wind / 60**2
+    expected[expected > 1 / sampling] = 1 / sampling
+    expected = np.asarray([[timedelta(hours=float(t)) for t in tt] for tt in expected])
+    result = tools.calculate_advection_time(resolution, ma.masked_array(wind), sampling)
+    assert result.all() == expected.all()
 
 
 def test_calculate_advection_time_10min(model_file) -> None:
-    obj = ModelManager(str(model_file), MODEL, OUTPUT_FILE, PRODUCT)
-    h = obj.resolution_h
-    v = np.array([[1, 2, 3], [2, 3, 4], [3, 4, 5]])
-    s = 6
-    compare = h * 1000 / v / 60**2
-    compare[compare > 1 / s] = 1 / s
-    compare = np.asarray([[timedelta(hours=float(t)) for t in tt] for tt in compare])
-    x = tools.calculate_advection_time(int(h), ma.masked_array(v), s)
-    assert x.all() == compare.all()
+    model = ModelManager(str(model_file), MODEL, PRODUCT)
+    resolution = model.resolution_h
+    wind = np.array([[1, 2, 3], [2, 3, 4], [3, 4, 5]])
+    sampling = 6
+    expected = resolution * 1000 / wind / 60**2
+    expected[expected > 1 / sampling] = 1 / sampling
+    expected = np.asarray([[timedelta(hours=float(t)) for t in tt] for tt in expected])
+    result = tools.calculate_advection_time(resolution, ma.masked_array(wind), sampling)
+    assert result.all() == expected.all()
+
+
+def test_calculate_advection_time_fractional_resolution() -> None:
+    # A sub-kilometre / fractional resolution must not be truncated to int.
+    resolution = 0.5
+    wind = ma.masked_array([[2.0]])
+    sampling = 6
+    result = tools.calculate_advection_time(resolution, wind, sampling)
+    expected = timedelta(hours=resolution * 1000 / 2.0 / 60**2)
+    assert result[0, 0] == expected
 
 
 def test_get_1d_indices() -> None:
-    w = (1, 5)
-    d = ma.array([0, 1, 2, 3, 4, 5, 6, 7])
-    compare = ma.array([0, 1, 1, 1, 1, 0, 0, 0])
-    x = tools.get_1d_indices(w, d)
-    testing.assert_array_almost_equal(x, compare)
+    window = (1, 5)
+    data = ma.array([0, 1, 2, 3, 4, 5, 6, 7])
+    expected = ma.array([0, 1, 1, 1, 1, 0, 0, 0])
+    result = tools.get_1d_indices(window, data)
+    testing.assert_array_almost_equal(result, expected)
 
 
 def test_get_1d_indices_mask() -> None:
-    w = (1, 5)
-    d = ma.array([0, 1, 2, 3, 4, 5, 6, 7])
-    m = np.array([0, 0, 1, 0, 0, 1, 0, 1], dtype=bool)
-    x = tools.get_1d_indices(w, d, m)
-    d[m] = ma.masked
-    compare = ma.array(
+    window = (1, 5)
+    data = ma.array([0, 1, 2, 3, 4, 5, 6, 7])
+    mask = np.array([0, 0, 1, 0, 0, 1, 0, 1], dtype=bool)
+    result = tools.get_1d_indices(window, data, mask)
+    data[mask] = ma.masked
+    expected = ma.array(
         [0, 1, -99, 1, 1, -99, 0, -99],
         mask=[False, False, True, False, False, True, False, True],
     )
-    testing.assert_array_almost_equal(x, compare)
+    testing.assert_array_almost_equal(result, expected)
 
 
 def test_get_adv_indices() -> None:
-    mt = 3
-    at = 4
-    d = ma.array([0, 1, 2, 3, 4, 5, 6, 7])
-    compare: ma.MaskedArray = ma.array([0, 1, 1, 1, 1, 0, 0, 0], dtype=bool)
-    x = tools.get_adv_indices(mt, at, d)
-    testing.assert_array_almost_equal(x, compare)
+    model_t = 3
+    adv_t = 4
+    data = ma.array([0, 1, 2, 3, 4, 5, 6, 7])
+    expected: ma.MaskedArray = ma.array([0, 1, 1, 1, 1, 0, 0, 0], dtype=bool)
+    result = tools.get_adv_indices(model_t, adv_t, data)
+    testing.assert_array_almost_equal(result, expected)
 
 
 def test_get_adv_indices_mask() -> None:
-    mt = 3
-    at = 4
-    d: ma.MaskedArray = ma.array([0, 1, 2, 3, 4, 5, 6, 7])
-    m: ma.MaskedArray = ma.array([0, 0, 1, 0, 0, 1, 0, 1], dtype=bool)
-    x = tools.get_adv_indices(mt, at, d, m)
-    d[m] = ma.masked
-    compare = ma.array(
+    model_t = 3
+    adv_t = 4
+    data: ma.MaskedArray = ma.array([0, 1, 2, 3, 4, 5, 6, 7])
+    mask: ma.MaskedArray = ma.array([0, 0, 1, 0, 0, 1, 0, 1], dtype=bool)
+    result = tools.get_adv_indices(model_t, adv_t, data, mask)
+    data[mask] = ma.masked
+    expected = ma.array(
         [0, 1, -99, 1, 1, -99, 0, 0],
         mask=[False, False, True, False, False, True, False, False],
     )
-    testing.assert_array_almost_equal(x, compare)
+    testing.assert_array_almost_equal(result, expected)
 
 
 def test_obs_windows_size() -> None:
-    i = np.array([0, 0, 1, 1, 1, 1, 0], dtype=bool)
-    j = np.array([0, 1, 1, 1, 0, 0, 0], dtype=bool)
-    x = tools.get_obs_window_size(i, j)
-    assert x is not None
-    testing.assert_almost_equal(x, (4, 3))
+    ind_x = np.array([0, 0, 1, 1, 1, 1, 0], dtype=bool)
+    ind_y = np.array([0, 1, 1, 1, 0, 0, 0], dtype=bool)
+    result = tools.get_obs_window_size(ind_x, ind_y)
+    assert result is not None
+    testing.assert_almost_equal(result, (4, 3))
 
 
 def test_obs_windows_size_none() -> None:
-    i = np.array([0, 0, 1, 1, 1, 1, 0], dtype=bool)
-    j = np.array([0, 0, 0, 0, 0, 0, 0], dtype=bool)
-    x = tools.get_obs_window_size(i, j)
-    assert x is None
+    ind_x = np.array([0, 0, 1, 1, 1, 1, 0], dtype=bool)
+    ind_y = np.array([0, 0, 0, 0, 0, 0, 0], dtype=bool)
+    result = tools.get_obs_window_size(ind_x, ind_y)
+    assert result is None
+
+
+def test_obs_windows_size_first_index() -> None:
+    ind_x = np.array([1, 0, 0, 0], dtype=bool)
+    ind_y = np.array([1, 0, 0, 0], dtype=bool)
+    result = tools.get_obs_window_size(ind_x, ind_y)
+    assert result is not None
+    testing.assert_almost_equal(result, (1, 1))

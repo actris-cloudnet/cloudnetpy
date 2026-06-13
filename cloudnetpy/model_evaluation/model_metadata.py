@@ -1,50 +1,60 @@
-from typing import NamedTuple
+"""Model-agnostic configuration for the model evaluation subpackage.
 
+All model files consumed here are expected to be harmonized to a common set of
+variable names and units (temperature [K], pressure [Pa], qi/ql/
+cloud_fraction [1], uwind/vwind [m s-1], height [m]). There is therefore no
+per-model variable mapping: the only thing that differs between models is the
+number of vertical levels, which is handled dynamically via `ALTITUDE_LIMIT`.
+"""
 
-class ModelMetaData(NamedTuple):
-    long_name: str | None = None
-    cycle_var: str | None = None
-    common_var: str | None = None
-    cycle: str | None = None
-    level: int | None = None
-    model_name: str | None = None
-
-
-MODELS = {
-    "ecmwf": ModelMetaData(
-        model_name="ECMWF",
-        long_name="European Centre for Medium-Range Weather Forecasts",
-        level=88,
-    ),
-    "icon": ModelMetaData(
-        model_name="ICON-Iglo",
-        long_name="Icosahedral Nonhydrostatic Model",
-        level=62,
-        cycle="12-23, 24-35, 36-47",
-    ),
-    "era5": ModelMetaData(
-        model_name="ERA5",
-        long_name="Earth Re-Analysis System",
-        level=88,
-        cycle="1-12, 7-18",
-    ),
-    "harmonie-fmi-6-11": ModelMetaData(
-        model_name="HARMONIE-AROME",
-        long_name="the HIRLAM–ALADIN Research on Mesoscale Operational NWP in Euromed",
-        level=65,
-        cycle="6-11",
-    ),
+# Mapping from internal product keys to the harmonized model-file variable
+# names. These names are expected to be identical for every model.
+MODEL_VARIABLE_NAMES = {
+    "T": "temperature",
+    "p": "pressure",
+    "h": "height",
+    "iwc": "qi",
+    "lwc": "ql",
+    "cf": "cloud_fraction",
 }
 
-VARIABLES = {
-    "variables": ModelMetaData(
-        common_var="time, level, latitude, longitude, horizontal_resolution",
-        cycle_var="forecast_time, height",
-    ),
-    "T": ModelMetaData(long_name="temperature"),
-    "p": ModelMetaData(long_name="pressure"),
-    "h": ModelMetaData(long_name="height"),
-    "iwc": ModelMetaData(long_name="qi"),
-    "lwc": ModelMetaData(long_name="ql"),
-    "cf": ModelMetaData(long_name="cloud_fraction"),
+# Optional frozen-condensate mixing-ratio variables summed into the model ice
+# water content alongside the required cloud-ice field `qi`. Some models (e.g.
+# ECMWF) carry all grid-mean ice in `qi`, while others (e.g. HARMONIE) leave
+# `qi` empty and store the frozen mass in the snow and graupel categories. The
+# observed IWC includes this precipitating ice, so it must be included in the
+# model IWC too. Components absent from a given model file are simply skipped.
+OPTIONAL_IWC_VARIABLES = ("qs", "qg")
+
+# Prefix for the model's own (simulated) fields in the L3 output. Observation
+# fields downsampled to the model grid are stored without a prefix. The model
+# identity itself is stored in the file's global attributes, not in variable
+# names, so one L3 file holds exactly one model run.
+MODEL_PREFIX = "model_"
+
+# Name of the vertical dimension in the harmonized model files. The vertical
+# axis is expected under this dimension for every model.
+LEVEL_DIMENSION = "level"
+
+# Human-readable names for the observation products, used in file titles.
+PRODUCT_NAMES = {
+    "cf": "cloud fraction",
+    "iwc": "ice water content",
+    "lwc": "liquid water content",
 }
+
+# Coordinate / metadata variables that are identical between forecast cycles.
+COMMON_VARIABLES = (
+    "time",
+    "level",
+    "latitude",
+    "longitude",
+    "horizontal_resolution",
+)
+
+# Variables that may differ between forecast cycles.
+CYCLE_VARIABLES = ("forecast_time", "height")
+
+# Vertical levels above this altitude (m) are dropped: the radar cannot observe
+# them and the model grid above is not evaluated.
+ALTITUDE_LIMIT = 22000.0

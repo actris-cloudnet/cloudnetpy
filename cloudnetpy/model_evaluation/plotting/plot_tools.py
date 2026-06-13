@@ -4,23 +4,42 @@ import numpy.typing as npt
 from matplotlib.axes import Axes
 from numpy import ma
 
-from cloudnetpy.model_evaluation.model_metadata import MODELS
+from cloudnetpy.model_evaluation.model_metadata import MODEL_PREFIX
+
+
+def read_model_id(nc_file: str) -> str:
+    """Returns the model identifier (e.g. "ecmwf").
+
+    Stored as the `model_id` global attribute when the L3 file is created.
+    """
+    with netCDF4.Dataset(nc_file) as nc:
+        return nc.model_id
+
+
+def read_model_name(nc_file: str, model: str) -> str:
+    """Returns a human-readable model name for plot titles.
+
+    The model description is stored as the `model_name` global attribute when
+    the file is created (from the model file's `source`). Falls back to the
+    model identifier if the attribute is missing.
+    """
+    with netCDF4.Dataset(nc_file) as nc:
+        return getattr(nc, "model_name", model)
 
 
 def parse_wanted_names(
     nc_file: str,
     name: str,
-    model: str,
     variables: list | None = None,
     *,
     advance: bool = False,
 ) -> tuple[list, list]:
     """Returns standard and advection lists of product types to plot."""
-    names = variables or parse_dataset_keys(nc_file, name, advance=advance, model=model)
+    names = variables or parse_dataset_keys(nc_file, name, advance=advance)
     standard_n = [n for n in names if name in n and "adv" not in n]
-    standard_n = sort_model2first_element(standard_n, model)
+    standard_n = sort_model2first_element(standard_n)
     advection_n = [n for n in names if name in n and "adv" in n]
-    model_names = [n for n in names if f"{model}_" in n and f"_{model}_" not in n]
+    model_names = [n for n in names if n.startswith(MODEL_PREFIX)]
     for i, model_n in enumerate(model_names):
         advection_n.insert(0 + i, model_n)
     if len(advection_n) < len(standard_n):
@@ -30,68 +49,34 @@ def parse_wanted_names(
     return standard_n, advection_n
 
 
-def parse_dataset_keys(
-    nc_file: str,
-    product: str,
-    *,
-    advance: bool,
-    model: str,
-) -> list:
-    names = list(netCDF4.Dataset(nc_file).variables.keys())
-    a_names = ["cirrus", "snow"]
-    model_vars = []
-    for n in names:
-        if model not in n or (model in n and product not in n):
-            model_vars.append(n)
+def parse_dataset_keys(nc_file: str, product: str, *, advance: bool) -> list:
+    with netCDF4.Dataset(nc_file) as nc:
+        names = [n for n in nc.variables if product in n]
     if not advance:
-        for a in a_names:
-            for n in names:
-                if a in n:
-                    model_vars.append(n)
-    for m in model_vars:
-        names.remove(m)
+        names = [n for n in names if "cirrus" not in n and "snow" not in n]
     return names
 
 
-def sort_model2first_element(a: list, model: str) -> list:
-    mm = [n for n in a if f"{model}_" in n and f"_{model}_" not in n]
+def sort_model2first_element(a: list) -> list:
+    mm = [n for n in a if n.startswith(MODEL_PREFIX)]
     for i, m in enumerate(mm):
         a.remove(m)
         a.insert(0 + i, m)
     return a
 
 
-def sort_cycles(names: list, model: str) -> tuple[list, list]:
-    model_info = MODELS[model]
-    cycles = model_info.cycle
-    if cycles is None:
-        raise AttributeError
-    cycles_split = [x.strip() for x in cycles.split(",")]
-    cycles_names = [[name for name in names if cycle in name] for cycle in cycles_split]
-    cycles_names.sort()
-    cycles_names = [c for c in cycles_names if c]
-    cycles_new = [c for c in cycles_split for name in cycles_names if c in name[0]]
-    return cycles_names, cycles_new
-
-
-def read_data_characters(nc_file: str, name: str, model: str) -> tuple:
+def read_data_characters(nc_file: str, name: str) -> tuple:
     """Gets dimensions and data for plotting."""
-    nc = netCDF4.Dataset(nc_file)
-    data = nc.variables[name][:]
-    data = mask_small_values(data, name)
-    x = nc.variables["time"][:]
-    x = reshape_1d2nd(x, data)
-    try:
-        y = nc.variables[f"{model}_height"][:]
-    except KeyError as err:
-        model_info = MODELS[model]
-        cycles = model_info.cycle
-        if cycles is None:
-            msg = f"Invalid model: {model}"
+    with netCDF4.Dataset(nc_file) as nc:
+        data = nc.variables[name][:]
+        data = mask_small_values(data, name)
+        x = nc.variables["time"][:]
+        x = reshape_1d2nd(x, data)
+        try:
+            y = nc.variables[f"{MODEL_PREFIX}height"][:]
+        except KeyError as err:
+            msg = f"Missing variable {MODEL_PREFIX}height"
             raise RuntimeError(msg) from err
-        cycles_split = [x.strip() for x in cycles.split(",")]
-        cycle = [cycle for cycle in cycles_split if cycle in name]
-        y = nc.variables[f"{model}_{cycle[0]}_height"][:]
     y = y / 1000
     try:
         mask = y.mask

@@ -20,7 +20,7 @@ from cloudnet_api_client.containers import Instrument, ProductMetadata, RawMetad
 
 from cloudnetpy import concat_lib, instruments
 from cloudnetpy.categorize import CategorizeInput, generate_categorize
-from cloudnetpy.exceptions import PlottingError
+from cloudnetpy.exceptions import ModelDataError, PlottingError
 from cloudnetpy.plotting import PlotParameters, generate_figure
 
 if TYPE_CHECKING:
@@ -28,6 +28,17 @@ if TYPE_CHECKING:
 
 
 cloudnet_api_url: Final = "https://cloudnet.fmi.fi/api/"
+
+# Model-evaluation L3 products and the observation product they downsample.
+# The API does not declare these source products, so they are mapped here.
+L3_SOURCE_PRODUCTS: Final = {
+    "l3-cf": "categorize",
+    "l3-iwc": "iwc",
+    "l3-lwc": "lwc",
+}
+
+# Model used for L3 products when none is given with --model.
+DEFAULT_L3_MODEL: Final = "ecmwf"
 
 
 def run(args: argparse.Namespace, tmpdir: str, client: APIClient) -> None:
@@ -96,6 +107,16 @@ def run(args: argparse.Namespace, tmpdir: str, client: APIClient) -> None:
         if epsilon_filepath is not None:
             _plot(epsilon_filepath, "epsilon-radar", args)
 
+    # Model evaluation L3 products (e.g. l3-cf)
+    for product in args.products:
+        base_product = _parse_instrument(product)[0]
+        if base_product in L3_SOURCE_PRODUCTS:
+            model = args.model or DEFAULT_L3_MODEL
+            if args.model is None:
+                logging.info("No model specified, using default '%s'", model)
+            l3_filepath = _process_l3_product(base_product, args, client, model)
+            _plot_l3(l3_filepath, base_product, args)
+
 
 def _process_epsilon_radar(
     cat_files: dict, args: argparse.Namespace, client: APIClient
@@ -115,6 +136,47 @@ def _process_epsilon_radar(
         str(radar_filepath), model_filepath, str(output_file)
     )
     logging.info("Processed epsilon-radar: %s", output_file)
+    return str(output_file)
+
+
+def _process_l3_product(
+    product: str, args: argparse.Namespace, client: APIClient, model: str
+) -> str | None:
+    obs = product.removeprefix("l3-")
+    source_product = L3_SOURCE_PRODUCTS[product]
+    product_file = _fetch_product(args, source_product, client)
+    if product_file is None:
+        logging.info("No %s data available for %s", source_product, product)
+        return None
+    model_file = _fetch_model(args, client, model)
+    if model_file is None:
+        logging.info("No model data available for %s", product)
+        return None
+    filename = f"{args.date.replace('-', '')}_{args.site}_{model}_{product}.nc"
+    output_file = _create_output_folder("evaluation", args) / filename
+    model_name = next((m.name for m in client.models() if m.id == model), model)
+    site_name = next(
+        (s.human_readable_name for s in client.sites() if s.id == args.site),
+        args.site,
+    )
+    module = importlib.import_module(
+        "cloudnetpy.model_evaluation.products.product_resampling"
+    )
+    try:
+        module.process_L3_day_product(
+            model,
+            obs,
+            model_file,
+            product_file,
+            str(output_file),
+            model_name=model_name,
+            site_name=site_name,
+            overwrite=True,
+        )
+    except ModelDataError as e:
+        logging.info("Failed to process %s: %s", product, e)
+        return None
+    logging.info("Processed %s: %s", product, output_file)
     return str(output_file)
 
 
@@ -536,9 +598,14 @@ def _fetch_product(
     return _download_product_file(meta, folder, client, force=args.force_download)
 
 
-def _fetch_model(args: argparse.Namespace, client: APIClient) -> str | None:
+def _fetch_model(
+    args: argparse.Namespace, client: APIClient, model_id: str | None = None
+) -> str | None:
     files = client.files(
-        product_id="model", model_id=args.model, date=args.date, site_id=args.site
+        product_id="model",
+        model_id=model_id or args.model,
+        date=args.date,
+        site_id=args.site,
     )
     if not files:
         logging.info("No model data available for this date")
@@ -623,6 +690,33 @@ def _plot(
         logging.info("Plotted %s: %s", product, image_name)
 
 
+def _plot_l3(
+    filepath: PathLike | str | None,
+    product: str,
+    args: argparse.Namespace,
+) -> None:
+    if filepath is None or (not args.plot and not args.show):
+        return
+    obs = product.removeprefix("l3-")
+    save_path = f"{Path(filepath).parent}/" if args.plot else None
+    var_list = args.variables.split(",") if args.variables is not None else None
+    module = importlib.import_module("cloudnetpy.model_evaluation.plotting.plotting")
+    try:
+        module.generate_L3_day_plots(
+            str(filepath),
+            obs,
+            var_list=var_list,
+            save_path=save_path,
+            show=args.show,
+            include_advection=False,
+        )
+    except (PlottingError, ValueError, KeyError) as e:
+        logging.info("Failed to plot %s: %s", product, e)
+        return
+    if args.plot:
+        logging.info("Plotted %s to %s", product, save_path)
+
+
 def _process_cat_product(product: str, categorize_file: str) -> str:
     output_file = categorize_file.replace("categorize", product)
     module = importlib.import_module("cloudnetpy.products")
@@ -648,7 +742,7 @@ def _parse_products(product_argument: str, client: APIClient) -> list[str]:
     valid_products = []
     for product in products:
         prod, _ = _parse_instrument(product)
-        if prod in valid_options:
+        if prod in valid_options or prod in L3_SOURCE_PRODUCTS:
             valid_products.append(product)
     return valid_products
 
@@ -704,7 +798,7 @@ def main() -> None:
         "-m",
         "--model",
         type=lambda arg: _parse_model(arg, client),
-        help="Model to use in categorize.",
+        help="Model to use in categorize and model evaluation (l3-*) products.",
     )
     parser.add_argument(
         "-i",

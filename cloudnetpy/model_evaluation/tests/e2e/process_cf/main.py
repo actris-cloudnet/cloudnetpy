@@ -21,7 +21,7 @@ def _process() -> None:
     product_resampling.process_L3_day_product(
         "ecmwf",
         "cf",
-        [test_file_model],
+        test_file_model,
         test_file_product,
         temp_file,
     )
