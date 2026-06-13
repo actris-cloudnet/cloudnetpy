@@ -144,14 +144,7 @@ class FigureData:
         return fig, axes_list
 
     def add_subtitle(self, fig: Figure) -> None:
-        fig.suptitle(
-            self._get_subtitle_text(),
-            fontsize=13,
-            y=0.885,
-            x=0.07,
-            horizontalalignment="left",
-            verticalalignment="bottom",
-        )
+        add_subtitle(fig, self.datetime().date(), self.file.location)
 
     def datetime(self) -> datetime:
         return datetime(
@@ -160,13 +153,6 @@ class FigureData:
             int(self.file.day),
             tzinfo=timezone.utc,
         )
-
-    def _get_subtitle_text(self) -> str:
-        measurement_date = date(
-            int(self.file.year), int(self.file.month), int(self.file.day)
-        )
-        site_name = self.file.location.replace("-", " ")
-        return f"{site_name}, {measurement_date.strftime('%d %b %Y').lstrip('0')}"
 
     def _get_valid_variables_and_indices(
         self, requested_variables: list[str]
@@ -282,12 +268,9 @@ class SubPlot:
         if self.file_type in ("cpr-validation", "cpr-tc-validation"):
             return
         resolution = 4
-        x_tick_labels = [
-            f"{int(i):02d}:00"
-            if (24 >= i >= 0 if self.options.edge_tick_labels else 24 > i > 0)
-            else ""
-            for i in np.arange(0, 24.01, resolution)
-        ]
+        x_tick_labels = get_time_tick_labels(
+            resolution, edge_tick_labels=self.options.edge_tick_labels
+        )
         self.ax.set_xticks(np.arange(0, 25, resolution, dtype=int))
         self.ax.set_xticklabels(x_tick_labels, fontsize=12)
         if self.options.minor_ticks:
@@ -1196,6 +1179,30 @@ def generate_figure(
     finally:
         if fig:
             plt.close(fig)
+
+
+def add_subtitle(fig: Figure, case_date: date, site_name: str) -> None:
+    """Adds a date/site subtitle to a figure."""
+    site = site_name.replace("-", " ")
+    text = f"{site}, {case_date.strftime('%d %b %Y').lstrip('0')}"
+    fig.suptitle(
+        text,
+        fontsize=13,
+        y=0.885,
+        x=0.07,
+        horizontalalignment="left",
+        verticalalignment="bottom",
+    )
+
+
+def get_time_tick_labels(
+    resolution: int = 4, *, edge_tick_labels: bool = False
+) -> list[str]:
+    """Returns hourly tick labels for a 0-24 h time axis."""
+    return [
+        f"{int(i):02d}:00" if (24 >= i >= 0 if edge_tick_labels else 24 > i > 0) else ""
+        for i in np.arange(0, 24.01, resolution)
+    ]
 
 
 def lin2log(*args: npt.ArrayLike) -> list[ma.MaskedArray]:

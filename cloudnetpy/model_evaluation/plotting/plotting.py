@@ -20,7 +20,13 @@ from numpy import ma
 import cloudnetpy.model_evaluation.plotting.plot_tools as p_tools
 from cloudnetpy.model_evaluation.plotting.plot_meta import ATTRIBUTES, PlotMeta
 from cloudnetpy.model_evaluation.statistics.statistical_methods import DayStatistics
-from cloudnetpy.plotting.plotting import Dimensions, get_log_cbar_tick_labels, lin2log
+from cloudnetpy.plotting.plotting import (
+    Dimensions,
+    add_subtitle,
+    get_log_cbar_tick_labels,
+    get_time_tick_labels,
+    lin2log,
+)
 
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
@@ -820,27 +826,10 @@ def set_yax(ax: Axes, max_y: float, ylabel: str | None, min_y: float = 0.0) -> N
 
 def set_xax(ax: Axes, *, include_xlimits: bool = False) -> None:
     """Sets xticks and xtick labels for plt.imshow()."""
-    ticks_x_labels = _get_standard_time_ticks(include_xlimits=include_xlimits)
+    ticks_x_labels = get_time_tick_labels(edge_tick_labels=include_xlimits)
     ax.set_xticks(np.arange(0, 25, 4, dtype=int))
     ax.set_xticklabels(ticks_x_labels, fontsize=12)
     ax.set_xlim(0, 24)
-
-
-def _get_standard_time_ticks(
-    resolution: int = 4,
-    *,
-    include_xlimits: bool = False,
-) -> list:
-    """Returns typical ticks / labels for a time vector between 0-24h."""
-    if include_xlimits:
-        return [
-            f"{int(i):02d}:00" if 24 >= i >= 0 else ""
-            for i in np.arange(0, 24.01, resolution)
-        ]
-    return [
-        f"{int(i):02d}:00" if 24 > i > 0 else ""
-        for i in np.arange(0, 24.01, resolution)
-    ]
 
 
 def set_labels(fig: Figure, ax: Axes, nc_file: str, *, sub_title: bool = True) -> date:
@@ -862,24 +851,6 @@ def read_date(nc_file: str) -> date:
     """Returns measurement date."""
     with netCDF4.Dataset(nc_file) as nc:
         return date(int(nc.year), int(nc.month), int(nc.day))
-
-
-def add_subtitle(fig: Figure, case_date: date, site_name: str) -> None:
-    """Adds subtitle into figure."""
-    text = _get_subtitle_text(case_date, site_name)
-    fig.suptitle(
-        text,
-        fontsize=13,
-        y=0.885,
-        x=0.07,
-        horizontalalignment="left",
-        verticalalignment="bottom",
-    )
-
-
-def _get_subtitle_text(case_date: date, site_name: str) -> str:
-    site_name = site_name.replace("-", " ")
-    return f"{site_name}, {case_date.strftime('%d %b %Y').lstrip('0')}"
 
 
 def _create_save_name(
