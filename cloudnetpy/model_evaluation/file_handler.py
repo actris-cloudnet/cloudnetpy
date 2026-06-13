@@ -1,12 +1,13 @@
 import os
 from datetime import datetime
 from os import PathLike
+from typing import TYPE_CHECKING
 from uuid import UUID
 
 import netCDF4
-import numpy.typing as npt
 
-from cloudnetpy import output, utils
+from cloudnetpy import output
+from cloudnetpy.model_evaluation.model_metadata import MODEL_PREFIX, PRODUCT_NAMES
 
 from .metadata import (
     CYCLE_ATTRIBUTES,
@@ -14,147 +15,101 @@ from .metadata import (
     MODEL_L3_ATTRIBUTES,
     REGRID_PRODUCT_ATTRIBUTES,
 )
-from .products.model_products import ModelManager
+
+if TYPE_CHECKING:
+    from cloudnetpy.model_evaluation.products.model_products import ModelManager
+    from cloudnetpy.model_evaluation.products.observation_products import (
+        ObservationManager,
+    )
 
 
 def update_attributes(model_downsample_variables: dict, attributes: dict) -> None:
-    """Overrides existing Cloudnet-ME Array-attributes.
-        Overrides existing attributes using hard-coded values.
-        New attributes are added.
+    """Sets variable attributes for the L3 downsampled file.
+
+    Model (simulated) fields are prefixed with ``model_``; observation fields
+    downsampled to the model grid use the bare product key.
 
     Args:
         model_downsample_variables (dict): Array instances.
-        attributes (dict): Product-specific attributes.
+        attributes (dict): Product-specific attributes (e.g. time units).
     """
-    for key in model_downsample_variables:
-        x = len(key.split("_")) - 1
-        key_parts = key.split("_", x)
-        if key in list(attributes.keys()):
-            model_downsample_variables[key].set_attributes(attributes[key])
+    for key, variable in model_downsample_variables.items():
+        if key in attributes:
+            variable.set_attributes(attributes[key])
         if key in MODEL_ATTRIBUTES:
-            model_downsample_variables[key].set_attributes(MODEL_ATTRIBUTES[key])
-        elif "_".join(key_parts[0:-1]) in REGRID_PRODUCT_ATTRIBUTES:
-            model_downsample_variables[key].set_attributes(
-                REGRID_PRODUCT_ATTRIBUTES["_".join(key_parts[0:-1])],
-            )
-        elif "_".join(key_parts[0:-2]) in REGRID_PRODUCT_ATTRIBUTES:
-            model_downsample_variables[key].set_attributes(
-                REGRID_PRODUCT_ATTRIBUTES["_".join(key_parts[0:-2])],
-            )
-        elif (
-            "_".join(key_parts[1:]) in MODEL_L3_ATTRIBUTES
-            or "_".join(key_parts[2:]) in MODEL_L3_ATTRIBUTES
-        ):
-            try:
-                model_downsample_variables[key].set_attributes(
-                    MODEL_L3_ATTRIBUTES["_".join(key_parts[1:])],
-                )
-            except KeyError:
-                model_downsample_variables[key].set_attributes(
-                    MODEL_L3_ATTRIBUTES["_".join(key_parts[2:])],
-                )
-        elif "_".join(key_parts[1:]) in CYCLE_ATTRIBUTES:
-            model_downsample_variables[key].set_attributes(
-                CYCLE_ATTRIBUTES["_".join(key_parts[1:])],
-            )
-        elif "_".join(key_parts[2:]) in CYCLE_ATTRIBUTES:
-            model_downsample_variables[key].set_attributes(
-                CYCLE_ATTRIBUTES["_".join(key_parts[2:])],
-            )
+            variable.set_attributes(MODEL_ATTRIBUTES[key])
+        elif key.startswith(MODEL_PREFIX):
+            base = key.removeprefix(MODEL_PREFIX)
+            if base in MODEL_L3_ATTRIBUTES:
+                variable.set_attributes(MODEL_L3_ATTRIBUTES[base])
+            elif base in CYCLE_ATTRIBUTES:
+                variable.set_attributes(CYCLE_ATTRIBUTES[base])
+        elif key in REGRID_PRODUCT_ATTRIBUTES:
+            variable.set_attributes(REGRID_PRODUCT_ATTRIBUTES[key])
 
 
 def save_downsampled_file(
-    id_mark: str,
+    product: str,
     file_name: str | PathLike,
-    objects: tuple,
-    files: tuple[list[str | PathLike], str | PathLike],
+    model_obj: "ModelManager",
+    obs_obj: "ObservationManager",
+    model_files: list[str | PathLike],
+    product_file: str | PathLike,
     uuid: UUID,
+    model_name: str | None = None,
+    site_name: str | None = None,
 ) -> None:
     """Saves a standard downsampled day product file.
 
     Args:
-        id_mark (str): File identifier, format "(product name)_(model name)"
-        file_name (str): Name of the output file to be generated
-        objects (tuple): Include two objects: The :class:'ModelManager' and
-                      The :class:'ObservationManager.
-        files (tuple): Includes two sourcefile group: List of model file(s) used
-                       for processing output file and Cloudnet L2 product file
-        keep_uuid (bool): If True, keeps the UUID of the old file, if that exists.
-                          Default is False when new UUID is generated.
+        product (str): Product name, e.g. "cf".
+        file_name (str): Name of the output file to be generated.
+        model_obj (ModelManager): Model fields downsampled to the model grid.
+        obs_obj (ObservationManager): Cloudnet L2 observation product.
+        model_files (list): Model file(s) used for processing the output file.
+        product_file (str): Cloudnet L2 product file.
         uuid (str): Set specific UUID for the file.
+        model_name (str): Human-readable model name for plot titles. Falls back
+                       to the model id when not given.
+        site_name (str): Human-readable site name for the location attribute and
+                       plot subtitle. Falls back to the source file's location
+                       when not given.
     """
-    obj = objects[0]
-    dimensions = {"time": len(obj.time), "level": len(obj.data["level"][:])}
-    with output.init_file(file_name, dimensions, obj.data, uuid) as root_group:
+    n_levels = model_obj.data[model_obj.keys["height"]][:].shape[-1]
+    dimensions = {"time": len(model_obj.time), "level": n_levels}
+    location = site_name or model_obj.dataset.location
+    with output.init_file(file_name, dimensions, model_obj.data, uuid) as root_group:
         _augment_global_attributes(root_group)
-        root_group.cloudnet_file_type = "l3-" + id_mark.split("_", maxsplit=1)[0]
-        root_group.title = (
-            f"Downsampled {id_mark.capitalize().replace('_', ' of ')} "
-            f"from {obj.dataset.location}"
-        )
-        _add_source(root_group, objects, files)
-        output.copy_global(
-            obj.dataset, root_group, ("location", "day", "month", "year")
-        )
-        if not hasattr(obj.dataset, "day"):
-            root_group.year, root_group.month, root_group.day = obj.date
-        output.merge_history(root_group, id_mark, obj)
-
-
-def add_var2ncfile(obj: ModelManager, file_name: str | PathLike) -> None:
-    with netCDF4.Dataset(file_name, "r+", format="NETCDF4_CLASSIC") as nc_file:
-        _write_vars2nc(nc_file, obj.data)
-
-
-def _write_vars2nc(rootgrp: netCDF4.Dataset, cloudnet_variables: dict) -> None:
-    """Iterates over Cloudnet-ME instances and write to given rootgrp."""
-
-    def _get_dimensions(array: npt.NDArray) -> tuple:
-        """Finds correct dimensions for a variable."""
-        if utils.isscalar(array):
-            return ()
-        variable_size: tuple = ()
-        file_dims = rootgrp.dimensions
-        array_dims = array.shape
-        for length in array_dims:
-            dim = [key for key in file_dims if file_dims[key].size == length][0]  # noqa: RUF015
-            variable_size = (*variable_size, dim)
-        return variable_size
-
-    for key in cloudnet_variables:
-        obj = cloudnet_variables[key]
-        size = _get_dimensions(obj.data)
-        try:
-            nc_variable = rootgrp.createVariable(
-                obj.name,
-                obj.data_type,
-                size,
-                zlib=True,
-            )
-            nc_variable[:] = obj.data
-            for attr in obj.fetch_attributes():
-                setattr(nc_variable, attr, getattr(obj, attr))
-        except RuntimeError:
-            continue
+        root_group.cloudnet_file_type = "l3-" + product
+        product_name = PRODUCT_NAMES.get(product, product)
+        root_group.title = f"Observed and modeled {product_name} over {location}"
+        root_group.model_id = model_obj.model
+        root_group.model_name = model_name or model_obj.model
+        _add_source(root_group, model_obj, obs_obj, model_files, product_file)
+        output.copy_global(model_obj.dataset, root_group, ("day", "month", "year"))
+        root_group.location = location
+        if not hasattr(model_obj.dataset, "day"):
+            root_group.year, root_group.month, root_group.day = model_obj.date
+        output.merge_history(root_group, f"L3 {product_name}", model_obj)
 
 
 def _augment_global_attributes(root_group: netCDF4.Dataset) -> None:
     root_group.Conventions = "CF-1.8"
 
 
-def _add_source(root_ground: netCDF4.Dataset, objects: tuple, files: tuple) -> None:
+def _add_source(
+    root_group: netCDF4.Dataset,
+    model_obj: "ModelManager",
+    obs_obj: "ObservationManager",
+    model_files: list[str | PathLike],
+    product_file: str | PathLike,
+) -> None:
     """Generates source info for multiple files."""
-    model, obs = objects
-    model_files, obs_file = files
-    source = f"Observation file: {os.path.basename(obs_file)}"
-    source += "\n"
-    source += f"{model.model} file(s): "
-    for i, f in enumerate(model_files):
-        source += f"{os.path.basename(f)}"
-        if i < len(model_files) - 1:
-            source += "\n"
-    root_ground.source = source
-    root_ground.source_file_uuids = output.get_source_uuids([model, obs])
+    filenames = [os.path.basename(product_file)] + [
+        os.path.basename(f) for f in model_files
+    ]
+    root_group.source = "\n".join(filenames)
+    root_group.source_file_uuids = output.get_source_uuids([model_obj, obs_obj])
 
 
 def add_time_attribute(date: datetime) -> dict:

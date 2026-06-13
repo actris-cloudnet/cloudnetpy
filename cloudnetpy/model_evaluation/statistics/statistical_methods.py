@@ -1,12 +1,9 @@
 import logging
-import os
-import sys
+from collections.abc import Callable
 
 import numpy as np
 import numpy.typing as npt
 from numpy import ma
-
-sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 
 class DayStatistics:
@@ -54,33 +51,26 @@ class DayStatistics:
         self.observation_data = observation
         self._generate_day_statistics()
 
-    def _get_method_attr(self) -> tuple[str, tuple]:
-        full_name = ""
+    def _get_method_attr(self) -> tuple[Callable, tuple]:
         params = (self.model_data, self.observation_data)
         if self.method == "error":
-            full_name = "relative_error"
+            return relative_error, params
         if self.method == "aerror":
-            full_name = "absolute_error"
+            return absolute_error, params
         if self.method == "area":
-            full_name = "calc_common_area_sum"
+            return calc_common_area_sum, params
         if self.method == "hist":
-            return "histogram", (
-                self.product,
-                self.model_data,
-                self.observation_data,
-            )
+            return histogram, (self.product, *params)
         if self.method == "vertical":
-            full_name = "vertical_profile"
-        return full_name, params
+            return vertical_profile, params
+        msg = f"Unknown statistical method: {self.method}"
+        raise RuntimeError(msg)
 
     def _generate_day_statistics(self) -> None:
-        full_name, params = self._get_method_attr()
-        cls = __import__("statistical_methods")
+        method, params = self._get_method_attr()
         try:
-            self.model_stat, self.observation_stat = getattr(cls, f"{full_name}")(
-                *params,
-            )
-            self.title = cls.day_stat_title(self.method, self.product)
+            self.model_stat, self.observation_stat = method(*params)
+            self.title = day_stat_title(self.method, self.product)
         except RuntimeError:
             msg = f"Failed to calculate {self.method} of {self.product[0]}"
             logging.exception(msg)
@@ -91,7 +81,10 @@ def relative_error(
     observation: ma.MaskedArray,
 ) -> tuple[float, str]:
     model, observation = combine_masked_indices(model, observation)
-    error = ((model - observation) / observation) * 100
+    # Very small observation values make the relative error overflow; the
+    # resulting huge values are expected, so ignore the warning.
+    with np.errstate(divide="ignore", over="ignore"):
+        error = ((model - observation) / observation) * 100
     return np.round(error, 2), ""
 
 
@@ -129,7 +122,10 @@ def calc_common_area_sum(
         model[model < np.min(observation)] = ma.masked
         combine_mask = model.mask + observation.mask
         common_mask = np.bitwise_and(model.mask, observation.mask)
-        the_match = np.sum(~combine_mask) / np.sum(~common_mask) * 100
+        valid_area = np.sum(~common_mask)
+        if valid_area == 0:
+            return 0.0
+        the_match = np.sum(~combine_mask) / valid_area * 100
         return np.round(the_match, 2)
 
     match = _indices_of_mask_sum()
@@ -160,9 +156,8 @@ def histogram(
 
 
 def vertical_profile(model: ma.MaskedArray, observation: ma.MaskedArray) -> tuple:
-    if model.shape[0] > 25:
-        model = model.T
-        observation = observation.T
+    # L3 fields are shaped (time, level); average over time (axis 0) to get the
+    # vertical profile over height.
     model_vertical = ma.mean(model, axis=0)
     obs_vertical = np.nanmean(observation, axis=0)
     return model_vertical, obs_vertical

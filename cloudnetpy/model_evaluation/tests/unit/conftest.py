@@ -61,6 +61,117 @@ def model_file(tmpdir_factory, file_metadata) -> str:
     return file_name
 
 
+def _write_model_file(
+    file_name,
+    file_metadata,
+    *,
+    n_levels: int,
+    heights: list,
+    horizontal_resolution: bool = True,
+    resolution: float = 9,
+    clouds: bool = True,
+    level_var: bool = True,
+) -> str:
+    """Writes a harmonized model file, optionally omitting certain variables.
+
+    Used to emulate the structural differences between models (e.g. arpege and
+    icon lack horizontal_resolution and a level coordinate; ecmwf-open lacks
+    cloud variables).
+    """
+    root_grp = netCDF4.Dataset(file_name, "w", format="NETCDF4_CLASSIC")
+    time = 3
+    root_grp.createDimension("time", time)
+    root_grp.createDimension("level", n_levels)
+    _create_global_attributes(root_grp, file_metadata)
+    root_grp.source = "Test Model (TM)"
+    var = root_grp.createVariable("time", "f8", "time")
+    var[:] = ma.array([2, 6, 10])
+    if level_var:
+        var = root_grp.createVariable("level", "f8", "level")
+        var[:] = np.arange(n_levels)
+    var = root_grp.createVariable("latitude", "f8")
+    var[:] = 1
+    var = root_grp.createVariable("longitude", "f8")
+    var[:] = 1
+    if horizontal_resolution:
+        var = root_grp.createVariable("horizontal_resolution", "f8")
+        var[:] = resolution
+    var = root_grp.createVariable("height", "f8", ("time", "level"))
+    var[:] = ma.array([heights, heights, heights])
+    var.units = "m"
+    var = root_grp.createVariable("forecast_time", "f8", "time")
+    var[:] = ma.array([1, 5, 10])
+    shape = (time, n_levels)
+    if clouds:
+        for name in ("cloud_fraction", "qi", "ql"):
+            var = root_grp.createVariable(name, "f8", ("time", "level"))
+            var[:] = ma.ones(shape) * 0.05
+    var = root_grp.createVariable("temperature", "f8", ("time", "level"))
+    var[:] = ma.ones(shape) * 300
+    var = root_grp.createVariable("pressure", "f8", ("time", "level"))
+    var[:] = ma.ones(shape) * 1000
+    var = root_grp.createVariable("uwind", "f8", ("time", "level"))
+    var[:] = ma.ones(shape) * 2
+    var = root_grp.createVariable("vwind", "f8", ("time", "level"))
+    var[:] = ma.ones(shape) * 3
+    root_grp.close()
+    return file_name
+
+
+@pytest.fixture(scope="session")
+def model_file_tall(tmpdir_factory, file_metadata) -> str:
+    """Model with 5 levels, of which only the lowest 3 are below 22 km."""
+    file_name = tmpdir_factory.mktemp("data").join("tall.nc")
+    return _write_model_file(
+        file_name,
+        file_metadata,
+        n_levels=5,
+        heights=[100, 5000, 15000, 25000, 40000],
+    )
+
+
+@pytest.fixture(scope="session")
+def model_file_no_hres(tmpdir_factory, file_metadata) -> str:
+    """Model without horizontal_resolution and level coordinate (icon-like)."""
+    file_name = tmpdir_factory.mktemp("data").join("no_hres.nc")
+    return _write_model_file(
+        file_name,
+        file_metadata,
+        n_levels=2,
+        heights=[100, 5000],
+        horizontal_resolution=False,
+        level_var=False,
+    )
+
+
+@pytest.fixture(scope="session")
+def model_file_zero_hres(tmpdir_factory, file_metadata) -> str:
+    """Model with an invalid (zero) horizontal_resolution."""
+    file_name = tmpdir_factory.mktemp("data").join("zero_hres.nc")
+    return _write_model_file(
+        file_name,
+        file_metadata,
+        n_levels=2,
+        heights=[100, 5000],
+        resolution=0,
+        level_var=False,
+    )
+
+
+@pytest.fixture(scope="session")
+def model_file_no_clouds(tmpdir_factory, file_metadata) -> str:
+    """Model without cloud variables (ecmwf-open-like)."""
+    file_name = tmpdir_factory.mktemp("data").join("no_clouds.nc")
+    return _write_model_file(
+        file_name,
+        file_metadata,
+        n_levels=2,
+        heights=[100, 5000],
+        clouds=False,
+        level_var=False,
+    )
+
+
 @pytest.fixture(scope="session")
 def obs_file(tmpdir_factory, file_metadata) -> str:
     file_name = tmpdir_factory.mktemp("data").join("file.nc")
@@ -177,19 +288,19 @@ def regrid_file(tmpdir_factory, file_metadata) -> str:
     var[:] = 1
     var = root_grp.createVariable("horizontal_resolution", "f8")
     var[:] = 9
-    var = root_grp.createVariable("ecmwf_height", "f8", ("time", "level"))
+    var = root_grp.createVariable("model_height", "f8", ("time", "level"))
     var[:] = ma.array([[10, 14], [8, 14], [9, 15]])
-    var = root_grp.createVariable("ecmwf_forecast_time", "f8", "time")
+    var = root_grp.createVariable("model_forecast_time", "f8", "time")
     var[:] = ma.array([1, 5, 10])
-    var = root_grp.createVariable("ecmwf_cf", "f8", ("time", "level"))
+    var = root_grp.createVariable("model_cf", "f8", ("time", "level"))
     var[:] = ma.array([[0, 2], [3, 6], [5, 8]])
-    var = root_grp.createVariable("ecmwf_cf_cirrus", "f8", ("time", "level"))
+    var = root_grp.createVariable("model_cf_cirrus", "f8", ("time", "level"))
     var[:] = ma.array([[0, 2], [3, 6], [5, 7]])
-    var = root_grp.createVariable("ecmwf_cf_snow", "f8", ("time", "level"))
+    var = root_grp.createVariable("model_cf_snow", "f8", ("time", "level"))
     var[:] = ma.array([[0, 2], [4, 6], [5, 8]])
-    var = root_grp.createVariable("cf_ecmwf", "f8", ("time", "level"))
+    var = root_grp.createVariable("cf_V", "f8", ("time", "level"))
     var[:] = ma.array([[0, 2], [3, 6], [5, 8]])
-    var = root_grp.createVariable("cf_adv_ecmwf", "f8", ("time", "level"))
+    var = root_grp.createVariable("cf_V_adv", "f8", ("time", "level"))
     var[:] = ma.array([[0, 2], [3, 6], [5, 8]])
     var = root_grp.createVariable("temperature", "f8", ("time", "level"))
     var[:] = ma.array([[300, 301], [302, 299], [305, 298]])

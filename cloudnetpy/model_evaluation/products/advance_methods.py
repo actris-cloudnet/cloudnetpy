@@ -1,7 +1,3 @@
-import importlib
-import logging
-from os import PathLike
-
 import numpy as np
 import numpy.typing as npt
 import scipy.special
@@ -9,12 +5,13 @@ import scipy.stats
 from numpy import ma
 
 import cloudnetpy.utils as cl_tools
-from cloudnetpy.datasource import DataSource
+from cloudnetpy.model_evaluation.model_metadata import MODEL_PREFIX
 from cloudnetpy.model_evaluation.products.model_products import ModelManager
 from cloudnetpy.model_evaluation.products.observation_products import ObservationManager
+from cloudnetpy.products.product_tools import get_ice_coefficients
 
 
-class AdvanceProductMethods(DataSource):
+class AdvanceProductMethods:
     """Class that adds advance methods of product to nc-file.
     Different methods could be filtering or adding info by making
     assumptions of model or observation data.
@@ -27,35 +24,27 @@ class AdvanceProductMethods(DataSource):
     def __init__(
         self,
         model_obj: ModelManager,
-        model_file: str | PathLike,
         obs_obj: ObservationManager,
     ) -> None:
-        super().__init__(model_file)
         self._obs_obj = obs_obj
-        self.product = obs_obj.obs
+        self.product = obs_obj.product
         self._date = obs_obj.date
         self._obs_height = obs_obj.data["height"][:]
-        self._obs_data = obs_obj.data[obs_obj.obs][:]
+        self._obs_data = obs_obj.data[obs_obj.product][:]
         self._model_obj = model_obj
         self._model_time = model_obj.time
         self._model_height = model_obj.data[model_obj.keys["height"]][:]
         self.generate_products()
 
     def generate_products(self) -> None:
-        cls = importlib.import_module(__name__).AdvanceProductMethods
-        try:
-            name = f"get_advance_{self.product}"
-            getattr(cls, name)(self)
-        except AttributeError as error:
-            logging.debug("No advance method for %s: %s", self.product, error)
-
-    def get_advance_cf(self) -> None:
-        self.cf_cirrus_filter()
+        # Cloud fraction is the only product with an advance (cirrus) step.
+        if self.product == "cf":
+            self.cf_cirrus_filter()
 
     def cf_cirrus_filter(self) -> None:
         cf = self.getvar_from_object("cf")
         h = self.getvar_from_object("h")
-        temperature = self.getvar("temperature")
+        temperature = self._model_obj.getvar("temperature")
         t_screened = self.remove_extra_levels(temperature - 273.15)
         iwc, lwc = (self._model_obj.get_water_content(var) for var in ["iwc", "lwc"])
         tZT, tT, tZ, t = self.set_frequency_parameters()
@@ -93,15 +82,11 @@ class AdvanceProductMethods(DataSource):
 
         cf_filtered[cf_filtered < 0.05] = ma.masked
 
-        self._model_obj.append_data(
-            cf_filtered,
-            f"{self._model_obj.model}{self._model_obj.cycle}_cf_cirrus",
-        )
+        self._model_obj.append_data(cf_filtered, f"{MODEL_PREFIX}cf_cirrus")
 
     def getvar_from_object(self, arg: str) -> npt.NDArray:
         v_name = arg if arg == "cf" else self._model_obj.get_model_var_names((arg,))[0]
-        key = f"{self._model_obj.model}{self._model_obj.cycle}_{v_name}"
-        return self._model_obj.data[key][:]
+        return self._model_obj.data[f"{MODEL_PREFIX}{v_name}"][:]
 
     def remove_extra_levels(self, arg: npt.NDArray) -> npt.NDArray:
         return self._model_obj.cut_off_extra_levels(arg)
@@ -110,11 +95,9 @@ class AdvanceProductMethods(DataSource):
         if self._obs_obj.radar_freq is None:
             msg = "No radar frequency in observation file"
             raise ValueError(msg)
-        if 30 <= self._obs_obj.radar_freq <= 40:
-            return 0.000242, -0.0186, 0.0699, -1.63
-        if 90 <= float(self._obs_obj.radar_freq) <= 100:
-            return 0.00058, -0.00706, 0.0923, -0.992
-        raise ValueError
+        wl_band = cl_tools.get_wl_band(float(self._obs_obj.radar_freq))
+        c = get_ice_coefficients("iwc", wl_band)
+        return c.ZT, c.T, c.Z, c.c
 
     def fit_z_sensitivity(self, h: npt.NDArray) -> npt.NDArray:
         if self._obs_obj.z_sensitivity is None:
@@ -172,8 +155,8 @@ class AdvanceProductMethods(DataSource):
         return tuple(np.where((cf_filtered > 0) & (iwc > 0) & (lwc < iwc / 10)))
 
     def iwc_variance(self, height: npt.NDArray, ice_ind: tuple) -> npt.NDArray:
-        u = self.getvar("uwind")
-        v = self.getvar("vwind")
+        u = self._model_obj.getvar("uwind")
+        v = self._model_obj.getvar("vwind")
         u = self.remove_extra_levels(u)
         v = self.remove_extra_levels(v)
         w_shear = self.calculate_wind_shear(self._model_obj.wind, u, v, height)
@@ -199,9 +182,7 @@ class AdvanceProductMethods(DataSource):
         for w in (wind, u, v):
             grad_w = np.zeros(w.shape)
             grad_w[0, :] = (w[1, :] - w[0, :]) / (height[1, :] - height[0, :])
-            grad_w[1:-2, :] = (w[2:-1, :] - 2 * w[1:-2, :] + w[1:-2, :]) / (
-                height[2:-1, :] - height[1:-2, :]
-            )
+            grad_w[1:-1, :] = (w[2:, :] - w[:-2, :]) / (height[2:, :] - height[:-2, :])
             grad_w[-1, :] = (w[-1, :] - w[-2, :]) / (height[-1, :] - height[-2, :])
             grand_winds.append(grad_w)
 
@@ -222,7 +203,7 @@ class AdvanceProductMethods(DataSource):
         iwc_dist = np.arange(0, finish, finish / (n_dist - 1))
         if cloud_iwc < iwc_dist[2]:
             finish = cloud_iwc * 10
-            iwc_dist = np.arange(0, finish, finish / n_dist - 1)
+            iwc_dist = np.arange(0, finish, finish / (n_dist - 1))
         return iwc_dist
 
     @staticmethod
@@ -240,3 +221,11 @@ class AdvanceProductMethods(DataSource):
         cf_filtered: npt.NDArray,
     ) -> npt.NDArray:
         return (ma.sum(p_iwc * obs_index) / ma.sum(p_iwc)) * cf_filtered
+
+
+def apply_cirrus_filter(model_obj: ModelManager, obs_obj: ObservationManager) -> None:
+    """Add the cirrus-filtered model cloud fraction to `model_obj` in place.
+
+    Raises ValueError if the model has no ice clouds to filter.
+    """
+    AdvanceProductMethods(model_obj, obs_obj)
