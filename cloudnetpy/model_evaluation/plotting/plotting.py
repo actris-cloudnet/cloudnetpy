@@ -331,6 +331,14 @@ def get_single_plots(
 def plot_colormesh(
     ax: Axes, data: npt.NDArray, axes: tuple, variable_info: PlotMeta
 ) -> None:
+    x, y = axes
+    if getattr(y, "ndim", 1) > 1:
+        # Collapse the 2D (time, level) model grid to 1D monotonic cell centers
+        # (mean height over time) so pcolormesh does not warn about non-monotonic
+        # coordinates.
+        x = x[:, 0]
+        y = ma.mean(y, axis=0)
+        data = data.T
     vmin, vmax = variable_info.plot_range
     if variable_info.clabel == "\u00b0C":
         data = data - 273.15
@@ -338,7 +346,7 @@ def plot_colormesh(
         data, vmin, vmax = lin2log(data, vmin, vmax)
     cmap = plt.get_cmap(variable_info.cbar, 22)
     data[data < vmin] = ma.masked
-    pl = ax.pcolormesh(*axes, data, vmin=vmin, vmax=vmax, cmap=cmap)
+    pl = ax.pcolormesh(x, y, data, vmin=vmin, vmax=vmax, cmap=cmap)
     colorbar = init_colorbar(pl, ax)
     if variable_info.plot_scale == "logarithmic":
         tick_labels = get_log_cbar_tick_labels(vmin, vmax)
