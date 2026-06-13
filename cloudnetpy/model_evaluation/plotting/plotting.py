@@ -1,7 +1,6 @@
 import logging
-import os
-import sys
 from datetime import date
+from typing import TYPE_CHECKING
 
 import matplotlib as mpl
 import matplotlib.pyplot as plt
@@ -28,7 +27,8 @@ from cloudnetpy.plotting.plotting import (
     lin2log,
 )
 
-sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 
 def generate_L3_day_plots(
@@ -98,7 +98,16 @@ def generate_L3_day_plots(
         >>> generate_L3_day_plots(l3_day_file, product, model,
         >>>                       fig_type='statistic', stats=['error'])
     """
-    cls = __import__("plotting")
+    plotters: dict[str, Callable[..., tuple | None]] = {
+        "group": get_group_plots,
+        "pair": get_pair_plots,
+        "single": get_single_plots,
+        "statistic": get_statistic_plots,
+    }
+    if fig_type not in plotters:
+        msg = f"Invalid fig_type: {fig_type}"
+        raise ValueError(msg)
+    plot_function = plotters[fig_type]
     model_name = p_tools.read_model_name(nc_file, model)
     standard_names, advection_names = p_tools.parse_wanted_names(
         nc_file, product, var_list
@@ -133,7 +142,7 @@ def generate_L3_day_plots(
                     save_path,
                     image_name,
                 ]
-            result = getattr(cls, f"get_{fig_type}_plots")(*params, **kwargs)
+            result = plot_function(*params, **kwargs)
             if result is None:  # e.g. pair plots, which save without returning
                 continue
             figs, axes = result
