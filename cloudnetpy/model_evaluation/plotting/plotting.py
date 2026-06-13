@@ -18,7 +18,6 @@ from mpl_toolkits.axes_grid1 import make_axes_locatable
 from numpy import ma
 
 import cloudnetpy.model_evaluation.plotting.plot_tools as p_tools
-from cloudnetpy.model_evaluation.model_metadata import MODELS
 from cloudnetpy.model_evaluation.plotting.plot_meta import ATTRIBUTES, PlotMeta
 from cloudnetpy.model_evaluation.statistics.statistical_methods import DayStatistics
 from cloudnetpy.plotting.plotting import Dimensions, get_log_cbar_tick_labels, lin2log
@@ -88,14 +87,8 @@ def generate_L3_day_plots(
         >>> generate_L3_day_plots(l3_day_file, product, model,
         >>>                       fig_type='statistic', stats=['error'])
     """
-
-    def _check_cycle_names() -> None:
-        if not c_names:
-            raise AttributeError
-
     cls = __import__("plotting")
-    model_info = MODELS[model]
-    model_name = model_info.model_name
+    model_name = p_tools.read_model_name(nc_file, model)
     name_set = p_tools.parse_wanted_names(nc_file, product, model, var_list)
     unique_tuples = {tuple(lst) for lst in name_set}
     name_set_unique = tuple(list(tup) for tup in unique_tuples)
@@ -103,59 +96,34 @@ def generate_L3_day_plots(
     dimensions = []
     for names in name_set_unique:
         if len(names) > 0:
-            try:
-                cycle_names, cycles = p_tools.sort_cycles(names, model)
-                for i, c_names in enumerate(cycle_names):
-                    _check_cycle_names()
-                    params = [
-                        product,
-                        c_names,
-                        nc_file,
-                        model,
-                        model_name,
-                        save_path,
-                        image_name,
-                    ]
-                    kwargs = {"show": show, "title": title, "cycle": cycles[i]}
-                    if fig_type == "statistic":
-                        params = [
-                            product,
-                            c_names,
-                            nc_file,
-                            model,
-                            model_name,
-                            stats,
-                            save_path,
-                            image_name,
-                        ]
-                    figs, axes = getattr(cls, f"get_{fig_type}_plots")(
-                        *params, **kwargs
-                    )
-                    for fig, ax in zip(figs, axes, strict=False):
-                        dimensions.append(Dimensions(fig, ax))
-            except AttributeError:
+            params: list = [
+                product,
+                names,
+                nc_file,
+                model,
+                model_name,
+                save_path,
+                image_name,
+            ]
+            kwargs = {"show": show, "title": title}
+            if fig_type == "statistic":
                 params = [
                     product,
                     names,
                     nc_file,
                     model,
                     model_name,
+                    stats,
                     save_path,
                     image_name,
                 ]
-                kwargs = {"show": show, "title": title}
-                if fig_type == "statistic":
-                    params = [
-                        product,
-                        names,
-                        nc_file,
-                        model,
-                        model_name,
-                        stats,
-                        save_path,
-                        image_name,
-                    ]
-                figs, axes = getattr(cls, f"get_{fig_type}_plots")(*params, **kwargs)
+            result = getattr(cls, f"get_{fig_type}_plots")(*params, **kwargs)
+            if result is None:  # e.g. pair plots, which save without returning
+                continue
+            figs, axes = result
+            if isinstance(figs, Figure):  # group plots return a single figure
+                dimensions.append(Dimensions(figs, axes))
+            else:
                 for fig, ax in zip(figs, axes, strict=False):
                     dimensions.append(Dimensions(fig, ax))
     return dimensions

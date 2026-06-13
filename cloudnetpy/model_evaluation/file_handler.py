@@ -84,7 +84,8 @@ def save_downsampled_file(
         uuid (str): Set specific UUID for the file.
     """
     obj = objects[0]
-    dimensions = {"time": len(obj.time), "level": len(obj.data["level"][:])}
+    n_levels = obj.data[obj.keys["height"]][:].shape[-1]
+    dimensions = {"time": len(obj.time), "level": n_levels}
     with output.init_file(file_name, dimensions, obj.data, uuid) as root_group:
         _augment_global_attributes(root_group)
         root_group.cloudnet_file_type = "l3-" + id_mark.split("_", maxsplit=1)[0]
@@ -92,6 +93,8 @@ def save_downsampled_file(
             f"Downsampled {id_mark.capitalize().replace('_', ' of ')} "
             f"from {obj.dataset.location}"
         )
+        if obj.source:
+            root_group.model_name = obj.source
         _add_source(root_group, objects, files)
         output.copy_global(
             obj.dataset, root_group, ("location", "day", "month", "year")

@@ -64,44 +64,6 @@ def test_sort_model2first_element() -> None:
     assert x == compare
 
 
-def test_sort_cycles_vars() -> None:
-    a = ["era5_cf_1-12", "era5_cf_7-18", "cf_era5_1-12", "cf_era5_7-18"]
-    e = "era5"
-    compare = [
-        ["era5_cf_1-12", "cf_era5_1-12"],
-        ["era5_cf_7-18", "cf_era5_7-18"],
-    ]
-    x, _ = plt.sort_cycles(a, e)
-    assert x == compare
-
-
-def test_sort_cycles_simo() -> None:
-    a = ["era5_cf_1-12", "era5_cf_7-18", "cf_era5_1-12", "cf_era5_7-18"]
-    e = "era5"
-    compare = ["1-12", "7-18"]
-    _, y = plt.sort_cycles(a, e)
-    assert y == compare
-
-
-def test_sort_cycles_vars_missing() -> None:
-    a = ["icon_cf_12-23", "icon_cf_36-47", "cf_icon_12-23", "cf_icon_36-47"]
-    e = "icon"
-    compare = [
-        ["icon_cf_12-23", "cf_icon_12-23"],
-        ["icon_cf_36-47", "cf_icon_36-47"],
-    ]
-    x, _ = plt.sort_cycles(a, e)
-    assert x == compare
-
-
-def test_sort_cycles_cycles_missing() -> None:
-    a = ["icon_cf_12-23", "icon_cf_36-47", "cf_icon_12-23", "cf_icon_36-47"]
-    e = "icon"
-    compare = ["12-23", "36-47"]
-    _, y = plt.sort_cycles(a, e)
-    assert y == compare
-
-
 def test_read_data_characters(regrid_file) -> None:
     t = np.array([[2, 2], [6, 6], [10, 10]])
     h = np.array([[0.01, 0.014], [0.008, 0.014], [0.009, 0.015]])

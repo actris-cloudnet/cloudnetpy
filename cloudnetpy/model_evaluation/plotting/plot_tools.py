@@ -4,7 +4,16 @@ import numpy.typing as npt
 from matplotlib.axes import Axes
 from numpy import ma
 
-from cloudnetpy.model_evaluation.model_metadata import MODELS
+
+def read_model_name(nc_file: str, model: str) -> str:
+    """Returns a human-readable model name for plot titles.
+
+    The model description is stored as the `model_name` global attribute when
+    the file is created (from the model file's `source`). Falls back to the
+    model identifier if the attribute is missing.
+    """
+    with netCDF4.Dataset(nc_file) as nc:
+        return getattr(nc, "model_name", model)
 
 
 def parse_wanted_names(
@@ -61,19 +70,6 @@ def sort_model2first_element(a: list, model: str) -> list:
     return a
 
 
-def sort_cycles(names: list, model: str) -> tuple[list, list]:
-    model_info = MODELS[model]
-    cycles = model_info.cycle
-    if cycles is None:
-        raise AttributeError
-    cycles_split = [x.strip() for x in cycles.split(",")]
-    cycles_names = [[name for name in names if cycle in name] for cycle in cycles_split]
-    cycles_names.sort()
-    cycles_names = [c for c in cycles_names if c]
-    cycles_new = [c for c in cycles_split for name in cycles_names if c in name[0]]
-    return cycles_names, cycles_new
-
-
 def read_data_characters(nc_file: str, name: str, model: str) -> tuple:
     """Gets dimensions and data for plotting."""
     nc = netCDF4.Dataset(nc_file)
@@ -84,14 +80,8 @@ def read_data_characters(nc_file: str, name: str, model: str) -> tuple:
     try:
         y = nc.variables[f"{model}_height"][:]
     except KeyError as err:
-        model_info = MODELS[model]
-        cycles = model_info.cycle
-        if cycles is None:
-            msg = f"Invalid model: {model}"
-            raise RuntimeError(msg) from err
-        cycles_split = [x.strip() for x in cycles.split(",")]
-        cycle = [cycle for cycle in cycles_split if cycle in name]
-        y = nc.variables[f"{model}_{cycle[0]}_height"][:]
+        msg = f"Missing variable {model}_height"
+        raise RuntimeError(msg) from err
     y = y / 1000
     try:
         mask = y.mask
