@@ -74,10 +74,12 @@ class ProductGrid:
                         continue
                     product_dict = self._regrid_cf(product_dict, i, j, data)
                     data_adv = self._reshape_data_to_window(ind_avd, x_ind_adv, y_ind)
-                    if data_adv is None:
-                        msg = "No data for advection"
-                        raise RuntimeError(msg)
-                    product_adv_dict = self._regrid_cf(product_adv_dict, i, j, data_adv)
+                    # No advection window data (e.g. masked model wind collapses
+                    # the window); leave the cell unfilled like the standard grid.
+                    if data_adv is not None:
+                        product_adv_dict = self._regrid_cf(
+                            product_adv_dict, i, j, data_adv
+                        )
                 elif self._obs_obj.obs == "iwc":
                     x_ind_no_rain_adv = tl.get_adv_indices(
                         model_t[i],

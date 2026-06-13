@@ -68,7 +68,7 @@ def get_obs_window_size(ind_x: npt.NDArray, ind_y: npt.NDArray) -> tuple | None:
     """Returns shape (tuple) of window area, where values are True."""
     x = np.where(ind_x)[0]
     y = np.where(ind_y)[0]
-    if np.any(x) and np.any(y):
+    if x.size > 0 and y.size > 0:
         return x[-1] - x[0] + 1, y[-1] - y[0] + 1
     return None
 

@@ -110,3 +110,11 @@ def test_obs_windows_size_none() -> None:
     j = np.array([0, 0, 0, 0, 0, 0, 0], dtype=bool)
     x = tools.get_obs_window_size(i, j)
     assert x is None
+
+
+def test_obs_windows_size_first_index() -> None:
+    i = np.array([1, 0, 0, 0], dtype=bool)
+    j = np.array([1, 0, 0, 0], dtype=bool)
+    x = tools.get_obs_window_size(i, j)
+    assert x is not None
+    testing.assert_almost_equal(x, (1, 1))
