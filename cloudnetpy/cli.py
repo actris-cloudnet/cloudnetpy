@@ -20,7 +20,7 @@ from cloudnet_api_client.containers import Instrument, ProductMetadata, RawMetad
 
 from cloudnetpy import concat_lib, instruments
 from cloudnetpy.categorize import CategorizeInput, generate_categorize
-from cloudnetpy.exceptions import PlottingError
+from cloudnetpy.exceptions import ModelDataError, PlottingError
 from cloudnetpy.plotting import PlotParameters, generate_figure
 
 if TYPE_CHECKING:
@@ -28,6 +28,14 @@ if TYPE_CHECKING:
 
 
 cloudnet_api_url: Final = "https://cloudnet.fmi.fi/api/"
+
+# Model-evaluation L3 products and the observation product they downsample.
+# The API does not declare these source products, so they are mapped here.
+L3_SOURCE_PRODUCTS: Final = {
+    "l3-cf": "categorize",
+    "l3-iwc": "iwc",
+    "l3-lwc": "lwc",
+}
 
 
 def run(args: argparse.Namespace, tmpdir: str, client: APIClient) -> None:
@@ -96,6 +104,12 @@ def run(args: argparse.Namespace, tmpdir: str, client: APIClient) -> None:
         if epsilon_filepath is not None:
             _plot(epsilon_filepath, "epsilon-radar", args)
 
+    # Model evaluation L3 products (e.g. l3-cf)
+    for product in args.products:
+        if _parse_instrument(product)[0] in L3_SOURCE_PRODUCTS:
+            l3_filepath = _process_l3_product(product, args, client)
+            _plot_l3(l3_filepath, product, args)
+
 
 def _process_epsilon_radar(
     cat_files: dict, args: argparse.Namespace, client: APIClient
@@ -115,6 +129,43 @@ def _process_epsilon_radar(
         str(radar_filepath), model_filepath, str(output_file)
     )
     logging.info("Processed epsilon-radar: %s", output_file)
+    return str(output_file)
+
+
+def _process_l3_product(
+    product: str, args: argparse.Namespace, client: APIClient
+) -> str | None:
+    if args.model is None:
+        logging.info("No model specified (use --model) for %s", product)
+        return None
+    obs = product.removeprefix("l3-")
+    source_product = L3_SOURCE_PRODUCTS[product]
+    product_file = _fetch_product(args, source_product, client)
+    if product_file is None:
+        logging.info("No %s data available for %s", source_product, product)
+        return None
+    model_file = _fetch_model(args, client)
+    if model_file is None:
+        logging.info("No model data available for %s", product)
+        return None
+    filename = f"{args.date.replace('-', '')}_{args.site}_{args.model}_{product}.nc"
+    output_file = _create_output_folder("evaluation", args) / filename
+    module = importlib.import_module(
+        "cloudnetpy.model_evaluation.products.product_resampling"
+    )
+    try:
+        module.process_L3_day_product(
+            args.model,
+            obs,
+            [model_file],
+            product_file,
+            str(output_file),
+            overwrite=True,
+        )
+    except ModelDataError as e:
+        logging.info("Failed to process %s: %s", product, e)
+        return None
+    logging.info("Processed %s: %s", product, output_file)
     return str(output_file)
 
 
@@ -623,6 +674,29 @@ def _plot(
         logging.info("Plotted %s: %s", product, image_name)
 
 
+def _plot_l3(
+    filepath: PathLike | str | None, product: str, args: argparse.Namespace
+) -> None:
+    if filepath is None or (not args.plot and not args.show):
+        return
+    obs = product.removeprefix("l3-")
+    save_path = f"{Path(filepath).parent}/" if args.plot else None
+    module = importlib.import_module("cloudnetpy.model_evaluation.plotting.plotting")
+    try:
+        module.generate_L3_day_plots(
+            str(filepath),
+            obs,
+            args.model,
+            save_path=save_path,
+            show=args.show,
+        )
+    except (PlottingError, ValueError, KeyError) as e:
+        logging.info("Failed to plot %s: %s", product, e)
+        return
+    if args.plot:
+        logging.info("Plotted %s to %s", product, save_path)
+
+
 def _process_cat_product(product: str, categorize_file: str) -> str:
     output_file = categorize_file.replace("categorize", product)
     module = importlib.import_module("cloudnetpy.products")
@@ -704,7 +778,7 @@ def main() -> None:
         "-m",
         "--model",
         type=lambda arg: _parse_model(arg, client),
-        help="Model to use in categorize.",
+        help="Model to use in categorize and model evaluation (l3-*) products.",
     )
     parser.add_argument(
         "-i",
