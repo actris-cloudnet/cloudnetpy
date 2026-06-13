@@ -68,6 +68,7 @@ def _write_model_file(
     n_levels: int,
     heights: list,
     horizontal_resolution: bool = True,
+    resolution: float = 9,
     clouds: bool = True,
     level_var: bool = True,
 ) -> str:
@@ -94,7 +95,7 @@ def _write_model_file(
     var[:] = 1
     if horizontal_resolution:
         var = root_grp.createVariable("horizontal_resolution", "f8")
-        var[:] = 9
+        var[:] = resolution
     var = root_grp.createVariable("height", "f8", ("time", "level"))
     var[:] = ma.array([heights, heights, heights])
     var.units = "m"
@@ -139,6 +140,20 @@ def model_file_no_hres(tmpdir_factory, file_metadata) -> str:
         n_levels=2,
         heights=[100, 5000],
         horizontal_resolution=False,
+        level_var=False,
+    )
+
+
+@pytest.fixture(scope="session")
+def model_file_zero_hres(tmpdir_factory, file_metadata) -> str:
+    """Model with an invalid (zero) horizontal_resolution."""
+    file_name = tmpdir_factory.mktemp("data").join("zero_hres.nc")
+    return _write_model_file(
+        file_name,
+        file_metadata,
+        n_levels=2,
+        heights=[100, 5000],
+        resolution=0,
         level_var=False,
     )
 

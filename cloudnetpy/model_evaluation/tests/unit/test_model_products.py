@@ -88,6 +88,11 @@ def test_missing_horizontal_resolution_raises(model_file_no_hres) -> None:
         ModelManager(str(model_file_no_hres), MODEL, "cf")
 
 
+def test_zero_horizontal_resolution_raises(model_file_zero_hres) -> None:
+    with pytest.raises(ModelDataError, match="invalid horizontal_resolution"):
+        ModelManager(str(model_file_zero_hres), MODEL, "cf")
+
+
 def test_missing_product_variable_raises(model_file_no_clouds) -> None:
     with pytest.raises(ModelDataError, match="cloud_fraction"):
         ModelManager(str(model_file_no_clouds), MODEL, "cf")

@@ -43,6 +43,7 @@ def generate_L3_day_plots(
     save_path: str | None = None,
     image_name: str | None = None,
     show: bool | None = False,
+    include_advection: bool = True,
 ) -> list[Dimensions]:
     """Generate visualizations for level 3 dayscale products.
     With figure type visualizations can be subplot in group, pair, single or
@@ -73,6 +74,10 @@ def generate_L3_day_plots(
 
         image_name (str, optional): Saving name of generated fig
         show (bool, optional): If True, shows visualization
+        include_advection (bool, optional): If True (default), also plot the
+            wind-advection time grid in its own figure(s). If False, plot only
+            the standard time grid.
+
     Notes:
         In case of 'group' and 'statistic' fig_type advection timegrid is
         separated from standard timegrid to their own figures.
@@ -95,7 +100,12 @@ def generate_L3_day_plots(
     """
     cls = __import__("plotting")
     model_name = p_tools.read_model_name(nc_file, model)
-    name_set = p_tools.parse_wanted_names(nc_file, product, var_list)
+    standard_names, advection_names = p_tools.parse_wanted_names(
+        nc_file, product, var_list
+    )
+    name_set = (
+        [standard_names, advection_names] if include_advection else [standard_names]
+    )
     unique_tuples = {tuple(lst) for lst in name_set}
     name_set_unique = tuple(list(tup) for tup in unique_tuples)
 

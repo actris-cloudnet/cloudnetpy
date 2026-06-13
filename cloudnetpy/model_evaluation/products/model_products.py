@@ -176,4 +176,11 @@ class ModelManager(DataSource):
                 "It needs to be added to the model file by the model munger."
             )
             raise ModelDataError(msg) from err
-        return float(np.unique(h_res.data)[0])
+        resolution = float(np.unique(h_res.data)[0])
+        if resolution <= 0:
+            msg = (
+                f"Model '{self.model}' has invalid horizontal_resolution "
+                f"({resolution}). It needs to be fixed in the model munger."
+            )
+            raise ModelDataError(msg)
+        return resolution

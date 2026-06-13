@@ -689,6 +689,7 @@ def _plot_l3(
             args.model,
             save_path=save_path,
             show=args.show,
+            include_advection=False,
         )
     except (PlottingError, ValueError, KeyError) as e:
         logging.info("Failed to plot %s: %s", product, e)
