@@ -91,7 +91,10 @@ def relative_error(
     observation: ma.MaskedArray,
 ) -> tuple[float, str]:
     model, observation = combine_masked_indices(model, observation)
-    error = ((model - observation) / observation) * 100
+    # Very small observation values make the relative error overflow; the
+    # resulting huge values are expected, so ignore the warning.
+    with np.errstate(divide="ignore", over="ignore"):
+        error = ((model - observation) / observation) * 100
     return np.round(error, 2), ""
 
 
