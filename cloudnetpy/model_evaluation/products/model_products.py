@@ -27,7 +27,7 @@ class ModelManager(DataSource):
         product (str): name of product to generate
 
     Notes:
-        Model files are harmonized by the model munger, so all models share the
+        Model files are expected to be harmonized, so all models share the
         same variable names and units. The only model-specific quantity is the
         number of vertical levels, which is derived from the model height and
         the shared `ALTITUDE_LIMIT`.
@@ -66,7 +66,7 @@ class ModelManager(DataSource):
         if "height" not in self.dataset.variables:
             msg = (
                 f"Model '{self.model}' is missing the 'height' variable. "
-                "It needs to be added to the model file by the model munger."
+                "It needs to be added to the model file."
             )
             raise ModelDataError(msg)
         height_var = self.dataset.variables["height"]
@@ -74,7 +74,7 @@ class ModelManager(DataSource):
             msg = (
                 f"Model '{self.model}' height is missing the "
                 f"'{LEVEL_DIMENSION}' dimension. It needs to be fixed in the "
-                "model munger."
+                "model file."
             )
             raise ModelDataError(msg)
         height = self.to_m(height_var)
@@ -184,7 +184,7 @@ class ModelManager(DataSource):
         except KeyError as err:
             msg = (
                 f"Model '{self.model}' is missing 'horizontal_resolution'. "
-                "It needs to be added to the model file by the model munger."
+                "It needs to be added to the model file."
             )
             raise ModelDataError(msg) from err
         unique = np.unique(ma.masked_invalid(h_res).compressed())
@@ -192,7 +192,7 @@ class ModelManager(DataSource):
             msg = (
                 f"Model '{self.model}' has invalid horizontal_resolution "
                 f"({unique.tolist()}); expected a single positive value. "
-                "It needs to be fixed in the model munger."
+                "It needs to be fixed in the model file."
             )
             raise ModelDataError(msg)
         return float(unique[0])

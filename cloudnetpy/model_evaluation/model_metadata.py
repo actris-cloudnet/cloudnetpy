@@ -1,14 +1,14 @@
 """Model-agnostic configuration for the model evaluation subpackage.
 
-All model files consumed here are harmonized by the model munger to a common
-set of variable names and units (temperature [K], pressure [Pa], qi/ql/
+All model files consumed here are expected to be harmonized to a common set of
+variable names and units (temperature [K], pressure [Pa], qi/ql/
 cloud_fraction [1], uwind/vwind [m s-1], height [m]). There is therefore no
 per-model variable mapping: the only thing that differs between models is the
 number of vertical levels, which is handled dynamically via `ALTITUDE_LIMIT`.
 """
 
 # Mapping from internal product keys to the harmonized model-file variable
-# names. These names are written identically for every model by the munger.
+# names. These names are expected to be identical for every model.
 MODEL_VARIABLE_NAMES = {
     "T": "temperature",
     "p": "pressure",
@@ -24,8 +24,8 @@ MODEL_VARIABLE_NAMES = {
 # names, so one L3 file holds exactly one model run.
 MODEL_PREFIX = "model_"
 
-# Name of the vertical dimension in the harmonized model files. The munger
-# writes the vertical axis under this dimension for every model.
+# Name of the vertical dimension in the harmonized model files. The vertical
+# axis is expected under this dimension for every model.
 LEVEL_DIMENSION = "level"
 
 # Coordinate / metadata variables that are identical between forecast cycles.
