@@ -47,6 +47,7 @@ def save_downsampled_file(
     objects: tuple,
     files: tuple[list[str | PathLike], str | PathLike],
     uuid: UUID,
+    model_name: str | None = None,
 ) -> None:
     """Saves a standard downsampled day product file.
 
@@ -57,6 +58,8 @@ def save_downsampled_file(
                       The :class:'ObservationManager.
         files (tuple): Includes two sourcefile group: List of model file(s) used
                        for processing output file and Cloudnet L2 product file
+        model_name (str): Human-readable model name for plot titles. Falls back
+                       to the model id when not given.
         keep_uuid (bool): If True, keeps the UUID of the old file, if that exists.
                           Default is False when new UUID is generated.
         uuid (str): Set specific UUID for the file.
@@ -72,8 +75,7 @@ def save_downsampled_file(
             f"from {obj.dataset.location}"
         )
         root_group.model = obj.model
-        if obj.source:
-            root_group.model_name = obj.source
+        root_group.model_name = model_name or obj.model
         _add_source(root_group, objects, files)
         output.copy_global(
             obj.dataset, root_group, ("location", "day", "month", "year")

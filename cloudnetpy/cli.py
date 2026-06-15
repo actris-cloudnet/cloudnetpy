@@ -151,6 +151,9 @@ def _process_l3_product(
         return None
     filename = f"{args.date.replace('-', '')}_{args.site}_{args.model}_{product}.nc"
     output_file = _create_output_folder("evaluation", args) / filename
+    model_name = next(
+        (m.name for m in client.models() if m.id == args.model), args.model
+    )
     module = importlib.import_module(
         "cloudnetpy.model_evaluation.products.product_resampling"
     )
@@ -161,6 +164,7 @@ def _process_l3_product(
             model_file,
             product_file,
             str(output_file),
+            model_name=model_name,
             overwrite=True,
         )
     except ModelDataError as e:

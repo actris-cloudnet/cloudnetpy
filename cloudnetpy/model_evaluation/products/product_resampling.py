@@ -23,6 +23,7 @@ def process_L3_day_product(
     product_file: str | PathLike,
     output_file: str | PathLike,
     uuid: str | UUID | None = None,
+    model_name: str | None = None,
     *,
     overwrite: bool = False,
 ) -> UUID:
@@ -40,6 +41,8 @@ def process_L3_day_product(
         product_file (str): Source file path of L2 observation product
         output_file (str): Path and name of L3 day scale product output file
         uuid (str): Set specific UUID for the file.
+        model_name (str): Human-readable model name for plot titles. Falls back
+                       to the model id when not given.
         overwrite (bool): Recreate the output file if it already exists.
 
     Raises:
@@ -73,5 +76,6 @@ def process_L3_day_product(
         (model_obj, product_obj),
         ([model_file], product_file),
         uuid,
+        model_name,
     )
     return uuid
