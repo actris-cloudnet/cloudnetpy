@@ -112,8 +112,10 @@ def generate_L3_day_plots(
     name_set = (
         [standard_names, advection_names] if include_advection else [standard_names]
     )
-    unique_tuples = {tuple(lst) for lst in name_set}
-    name_set_unique = tuple(list(tup) for tup in unique_tuples)
+    name_set_unique: list[list] = []
+    for names in name_set:
+        if names not in name_set_unique:
+            name_set_unique.append(names)
 
     dimensions = []
     for names in name_set_unique:
@@ -389,7 +391,7 @@ def get_statistic_plots(
             _raise()
 
     def _check_data2() -> None:
-        if "error" in stat and np.all(day_stat.model_stat.mask is True):
+        if "error" in stat and np.all(ma.getmaskarray(day_stat.model_stat)):
             _raise()
 
     def _raise() -> None:
@@ -407,11 +409,11 @@ def get_statistic_plots(
             figs.append(fig)
             axes.append(ax)
             model_data, _, _ = p_tools.read_data_characters(nc_file, names[0])
-            if np.all(model_data.mask is True):
+            if np.all(ma.getmaskarray(model_data)):
                 model_missing = True
             for j, name in enumerate(names):
                 data, x, y = p_tools.read_data_characters(nc_file, name)
-                if np.all(data.mask is True):
+                if np.all(ma.getmaskarray(data)):
                     obs_missing = True
                 _check_data()
                 statistics = "aerror" if product == "cf" and stat == "error" else stat

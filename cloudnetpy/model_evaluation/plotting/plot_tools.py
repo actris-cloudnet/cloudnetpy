@@ -41,7 +41,8 @@ def parse_wanted_names(
 
 
 def parse_dataset_keys(nc_file: str, product: str, *, advance: bool) -> list:
-    names = [n for n in netCDF4.Dataset(nc_file).variables if product in n]
+    with netCDF4.Dataset(nc_file) as nc:
+        names = [n for n in nc.variables if product in n]
     if not advance:
         names = [n for n in names if "cirrus" not in n and "snow" not in n]
     return names
@@ -57,16 +58,16 @@ def sort_model2first_element(a: list) -> list:
 
 def read_data_characters(nc_file: str, name: str) -> tuple:
     """Gets dimensions and data for plotting."""
-    nc = netCDF4.Dataset(nc_file)
-    data = nc.variables[name][:]
-    data = mask_small_values(data, name)
-    x = nc.variables["time"][:]
-    x = reshape_1d2nd(x, data)
-    try:
-        y = nc.variables[f"{MODEL_PREFIX}height"][:]
-    except KeyError as err:
-        msg = f"Missing variable {MODEL_PREFIX}height"
-        raise RuntimeError(msg) from err
+    with netCDF4.Dataset(nc_file) as nc:
+        data = nc.variables[name][:]
+        data = mask_small_values(data, name)
+        x = nc.variables["time"][:]
+        x = reshape_1d2nd(x, data)
+        try:
+            y = nc.variables[f"{MODEL_PREFIX}height"][:]
+        except KeyError as err:
+            msg = f"Missing variable {MODEL_PREFIX}height"
+            raise RuntimeError(msg) from err
     y = y / 1000
     try:
         mask = y.mask

@@ -24,6 +24,10 @@ MODEL_VARIABLE_NAMES = {
 # names, so one L3 file holds exactly one model run.
 MODEL_PREFIX = "model_"
 
+# Name of the vertical dimension in the harmonized model files. The munger
+# writes the vertical axis under this dimension for every model.
+LEVEL_DIMENSION = "level"
+
 # Coordinate / metadata variables that are identical between forecast cycles.
 COMMON_VARIABLES = (
     "time",

@@ -106,9 +106,10 @@ def run(args: argparse.Namespace, tmpdir: str, client: APIClient) -> None:
 
     # Model evaluation L3 products (e.g. l3-cf)
     for product in args.products:
-        if _parse_instrument(product)[0] in L3_SOURCE_PRODUCTS:
-            l3_filepath = _process_l3_product(product, args, client)
-            _plot_l3(l3_filepath, product, args)
+        base_product = _parse_instrument(product)[0]
+        if base_product in L3_SOURCE_PRODUCTS:
+            l3_filepath = _process_l3_product(base_product, args, client)
+            _plot_l3(l3_filepath, base_product, args)
 
 
 def _process_epsilon_radar(
@@ -723,7 +724,7 @@ def _parse_products(product_argument: str, client: APIClient) -> list[str]:
     valid_products = []
     for product in products:
         prod, _ = _parse_instrument(product)
-        if prod in valid_options:
+        if prod in valid_options or prod in L3_SOURCE_PRODUCTS:
             valid_products.append(product)
     return valid_products
 

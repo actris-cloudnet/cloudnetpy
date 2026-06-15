@@ -12,6 +12,7 @@ from cloudnetpy.model_evaluation.model_metadata import (
     ALTITUDE_LIMIT,
     COMMON_VARIABLES,
     CYCLE_VARIABLES,
+    LEVEL_DIMENSION,
     MODEL_PREFIX,
     MODEL_VARIABLE_NAMES,
 )
@@ -55,7 +56,7 @@ class ModelManager(DataSource):
         self.wind = self._calculate_wind_speed()
         self.resolution_h = self._get_horizontal_resolution()
 
-    def _read_number_of_levels(self) -> int | None:
+    def _read_number_of_levels(self) -> int:
         """Number of vertical levels below the altitude limit.
 
         Model heights are ground-first and increase with level index, and the
@@ -63,8 +64,20 @@ class ModelManager(DataSource):
         count can be used to drop the unused upper levels for any model.
         """
         if "height" not in self.dataset.variables:
-            return None
-        height = self.to_m(self.dataset.variables["height"])
+            msg = (
+                f"Model '{self.model}' is missing the 'height' variable. "
+                "It needs to be added to the model file by the model munger."
+            )
+            raise ModelDataError(msg)
+        height_var = self.dataset.variables["height"]
+        if LEVEL_DIMENSION not in height_var.dimensions:
+            msg = (
+                f"Model '{self.model}' height is missing the "
+                f"'{LEVEL_DIMENSION}' dimension. It needs to be fixed in the "
+                "model munger."
+            )
+            raise ModelDataError(msg)
+        height = self.to_m(height_var)
         below_limit = (
             np.any(height < ALTITUDE_LIMIT, axis=0)
             if height.ndim > 1
@@ -140,7 +153,7 @@ class ModelManager(DataSource):
         def _add_variable(var: str, key: str) -> None:
             ncvar = self.dataset.variables[var]
             data = ncvar[:]
-            if "level" in ncvar.dimensions:
+            if LEVEL_DIMENSION in ncvar.dimensions:
                 data = self.cut_off_extra_levels(data)
             self.append_data(data, key)
 
@@ -155,8 +168,6 @@ class ModelManager(DataSource):
 
     def cut_off_extra_levels(self, data: npt.NDArray) -> npt.NDArray:
         """Remove unused levels (above the altitude limit) from model data."""
-        if self._n_levels is None:
-            return data
         return data[:, : self._n_levels] if data.ndim > 1 else data[: self._n_levels]
 
     def _calculate_wind_speed(self) -> npt.NDArray:
@@ -176,11 +187,12 @@ class ModelManager(DataSource):
                 "It needs to be added to the model file by the model munger."
             )
             raise ModelDataError(msg) from err
-        resolution = float(np.unique(h_res.data)[0])
-        if resolution <= 0:
+        unique = np.unique(ma.masked_invalid(h_res).compressed())
+        if unique.size != 1 or unique[0] <= 0:
             msg = (
                 f"Model '{self.model}' has invalid horizontal_resolution "
-                f"({resolution}). It needs to be fixed in the model munger."
+                f"({unique.tolist()}); expected a single positive value. "
+                "It needs to be fixed in the model munger."
             )
             raise ModelDataError(msg)
-        return resolution
+        return float(unique[0])
