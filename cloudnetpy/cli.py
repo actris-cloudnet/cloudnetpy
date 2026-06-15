@@ -37,6 +37,9 @@ L3_SOURCE_PRODUCTS: Final = {
     "l3-lwc": "lwc",
 }
 
+# Model used for L3 products when none is given with --model.
+DEFAULT_L3_MODEL: Final = "ecmwf"
+
 
 def run(args: argparse.Namespace, tmpdir: str, client: APIClient) -> None:
     cat_files = {}
@@ -108,8 +111,11 @@ def run(args: argparse.Namespace, tmpdir: str, client: APIClient) -> None:
     for product in args.products:
         base_product = _parse_instrument(product)[0]
         if base_product in L3_SOURCE_PRODUCTS:
-            l3_filepath = _process_l3_product(base_product, args, client)
-            _plot_l3(l3_filepath, base_product, args)
+            model = args.model or DEFAULT_L3_MODEL
+            if args.model is None:
+                logging.info("No model specified, using default '%s'", model)
+            l3_filepath = _process_l3_product(base_product, args, client, model)
+            _plot_l3(l3_filepath, base_product, args, model)
 
 
 def _process_epsilon_radar(
@@ -134,26 +140,21 @@ def _process_epsilon_radar(
 
 
 def _process_l3_product(
-    product: str, args: argparse.Namespace, client: APIClient
+    product: str, args: argparse.Namespace, client: APIClient, model: str
 ) -> str | None:
-    if args.model is None:
-        logging.info("No model specified (use --model) for %s", product)
-        return None
     obs = product.removeprefix("l3-")
     source_product = L3_SOURCE_PRODUCTS[product]
     product_file = _fetch_product(args, source_product, client)
     if product_file is None:
         logging.info("No %s data available for %s", source_product, product)
         return None
-    model_file = _fetch_model(args, client)
+    model_file = _fetch_model(args, client, model)
     if model_file is None:
         logging.info("No model data available for %s", product)
         return None
-    filename = f"{args.date.replace('-', '')}_{args.site}_{args.model}_{product}.nc"
+    filename = f"{args.date.replace('-', '')}_{args.site}_{model}_{product}.nc"
     output_file = _create_output_folder("evaluation", args) / filename
-    model_name = next(
-        (m.name for m in client.models() if m.id == args.model), args.model
-    )
+    model_name = next((m.name for m in client.models() if m.id == model), model)
     site_name = next(
         (s.human_readable_name for s in client.sites() if s.id == args.site),
         args.site,
@@ -163,7 +164,7 @@ def _process_l3_product(
     )
     try:
         module.process_L3_day_product(
-            args.model,
+            model,
             obs,
             model_file,
             product_file,
@@ -597,9 +598,14 @@ def _fetch_product(
     return _download_product_file(meta, folder, client, force=args.force_download)
 
 
-def _fetch_model(args: argparse.Namespace, client: APIClient) -> str | None:
+def _fetch_model(
+    args: argparse.Namespace, client: APIClient, model_id: str | None = None
+) -> str | None:
     files = client.files(
-        product_id="model", model_id=args.model, date=args.date, site_id=args.site
+        product_id="model",
+        model_id=model_id or args.model,
+        date=args.date,
+        site_id=args.site,
     )
     if not files:
         logging.info("No model data available for this date")
@@ -685,7 +691,10 @@ def _plot(
 
 
 def _plot_l3(
-    filepath: PathLike | str | None, product: str, args: argparse.Namespace
+    filepath: PathLike | str | None,
+    product: str,
+    args: argparse.Namespace,
+    model: str,
 ) -> None:
     if filepath is None or (not args.plot and not args.show):
         return
@@ -696,7 +705,7 @@ def _plot_l3(
         module.generate_L3_day_plots(
             str(filepath),
             obs,
-            args.model,
+            model,
             save_path=save_path,
             show=args.show,
             include_advection=False,
