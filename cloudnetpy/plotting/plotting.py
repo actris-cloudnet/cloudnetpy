@@ -1183,8 +1183,7 @@ def generate_figure(
 
 def add_subtitle(fig: Figure, case_date: date, site_name: str) -> None:
     """Adds a date/site subtitle to a figure."""
-    site = site_name.replace("-", " ")
-    text = f"{site}, {case_date.strftime('%d %b %Y').lstrip('0')}"
+    text = f"{site_name}, {case_date.strftime('%d %b %Y').lstrip('0')}"
     fig.suptitle(
         text,
         fontsize=13,

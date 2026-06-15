@@ -48,6 +48,7 @@ def save_downsampled_file(
     files: tuple[list[str | PathLike], str | PathLike],
     uuid: UUID,
     model_name: str | None = None,
+    site_name: str | None = None,
 ) -> None:
     """Saves a standard downsampled day product file.
 
@@ -60,6 +61,9 @@ def save_downsampled_file(
                        for processing output file and Cloudnet L2 product file
         model_name (str): Human-readable model name for plot titles. Falls back
                        to the model id when not given.
+        site_name (str): Human-readable site name for the location attribute and
+                       plot subtitle. Falls back to the source file's location
+                       when not given.
         keep_uuid (bool): If True, keeps the UUID of the old file, if that exists.
                           Default is False when new UUID is generated.
         uuid (str): Set specific UUID for the file.
@@ -67,19 +71,18 @@ def save_downsampled_file(
     obj = objects[0]
     n_levels = obj.data[obj.keys["height"]][:].shape[-1]
     dimensions = {"time": len(obj.time), "level": n_levels}
+    location = site_name or obj.dataset.location
     with output.init_file(file_name, dimensions, obj.data, uuid) as root_group:
         _augment_global_attributes(root_group)
         root_group.cloudnet_file_type = "l3-" + id_mark.split("_", maxsplit=1)[0]
         root_group.title = (
-            f"Downsampled {id_mark.capitalize().replace('_', ' of ')} "
-            f"from {obj.dataset.location}"
+            f"Downsampled {id_mark.capitalize().replace('_', ' of ')} from {location}"
         )
         root_group.model = obj.model
         root_group.model_name = model_name or obj.model
         _add_source(root_group, objects, files)
-        output.copy_global(
-            obj.dataset, root_group, ("location", "day", "month", "year")
-        )
+        output.copy_global(obj.dataset, root_group, ("day", "month", "year"))
+        root_group.location = location
         if not hasattr(obj.dataset, "day"):
             root_group.year, root_group.month, root_group.day = obj.date
         output.merge_history(root_group, id_mark, obj)

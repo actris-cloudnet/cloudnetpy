@@ -154,6 +154,10 @@ def _process_l3_product(
     model_name = next(
         (m.name for m in client.models() if m.id == args.model), args.model
     )
+    site_name = next(
+        (s.human_readable_name for s in client.sites() if s.id == args.site),
+        args.site,
+    )
     module = importlib.import_module(
         "cloudnetpy.model_evaluation.products.product_resampling"
     )
@@ -165,6 +169,7 @@ def _process_l3_product(
             product_file,
             str(output_file),
             model_name=model_name,
+            site_name=site_name,
             overwrite=True,
         )
     except ModelDataError as e:

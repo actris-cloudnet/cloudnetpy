@@ -24,6 +24,7 @@ def process_L3_day_product(
     output_file: str | PathLike,
     uuid: str | UUID | None = None,
     model_name: str | None = None,
+    site_name: str | None = None,
     *,
     overwrite: bool = False,
 ) -> UUID:
@@ -43,6 +44,9 @@ def process_L3_day_product(
         uuid (str): Set specific UUID for the file.
         model_name (str): Human-readable model name for plot titles. Falls back
                        to the model id when not given.
+        site_name (str): Human-readable site name for the location attribute and
+                       plot subtitle. Falls back to the source file's location
+                       when not given.
         overwrite (bool): Recreate the output file if it already exists.
 
     Raises:
@@ -77,5 +81,6 @@ def process_L3_day_product(
         ([model_file], product_file),
         uuid,
         model_name,
+        site_name,
     )
     return uuid
