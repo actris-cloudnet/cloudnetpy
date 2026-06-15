@@ -669,7 +669,7 @@ def plot_vertical_profile(
         "-",
         color="orange",
         lw=2,
-        label="Mean of {day_stat.title[0]}",
+        label=f"Mean of {day_stat.title[0]}",
     )
     ax.plot(orm, axes, "-", color="green", lw=2, label="Mean of observation")
 
@@ -757,7 +757,7 @@ def _set_title(
     else:
         name = variable_info.name
         if len(model_name) > 1:
-            ax.set_title(f"{name} of {model_name}", fontsize=14)
+            ax.set_title(f"{name}, {model_name}", fontsize=14)
         else:
             ax.set_title(f"Simulated {name}")
 
