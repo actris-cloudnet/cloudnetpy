@@ -47,14 +47,13 @@ def test_generate_cf(obs_file) -> None:
     compare = ma.array(
         [
             [0, 1, 0, 0],
-            [0, 0, 0, 0],
-            [0, 0, 0, 1],
             [0, 0, 0, 1],
             [1, 0, 0, 0],
+            [0, 0, 0, 1],
+            [0, 0, 0, 0],
             [0, 0, 0, 0],
         ],
     )
-    compare[~obj._rain_index(), :] = ma.masked
     testing.assert_array_almost_equal(compare, x)
 
 
@@ -110,49 +109,10 @@ def test_mask_cloud_bits_all_values(obs_file) -> None:
     testing.assert_array_almost_equal(x, compare)
 
 
-def test_check_rainrate(obs_file) -> None:
-    obj = ObservationManager("cf", str(obs_file))
-    x = obj._check_rainrate()
-    assert x is True
-
-
-def test_get_rainrate_threshold(obs_file) -> None:
-    obj = ObservationManager("cf", str(obs_file))
-    x = obj._get_rainrate_threshold()
-    assert x == 8
-
-
-def test_rain_index(obs_file) -> None:
-    obj = ObservationManager("cf", str(obs_file))
-    x = obj._rain_index()
-    compare = np.array([0, 0, 0, 1, 0, 1], dtype=bool)
-    testing.assert_array_almost_equal(x, compare)
-
-
-@pytest.mark.parametrize("key", ["iwc", "iwc_att", "iwc_rain"])
-def test_generate_iwc_masks(key, obs_file) -> None:
-    obj = ObservationManager(PRODUCT, str(obs_file))
-    obj._generate_iwc_masks()
-    assert key in obj.data
-
-
-def test_get_rain_iwc(obs_file) -> None:
+def test_mask_iwc(obs_file) -> None:
     obj = ObservationManager("iwc", str(obs_file))
     iwc_status = obj.getvar("iwc_retrieval_status")
-    x = np.zeros(iwc_status.shape)
-    x[iwc_status == 5] = 1
-    x = np.any(x, axis=1)
-    obj._get_rain_iwc(iwc_status[:])
-    compare = obj.data["iwc_rain"]
-    testing.assert_array_almost_equal(x, compare[:])
-
-
-def test_mask_iwc_att(obs_file) -> None:
-    obj = ObservationManager("iwc", str(obs_file))
-    iwc = obj.getvar("iwc")
-    iwc_status = obj.getvar("iwc_retrieval_status")
-    x = ma.copy(iwc)
-    obj._mask_iwc_att(iwc, iwc_status)
-    compare = obj.data["iwc_att"]
-    x[iwc_status > 3] = ma.masked
-    testing.assert_array_almost_equal(x, compare[:])
+    expected = ma.copy(obj.getvar("iwc"))
+    expected[~np.isin(iwc_status, (1, 3))] = ma.masked
+    obj._mask_iwc()
+    testing.assert_array_almost_equal(expected, obj.data["iwc"][:])

@@ -175,28 +175,6 @@ REGRID_PRODUCT_ATTRIBUTES = {
         ),
         dimensions=("time", "level"),
     ),
-    "iwc_att": MetaData(
-        long_name="Observed ice water content with attenuation reshaped to model grid"
-        " by averaging",
-        units="kg m-3",
-        comment=(
-            "This variable is the same as the observed mean ice water content, iwc,\n"
-            "except that profiles with uncorrected attenuation of the radar\n"
-            "reflectivity were included."
-        ),
-        dimensions=("time", "level"),
-    ),
-    "iwc_rain": MetaData(
-        long_name="Observed ice water content with raining reshaped to model grid"
-        " by averaging",
-        units="kg m-3",
-        comment=(
-            "This variable is the same as the observed mean ice water content\n"
-            "including attenuation, iwc_att, except that profiles with rain\n"
-            "at the surface were also included."
-        ),
-        dimensions=("time", "level"),
-    ),
     "iwc_adv": MetaData(
         long_name="Observed ice water content reshaped to model advection grid"
         " by averaging",
@@ -205,28 +183,6 @@ REGRID_PRODUCT_ATTRIBUTES = {
             "This variable is the same as the observed mean ice water content, iwc,\n"
             "except that model winds were used to estimate the time taken to advect\n"
             "the flow a distance equivalent to the models horizontal resolution."
-        ),
-        dimensions=("time", "level"),
-    ),
-    "iwc_att_adv": MetaData(
-        long_name="Observed ice water content with attenuation reshaped to model"
-        " advection grid by averaging",
-        units="kg m-3",
-        comment=(
-            "This variable is the same as the observed mean ice water content,\n"
-            "iwc_adv, except that profiles with uncorrected attenuation of the radar\n"
-            "reflectivity were included."
-        ),
-        dimensions=("time", "level"),
-    ),
-    "iwc_rain_adv": MetaData(
-        long_name="Observed ice water content with raining reshaped to model"
-        " advection grid by averaging",
-        units="kg m-3",
-        comment=(
-            "This variable is the same as the observed mean ice water content\n"
-            "including attenuation, iwc_att_adv, except that profiles with rain\n"
-            "at the surface were also included."
         ),
         dimensions=("time", "level"),
     ),

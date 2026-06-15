@@ -30,11 +30,7 @@ class TestCloudFractionProcessing:
         "key",
         [
             "iwc",
-            "iwc_att",
-            "iwc_rain",
             "iwc_adv",
-            "iwc_att_adv",
-            "iwc_rain_adv",
         ],
     )
     def test_that_has_correct_product_variables(self, key) -> None:

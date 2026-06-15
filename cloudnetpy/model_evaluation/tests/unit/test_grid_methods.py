@@ -18,11 +18,7 @@ PRODUCT = "iwc"
             (
                 "model_iwc",
                 "iwc",
-                "iwc_att",
-                "iwc_rain",
                 "iwc_adv",
-                "iwc_att_adv",
-                "iwc_rain_adv",
             ),
         ),
         (
@@ -46,7 +42,7 @@ def test_generate_regrid_product(model_file, obs_file, product, variables) -> No
         assert var in model.data
 
 
-@pytest.mark.parametrize("key, value", [("iwc", 3), ("lwc", 1), ("cf", 2)])
+@pytest.mark.parametrize("key, value", [("iwc", 1), ("lwc", 1), ("cf", 2)])
 def test_get_method_storage(key, value, model_file, obs_file) -> None:
     obs = ObservationManager(key, str(obs_file))
     model = ModelManager(str(model_file), MODEL, key)
@@ -55,7 +51,7 @@ def test_get_method_storage(key, value, model_file, obs_file) -> None:
     assert len(x.keys()) == value
 
 
-@pytest.mark.parametrize("key, value", [("iwc", 3), ("lwc", 1), ("cf", 2)])
+@pytest.mark.parametrize("key, value", [("iwc", 1), ("lwc", 1), ("cf", 2)])
 def test_get_method_storage_adv(key, value, model_file, obs_file) -> None:
     obs = ObservationManager(key, str(obs_file))
     model = ModelManager(str(model_file), MODEL, key)
@@ -79,24 +75,6 @@ def test_cf_method_storage_adv(name, model_file, obs_file) -> None:
     model = ModelManager(str(model_file), MODEL, PRODUCT)
     obj = ProductGrid(model, obs)
     x, y = obj._cf_method_storage()
-    assert name in y
-
-
-@pytest.mark.parametrize("name", ["iwc", "iwc_att", "iwc_rain"])
-def test_iwc_method_storage(name, model_file, obs_file) -> None:
-    obs = ObservationManager(PRODUCT, str(obs_file))
-    model = ModelManager(str(model_file), MODEL, PRODUCT)
-    obj = ProductGrid(model, obs)
-    x, y = obj._iwc_method_storage()
-    assert name in x
-
-
-@pytest.mark.parametrize("name", ["iwc_adv", "iwc_att_adv", "iwc_rain_adv"])
-def test_iwc_method_storage_adv(name, model_file, obs_file) -> None:
-    obs = ObservationManager(PRODUCT, str(obs_file))
-    model = ModelManager(str(model_file), MODEL, PRODUCT)
-    obj = ProductGrid(model, obs)
-    x, y = obj._iwc_method_storage()
     assert name in y
 
 
@@ -334,332 +312,6 @@ def test_reshape_data_to_window_empty(model_file, obs_file) -> None:
     assert x is None
 
 
-def test_regrid_iwc(model_file, obs_file) -> None:
-    obs = ObservationManager(PRODUCT, str(obs_file))
-    model = ModelManager(str(model_file), MODEL, PRODUCT)
-    obj = ProductGrid(model, obs)
-    obj._obs_data = ma.array([[1, 1, 1, 1], [2, 2, 2, 2], [3, 3, 3, 3], [4, 4, 4, 3]])
-    d = {"iwc": ma.zeros((1, 1))}
-    ind: ma.MaskedArray = ma.array([[0, 1, 1, 1]], dtype=bool)
-    no_rain: ma.MaskedArray = ma.array(
-        [[0, 1, 1, 1], [0, 0, 1, 1], [0, 0, 0, 0], [0, 0, 0, 0]],
-        dtype=bool,
-    )
-    d = obj._regrid_iwc(d, 0, 0, ind, no_rain)
-    x = d["iwc"]
-    testing.assert_almost_equal(x[0, 0], 1.4)
-
-
-def test_regrid_iwc_nan(model_file, obs_file) -> None:
-    obs = ObservationManager(PRODUCT, str(obs_file))
-    model = ModelManager(str(model_file), MODEL, PRODUCT)
-    obj = ProductGrid(model, obs)
-    obj._obs_data = ma.array(
-        [[1, 1, 99, 1], [2, 99, 2, 2], [3, 3, 3, 3], [4, 4, 4, 99]],
-    )
-    obj._obs_data = ma.masked_where(obj._obs_data == 99, obj._obs_data)
-    d = {"iwc": ma.zeros((1, 1))}
-    ind: ma.MaskedArray = ma.array([[0, 1, 1, 1]], dtype=bool)
-    no_rain: ma.MaskedArray = ma.array(
-        [[0, 1, 1, 1], [0, 0, 1, 1], [0, 0, 0, 0], [0, 0, 0, 0]],
-        dtype=bool,
-    )
-    d = obj._regrid_iwc(d, 0, 0, ind, no_rain)
-    x = d["iwc"]
-    testing.assert_almost_equal(x[0, 0], 1.5)
-
-
-def test_regrid_iwc_all_nan(model_file, obs_file) -> None:
-    obs = ObservationManager(PRODUCT, str(obs_file))
-    model = ModelManager(str(model_file), MODEL, PRODUCT)
-    obj = ProductGrid(model, obs)
-    obj._obs_data = ma.array(
-        [
-            [99, 99, 99, 99],
-            [99, 99, 99, 99],
-            [99, 99, 99, 99],
-            [99, 99, 99, 99],
-        ],
-    )
-    obj._obs_data = ma.masked_where(obj._obs_data == 99, obj._obs_data)
-    d = {"iwc": ma.zeros((1, 1))}
-    ind: ma.MaskedArray = ma.array([[0, 1, 1, 1]], dtype=bool)
-    no_rain: ma.MaskedArray = ma.array(
-        [[0, 1, 1, 1], [0, 0, 1, 1], [0, 0, 0, 0], [0, 0, 0, 0]],
-        dtype=bool,
-    )
-    d = obj._regrid_iwc(d, 0, 0, ind, no_rain)
-    assert d["iwc"][0, 0].mask == True
-
-
-def test_regrid_iwc_masked(model_file, obs_file) -> None:
-    obs = ObservationManager(PRODUCT, str(obs_file))
-    model = ModelManager(str(model_file), MODEL, PRODUCT)
-    obj = ProductGrid(model, obs)
-    obj._obs_data = ma.array([[1, 1, 1, 1], [2, 2, 2, 2], [3, 3, 3, 3], [4, 4, 4, 4]])
-    obj._obs_data[1, :] = ma.masked
-    d = {"iwc": ma.zeros((1, 1))}
-    ind: ma.MaskedArray = ma.array([[0, 1, 1, 1]], dtype=bool)
-    no_rain: ma.MaskedArray = ma.array(
-        [[0, 1, 1, 1], [0, 0, 1, 1], [0, 0, 0, 0], [0, 0, 0, 0]],
-        dtype=bool,
-    )
-    d = obj._regrid_iwc(d, 0, 0, ind, no_rain)
-    x = d["iwc"]
-    testing.assert_almost_equal(x[0, 0], 1.0)
-
-
-def test_regrid_iwc_all_masked(model_file, obs_file) -> None:
-    obs = ObservationManager(PRODUCT, str(obs_file))
-    model = ModelManager(str(model_file), MODEL, PRODUCT)
-    obj = ProductGrid(model, obs)
-    obj._obs_data = ma.array(
-        [[1, 1, 1, 1], [2, 2, 2, 2], [3, 3, 3, 3], [4, 4, 4, 4]], mask=True
-    )
-    d = {"iwc": ma.zeros((1, 1))}
-    ind: ma.MaskedArray = ma.array([[0, 1, 1, 1]], dtype=bool)
-    no_rain: ma.MaskedArray = ma.array(
-        [[0, 1, 1, 1], [0, 0, 1, 1], [0, 0, 0, 0], [0, 0, 0, 0]],
-        dtype=bool,
-    )
-    d = obj._regrid_iwc(d, 0, 0, ind, no_rain)
-    assert d["iwc"][0, 0].mask == True
-
-
-def test_regrid_iwc_none(model_file, obs_file) -> None:
-    obs = ObservationManager(PRODUCT, str(obs_file))
-    model = ModelManager(str(model_file), MODEL, PRODUCT)
-    obj = ProductGrid(model, obs)
-    obj._obs_data = ma.array([[1, 1, 1, 1], [2, 2, 2, 2], [3, 3, 3, 3], [4, 4, 4, 4]])
-    d = {"iwc": ma.zeros((1, 1))}
-    ind: ma.MaskedArray = ma.array([[0, 1, 1, 1]], dtype=bool)
-    no_rain: ma.MaskedArray = ma.array(
-        [[0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]],
-        dtype=bool,
-    )
-    d = obj._regrid_iwc(d, 0, 0, ind, no_rain)
-    assert d["iwc"][0, 0].mask == True
-
-
-def test_regrid_iwc_att(model_file, obs_file) -> None:
-    obs = ObservationManager(PRODUCT, str(obs_file))
-    model = ModelManager(str(model_file), MODEL, PRODUCT)
-    obj = ProductGrid(model, obs)
-    d = {"iwc_att": ma.zeros((1, 1))}
-    ind: ma.MaskedArray = ma.array([[0, 1, 1, 1]], dtype=bool)
-    no_rain: ma.MaskedArray = ma.array(
-        [
-            [0, 1, 1, 1],
-            [0, 0, 1, 1],
-            [0, 1, 1, 1],
-            [0, 0, 1, 1],
-            [0, 0, 0, 0],
-            [0, 0, 0, 0],
-        ],
-        dtype=bool,
-    )
-    d = obj._regrid_iwc(d, 0, 0, ind, no_rain)
-    x = d["iwc_att"]
-    testing.assert_almost_equal(x[0, 0], 0.018)
-
-
-def test_regrid_iwc_att_masked(model_file, obs_file) -> None:
-    obs = ObservationManager(PRODUCT, str(obs_file))
-    model = ModelManager(str(model_file), MODEL, PRODUCT)
-    obj = ProductGrid(model, obs)
-    obj._obs_obj.data["iwc_att"][:].mask = ma.array(
-        [
-            [1, 0, 1, 0],
-            [0, 1, 1, 0],
-            [1, 0, 0, 1],
-            [0, 1, 1, 1],
-            [1, 1, 0, 0],
-            [0, 1, 0, 1],
-        ],
-        dtype=bool,
-    )
-    d = {"iwc_att": ma.zeros((1, 1))}
-    ind: ma.MaskedArray = ma.array([[0, 1, 1, 1]], dtype=bool)
-    no_rain: ma.MaskedArray = ma.array(
-        [
-            [0, 1, 1, 1],
-            [0, 0, 1, 1],
-            [0, 1, 1, 1],
-            [0, 0, 1, 1],
-            [0, 0, 0, 0],
-            [0, 0, 0, 0],
-        ],
-        dtype=bool,
-    )
-    d = obj._regrid_iwc(d, 0, 0, ind, no_rain)
-    x = d["iwc_att"]
-    testing.assert_almost_equal(x[0, 0], 0.018)
-
-
-def test_regrid_iwc_att_all_masked(model_file, obs_file) -> None:
-    obs = ObservationManager(PRODUCT, str(obs_file))
-    model = ModelManager(str(model_file), MODEL, PRODUCT)
-    obj = ProductGrid(model, obs)
-    obj._obs_obj.data["iwc_att"][:].mask = ma.array(
-        [
-            [1, 1, 1, 1],
-            [1, 1, 1, 1],
-            [1, 1, 1, 1],
-            [1, 1, 1, 1],
-            [1, 1, 1, 1],
-            [1, 1, 1, 1],
-        ],
-        dtype=bool,
-    )
-    d = {"iwc_att": ma.zeros((1, 1))}
-    ind: ma.MaskedArray = ma.array([[0, 1, 1, 1]], dtype=bool)
-    no_rain: ma.MaskedArray = ma.array(
-        [
-            [0, 1, 1, 1],
-            [0, 0, 1, 1],
-            [0, 1, 1, 1],
-            [0, 0, 1, 1],
-            [0, 0, 0, 0],
-            [0, 0, 0, 0],
-        ],
-        dtype=bool,
-    )
-    d = obj._regrid_iwc(d, 0, 0, ind, no_rain)
-    x = d["iwc_att"]
-    # Simo: not sure if this should be masked or not
-    assert x[0, 0] == 0.01
-
-
-def test_regrid_iwc_att_none(model_file, obs_file) -> None:
-    obs = ObservationManager(PRODUCT, str(obs_file))
-    model = ModelManager(str(model_file), MODEL, PRODUCT)
-    obj = ProductGrid(model, obs)
-    d = {"iwc_att": ma.zeros((1, 1))}
-    ind: ma.MaskedArray = ma.array([[0, 1, 1, 1]], dtype=bool)
-    no_rain: ma.MaskedArray = ma.array(
-        [
-            [0, 0, 0, 0],
-            [0, 0, 0, 0],
-            [0, 0, 0, 0],
-            [0, 0, 0, 0],
-            [0, 0, 0, 0],
-            [0, 0, 0, 0],
-        ],
-        dtype=bool,
-    )
-    d = obj._regrid_iwc(d, 0, 0, ind, no_rain)
-    x = d["iwc_att"]
-    assert x[0, 0].mask == True
-
-
-def test_regrid_iwc_rain(model_file, obs_file) -> None:
-    obs = ObservationManager(PRODUCT, str(obs_file))
-    model = ModelManager(str(model_file), MODEL, PRODUCT)
-    obj = ProductGrid(model, obs)
-    obj._obs_data = ma.array([[1, 1, 1, 1], [2, 2, 2, 2], [3, 3, 3, 3], [4, 4, 4, 3]])
-    d = {"iwc_rain": ma.zeros((1, 1))}
-    ind: ma.MaskedArray = ma.array(
-        [[0, 1, 1, 1], [0, 0, 1, 1], [0, 1, 1, 1], [0, 0, 1, 1]], dtype=bool
-    )
-    no_rain: ma.MaskedArray = ma.array(
-        [[0, 1, 1, 1], [0, 0, 1, 1], [0, 1, 1, 1], [0, 0, 1, 1]],
-        dtype=bool,
-    )
-    d = obj._regrid_iwc(d, 0, 0, ind, no_rain)
-    x = d["iwc_rain"]
-    testing.assert_almost_equal(x[0, 0], 2.3)
-
-
-def test_regrid_iwc_rain_nan(model_file, obs_file) -> None:
-    obs = ObservationManager(PRODUCT, str(obs_file))
-    model = ModelManager(str(model_file), MODEL, PRODUCT)
-    obj = ProductGrid(model, obs)
-    obj._obs_data = ma.array(
-        [
-            [1, 99, 1, 1],
-            [2, 2, 2, 99],
-            [3, 3, 3, 3],
-            [99, 4, 4, 99],
-        ],
-    )
-    obj._obs_data = ma.masked_where(obj._obs_data == 99, obj._obs_data)
-    d = {"iwc_rain": ma.zeros((1, 1))}
-    ind: ma.MaskedArray = ma.array(
-        [[0, 1, 1, 1], [0, 0, 1, 1], [0, 1, 1, 1], [0, 0, 1, 1]], dtype=bool
-    )
-    no_rain: ma.MaskedArray = ma.array(
-        [[0, 1, 1, 1], [0, 0, 1, 1], [0, 1, 1, 1], [0, 0, 1, 1]],
-        dtype=bool,
-    )
-    d = obj._regrid_iwc(d, 0, 0, ind, no_rain)
-    x = d["iwc_rain"]
-    testing.assert_almost_equal(round(x[0, 0], 3), 2.429)
-
-
-def test_regrid_iwc_rain_all_nan(model_file, obs_file) -> None:
-    obs = ObservationManager(PRODUCT, str(obs_file))
-    model = ModelManager(str(model_file), MODEL, PRODUCT)
-    obj = ProductGrid(model, obs)
-    obj._obs_data = ma.array(
-        [
-            [99, 99, 99, 99],
-            [99, 99, 99, 99],
-            [99, 99, 99, 99],
-            [99, 99, 99, 99],
-        ],
-    )
-    obj._obs_data = ma.masked_where(obj._obs_data == 99, obj._obs_data)
-    d = {"iwc_rain": ma.zeros((1, 1))}
-    ind: ma.MaskedArray = ma.array(
-        [[0, 1, 1, 1], [0, 0, 1, 1], [0, 1, 1, 1], [0, 0, 1, 1]], dtype=bool
-    )
-    no_rain: ma.MaskedArray = ma.array(
-        [[0, 1, 1, 1], [0, 0, 1, 1], [0, 1, 1, 1], [0, 0, 1, 1]],
-        dtype=bool,
-    )
-    d = obj._regrid_iwc(d, 0, 0, ind, no_rain)
-    x = d["iwc_rain"]
-    assert x[0, 0].mask == True
-
-
-def test_regrid_iwc_rain_masked(model_file, obs_file) -> None:
-    obs = ObservationManager(PRODUCT, str(obs_file))
-    model = ModelManager(str(model_file), MODEL, PRODUCT)
-    obj = ProductGrid(model, obs)
-    obj._obs_data = ma.array([[1, 1, 1, 1], [2, 2, 2, 2], [3, 3, 3, 3], [4, 4, 4, 4]])
-    obj._obs_data[2, :] = ma.masked
-    d = {"iwc_rain": ma.zeros((1, 1))}
-    ind: ma.MaskedArray = ma.array(
-        [[0, 1, 1, 1], [0, 0, 1, 1], [0, 1, 1, 1], [0, 0, 1, 1]], dtype=bool
-    )
-    no_rain: ma.MaskedArray = ma.array(
-        [[0, 1, 1, 1], [0, 0, 1, 1], [0, 1, 1, 1], [0, 0, 1, 1]],
-        dtype=bool,
-    )
-    d = obj._regrid_iwc(d, 0, 0, ind, no_rain)
-    x = d["iwc_rain"]
-    testing.assert_almost_equal(round(x[0, 0], 3), 2.143)
-
-
-def test_regrid_iwc_rain_all_masked(model_file, obs_file) -> None:
-    obs = ObservationManager(PRODUCT, str(obs_file))
-    model = ModelManager(str(model_file), MODEL, PRODUCT)
-    obj = ProductGrid(model, obs)
-    obj._obs_data = ma.array([[1, 3, 1, 1], [2, 2, 2, 2], [3, 3, 3, 3], [4, 4, 4, 4]])
-    obj._obs_data[:, :] = ma.masked
-    d = {"iwc_rain": ma.zeros((1, 1))}
-    ind: ma.MaskedArray = ma.array(
-        [[0, 1, 1, 1], [0, 0, 1, 1], [0, 1, 1, 1], [0, 0, 1, 1]], dtype=bool
-    )
-    no_rain: ma.MaskedArray = ma.array(
-        [[0, 1, 1, 1], [0, 0, 1, 1], [0, 1, 1, 1], [0, 0, 1, 1]],
-        dtype=bool,
-    )
-    d = obj._regrid_iwc(d, 0, 0, ind, no_rain)
-    x = d["iwc_rain"]
-    assert x[0, 0].mask == True
-
-
 def test_regrid_product(model_file, obs_file) -> None:
     obs = ObservationManager("lwc", str(obs_file))
     model = ModelManager(str(model_file), MODEL, "lwc")
@@ -761,10 +413,7 @@ def test_append_data2object_cf(product, model_file, obs_file) -> None:
     assert product in model.data
 
 
-@pytest.mark.parametrize(
-    "product",
-    ["iwc", "iwc_att", "iwc_rain", "iwc_adv", "iwc_att_adv", "iwc_rain_adv"],
-)
+@pytest.mark.parametrize("product", ["iwc", "iwc_adv"])
 def test_append_data2object_iwc(product, model_file, obs_file) -> None:
     obs = ObservationManager("iwc", str(obs_file))
     model = ModelManager(str(model_file), MODEL, "iwc")

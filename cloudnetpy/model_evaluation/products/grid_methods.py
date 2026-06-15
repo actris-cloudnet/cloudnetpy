@@ -49,12 +49,6 @@ class ProductGrid:
                 (self._time_steps[i], self._time_steps[i + 1]),
                 self._obs_time,
             )
-            if self._obs_obj.obs == "iwc":
-                x_ind_no_rain = tl.get_1d_indices(
-                    (self._time_steps[i], self._time_steps[i + 1]),
-                    self._obs_time,
-                    mask=self._obs_obj.data["iwc_rain"][:],
-                )
             y_steps = tl.rebin_edges(self._model_height[i])
             for j in range(len(y_steps) - 1):
                 x_ind_adv = tl.get_adv_indices(
@@ -80,29 +74,6 @@ class ProductGrid:
                         product_adv_dict = self._regrid_cf(
                             product_adv_dict, i, j, data_adv
                         )
-                elif self._obs_obj.obs == "iwc":
-                    x_ind_no_rain_adv = tl.get_adv_indices(
-                        model_t[i],
-                        self._time_adv[i, j],
-                        self._obs_time,
-                        mask=self._obs_obj.data["iwc_rain"][:],
-                    )
-                    ind_no_rain = np.outer(x_ind_no_rain, y_ind)
-                    ind_no_rain_adv = np.outer(x_ind_no_rain_adv, y_ind)
-                    product_dict = self._regrid_iwc(
-                        product_dict,
-                        i,
-                        j,
-                        ind,
-                        ind_no_rain,
-                    )
-                    product_adv_dict = self._regrid_iwc(
-                        product_adv_dict,
-                        i,
-                        j,
-                        ind_avd,
-                        ind_no_rain_adv,
-                    )
                 else:
                     product_dict = self._regrid_product(product_dict, i, j, ind)
                     product_adv_dict = self._regrid_product(
@@ -116,8 +87,6 @@ class ProductGrid:
     def _get_method_storage(self) -> tuple[dict, dict]:
         if self._obs_obj.obs == "cf":
             return self._cf_method_storage()
-        if self._obs_obj.obs == "iwc":
-            return self._iwc_method_storage()
         return self._product_method_storage()
 
     def _cf_method_storage(self) -> tuple[dict, dict]:
@@ -130,19 +99,6 @@ class ProductGrid:
             "cf_A_adv": ma.zeros(self._model_height.shape),
         }
         return cf_dict, cf_adv_dict
-
-    def _iwc_method_storage(self) -> tuple[dict, dict]:
-        iwc_dict = {
-            "iwc": ma.zeros(self._model_height.shape),
-            "iwc_att": ma.zeros(self._model_height.shape),
-            "iwc_rain": ma.zeros(self._model_height.shape),
-        }
-        iwc_adv_dict = {
-            "iwc_adv": ma.zeros(self._model_height.shape),
-            "iwc_att_adv": ma.zeros(self._model_height.shape),
-            "iwc_rain_adv": ma.zeros(self._model_height.shape),
-        }
-        return iwc_dict, iwc_adv_dict
 
     def _product_method_storage(self) -> tuple[dict, dict]:
         product_dict = {f"{self._obs_obj.obs}": ma.zeros(self._model_height.shape)}
@@ -172,32 +128,6 @@ class ProductGrid:
             if "_A" in key and not data_ma.mask.all():
                 downsample[i, j] = tl.average_column_sum(data_ma)
             storage[key] = downsample
-        return storage
-
-    def _regrid_iwc(
-        self,
-        storage: dict,
-        i: int,
-        j: int,
-        ind_rain: npt.NDArray,
-        ind_no_rain: npt.NDArray,
-    ) -> dict:
-        """Calculates average iwc value for each grid point."""
-        for key, down_sample in storage.items():
-            down_sample[i, j] = ma.masked
-            if "rain" not in key:
-                no_rain_data = self._obs_data[ind_no_rain]
-                if ind_no_rain.any() and not no_rain_data.mask.all():
-                    down_sample[i, j] = ma.mean(no_rain_data)
-            if "rain" in key:
-                rain_data = self._obs_data[ind_rain]
-                if ind_rain.any() and not rain_data.mask.all():
-                    down_sample[i, j] = ma.mean(rain_data)
-            if "att" in key:
-                no_rain_att_data = self._obs_obj.data["iwc_att"][ind_no_rain]
-                if ind_no_rain.any() and not no_rain_att_data.mask.all():
-                    down_sample[i, j] = ma.mean(no_rain_att_data)
-            storage[key] = down_sample
         return storage
 
     def _regrid_product(self, storage: dict, i: int, j: int, ind: npt.NDArray) -> dict:

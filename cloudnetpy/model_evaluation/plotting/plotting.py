@@ -748,8 +748,6 @@ def _set_title(
         title = _get_product_title(variable_info)
         if product == "cf":
             title = _get_cf_title(field_name, variable_info)
-        if product == "iwc":
-            title = _get_iwc_title(field_name, variable_info)
         if "adv" in field_name:
             adv = " Downsampled using advection time"
             ax.text(0.9, -0.13, adv, size=12, ha="center", transform=ax.transAxes)
@@ -769,17 +767,6 @@ def _get_cf_title(field_name: str, variable_info: PlotMeta) -> str:
     return title
 
 
-def _get_iwc_title(field_name: str, variable_info: PlotMeta) -> str:
-    name = variable_info.name
-    if "att" in field_name:
-        title = f"{name} with good attenuation"
-    elif "rain" in field_name:
-        title = f"{name} with rain"
-    else:
-        title = f"{name}"
-    return title
-
-
 def _get_product_title(variable_info: PlotMeta) -> str:
     return f"{variable_info.name}"
 
@@ -788,8 +775,6 @@ def _get_stat_titles(field_name: str, product: str, variable_info: PlotMeta) -> 
     title = _get_product_title_stat(variable_info)
     if product == "cf":
         title = _get_cf_title_stat(field_name, variable_info)
-    if product == "iwc":
-        title = _get_iwc_title_stat(field_name, variable_info)
     if "adv" in field_name:
         adv = " (Advection time)"
         return f"{title}{adv}"
@@ -801,17 +786,6 @@ def _get_cf_title_stat(field_name: str, variable_info: PlotMeta) -> str:
     title = f"{name} area"
     if "V" in field_name:
         title = f"{name} volume"
-    return title
-
-
-def _get_iwc_title_stat(field_name: str, variable_info: PlotMeta) -> str:
-    name = variable_info.name
-    if "att" in field_name:
-        title = f"{name} with good attenuation"
-    elif "rain" in field_name:
-        title = f"{name} with rain"
-    else:
-        title = f"{name}"
     return title
 
 
