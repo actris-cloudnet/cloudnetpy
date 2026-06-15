@@ -6,7 +6,7 @@ from uuid import UUID
 import netCDF4
 
 from cloudnetpy import output
-from cloudnetpy.model_evaluation.model_metadata import MODEL_PREFIX
+from cloudnetpy.model_evaluation.model_metadata import MODEL_PREFIX, PRODUCT_NAMES
 
 from .metadata import (
     CYCLE_ATTRIBUTES,
@@ -74,18 +74,18 @@ def save_downsampled_file(
     location = site_name or obj.dataset.location
     with output.init_file(file_name, dimensions, obj.data, uuid) as root_group:
         _augment_global_attributes(root_group)
-        root_group.cloudnet_file_type = "l3-" + id_mark.split("_", maxsplit=1)[0]
-        root_group.title = (
-            f"Downsampled {id_mark.capitalize().replace('_', ' of ')} from {location}"
-        )
-        root_group.model = obj.model
+        product = id_mark.split("_", maxsplit=1)[0]
+        root_group.cloudnet_file_type = "l3-" + product
+        product_name = PRODUCT_NAMES.get(product, product)
+        root_group.title = f"Observed and modeled {product_name} over {location}"
+        root_group.model_id = obj.model
         root_group.model_name = model_name or obj.model
         _add_source(root_group, objects, files)
         output.copy_global(obj.dataset, root_group, ("day", "month", "year"))
         root_group.location = location
         if not hasattr(obj.dataset, "day"):
             root_group.year, root_group.month, root_group.day = obj.date
-        output.merge_history(root_group, id_mark, obj)
+        output.merge_history(root_group, f"L3 {product_name}", obj)
 
 
 def _augment_global_attributes(root_group: netCDF4.Dataset) -> None:
@@ -96,14 +96,10 @@ def _add_source(root_ground: netCDF4.Dataset, objects: tuple, files: tuple) -> N
     """Generates source info for multiple files."""
     model, obs = objects
     model_files, obs_file = files
-    source = f"Observation file: {os.path.basename(obs_file)}"
-    source += "\n"
-    source += f"{model.model} file(s): "
-    for i, f in enumerate(model_files):
-        source += f"{os.path.basename(f)}"
-        if i < len(model_files) - 1:
-            source += "\n"
-    root_ground.source = source
+    filenames = [os.path.basename(obs_file)] + [
+        os.path.basename(f) for f in model_files
+    ]
+    root_ground.source = "\n".join(filenames)
     root_ground.source_file_uuids = output.get_source_uuids([model, obs])
 
 

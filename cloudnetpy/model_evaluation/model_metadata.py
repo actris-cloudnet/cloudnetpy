@@ -28,6 +28,13 @@ MODEL_PREFIX = "model_"
 # axis is expected under this dimension for every model.
 LEVEL_DIMENSION = "level"
 
+# Human-readable names for the observation products, used in file titles.
+PRODUCT_NAMES = {
+    "cf": "cloud fraction",
+    "iwc": "ice water content",
+    "lwc": "liquid water content",
+}
+
 # Coordinate / metadata variables that are identical between forecast cycles.
 COMMON_VARIABLES = (
     "time",
