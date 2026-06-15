@@ -93,9 +93,8 @@ class Dimensions:
         if pad_inches is None:
             pad_inches = rcParams["savefig.pad_inches"]
 
-        renderer = fig.canvas.get_renderer()  # type: ignore[attr-defined]
         tightbbox = (
-            fig.get_tightbbox(renderer)
+            fig.get_tightbbox()
             .padded(pad_inches)
             .transformed(Affine2D().scale(fig.dpi))
         )
