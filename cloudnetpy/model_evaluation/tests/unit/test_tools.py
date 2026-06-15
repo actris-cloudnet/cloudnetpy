@@ -37,7 +37,7 @@ def test_calculate_advection_time_hour(model_file) -> None:
     compare = h * 1000 / v / 60**2
     compare[compare > 1 / s] = 1 / s
     compare = np.asarray([[timedelta(hours=float(t)) for t in tt] for tt in compare])
-    x = tools.calculate_advection_time(int(h), ma.masked_array(v), s)
+    x = tools.calculate_advection_time(h, ma.masked_array(v), s)
     assert x.all() == compare.all()
 
 
@@ -49,8 +49,18 @@ def test_calculate_advection_time_10min(model_file) -> None:
     compare = h * 1000 / v / 60**2
     compare[compare > 1 / s] = 1 / s
     compare = np.asarray([[timedelta(hours=float(t)) for t in tt] for tt in compare])
-    x = tools.calculate_advection_time(int(h), ma.masked_array(v), s)
+    x = tools.calculate_advection_time(h, ma.masked_array(v), s)
     assert x.all() == compare.all()
+
+
+def test_calculate_advection_time_fractional_resolution() -> None:
+    # A sub-kilometre / fractional resolution must not be truncated to int.
+    resolution = 0.5
+    v = ma.masked_array([[2.0]])
+    s = 6
+    x = tools.calculate_advection_time(resolution, v, s)
+    expected = timedelta(hours=resolution * 1000 / 2.0 / 60**2)
+    assert x[0, 0] == expected
 
 
 def test_get_1d_indices() -> None:

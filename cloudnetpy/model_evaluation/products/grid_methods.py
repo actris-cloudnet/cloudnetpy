@@ -30,7 +30,7 @@ class ProductGrid:
         self._model_time = model_obj.time
         self._model_height = model_obj.data[model_obj.keys["height"]][:]
         self._time_adv = tl.calculate_advection_time(
-            int(model_obj.resolution_h),
+            model_obj.resolution_h,
             ma.array(model_obj.wind),
             1,
         )

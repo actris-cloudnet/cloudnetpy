@@ -22,7 +22,7 @@ def rebin_edges(arr: npt.NDArray) -> npt.NDArray:
 
 
 def calculate_advection_time(
-    resolution: int,
+    resolution: float,
     wind: ma.MaskedArray,
     sampling: int,
 ) -> npt.NDArray:
