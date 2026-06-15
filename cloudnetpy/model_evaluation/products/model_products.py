@@ -1,4 +1,3 @@
-import importlib
 import logging
 from os import PathLike
 
@@ -87,14 +86,14 @@ class ModelManager(DataSource):
 
     def _generate_products(self) -> None:
         """Process needed data of model to a ModelManager object."""
-        cls = importlib.import_module(__name__).ModelManager
+        name = f"_get_{self._product}"
         try:
-            name = f"_get_{self._product}"
-            getattr(cls, name)(self)
+            method = getattr(self, name)
         except AttributeError:
             msg = f"Invalid product name: {self._product}"
             logging.exception(msg)
             raise
+        method()
 
     def _get_cf(self) -> None:
         """Collect cloud fraction straight from model file."""
