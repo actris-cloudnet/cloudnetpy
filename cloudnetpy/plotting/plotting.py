@@ -111,6 +111,16 @@ class Dimensions:
         self.margin_bottom = round(y0) - 1
         self.margin_left = round(x0)
 
+    def __repr__(self) -> str:
+        return (
+            f"Dimensions(width={self.width}, "
+            f"height={self.height}, "
+            f"margin_top={self.margin_top}, "
+            f"margin_right={self.margin_right}, "
+            f"margin_bottom={self.margin_bottom}, "
+            f"margin_left={self.margin_left})"
+        )
+
 
 class FigureData:
     def __init__(
