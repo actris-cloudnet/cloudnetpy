@@ -23,7 +23,8 @@ MODEL_ATTRIBUTES = {
     "level": MetaData(
         long_name="Model level",
         units="1",
-        comment="Level 1 describes the highest level above the ground.",
+        comment="Level 1 is the topmost model level; the level number increases "
+        "towards the surface.",
         axis="Z",
         positive="down",
         dimensions=("level",),
@@ -110,14 +111,14 @@ MODEL_L3_ATTRIBUTES = {
         long_name="Ice water content of model grid point",
         units="kg m-3",
         comment="Calculated using model ice water mixing ratio, pressure\n"
-        "and temperature: qi*P/287*T",
+        "and temperature: qi*P/(287*T)",
         dimensions=("time", "level"),
     ),
     "lwc": MetaData(
         long_name="Liquid water content of model grid point",
         units="kg m-3",
         comment="Calculated using model liquid water mixing ratio, pressure\n"
-        "and temperature: ql*P/287*T",
+        "and temperature: ql*P/(287*T)",
         dimensions=("time", "level"),
     ),
 }
@@ -127,9 +128,9 @@ REGRID_PRODUCT_ATTRIBUTES = {
         long_name="Observed cloud fraction by volume",
         units="1",
         comment=(
-            "Cloud fraction generated from observations and by volume,\n"
-            "averaged onto the models grid with height and time. Volume is\n"
-            "space within four grid points."
+            "Cloud fraction generated from observations by volume, averaged onto\n"
+            "the model grid in height and time. The volume value is the mean over\n"
+            "all observation pixels within the model grid cell."
         ),
         dimensions=("time", "level"),
     ),
@@ -138,8 +139,8 @@ REGRID_PRODUCT_ATTRIBUTES = {
         units="1",
         comment=(
             "Cloud fraction generated from observations and by area,\n"
-            "averaged onto the models grid with height and time. Area is\n"
-            "sum of time columns with any cloud fraction."
+            "averaged onto the model grid with height and time. Area is\n"
+            "the fraction of time columns containing any cloud."
         ),
         dimensions=("time", "level"),
     ),
@@ -149,7 +150,7 @@ REGRID_PRODUCT_ATTRIBUTES = {
         comment=(
             "This variable is the same as the observed cloud fraction by volume,\n"
             "cf_V, except that model winds were used to estimate the time taken to\n"
-            "advect airflow a distance equivalent to the models horizontal resolution."
+            "advect airflow a distance equivalent to the model's horizontal resolution."
         ),
         dimensions=("time", "level"),
     ),
@@ -159,13 +160,12 @@ REGRID_PRODUCT_ATTRIBUTES = {
         comment=(
             "This variable is the same as the observed cloud fraction by area, cf_A,\n"
             "except that model winds were used to estimate the time taken to advect\n"
-            "airflow a distance equivalent to the models horizontal resolution."
+            "airflow a distance equivalent to the model's horizontal resolution."
         ),
         dimensions=("time", "level"),
     ),
     "iwc": MetaData(
-        long_name="Observed ice water content reshaped to model dimensions by"
-        " averaging",
+        long_name="Observed ice water content reshaped to model grid by averaging",
         units="kg m-3",
         comment=(
             "This variable is the observed mean ice water content derived from radar\n"
@@ -182,7 +182,7 @@ REGRID_PRODUCT_ATTRIBUTES = {
         comment=(
             "This variable is the same as the observed mean ice water content, iwc,\n"
             "except that model winds were used to estimate the time taken to advect\n"
-            "the flow a distance equivalent to the models horizontal resolution."
+            "the flow a distance equivalent to the model's horizontal resolution."
         ),
         dimensions=("time", "level"),
     ),
@@ -203,7 +203,8 @@ REGRID_PRODUCT_ATTRIBUTES = {
         comment=(
             "This variable is the same as the observed mean liquid water content,\n"
             "lwc, except that model winds were used to estimate the time taken to\n"
-            "advect flow over the models grid points."
+            "advect the flow a distance equivalent to the model's horizontal "
+            "resolution."
         ),
         dimensions=("time", "level"),
     ),
