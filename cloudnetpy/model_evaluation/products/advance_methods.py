@@ -8,7 +8,11 @@ import cloudnetpy.utils as cl_tools
 from cloudnetpy.model_evaluation.model_metadata import MODEL_PREFIX
 from cloudnetpy.model_evaluation.products.model_products import ModelManager
 from cloudnetpy.model_evaluation.products.observation_products import ObservationManager
-from cloudnetpy.products.product_tools import get_ice_coefficients
+from cloudnetpy.products.product_tools import (
+    IceCoefficients,
+    get_ice_coefficients,
+    z_to_iwc,
+)
 
 
 class AdvanceProductMethods:
@@ -47,7 +51,7 @@ class AdvanceProductMethods:
         temperature = self._model_obj.getvar("temperature")
         t_screened = self.remove_extra_levels(temperature - 273.15)
         iwc, lwc = (self._model_obj.get_water_content(var) for var in ["iwc", "lwc"])
-        tZT, tT, tZ, t = self.set_frequency_parameters()
+        coeffs = self.set_frequency_parameters()
         z_sen = self.fit_z_sensitivity(h)
         cf_filtered = self.filter_high_iwc_low_cf(cf, iwc, lwc)
         cloud_iwc, ice_ind = self.find_ice_in_clouds(cf_filtered, iwc, lwc)
@@ -71,12 +75,7 @@ class AdvanceProductMethods:
                 cf_filtered[ind] = ma.masked
                 continue
 
-            min_iwc = 10 ** (
-                tZT * z_sen[ind] * t_screened[ind]
-                + tT * t_screened[ind]
-                + tZ * z_sen[ind]
-                + t
-            )
+            min_iwc = z_to_iwc(coeffs, z_sen[ind], t_screened[ind])
             obs_index = iwc_dist > min_iwc
             cf_filtered[ind] = self.filter_cirrus(p_iwc, obs_index, cf_filtered[ind])
 
@@ -91,13 +90,12 @@ class AdvanceProductMethods:
     def remove_extra_levels(self, arg: npt.NDArray) -> npt.NDArray:
         return self._model_obj.cut_off_extra_levels(arg)
 
-    def set_frequency_parameters(self) -> tuple:
+    def set_frequency_parameters(self) -> IceCoefficients:
         if self._obs_obj.radar_freq is None:
             msg = "No radar frequency in observation file"
             raise ValueError(msg)
         wl_band = cl_tools.get_wl_band(float(self._obs_obj.radar_freq))
-        c = get_ice_coefficients("iwc", wl_band)
-        return c.ZT, c.T, c.Z, c.c
+        return get_ice_coefficients("iwc", wl_band)
 
     def fit_z_sensitivity(self, h: npt.NDArray) -> npt.NDArray:
         if self._obs_obj.z_sensitivity is None:

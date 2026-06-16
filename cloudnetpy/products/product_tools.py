@@ -45,6 +45,24 @@ def get_ice_coefficients(product: str, wl_band: str) -> IceCoefficients:
     raise ValueError(msg)
 
 
+def z_to_iwc(
+    coefficients: IceCoefficients,
+    z: npt.NDArray,
+    temperature: npt.NDArray,
+) -> npt.NDArray:
+    """Converts reflectivity to ice water content with the Z-T method.
+
+    References:
+        Hogan et.al. 2006, https://doi.org/10.1175/JAM2340.1
+    """
+    return 10 ** (
+        coefficients.ZT * z * temperature
+        + coefficients.T * temperature
+        + coefficients.Z * z
+        + coefficients.c
+    )
+
+
 @dataclass
 class CategoryBits:
     droplet: NDArray[np.bool_]
@@ -253,16 +271,7 @@ class IceSource(DataSource):
         scale = (
             g_to_kg if self.product == "iwc" else 3 / (2 * constants.RHO_ICE) * m_to_mu
         )
-        return (
-            10
-            ** (
-                self.coefficients.ZT * z_scaled * temperature
-                + self.coefficients.T * temperature
-                + self.coefficients.Z * z_scaled
-                + self.coefficients.c
-            )
-            * scale
-        )
+        return z_to_iwc(self.coefficients, z_scaled, temperature) * scale
 
     def _get_z_factor(self) -> float:
         """Returns empirical scaling factor for radar echo."""
