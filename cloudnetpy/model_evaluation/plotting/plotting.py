@@ -180,7 +180,7 @@ def get_group_plots(config: L3PlotConfig, names: list) -> tuple:
             _set_title(ax[j], config.model, product, variable_info, config.model_name)
         data, x, y = p_tools.read_data_characters(config.nc_file, name)
         plot_colormesh(ax[j], data, (x, y), variable_info)
-    casedate = set_labels(fig, ax[j], config.nc_file)
+    casedate = set_labels(fig, ax[j], config.nc_file, sub_title=config.title)
     if "adv" in name:
         product = product + "_adv"
     handle_saving(
