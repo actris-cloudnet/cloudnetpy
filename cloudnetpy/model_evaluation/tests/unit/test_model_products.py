@@ -3,6 +3,7 @@ import numpy as np
 import pytest
 from numpy import testing
 
+from cloudnetpy.constants import RS
 from cloudnetpy.exceptions import ModelDataError
 from cloudnetpy.model_evaluation.products.model_products import ModelManager
 
@@ -47,7 +48,7 @@ def test_set_variables(key, model_file) -> None:
 @pytest.mark.parametrize("p, T, q", [(1, 2, 3), (20, 40, 80), (0.3, 0.6, 0.9)])
 def test_calc_water_content(p, T, q, model_file) -> None:
     model = ModelManager(str(model_file), MODEL, PRODUCT)
-    result = q * p / (287 * T)
+    result = q * p / (RS * T)
     testing.assert_almost_equal(result, model._calc_water_content(q, p, T))
 
 
