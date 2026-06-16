@@ -62,7 +62,7 @@ def test_set_frequency_parameters(obs_file, model_file, radar_f, values) -> None
     advance = AdvanceProductMethods(model, obs)
     obs.radar_freq = radar_f
     result = advance.set_frequency_parameters()
-    assert result == values
+    assert (result.ZT, result.T, result.Z, result.c) == values
 
 
 def test_fit_z_sensitivity(obs_file, model_file) -> None:
