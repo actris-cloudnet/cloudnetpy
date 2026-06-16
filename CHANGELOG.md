@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.93.0 – 2026-06-16
+
+- Generalize model evaluation to support any model
+
 ## 1.92.6 – 2026-06-10
 
 - Handle empty units in plotting of legacy files
