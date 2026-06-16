@@ -85,7 +85,7 @@ class IwcSource(IceSource):
             return self.getvar("Z_error") * scaled_temperature * 10
 
         def _calc_error_in_uncorrected_ice() -> float:
-            spec_liq_atten = 1.0 if self.wl_band == 0 else 4.5
+            spec_liq_atten = 1.0 if self.wl_band == "Ka" else 4.5
             liq_atten_scaled = spec_liq_atten * self.coefficients.Z
             return lwp_prior * G_TO_KG * liq_atten_scaled * 2 * 10
 
