@@ -5,6 +5,7 @@ import numpy as np
 import numpy.typing as npt
 from numpy import ma
 
+from cloudnetpy.constants import RS
 from cloudnetpy.datasource import DataSource
 from cloudnetpy.exceptions import ModelDataError
 from cloudnetpy.model_evaluation.model_metadata import (
@@ -160,7 +161,7 @@ class ModelManager(DataSource):
     def _calc_water_content(
         q: npt.NDArray, p: npt.NDArray, t: npt.NDArray
     ) -> npt.NDArray:
-        return q * p / (287 * t)
+        return q * p / (RS * t)
 
     def _add_variables(self) -> None:
         """Add common coordinate variables and the model's own fields."""
