@@ -152,6 +152,8 @@ class WeatherRadar(CloudnetInstrument):
         threshold = -10  # dBZ
         mean_z = np.mean(self.data["Zh"].data[:, :max_range], axis=0)
         is_clutter = mean_z > threshold
+        if not np.any(is_clutter):
+            return
         ind_last = np.nonzero(is_clutter)[0][-1]
         mask = np.zeros(n_range, dtype=np.bool)
         mask[: ind_last + 1] = True
