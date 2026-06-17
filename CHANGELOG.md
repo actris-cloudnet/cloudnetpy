@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.93.1 – 2026-06-17
+
+- Add source_instrument_pids attribute to L3 evaluation files
+
 ## 1.93.0 – 2026-06-16
 
 - Generalize model evaluation to support any model
