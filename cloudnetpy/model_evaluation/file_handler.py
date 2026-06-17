@@ -110,6 +110,8 @@ def _add_source(
     ]
     root_group.source = "\n".join(filenames)
     root_group.source_file_uuids = output.get_source_uuids([model_obj, obs_obj])
+    if hasattr(obs_obj.dataset, "source_instrument_pids"):
+        root_group.source_instrument_pids = obs_obj.dataset.source_instrument_pids
 
 
 def add_time_attribute(date: datetime) -> dict:
