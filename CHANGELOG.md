@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.93.3 – 2026-06-17
+
+- Fix bug when weather radar has no clutter
+
 ## 1.93.2 – 2026-06-17
 
 - Screen clutter from weather radar data
