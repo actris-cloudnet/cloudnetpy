@@ -54,7 +54,7 @@ class CloudnetArray:
             self.data = utils.db2lin(self.data)
             self.units = ""
 
-    def mask_indices(self, ind: list) -> None:
+    def mask_indices(self, ind: list | tuple) -> None:
         """Masks data from given indices."""
         self.data[ind] = ma.masked
 

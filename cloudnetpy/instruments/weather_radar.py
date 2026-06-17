@@ -45,6 +45,7 @@ def wr2nc(
     wr = WeatherRadar(input_files, site_meta, date)
     wr.sort_and_dedup_timestamps()
     wr.convert_to_cloudnet_arrays()
+    wr.screen_clutter()
     wr.screen_noise()
     wr.add_meta()
     attributes = output.add_time_attribute(ATTRIBUTES, wr.date)
@@ -145,11 +146,25 @@ class WeatherRadar(CloudnetInstrument):
             self.scalars["NEZ"], "calibration_reflectivity_factor"
         )
 
+    def screen_clutter(self) -> None:
+        n_range = len(self.data["range"][:])
+        max_range = 10
+        threshold = -10  # dBZ
+        mean_z = np.mean(self.data["Zh"].data[:, :max_range], axis=0)
+        is_clutter = mean_z > threshold
+        ind_last = np.nonzero(is_clutter)[0][-1]
+        mask = np.zeros(n_range, dtype=np.bool)
+        mask[: ind_last + 1] = True
+        self._screen_indices((slice(None), mask))
+
     def screen_noise(self) -> None:
         is_noise = self.data["SNR"].data < 0
+        self._screen_indices(is_noise)
+
+    def _screen_indices(self, ind: list | tuple) -> None:
         for cloudnet_array in self.data.values():
             if cloudnet_array.data.ndim == 2:
-                cloudnet_array.mask_indices(is_noise)
+                cloudnet_array.mask_indices(ind)
 
 
 class InvalidRangeError(CloudnetException):
