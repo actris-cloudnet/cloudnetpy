@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.93.2 – 2026-06-17
+
+- Screen clutter from weather radar data
+
 ## 1.93.1 – 2026-06-17
 
 - Add source_instrument_pids attribute to L3 evaluation files
