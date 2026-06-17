@@ -103,8 +103,7 @@ def generate_L3_day_plots(
         separated from standard timegrid to their own figures.
 
     Examples:
-        >>> from cloudnetpy.model_evaluation.plotting.plotting
-        import generate_L3_day_plots
+        >>> from cloudnetpy.model_evaluation import generate_L3_day_plots
         >>> l3_day_file = 'cf_ecmwf.nc'
         >>> product = 'cf'
         >>> generate_L3_day_plots(l3_day_file, product)

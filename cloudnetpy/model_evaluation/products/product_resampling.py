@@ -55,8 +55,7 @@ def process_L3_day_product(
         FileExistsError: Output file exists and overwrite is False.
 
     Examples:
-        >>> from cloudnetpy.model_evaluation.products.product_resampling import \
-        process_L3_day_product
+        >>> from cloudnetpy.model_evaluation import process_L3_day_product
         >>> process_L3_day_product('ecmwf', 'cf', 'ecmwf.nc',
         ... 'categorize.nc', 'l3-cf.nc')
     """
