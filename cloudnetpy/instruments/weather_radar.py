@@ -147,17 +147,27 @@ class WeatherRadar(CloudnetInstrument):
         )
 
     def screen_clutter(self) -> None:
-        n_range = len(self.data["range"][:])
+        # Find clutter in the first ranges where reflectivity is high but
+        # velocity is low.
         max_range = 10
-        threshold = -10  # dBZ
-        mean_z = np.mean(self.data["Zh"].data[:, :max_range], axis=0)
-        is_clutter = mean_z > threshold
-        if not np.any(is_clutter):
+        z_threshold = -10  # dBZ
+        v_threshold = -1  # m s-1
+
+        n_range = self.data["range"][:].size
+        z = self.data["Zh"][:, :max_range]
+        v = self.data["v"][:, :max_range]
+        v_rain = v < v_threshold
+        mean_z = ma.mean(ma.masked_where(v_rain, z), axis=0)
+        z_high = mean_z > z_threshold
+
+        # Sometimes first ranges are not classified as clutter, so screen
+        # everything up to the highest detected clutter.
+        clutter_ind = np.nonzero(z_high)[0]
+        if clutter_ind.size == 0:
             return
-        ind_last = np.nonzero(is_clutter)[0][-1]
-        mask = np.zeros(n_range, dtype=np.bool)
-        mask[: ind_last + 1] = True
-        self._screen_indices((slice(None), mask))
+        is_clutter = np.zeros(n_range, dtype=np.bool)
+        is_clutter[: clutter_ind[-1] + 1] = True
+        self._screen_indices((slice(None), is_clutter))
 
     def screen_noise(self) -> None:
         is_noise = self.data["SNR"].data < 0
