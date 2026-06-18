@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.93.4 – 2026-06-18
+
+- Distinguish clutter from rain in weather radar screening
+
 ## 1.93.3 – 2026-06-17
 
 - Fix bug when weather radar has no clutter
