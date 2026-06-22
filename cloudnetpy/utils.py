@@ -146,7 +146,7 @@ def rebin_2d(
     stat_fn = REBIN_STAT_FN[statistic]
 
     shape = array.shape if keepdim else (n_bins, array.shape[1])
-    result: ma.MaskedArray = ma.masked_array(np.ones(shape, dtype="float32"), mask=True)
+    result: ma.MaskedArray = ma.array(np.ones(shape, dtype="float32"), mask=True)
 
     for bin_ind in range(n_bins):
         if counts[bin_ind] < n_min:

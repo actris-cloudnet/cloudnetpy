@@ -8,7 +8,7 @@ from cloudnetpy.categorize import droplet
 
 class TestIndBase:
     x = ma.array([0, 0.5, 1, -99, 4, 8, 5])
-    mx: ma.MaskedArray = ma.masked_array(
+    mx: ma.MaskedArray = ma.array(
         x, mask=[False, False, False, True, False, False, False]
     )
     diffu = np.diff(mx)
@@ -61,7 +61,7 @@ class TestIndBase:
         )
 
     def test_ind_base_4(self):
-        mx: ma.MaskedArray = ma.masked_array(
+        mx: ma.MaskedArray = ma.array(
             self.x, mask=[True, False, True, True, True, False, False]
         )
         diffu = ma.diff(mx)
@@ -73,7 +73,7 @@ class TestIndBase:
 
 class TestIndTop:
     x = np.array([1, 3, 8, 4, -99, 1, 0.5, 0])
-    mx: ma.MaskedArray = ma.masked_array(
+    mx: ma.MaskedArray = ma.array(
         x, mask=[False, False, False, False, True, False, False, False]
     )
     diffu = np.diff(mx)
@@ -136,7 +136,7 @@ class TestIndTop:
         )
 
     def test_ind_top_4(self):
-        mx: ma.MaskedArray = ma.masked_array(
+        mx: ma.MaskedArray = ma.array(
             self.x, mask=[True, False, True, False, True, False, True, False]
         )
         diffu = ma.diff(mx)
@@ -203,7 +203,7 @@ def test_correct_liquid_top():
     class Obs:
         def __init__(self):
             self.height = np.arange(11)
-            self.z: ma.MaskedArray = ma.masked_array(
+            self.z: ma.MaskedArray = ma.array(
                 np.random.random((3, 10)),
                 mask=[
                     [

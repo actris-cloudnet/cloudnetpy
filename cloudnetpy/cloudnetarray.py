@@ -111,7 +111,7 @@ class CloudnetArray:
 
     def _filter(self, fun: Callable[[npt.NDArray], npt.NDArray]) -> None:
         if not isinstance(self.data, ma.MaskedArray):
-            self.data = ma.masked_array(self.data)
+            self.data = ma.array(self.data)
         is_data = (~self.data.mask).astype(int)
         is_data_filtered = fun(is_data)
         self.data[is_data_filtered == 0] = ma.masked

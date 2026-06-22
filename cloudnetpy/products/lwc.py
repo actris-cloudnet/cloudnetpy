@@ -344,7 +344,7 @@ class LwcError:
 
     def _calc_lwc_gradient(self) -> npt.NDArray:
         if not isinstance(self.lwc, ma.MaskedArray):
-            self.lwc = ma.masked_array(self.lwc)
+            self.lwc = ma.array(self.lwc)
         gradient_elements = np.gradient(self.lwc.filled(0))
         return utils.l2norm(*gradient_elements)
 

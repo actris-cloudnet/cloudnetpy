@@ -37,7 +37,7 @@ def test_calculate_advection_time_hour(model_file) -> None:
     expected = resolution * 1000 / wind / 60**2
     expected[expected > 1 / sampling] = 1 / sampling
     expected = np.asarray([[timedelta(hours=float(t)) for t in tt] for tt in expected])
-    result = tools.calculate_advection_time(resolution, ma.masked_array(wind), sampling)
+    result = tools.calculate_advection_time(resolution, ma.array(wind), sampling)
     assert result.all() == expected.all()
 
 
@@ -49,14 +49,14 @@ def test_calculate_advection_time_10min(model_file) -> None:
     expected = resolution * 1000 / wind / 60**2
     expected[expected > 1 / sampling] = 1 / sampling
     expected = np.asarray([[timedelta(hours=float(t)) for t in tt] for tt in expected])
-    result = tools.calculate_advection_time(resolution, ma.masked_array(wind), sampling)
+    result = tools.calculate_advection_time(resolution, ma.array(wind), sampling)
     assert result.all() == expected.all()
 
 
 def test_calculate_advection_time_fractional_resolution() -> None:
     # A sub-kilometre / fractional resolution must not be truncated to int.
     resolution = 0.5
-    wind = ma.masked_array([[2.0]])
+    wind = ma.array([[2.0]])
     sampling = 6
     result = tools.calculate_advection_time(resolution, wind, sampling)
     expected = timedelta(hours=resolution * 1000 / 2.0 / 60**2)

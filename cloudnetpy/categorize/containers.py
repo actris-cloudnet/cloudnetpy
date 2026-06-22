@@ -163,6 +163,6 @@ def _find_clutter(
     """
     is_clutter = np.zeros(v.shape, dtype=bool)
     filled = False
-    tiny_velocity = (np.abs(v[:, :n_gates]) < v_lim).filled(filled)
+    tiny_velocity = ma.less(ma.abs(v[:, :n_gates]), v_lim).filled(filled)
     is_clutter[:, :n_gates] = tiny_velocity * utils.transpose(~is_rain)
     return is_clutter
