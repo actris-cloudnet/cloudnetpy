@@ -43,7 +43,7 @@ class LufftCeilo(NcLidar):
             logging.warning("Using default calibration factor")
             calibration_factor = 3e-12
         beta_raw = self._getvar("beta_raw", "beta_att")
-        beta_raw = ma.masked_array(beta_raw)
+        beta_raw = ma.array(beta_raw)
         old_version = self._get_old_software_version()
         if old_version is not None:
             self.is_old_version = True
@@ -53,7 +53,7 @@ class LufftCeilo(NcLidar):
             )
             data_std = self._getvar("stddev")
             normalised_apd = self._get_nn()
-            beta_raw *= utils.transpose(ma.masked_array(data_std / normalised_apd))
+            beta_raw *= utils.transpose(ma.array(data_std / normalised_apd))
             beta_raw *= self.data["range"] ** 2
         beta_raw *= calibration_factor
         self.data["calibration_factor"] = float(calibration_factor)

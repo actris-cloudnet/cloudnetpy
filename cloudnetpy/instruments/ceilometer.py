@@ -273,7 +273,7 @@ class NoisyData:
             ind = self._get_altitude_ind()
             snr[:, ind] *= snr_scale_factor
         if ma.isMaskedArray(array) is False:
-            array = ma.masked_array(array)
+            array = ma.array(array)
         if keep_negative is True:
             array[np.abs(snr) < snr_limit] = ma.masked
         else:

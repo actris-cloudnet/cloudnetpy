@@ -671,7 +671,7 @@ class Plot2D(Plot):
         if "rain_detected" not in figure_data.file.variables:
             return
         rain = figure_data.file.variables["rain_detected"][:]
-        is_rain: ma.MaskedArray = ma.masked_array(np.zeros_like(rain), mask=(rain == 0))
+        is_rain: ma.MaskedArray = ma.array(np.zeros_like(rain), mask=(rain == 0))
         if is_rain.mask.all():
             return
         self._ax.plot(

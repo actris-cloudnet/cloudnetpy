@@ -55,11 +55,11 @@ def test_find_cold_aerosols():
 @pytest.mark.parametrize(
     "z, ind_top, result",
     [
-        (ma.masked_array([1, 1, 1, 1], mask=[False, False, False, False]), 2, False),
-        (ma.masked_array([1, 1, 1, 1], mask=[False, False, False, False]), 2, False),
-        (ma.masked_array([1, 1, 1, 1], mask=[False, False, False, False]), 3, False),
-        (ma.masked_array([1, 1, 1, 1], mask=[True, True, True, True]), 3, False),
-        (ma.masked_array([1, 1, 1, 1], mask=[False, False, False, True]), 2, True),
+        (ma.array([1, 1, 1, 1], mask=[False, False, False, False]), 2, False),
+        (ma.array([1, 1, 1, 1], mask=[False, False, False, False]), 2, False),
+        (ma.array([1, 1, 1, 1], mask=[False, False, False, False]), 3, False),
+        (ma.array([1, 1, 1, 1], mask=[True, True, True, True]), 3, False),
+        (ma.array([1, 1, 1, 1], mask=[False, False, False, True]), 2, True),
     ],
 )
 def test_is_z_missing_above_liquid(z, ind_top, result):
@@ -69,11 +69,11 @@ def test_is_z_missing_above_liquid(z, ind_top, result):
 @pytest.mark.parametrize(
     "z, ind_base, ind_top, result",
     [
-        (ma.masked_array([1, 1, 1, 1], mask=[False, False, False, False]), 1, 2, False),
-        (ma.masked_array([1, 1, 2, 1], mask=[False, False, False, False]), 1, 2, True),
-        (ma.masked_array([1, 2, 1, 1], mask=[False, False, False, False]), 1, 2, False),
-        (ma.masked_array([1, 1, 2, 3], mask=[False, False, True, False]), 1, 3, True),
-        (ma.masked_array([1, 2, 3, 4], mask=[False, True, True, True]), 1, 3, False),
+        (ma.array([1, 1, 1, 1], mask=[False, False, False, False]), 1, 2, False),
+        (ma.array([1, 1, 2, 1], mask=[False, False, False, False]), 1, 2, True),
+        (ma.array([1, 2, 1, 1], mask=[False, False, False, False]), 1, 2, False),
+        (ma.array([1, 1, 2, 3], mask=[False, False, True, False]), 1, 3, True),
+        (ma.array([1, 2, 3, 4], mask=[False, True, True, True]), 1, 3, False),
     ],
 )
 def test_is_z_increasing(z, ind_top, ind_base, result):
