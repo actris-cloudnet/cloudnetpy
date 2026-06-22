@@ -52,10 +52,11 @@ steps, and writes netCDF files (and optionally plots) to disk:
 ```sh
 cloudnetpy --site munich --date 2023-07-29 --products radar --show
 cloudnetpy --site kenttarova --date 2025-07-29 --products classification --show
+cloudnetpy -s kenttarova -d 2025-05-28 -p l3-cf -m harmonie-fmi-6-11 --show
 ```
 
 See the [command-line usage documentation](https://actris-cloudnet.github.io/cloudnetpy/cli.html)
-for instrument selection, L2 products, plotting, and all options.
+for instrument selection, different products, plotting, and all options.
 
 ## Citing
 
