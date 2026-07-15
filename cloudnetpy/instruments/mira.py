@@ -246,6 +246,11 @@ class Mira(NcRadar):
         """
         if "ldr" not in self.data:
             return
+        # Delete LDR if polarization is off. The LDR variable exists but
+        # contains no data. At least Munich MIRA-10 doesn't have polarization.
+        if self.hrd["POL"] == "0":
+            del self.data["ldr"]
+            return
         ldr = self.data["ldr"][:]
         if ma.mean(ldr) > 0:
             logging.warning(
