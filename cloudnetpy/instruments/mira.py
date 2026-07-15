@@ -156,17 +156,36 @@ class Mira(NcRadar):
         return utils.seconds2date(float(time_stamps[0]), self.epoch).date()
 
     def screen_low_power(self) -> None:
-        """Screen times with average transmit power close to zero."""
+        """Screen times with low average transmit power (tpow).
+
+        The expected average power depends on the specific model:
+
+        - MIRA-35 / 35S: average power should be between 30 and 60 W according
+          to the data sheet. Based on a random sample, tpow values range from 15
+          to 25 W.
+        - MIRA-35C: average power should be around 3 W according to the data
+          sheet. Based on a random sample, tpow values range from 1.5 to 2 W.
+        - MIRA-10: average power is up to 40 W (website) or 50 W (data sheet).
+
+        Please note that the raw tpow values cannot always be trusted:
+
+        - Files with SN:fzk and without FZK100 field in 'hrd' global attribute
+          should be multiplied by 100.
+        - It looks like tpow could contain the peak power instead of the average
+          power. As of now, this has only be seen in Munich MIRA-10, but because
+          this is the only MIRA-10 in Cloudnet, let's leave it as it is.
+
+        Example case:
+
+        - Limassol 2024-10-20: https://hdl.handle.net/21.12132/1.159fe518fe5b403d
+        """
         if "tpow" not in self.data:
             logging.warning("Variable tpow is missing")
             return
         self._correct_fzk_tpow()
         tpow = self.data["tpow"][:]
-        # Threshold for abnormally low power e.g. Limassol 2024-10-20. Average
-        # power should 30 to 60 W according to MIRA-35 data sheet. Based on a
-        # random sample, typical range is 15 to 25 W. In Lampedusa, the power is
-        # constantly as low as 1.9 W.
-        is_low = tpow < 1
+        low_threshold = 0.5 if self.instrument == MIRA35C else 5
+        is_low = tpow < low_threshold
         n_removed = np.count_nonzero(is_low)
         if n_removed > 0:
             logging.warning(
@@ -175,12 +194,15 @@ class Mira(NcRadar):
             self.screen_time_indices(~is_low)
 
     def _correct_fzk_tpow(self) -> None:
-        """Corrects tpow for old FZK-serial instruments missing the FZK100 fix.
+        """Corrects tpow for old instruments missing the FZK100 fix.
 
-        Some MIRA-35 instruments with serial number 'fzk' had a firmware bug
-        where tpow was reported 100x too small. Files produced after the
-        firmware fix contain 'FZK100' in the 'hrd' global attribute. Files
-        without this field need tpow multiplied by 100.
+        In old MIRA-35 files with 'SN:fzk', tpow was reported 100x too small
+        (e.g. Schneefernerhaus 2012-01-01). The tpow was corrected in a firmware
+        update as indicated by 'FZK100:      1.00000' in the 'hrd' global
+        attribute (e.g. Schneefernerhaus 2018-01-01).
+
+        Please note that this doesn't affect all old MIRA-35 instruments (e.g.
+        'SN:dwd', Lindenberg 2007-01-01).
         """
         hrd = getattr(self.dataset, "hrd", "")
         if "FZK100" in hrd:
