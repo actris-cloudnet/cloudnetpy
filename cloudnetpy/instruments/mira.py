@@ -38,8 +38,9 @@ def mira2nc(
             ``.znc`` files from one day, or a list of files. ``.znc`` files take
             precedence because they are the newer filetype.
         output_file: Output filename.
-        site_meta: Dictionary containing information about the site. Required key
-            value pair is `name`.
+        site_meta: Dictionary containing information about the site. Required
+            key-value pair is `name`. Optional `model` takes `mira-35` (default),
+            `mira-35s`, `mira-35c`, or `mira-10`.
         uuid: Set specific UUID for the file.
         date: Expected date as YYYY-MM-DD of all profiles in the file.
 
