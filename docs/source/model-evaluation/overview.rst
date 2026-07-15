@@ -3,43 +3,45 @@ Model evaluation
 ================
 
 The ``cloudnetpy.model_evaluation`` subpackage connects Cloudnet observation
-products with the corresponding fields simulated by numerical weather and
-climate models, and brings them onto a common grid so that they can be
+products with the corresponding fields simulated by numerical weather
+prediction (NWP) models, and brings them onto a common grid so that they can be
 compared directly. The goal is to highlight the capabilities and shortcomings
 of simulated cloud variables against ground-based remote sensing observations.
 
 Comparing observations with a model is not trivial: the two live on very
-different grids. Cloudnet products have a fine time-height resolution (typically
-~30 s and ~30 m), while a model column is coarse in the vertical and represents
-a grid-box average in the horizontal that a point measurement only samples as
-air advects past the site. The subpackage handles this by **downsampling** the
-high-resolution observations onto the model grid, producing so-called *L3
-day-scale* products: a single file, for one model run and one day, holding the
-model's own field next to the observation field regridded to match it.
+different grids. Cloudnet products have a fine time-height resolution
+(typically ~30 s and ~30 m), while a model column is coarse in the vertical and
+represents a grid-box average in the horizontal that a point measurement only
+samples as air advects past the site. The subpackage handles this by
+**downsampling** the high-resolution observations onto the model grid,
+producing so-called *L3 day-scale* products: a single file holding 24 hours of
+the model's own fields next to the regridded observation fields.
 
-Day-scale products are the building block of the evaluation. Longer time scales
-(month, season, year) are intended to be aggregated from them at a later stage.
+Day-scale products are the building block of the model evaluation.
+Climatological products for longer time scales (month, season, year, etc.) are
+intended to be aggregated from the day-scale products at a later stage.
 
 Inputs
 ======
 
-Each L3 product is generated from exactly two files:
+Each L3 product is generated from two files:
 
 - **A Cloudnet observation file** — the ``categorize`` file for cloud fraction
   (the cloud mask is built from its category bits), or an ``iwc`` or ``lwc``
   product file. It must be processed with CloudnetPy so that the expected
   variables and category bits are present.
-- **A harmonized model file** for a single model run. All models are expected to
-  share the same variable names and units (temperature [K], pressure [Pa],
-  ``qi``/``ql`` ice/liquid mixing ratios and ``cloud_fraction`` [1],
-  ``uwind``/``vwind`` [m s\ :sup:`-1`], ``height`` [m]). The only quantity that
-  genuinely differs between models is the number of vertical levels, which is
-  derived dynamically from the model height and a fixed altitude limit
-  (22 km — levels above this are dropped because the radar cannot observe them).
+- **A harmonized model file** for a specified forecast range (e.g. steps 0h –
+  7h combined from consecutive model runs). All models are expected to share the
+  same variable names and units (temperature [K], pressure [Pa], ``qi``/``ql``
+  ice/liquid mixing ratios and ``cloud_fraction`` [1], ``uwind``/``vwind`` [m
+  s\ :sup:`-1`], ``height`` [m]). The only quantity that genuinely differs
+  between models is the number of vertical levels, which is derived dynamically
+  from the model height and a fixed altitude limit (22 km — levels above this
+  are dropped because the radar cannot observe them).
 
-One L3 file corresponds to one model run. The model's own fields are written
-with a ``model_`` prefix; the downsampled observation fields are written without
-a prefix. The model identity is stored in the global attributes.
+The model's own fields are written with a ``model_`` prefix; the downsampled
+observation fields are written without a prefix. The model identity is stored
+in the global attributes.
 
 Processing overview
 ===================
@@ -164,8 +166,8 @@ model cloud fraction the radar would plausibly have been able to see.
 Output L3 products
 ==================
 
-The L3 file holds, for one model run and product, the model's own field and the
-downsampled observations on both grids. For cloud fraction:
+The L3 file holds the model's own fields and the downsampled observations on
+the model's grid. For cloud fraction:
 
 ================================  ================================================
 Variable                          Description
