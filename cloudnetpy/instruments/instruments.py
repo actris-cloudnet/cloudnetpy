@@ -91,6 +91,22 @@ MIRA35 = Instrument(
     frequency=35.5,
 )
 
+MIRA35S = Instrument(
+    manufacturer="METEK",
+    domain="radar",
+    category="cloud radar",
+    model="MIRA-35S",
+    frequency=35.5,
+)
+
+MIRA35C = Instrument(
+    manufacturer="METEK",
+    domain="radar",
+    category="cloud radar",
+    model="MIRA-35C",
+    frequency=35.5,
+)
+
 COPERNICUS = Instrument(
     manufacturer="RAL Space",
     domain="radar",

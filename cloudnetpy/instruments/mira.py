@@ -14,7 +14,7 @@ import numpy as np
 from numpy import ma
 
 from cloudnetpy import concat_lib, output, utils
-from cloudnetpy.instruments.instruments import MIRA10, MIRA35
+from cloudnetpy.instruments.instruments import MIRA10, MIRA35, MIRA35C, MIRA35S
 from cloudnetpy.instruments.nc_radar import NcRadar
 from cloudnetpy.metadata import MetaData
 
@@ -26,7 +26,7 @@ def mira2nc(
     uuid: str | UUID | None = None,
     date: str | datetime.date | None = None,
 ) -> UUID:
-    """Converts METEK MIRA-35 cloud radar data into Cloudnet Level 1b netCDF file.
+    """Converts METEK MIRA cloud radar data into Cloudnet Level 1b netCDF file.
 
     This function converts raw MIRA file(s) into a much smaller file that
     contains only the relevant data and can be used in further processing
@@ -114,7 +114,7 @@ def mira2nc(
 
 
 class Mira(NcRadar):
-    """Class for MIRA-35 raw radar data. Child of NcRadar().
+    """Class for MIRA raw radar data. Child of NcRadar().
 
     Args:
         full_path: Filename of a daily MIRA .mmclx NetCDF file.
@@ -129,6 +129,10 @@ class Mira(NcRadar):
         self.date = self._init_mira_date()
         if "model" not in site_meta or site_meta["model"] == "mira-35":
             self.instrument = MIRA35
+        elif site_meta["model"] == "mira-35s":
+            self.instrument = MIRA35S
+        elif site_meta["model"] == "mira-35c":
+            self.instrument = MIRA35C
         elif site_meta["model"] == "mira-10":
             self.instrument = MIRA10
         else:
