@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.93.5 – 2026-07-15
+
+- Allow passing "mira-35s" and "mira-35c" models to `mira2nc`
+- Improve `tpow` screening based on specific MIRA model
+- Write actual radar frequency used by MIRA to output file
+- Remove LDR variable from MIRA if polarization is off
+- Expose model evaluation entry points and improve documentation
+
 ## 1.93.4 – 2026-06-18
 
 - Distinguish clutter from rain in weather radar screening
