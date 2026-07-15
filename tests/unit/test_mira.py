@@ -74,7 +74,7 @@ class TestMIRA2nc(Check):
         assert set(self.nc.variables.keys()) == keys
 
     def test_variables(self):
-        assert self.nc.variables["radar_frequency"][:].data == 35.5  # Hard coded
+        assert self.nc.variables["radar_frequency"][:].data == 35.46
         assert np.all(self.nc.variables["zenith_angle"][:].data) == 0
 
     def test_common_radar(self):

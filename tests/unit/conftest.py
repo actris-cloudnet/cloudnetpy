@@ -72,6 +72,7 @@ def raw_mira_file(tmpdir_factory, file_metadata):
         ]
         for var in ("Zg", "VELg", "RMSg", "LDRg", "SNRg"):
             _create_variable(root_grp, var, TEST_ARRAY, "m")
+        root_grp.hrd = ""
     return file_name
 
 

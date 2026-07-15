@@ -14,6 +14,8 @@ import numpy as np
 from numpy import ma
 
 from cloudnetpy import concat_lib, output, utils
+from cloudnetpy.cloudnetarray import CloudnetArray
+from cloudnetpy.constants import HZ_TO_GHZ
 from cloudnetpy.instruments.instruments import MIRA10, MIRA35, MIRA35C, MIRA35S
 from cloudnetpy.instruments.nc_radar import NcRadar
 from cloudnetpy.metadata import MetaData
@@ -97,7 +99,8 @@ def mira2nc(
             mira.mask_bad_angles()
             mira.add_time_and_range()
             mira.add_site_geolocation()
-            mira.add_radar_specific_variables()
+            mira.add_radar_frequency()
+            mira.broadcast_nyquist_velocity()
             valid_indices = mira.add_zenith_and_azimuth_angles(
                 elevation_threshold=1.1,
                 elevation_diff_threshold=1e-6,
@@ -128,6 +131,7 @@ class Mira(NcRadar):
     def __init__(self, full_path: str | PathLike, site_meta: dict) -> None:
         super().__init__(full_path, site_meta)
         self.date = self._init_mira_date()
+        self.hrd = self._read_hrd()
         if "model" not in site_meta or site_meta["model"] == "mira-35":
             self.instrument = MIRA35
         elif site_meta["model"] == "mira-35s":
@@ -139,6 +143,31 @@ class Mira(NcRadar):
         else:
             msg = f"Invalid model: {site_meta['model']}"
             raise ValueError(msg)
+
+    def _read_hrd(self) -> dict[str, str]:
+        lines = self.dataset.hrd.split("\n")
+        output = {}
+        for line in lines:
+            if ":" not in line:
+                continue
+            key, value = line.split(":", maxsplit=1)
+            output[key] = value.strip()
+        return output
+
+    def add_radar_frequency(self) -> None:
+        # XMT should always be present. In newer files, there's also
+        # LO_frequency variable which doesn't match XMT exactly and sometimes
+        # contains only zeros.
+        key = "radar_frequency"
+        frequency = float(self.hrd["XMT"]) * HZ_TO_GHZ
+        self.data[key] = CloudnetArray(frequency, key)
+
+    def broadcast_nyquist_velocity(self) -> None:
+        # Scalar in original file, 1d array in concatenated file.
+        key = "nyquist_velocity"
+        nv = self.data[key].data
+        if len(nv.shape) == 1:
+            self.data[key].data = ma.getdata(nv)[:, np.newaxis]
 
     def screen_by_date(self, expected_date: datetime.date) -> None:
         """Screens incorrect time stamps."""
@@ -205,14 +234,7 @@ class Mira(NcRadar):
         Please note that this doesn't affect all old MIRA-35 instruments (e.g.
         'SN:dwd', Lindenberg 2007-01-01).
         """
-        hrd = getattr(self.dataset, "hrd", "")
-        if "FZK100" in hrd:
-            return
-        sn_lines = [line for line in hrd.split("\n") if line.strip().startswith("SN:")]
-        if not sn_lines:
-            return
-        sn = sn_lines[0].split(":", 1)[1].strip()
-        if sn != "fzk":
+        if self.hrd["SN"] != "fzk" or "FZK100" in self.hrd:
             return
         logging.info("Correcting tpow by factor 100 for old FZK instrument firmware")
         self.data["tpow"].data[:] *= 100
@@ -341,6 +363,7 @@ def _get_keymap(filetype: str) -> dict[str, str]:
                 ("nave", "nave"),
                 ("prf", "prf"),
                 ("rg0", "rg0"),
+                ("NyquistVelocity", "nyquist_velocity"),
                 ("tpow", "tpow"),
             ],
         ),
@@ -358,7 +381,7 @@ def _get_keymap(filetype: str) -> dict[str, str]:
                 ("nave", "nave"),
                 ("prf", "prf"),
                 ("rg0", "rg0"),
-                ("NyquistVelocity", "NyquistVelocity"),  # variable in some mmclx files
+                ("NyquistVelocity", "nyquist_velocity"),
                 ("tpow", "tpow"),
             ]
         ),
