@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.93.6 – 2026-07-20
+
+- Handle missing values in Limassol weather station
+
 ## 1.93.5 – 2026-07-15
 
 - Allow passing "mira-35s" and "mira-35c" models to `mira2nc`
