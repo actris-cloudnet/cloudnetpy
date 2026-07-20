@@ -682,13 +682,13 @@ class LimassolWS(WS):
 
     def add_data(self) -> None:
         self.data["air_temperature"] = CloudnetArray(
-            np.array(self._data["Air temperature (°C)"]), "air_temperature"
+            ma.masked_invalid(self._data["Air temperature (°C)"]), "air_temperature"
         )
         self.data["relative_humidity"] = CloudnetArray(
-            np.array(self._data["Relative humidity (%)"]), "relative_humidity"
+            ma.masked_invalid(self._data["Relative humidity (%)"]), "relative_humidity"
         )
         self.data["rainfall_rate"] = CloudnetArray(
-            np.array(self._data["Total precipitation (mm)"]), "rainfall_rate"
+            ma.masked_invalid(self._data["Total precipitation (mm)"]), "rainfall_rate"
         )
         # Wind speed and direction are available since 2025-02-13:
         if (
@@ -696,15 +696,15 @@ class LimassolWS(WS):
             and "Wind direction at 10m (degrees)" in self._data
         ):
             self.data["wind_speed"] = CloudnetArray(
-                np.array(self._data["Wind speed at 10m (m/s)"]), "wind_speed"
+                ma.masked_invalid(self._data["Wind speed at 10m (m/s)"]), "wind_speed"
             )
             self.data["wind_direction"] = CloudnetArray(
-                np.array(self._data["Wind direction at 10m (degrees)"]),
+                ma.masked_invalid(self._data["Wind direction at 10m (degrees)"]),
                 "wind_direction",
             )
         else:
             self.data["wind_speed"] = CloudnetArray(
-                np.array(self._data["Wind speed (m/s)"]), "wind_speed"
+                ma.masked_invalid(self._data["Wind speed (m/s)"]), "wind_speed"
             )
 
     def convert_rainfall_rate(self) -> None:
@@ -751,7 +751,10 @@ def _parse_sirta(filename: str | PathLike) -> dict:
                     value, "%Y-%m-%dT%H:%M:%SZ"
                 ).replace(tzinfo=datetime.timezone.utc)
             else:
-                parsed = float(value)
+                try:
+                    parsed = float(value)
+                except ValueError:
+                    parsed = math.nan
             output[column].append(parsed)
     return output
 
