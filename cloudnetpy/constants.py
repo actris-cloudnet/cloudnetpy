@@ -23,6 +23,7 @@ SEC_IN_MINUTE: Final = 60
 SEC_IN_HOUR: Final = 3600
 SEC_IN_DAY: Final = 86400
 MM_TO_M: Final = 1e-3
+MM2_TO_M2: Final = 1e-6
 G_TO_KG: Final = 1e-3
 M_TO_KM: Final = 1e-3
 KM_TO_M: Final = 1e3

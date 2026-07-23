@@ -1,6 +1,7 @@
 from collections.abc import Container
 
 import numpy as np
+import numpy.typing as npt
 from numpy import ma
 
 
@@ -25,3 +26,13 @@ def convert_to_numpy(
             arr = arr.astype(np.float32)
         output[key] = arr
     return output
+
+
+def make_rain_mask(
+    diameter: npt.NDArray[np.floating],
+    velocity: npt.NDArray[np.floating],
+    threshold: float = 0.5,
+) -> npt.NDArray[np.bool]:
+    v = 9.65 - 10.3 * np.exp(-0.6 * diameter)  # Atlas et al. (1973)
+    e = np.abs((velocity - v[:, np.newaxis]) / v[:, np.newaxis])
+    return e < threshold

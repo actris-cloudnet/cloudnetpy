@@ -1,5 +1,6 @@
 import datetime
 import re
+from collections.abc import Sequence
 from os import PathLike
 from typing import TypeAlias
 
@@ -8,6 +9,7 @@ import netCDF4
 import numpy as np
 import numpy.typing as npt
 
+from cloudnetpy.disdronator.process import DisdroL1
 from cloudnetpy.disdronator.utils import convert_to_numpy
 
 ParsivelOutput: TypeAlias = tuple[list, dict[int, list]]
@@ -85,10 +87,11 @@ ASDO_HEADER: dict[bytes, str | int | None] = {
     b"Spectrum": 93,
 }
 
-
+# Headers used in Granada's TOA5 format from CR1000 data logger.
 GRANADA_HEADERS: dict[bytes, str | int | None] = {
     b"TIMESTAMP": '"%Y-%m-%d %H:%M:%S"',
     b"RECORD": None,
+    # New snake case names:
     b"rain_intensity": 1,
     b"snow_intensity": 35,
     b"precipitation": 24,
@@ -98,7 +101,7 @@ GRANADA_HEADERS: dict[bytes, str | int | None] = {
     b"kinetic_energy": 34,
     b"signal_amplitude": 10,
     b"sensor_temperature": 12,
-    b"pbc_temperature": 26,
+    b"pbc_temperature": 26,  # sic
     b"right_temperature": 27,
     b"left_temperature": 28,
     b"heating_current": 16,
@@ -109,6 +112,24 @@ GRANADA_HEADERS: dict[bytes, str | int | None] = {
     b"N": 90,
     b"V": 91,
     b"spectrum": 93,
+    # Old camel case names:
+    b"rainIntensity": 1,
+    b"snowIntensity": 35,
+    b"accPrec": 24,
+    b"weatherCodeWaWa": 3,
+    b"radarReflectivity": 7,
+    b"morVisibility": 8,
+    b"kineticEnergy": 34,
+    b"signalAmplitude": 10,
+    b"sensorTemperature": 12,
+    b"pbcTemperature": 26,  # sic
+    b"rightTemperature": 27,
+    b"leftTemperature": 28,
+    b"heatingCurrent": 16,
+    b"sensorVoltage": 17,
+    b"sensorStatus": 18,
+    b"errorCode": 25,
+    b"numberParticles": 11,
 }
 
 # parsivel2nc
@@ -213,11 +234,11 @@ LEIPZIG_KEYS = {
 }
 
 FLOAT_KEYS = {1, 2, 7, 16, 17, 24, 30, 31, 33, 34, 35}
-INT_KEYS = {3, 4, 8, 9, 10, 11, 12, 13, 18, 25, 26, 27, 28, 60}
+INT_KEYS = {3, 4, 8, 9, 10, 11, 12, 18, 25, 26, 27, 28, 60}
 
 
 def _read_lines(
-    telegram: list[str | int | None],
+    telegram: Sequence[str | int | None],
     content: bytes,
     field_separator: bytes,
     decimal_separator: bytes,
@@ -256,7 +277,7 @@ def _read_lines(
                     row_data[t] = [float(x) for x in values[:32]]
                     values = values[32:]
                 elif t == 93:
-                    spectrum = [float(x) for x in values[:1024]]
+                    spectrum = [int(x) for x in values[:1024]]
                     row_data[t] = np.reshape(spectrum, (32, 32))
                     values = values[1024:]
                 elif isinstance(t, str):
@@ -294,7 +315,7 @@ def _read_lines(
 def _expand_spectrum(m: re.Match) -> bytes:
     if m[1] == b"ZERO":
         return b"0;" * 1024
-    return b";".join([x or b"0" for x in m[1].split(b";")])
+    return b";".join([x or b"0" for x in m[1].split(b";")[:1024]]) + b";"
 
 
 def _read_typ_op4a(content: bytes) -> dict:
@@ -315,6 +336,8 @@ def _read_typ_op4a(content: bytes) -> dict:
         elif num == 93:
             spectrum = [int(x) for x in value.rstrip(b";").split(b";")]
             data[num] = np.reshape(spectrum, (32, 32))
+        else:
+            data[num] = value
     return data
 
 
@@ -365,7 +388,7 @@ def _read_granada(filename: str | PathLike) -> ParsivelOutput:
 
 def _read_headerless(
     filename: str | PathLike,
-    telegram: list[int | str | None],
+    telegram: Sequence[int | str | None],
     field_separator: bytes,
     decimal_separator: bytes,
 ) -> ParsivelOutput:
@@ -417,6 +440,8 @@ def _read_parsivel2nc(filename: str | PathLike) -> ParsivelOutput:
         data[12][0] -= 273
         # Sensor serial number from global attribute.
         data[13] = np.repeat(int(nc.Sensor_ID), len(time))
+        # Convert raw data from double to integer.
+        data[93] = data[93].astype(np.int32)
         return time, data
 
 
@@ -435,7 +460,7 @@ def _read_munich(filename: str | PathLike) -> ParsivelOutput:
     with netCDF4.Dataset(filename) as nc:
         time = cftime.num2pydate(nc["time"][:], units=nc["time"].units)
         data = {num: nc[key][:] for key, num in MUNICH_KEYS.items()}
-        data[93] = np.transpose(data[93], (0, 2, 1))
+        data[93] = np.swapaxes(data[93], 1, 2)
         return time, data
 
 
@@ -451,7 +476,7 @@ def _read_leipzig(filename: str | PathLike) -> ParsivelOutput:
 
 def _read_parsivel(
     filename: str | PathLike,
-    telegram: list[int | str | None] | None = None,
+    telegram: Sequence[int | str | None] | None = None,
     field_separator: str = ";",
     decimal_separator: str = ".",
 ) -> ParsivelOutput:
@@ -489,7 +514,7 @@ def _read_parsivel(
 
 def read_parsivel(
     filename: str | PathLike,
-    telegram: list[int | str | None] | None = None,
+    telegram: Sequence[int | str | None] | None = None,
     field_separator: str = ";",
     decimal_separator: str = ".",
 ) -> tuple[npt.NDArray, dict[int, npt.NDArray]]:
@@ -497,31 +522,64 @@ def read_parsivel(
     return np.array(time), convert_to_numpy(data, {}, INT_KEYS, FLOAT_KEYS)
 
 
+def read_parsivel_l1(time: npt.NDArray, l0: dict[int, npt.NDArray]) -> DisdroL1:
+    if 93 not in l0:
+        msg = "No raw data"
+        raise ValueError(msg)
+    data_raw = np.swapaxes(l0[93], 1, 2)
+    interval = (
+        l0[9]
+        if 9 in l0
+        else np.median(np.diff(time.astype("datetime64[s]"))).astype(int)
+    )
+    return DisdroL1(
+        diameter=D,
+        diameter_bins=D_BINS,
+        diameter_spread=D_SPREAD,
+        velocity=V,
+        velocity_bins=V_BINS,
+        velocity_spread=V_SPREAD,
+        time=time,
+        interval=np.broadcast_to(interval, len(time)),
+        area_nom=AREA_NOM,
+        area_eff=AREA_EFF,
+        data_raw=data_raw,
+    )
+
+
 # fmt: off
-# mm
-Dmid = np.array([
-    0.062, 0.187, 0.312, 0.437, 0.562, 0.687, 0.812, 0.937, 1.062, 1.187, 1.375,
-    1.625, 1.875, 2.125, 2.375, 2.750, 3.250, 3.750, 4.250, 4.750, 5.500, 6.500,
-    7.500, 8.500, 9.500, 11.000, 13.000, 15.000, 17.000, 19.000, 21.500, 24.500,
+D = np.array([
+    0.0625, 0.1875, 0.3125, 0.4375, 0.5625, 0.6875, 0.8125, 0.9375, 1.0625,
+    1.1875, 1.3750, 1.6250, 1.8750, 2.1250, 2.3750, 2.7500, 3.2500, 3.7500,
+    4.2500, 4.7500, 5.5000, 6.5000, 7.5000, 8.5000, 9.5000, 11.0000, 13.0000,
+    15.0000, 17.0000, 19.0000, 21.5000, 24.5000,
 ])
-# mm
-Dspr = np.array( [
+D_BINS = np.array([
+    0.000, 0.125, 0.250, 0.375, 0.500, 0.625, 0.750, 0.875, 1.000, 1.125, 1.250,
+    1.500, 1.750, 2.000, 2.250, 2.500, 3.000, 3.500, 4.000, 4.500, 5.000, 6.000,
+    7.000, 8.000, 9.000, 10.000, 12.000, 14.000, 16.000, 18.000, 20.000, 23.000,
+    26.000
+])
+D_SPREAD = np.array([
     0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.250,
     0.250, 0.250, 0.250, 0.250, 0.500, 0.500, 0.500, 0.500, 0.500, 1.000, 1.000,
-    1.000, 1.000, 1.000, 2.000, 2.000, 2.000, 2.000, 2.000, 3.000, 3.000,
+    1.000, 1.000, 1.000, 2.000, 2.000, 2.000, 2.000, 2.000, 3.000, 3.000
 ])
-# m/s
-Vmid = np.array([
-    0.050, 0.150, 0.250, 0.350, 0.450, 0.550, 0.650, 0.750, 0.850, 0.950, 1.100,
-    1.300, 1.500, 1.700, 1.900, 2.200, 2.600, 3.000, 3.400, 3.800, 4.400, 5.200,
-    6.000, 6.800, 7.600, 8.800, 10.400, 12.000, 13.600, 15.200, 17.600, 20.800,
+V = np.array([
+    0.05, 0.15, 0.25, 0.35, 0.45, 0.55, 0.65, 0.75, 0.85, 0.95, 1.1, 1.30, 1.5,
+    1.7, 1.9, 2.2, 2.6, 3., 3.4, 3.8, 4.4, 5.2, 6.00, 6.8, 7.6, 8.8, 10.4, 12.,
+    13.6, 15.2, 17.6, 20.8
 ])
-# m/s
-Vspr = np.array([
-    0.100, 0.100, 0.100, 0.100, 0.100, 0.100, 0.100, 0.100, 0.100, 0.100, 0.200,
-    0.200, 0.200, 0.200, 0.200, 0.400, 0.400, 0.400, 0.400, 0.400, 0.800, 0.800,
-    0.800, 0.800, 0.800, 1.600, 1.600, 1.600, 1.600, 1.600, 3.200, 3.200,
+V_BINS = np.array([
+    0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.2, 1.4, 1.6, 1.8,
+    2.0, 2.4, 2.8, 3.2, 3.6, 4.0, 4.8, 5.6, 6.4, 7.2, 8.0, 9.6, 11.2, 12.8,
+    14.4, 16.0, 19.2, 22.4
 ])
+V_SPREAD = np.array([
+    0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.2, 0.2, 0.2, 0.2, 0.2,
+    0.4, 0.4, 0.4, 0.4, 0.4, 0.8, 0.8, 0.8, 0.8, 0.8, 1.6, 1.6, 1.6, 1.6, 1.6,
+    3.2, 3.2
+])
+AREA_NOM = 180 * 30
+AREA_EFF = 180 * (30 - D / 2)
 # fmt: on
-
-A = 0.0054  # sampling area [m2] 30 mm * 180 mm
