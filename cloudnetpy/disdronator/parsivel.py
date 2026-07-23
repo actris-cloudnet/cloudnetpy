@@ -8,6 +8,7 @@ import netCDF4
 import numpy as np
 import numpy.typing as npt
 
+from cloudnetpy.disdronator.process import DisdroL1
 from cloudnetpy.disdronator.utils import convert_to_numpy
 
 ParsivelOutput: TypeAlias = tuple[list, dict[int, list]]
@@ -495,6 +496,19 @@ def read_parsivel(
 ) -> tuple[npt.NDArray, dict[int, npt.NDArray]]:
     time, data = _read_parsivel(filename, telegram, field_separator, decimal_separator)
     return np.array(time), convert_to_numpy(data, {}, INT_KEYS, FLOAT_KEYS)
+
+
+def read_parsivel_l1(time: npt.NDArray, l0: dict[int, npt.NDArray]) -> DisdroL1:
+    return DisdroL1(
+        diameter=Dmid,
+        diameter_spread=Dspr,
+        velocity=Vmid,
+        velocity_spread=Vspr,
+        time=time,
+        interval=l0[9],
+        area=A,
+        data_raw=l0[93],
+    )
 
 
 # fmt: off

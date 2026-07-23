@@ -5,6 +5,7 @@ from typing import TypeAlias
 import numpy as np
 import numpy.typing as npt
 
+from cloudnetpy.disdronator.process import DisdroL1
 from cloudnetpy.disdronator.utils import convert_to_numpy
 
 LpmOutput: TypeAlias = tuple[list, dict[int, list]]
@@ -50,7 +51,6 @@ Vspr = np.array([
 
 Dmid = Dlow + Dspr / 2
 Vmid = Vlow + Vspr / 2
-A = (20 / 1000) * (228 / 1000)  # TODO: AU
 
 
 def _read_telegram(telegram: str, data: dict[int, list]) -> None:
@@ -130,3 +130,22 @@ def read_lpm(filename: str | PathLike) -> tuple[npt.NDArray, dict[int, npt.NDArr
     else:
         time, data = _read_raw(filename)
     return np.array(time), convert_to_numpy(data, FILL_VALUES)
+
+
+def read_lpm_l1(
+    time: npt.NDArray, l0: dict[int, npt.NDArray], au: int | None = None
+) -> DisdroL1:
+    area = 4.6 / au if au is not None else 45.6e-4
+    data_raw = np.stack([l0[i] for i in range(81, 521)], axis=1).reshape(
+        (len(time), len(Dmid), len(Vmid))
+    )
+    return DisdroL1(
+        diameter=Dmid,
+        diameter_spread=Dspr,
+        velocity=Vmid,
+        velocity_spread=Vspr,
+        time=time,
+        interval=np.array(60),
+        area=area,
+        data_raw=data_raw,
+    )
