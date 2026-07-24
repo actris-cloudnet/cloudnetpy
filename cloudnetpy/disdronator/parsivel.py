@@ -507,7 +507,7 @@ def read_parsivel_l1(time: npt.NDArray, l0: dict[int, npt.NDArray]) -> DisdroL1:
         time=time,
         interval=l0[9],
         area=0.0054,
-        data_raw=l0[93],
+        data_raw=np.swapaxes(l0[93], 1, 2),
     )
 
 

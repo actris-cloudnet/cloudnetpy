@@ -32,6 +32,8 @@ class DisdroL2:
     fall_velocity: npt.NDArray
     rain_rate: npt.NDArray
     rain_accum: npt.NDArray
+    radar_refl: npt.NDArray
+    energy_flux: npt.NDArray
 
 
 def process_l2(l1: DisdroL1) -> DisdroL2:
@@ -42,33 +44,63 @@ def process_l2(l1: DisdroL1) -> DisdroL2:
     filtered = np.copy(l1.data_raw)
     filtered[~is_valid] = 0
 
-    number_concentration = filtered / (
-        l1.area * l1.interval[:, np.newaxis] * l1.velocity * l1.diameter_spread
-    )
-    fall_velocity = ma.masked_where(filtered == 0, np.tile(l1.velocity, (n_time, 1)))
-    rain_amount = (
-        np.pi
-        / 6
-        * (filtered * l1.diameter**3).reshape(n_time, -1).sum(axis=1)
-        / (l1.area * 1e6)
-    )
-    rain_rate = rain_amount / (l1.interval / 3600)
-    rain_accum = np.cumsum(rain_amount)
+    area_mm2 = l1.area * 1e6
+    interval_h = l1.interval / 3600
+    rho_w = 1e-6  # kg mm-3
 
-    # number_concentration = np.sum(
-    #     filtered
-    #     / (l1.area * l1.interval * l1.velocity * l1.diameter_spread[:, np.newaxis]),
-    #     axis=2,
-    # )
-    # fall_velocity = ma.divide(
-    #     np.sum(l1.velocity * filtered, axis=2), np.sum(filtered, axis=2)
-    # )
-    # rainfall_rate = (
-    #     6e-4
-    #     * np.pi
-    #     * np.sum(filtered * l1.diameter[:, np.newaxis] ** 3, axis=(1, 2))
-    #     / (l1.area * l1.interval)
-    # )
+    if filtered.ndim == 2:
+        number_concentration = (
+            filtered
+            / (l1.velocity * l1.diameter_spread)
+            / (l1.area * l1.interval)[:, np.newaxis]
+        )
+        fall_velocity = ma.masked_where(
+            filtered == 0, np.tile(l1.velocity, (n_time, 1))
+        )
+        rain_amount = np.pi / 6 * np.sum(filtered * l1.diameter**3, axis=1) / area_mm2
+        radar_refl = np.sum(filtered * l1.diameter**6 / l1.velocity, axis=1) / (
+            l1.area * l1.interval
+        )
+        energy_flux = (
+            np.pi
+            / 12
+            * rho_w
+            * np.sum(filtered * l1.diameter**3 * l1.velocity**2, axis=1)
+            / (l1.area * interval_h)
+        )
+    else:
+        number_concentration = (
+            np.sum(
+                filtered / (l1.velocity * l1.diameter_spread[:, np.newaxis]),
+                axis=2,
+            )
+            / (l1.area * l1.interval)[:, np.newaxis]
+        )
+        fall_velocity = ma.divide(
+            np.sum(l1.velocity * filtered, axis=2), np.sum(filtered, axis=2)
+        )
+        rain_amount = (
+            np.pi
+            / 6
+            * np.sum(filtered * l1.diameter[:, np.newaxis] ** 3, axis=(1, 2))
+            / area_mm2
+        )
+        radar_refl = np.sum(
+            filtered * l1.diameter[:, np.newaxis] ** 6 / l1.velocity, axis=(1, 2)
+        ) / (l1.area * l1.interval)
+        energy_flux = (
+            np.pi
+            / 12
+            * rho_w
+            * np.sum(
+                filtered * l1.diameter[:, np.newaxis] ** 3 * l1.velocity**2, axis=(1, 2)
+            )
+            / (l1.area * interval_h)
+        )
+    rain_rate = rain_amount / interval_h
+    rain_accum = np.cumsum(rain_amount)
+    radar_refl_db = 10 * ma.log10(radar_refl)
+    radar_refl_db[radar_refl_db < -10] = ma.masked
 
     return DisdroL2(
         diameter=l1.diameter,
@@ -84,4 +116,6 @@ def process_l2(l1: DisdroL1) -> DisdroL2:
         fall_velocity=fall_velocity,
         rain_rate=rain_rate,
         rain_accum=rain_accum,
+        radar_refl=radar_refl_db,
+        energy_flux=energy_flux,
     )

@@ -5,12 +5,12 @@ from os import PathLike
 from uuid import UUID
 
 import numpy as np
-from numpy import ma
 
 from cloudnetpy import output
-from cloudnetpy.cloudnetarray import CloudnetArray
-from cloudnetpy.constants import MM_TO_M, SEC_IN_HOUR
-from cloudnetpy.disdronator.rd80 import A, Dlow, Dmid, Dspr, Dupp, Vmid, read_rd80
+from cloudnetpy.cloudnetarray import CloudnetArray, MetaData
+from cloudnetpy.constants import MM_H_TO_M_S, MM_TO_M
+from cloudnetpy.disdronator.process import process_l2
+from cloudnetpy.disdronator.rd80 import read_rd80, read_rd80_l1
 from cloudnetpy.instruments import instruments
 from cloudnetpy.instruments.cloudnet_instrument import CloudnetInstrument
 from cloudnetpy.utils import get_uuid
@@ -48,22 +48,36 @@ def rd802nc(
             'longitude': -59.02}
         >>> uuid = rd802nc('RD-220101-181400.txt', 'rd80.nc', site_meta)
     """
+    return _process_disdrometer(
+        Rd80, RD80_ATTRIBUTES, input_file, output_file, site_meta, uuid, date
+    )
+
+
+def _process_disdrometer(
+    klass,
+    attributes: dict[str, MetaData],
+    input_file: str | PathLike | Iterable[str | PathLike],
+    output_file: str | PathLike,
+    site_meta: dict,
+    uuid: str | UUID | None = None,
+    date: str | datetime.date | None = None,
+) -> UUID:
     if isinstance(date, str):
         date = datetime.date.fromisoformat(date)
     uuid = get_uuid(uuid)
     if isinstance(input_file, str | PathLike):
         input_file = [input_file]
-    disdrometer = Rd80(input_file, site_meta, date)
+    disdrometer = klass(input_file, site_meta, date)
     disdrometer.sort_and_dedup_timestamps()
     disdrometer.convert_to_cloudnet_arrays()
     disdrometer.add_meta()
-    attributes = output.add_time_attribute(ATTRIBUTES, disdrometer.date)
+    attributes = output.add_time_attribute(attributes, disdrometer.date)
     output.update_attributes(disdrometer.data, attributes)
     output.save_level1b(disdrometer, output_file, uuid)
     return uuid
 
 
-class Rd80(CloudnetInstrument):
+class Disdro(CloudnetInstrument):
     def __init__(
         self,
         filenames: Iterable[str | PathLike],
@@ -72,23 +86,30 @@ class Rd80(CloudnetInstrument):
     ) -> None:
         super().__init__()
         self.site_meta = site_meta
-        self._read_data(filenames)
+        self._process_data(filenames)
         self._screen_time(expected_date)
-        self.n_velocity = 20
-        self.n_diameter = 20
-        self.serial_number = None
-        self.instrument = instruments.RD80
 
-    def _read_data(self, filenames: Iterable[str | PathLike]) -> None:
-        times = []
-        data = defaultdict(list)
-        for filename in filenames:
-            file_time, file_data = read_rd80(filename)
-            times.append(file_time)
-            for key, value in file_data.items():
-                data[key].append(value)
-        self.raw_time = np.concatenate(times)
-        self.raw_data = {key: np.concatenate(value) for key, value in data.items()}
+    def _process_data(self, filenames):
+        l1 = self._read_data(filenames)
+        l2 = process_l2(l1)
+        self.raw_time = l2.time
+        self.raw_meta = {
+            "diameter": l2.diameter * MM_TO_M,
+            "diameter_spread": l2.diameter_spread * MM_TO_M,
+            "velocity": l2.velocity,
+            "sampling_area": l2.area,
+        }
+        self.raw_data = {
+            "interval": l2.interval,
+            "data_raw": l2.data_raw,
+            "n_particles": l2.n_particles,
+            "number_concentration": l2.number_concentration,
+            "fall_velocity": l2.fall_velocity,
+            "rainfall_rate": l2.rain_rate * MM_H_TO_M_S,
+            "rainfall_amount": l2.rain_accum * MM_TO_M,
+            "radar_reflectivity": l2.radar_refl,
+            "kinetic_energy": l2.energy_flux,
+        }
 
     def _screen_time(self, expected_date: datetime.date | None = None) -> None:
         if expected_date is None:
@@ -113,31 +134,44 @@ class Rd80(CloudnetInstrument):
                 self.data[name] = CloudnetArray(float(value), name)
 
     def convert_to_cloudnet_arrays(self) -> None:
-        mmh_to_ms = SEC_IN_HOUR / MM_TO_M
-        mm_to_m = 1000
+        for key, value in self.raw_meta.items():
+            self.data[key] = CloudnetArray(value, key)
+        for key, value in self.raw_data.items():
+            self.data[key] = CloudnetArray(value, key)
         hour = (
             self.raw_time - datetime.datetime.combine(self.date, datetime.time())
         ) / datetime.timedelta(hours=1)
-        rainfall_rate = self.raw_data["RI [mm/h]"]
-        n_particles = np.sum(self.raw_data["n"], axis=1)
-        dt = self.raw_data["Interval [s]"]
-        n = self.raw_data["n"]
-        numcon = n / (A * dt[:, np.newaxis] * Vmid * Dspr)
-        Z = np.sum(n / Vmid * Dmid**6, axis=1) / (A * dt)
-        ZdB = 10 * ma.log10(ma.masked_where(Z == 0, Z))
-        ZdB[ZdB < -10] = ma.masked
-        self.data["diameter"] = CloudnetArray(Dmid / mm_to_m, "diameter")
-        self.data["diameter_spread"] = CloudnetArray(Dspr / mm_to_m, "diameter_spread")
-        self.data["diameter_bnds"] = CloudnetArray(
-            np.stack((Dlow, Dupp), axis=1) / mm_to_m, "diameter_bnds"
-        )
         self.data["time"] = CloudnetArray(hour.astype(np.float32), "time")
-        self.data["interval"] = CloudnetArray(dt, "interval")
-        self.data["rainfall_rate"] = CloudnetArray(
-            rainfall_rate / mmh_to_ms, "rainfall_rate"
-        )
-        self.data["n_particles"] = CloudnetArray(n_particles, "n_particles")
-        self.data["number_concentration"] = CloudnetArray(
-            numcon, "number_concentration"
-        )
-        self.data["radar_reflectivity"] = CloudnetArray(ZdB, "radar_reflectivity")
+
+
+class Rd80(Disdro):
+    def __init__(
+        self,
+        filenames: Iterable[str | PathLike],
+        site_meta: dict,
+        expected_date: datetime.date | None = None,
+    ) -> None:
+        super().__init__(filenames, site_meta, expected_date)
+        self.serial_number = None
+        self.instrument = instruments.RD80
+
+    def _read_data(self, filenames: Iterable[str | PathLike]) -> None:
+        times = []
+        data = defaultdict(list)
+        for filename in filenames:
+            file_time, file_data = read_rd80(filename)
+            times.append(file_time)
+            for key, value in file_data.items():
+                data[key].append(value)
+        raw_time = np.concatenate(times)
+        raw_data = {key: np.concatenate(value) for key, value in data.items()}
+        return read_rd80_l1(raw_time, raw_data)
+
+
+RD80_ATTRIBUTES = ATTRIBUTES | {
+    "data_raw": MetaData(
+        long_name="Raw data as a function of particle diameter",
+        units="1",
+        dimensions=("time", "diameter"),
+    ),
+}

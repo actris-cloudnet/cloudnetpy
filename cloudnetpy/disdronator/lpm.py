@@ -145,7 +145,7 @@ def read_lpm_l1(
         velocity=Vmid,
         # velocity_spread=Vspr,
         time=time,
-        interval=np.array(60),
+        interval=np.repeat(60, len(time)),
         area=area,
         data_raw=data_raw,
     )

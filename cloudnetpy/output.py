@@ -13,6 +13,7 @@ from cloudnetpy import utils, version
 from cloudnetpy.categorize.containers import Observations
 from cloudnetpy.categorize.model import Model
 from cloudnetpy.datasource import DataSource
+from cloudnetpy.instruments.disdrometer.rd80 import Disdro
 from cloudnetpy.instruments.instruments import Instrument
 from cloudnetpy.metadata import COMMON_ATTRIBUTES
 
@@ -53,9 +54,9 @@ def _get_netcdf_dimensions(obj) -> dict:  # noqa: ANN001
         dimensions["chirp_sequence"] = ind.shape[1] if ind.ndim > 1 else len(ind)
 
     # disdrometer
-    if hasattr(obj, "n_diameter") and hasattr(obj, "n_velocity"):
-        dimensions["diameter"] = obj.n_diameter
-        dimensions["velocity"] = obj.n_velocity
+    if isinstance(obj, Disdro):
+        dimensions["diameter"] = len(obj.data["diameter"][:])
+        dimensions["velocity"] = len(obj.data["velocity"][:])
         dimensions["nv"] = 2
     # HATPRO l1c
     if "tb" in obj.data:
