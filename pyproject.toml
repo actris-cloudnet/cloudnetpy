@@ -72,6 +72,7 @@ select = ["ALL"]
 ignore = [
   "C9", # too complex, fix me later
   "COM812", # Formatting
+  "CPY001", # no copyright comments
   "D100", # allow missing documentation
   "D101", # allow missing documentation
   "D102", # allow missing documentation
