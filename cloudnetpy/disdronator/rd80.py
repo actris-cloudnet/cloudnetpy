@@ -4,6 +4,7 @@ from os import PathLike
 import numpy as np
 import numpy.typing as npt
 
+from cloudnetpy.disdronator.process import DisdroL1
 from cloudnetpy.disdronator.utils import convert_to_numpy
 
 
@@ -34,6 +35,19 @@ def read_rd80(filename: str | PathLike) -> tuple[npt.NDArray, dict[str, npt.NDAr
     return np.array(time), convert_to_numpy(data)
 
 
+def read_rd80_l1(time: npt.NDArray, l0: dict[str, npt.NDArray]) -> DisdroL1:
+    return DisdroL1(
+        diameter=Dmid,
+        diameter_spread=Dspr,
+        velocity=Vmid,
+        # velocity_spread=Vspr,
+        time=time,
+        interval=l0["Interval [s]"],
+        area=0.005,
+        data_raw=l0["n"],
+    )
+
+
 # fmt: off
 Dmid = np.array([
     0.359, 0.455, 0.551, 0.656, 0.771, 0.913, 1.116, 1.331, 1.506, 1.665, 1.912,
@@ -52,5 +66,4 @@ Vmid = np.array([
     1.435, 1.862, 2.267, 2.692, 3.154, 3.717, 4.382, 4.986, 5.423, 5.793, 6.315,
     7.009, 7.546, 7.903, 8.258, 8.556, 8.784, 8.965, 9.076, 9.137
 ])  # m s-1
-A = 0.005  # m2
 # fmt: on

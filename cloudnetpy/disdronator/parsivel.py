@@ -503,10 +503,10 @@ def read_parsivel_l1(time: npt.NDArray, l0: dict[int, npt.NDArray]) -> DisdroL1:
         diameter=Dmid,
         diameter_spread=Dspr,
         velocity=Vmid,
-        velocity_spread=Vspr,
+        # velocity_spread=Vspr,
         time=time,
         interval=l0[9],
-        area=A,
+        area=0.0054,
         data_raw=l0[93],
     )
 
@@ -537,5 +537,3 @@ Vspr = np.array([
     0.800, 0.800, 0.800, 1.600, 1.600, 1.600, 1.600, 1.600, 3.200, 3.200,
 ])
 # fmt: on
-
-A = 0.0054  # sampling area [m2] 30 mm * 180 mm

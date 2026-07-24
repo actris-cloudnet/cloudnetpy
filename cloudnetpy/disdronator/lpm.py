@@ -143,7 +143,7 @@ def read_lpm_l1(
         diameter=Dmid,
         diameter_spread=Dspr,
         velocity=Vmid,
-        velocity_spread=Vspr,
+        # velocity_spread=Vspr,
         time=time,
         interval=np.array(60),
         area=area,
