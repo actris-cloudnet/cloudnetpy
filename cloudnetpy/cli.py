@@ -315,7 +315,8 @@ def _process_instrument_product(
             fun = instruments.parsivel2nc
         case ("disdrometer", _id) if "thies" in _id:
             fun = instruments.thies2nc
-            input_files = _concatenate_(input_files, tmpdir)
+        case ("disdrometer", _id) if "rd-80" in _id:
+            fun = instruments.rd802nc
         case ("lidar", _id) if "pollyxt" in _id:
             site_meta["snr_limit"] = calibration.get("snr_limit", 25)
             fun = instruments.pollyxt2nc
@@ -351,6 +352,12 @@ def _process_instrument_product(
             fun = instruments.mrr2nc
         case ("weather-station", _id):
             fun = instruments.ws2nc
+        case (invalid_product_id, invalid_instrument_id):
+            msg = (
+                f"Processing product '{invalid_product_id}'"
+                f" from instrument '{invalid_instrument_id}' is not supported"
+            )
+            raise ValueError(msg)
     logging.info("Processing %s...", product)
     fun(input_files, output_filepath, site_meta, date=args.date)
     logging.info("Processed %s: %s", product, output_filepath)
