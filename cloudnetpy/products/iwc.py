@@ -37,10 +37,10 @@ def generate_iwc(
         >>> generate_iwc('categorize.nc', 'iwc.nc')
 
     References:
-        Hogan, R.J., M.P. Mittermaier, and A.J. Illingworth, 2006:
-        The Retrieval of Ice Water Content from Radar Reflectivity Factor and
-        Temperature and Its Use in Evaluating a Mesoscale Model.
-        J. Appl. Meteor. Climatol., 45, 301–317, https://doi.org/10.1175/JAM2340.1
+        Hogan, R. J., Mittermaier, M. P., & Illingworth, A. J. (2006). The
+        Retrieval of Ice Water Content from Radar Reflectivity Factor and
+        Temperature and Its Use in Evaluating a Mesoscale Model. J. Appl.
+        Meteor. Climatol., 45, 301–317, https://doi.org/10.1175/JAM2340.1
 
     """
     uuid = utils.get_uuid(uuid)

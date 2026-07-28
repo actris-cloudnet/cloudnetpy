@@ -42,9 +42,9 @@ def generate_drizzle(
         >>> generate_drizzle('categorize.nc', 'drizzle.nc')
 
     References:
-        O’Connor, E.J., R.J. Hogan, and A.J. Illingworth, 2005:
-        Retrieving Stratocumulus Drizzle Parameters Using Doppler Radar and Lidar.
-        J. Appl. Meteor., 44, 14–27, https://doi.org/10.1175/JAM-2181.1
+        O'Connor, E. J., Hogan, R. J., & Illingworth, A. J. (2005). Retrieving
+        Stratocumulus Drizzle Parameters Using Doppler Radar and Lidar. J.
+        Appl. Meteor., 44, 14–27, https://doi.org/10.1175/JAM-2181.1
 
     """
     uuid = utils.get_uuid(uuid)

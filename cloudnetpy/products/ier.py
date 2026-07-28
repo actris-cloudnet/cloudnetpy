@@ -39,24 +39,23 @@ def generate_ier(
         >>> generate_ier('categorize.nc', 'ier.nc')
 
     References:
-        Hogan, R. J., Mittermaier, M. P., & Illingworth, A. J. (2006). The Retrieval
-        of Ice Water Content from Radar Reflectivity Factor and Temperature and Its
-        Use in Evaluating a Mesoscale Model, Journal of Applied Meteorology and
-        Climatology, 45(2), 301-317.
-        from https://journals.ametsoc.org/view/journals/apme/45/2/jam2340.1.xml
+        Hogan, R. J., Mittermaier, M. P., & Illingworth, A. J. (2006). The
+        Retrieval of Ice Water Content from Radar Reflectivity Factor and
+        Temperature and Its Use in Evaluating a Mesoscale Model, Journal of
+        Applied Meteorology and Climatology, 45(2), 301-317.
+        https://doi.org/10.1175/JAM2340.1
 
-        Delanoë, J., Protat, A., Bouniol, D., Heymsfield, A., Bansemer, A., & Brown,
-        P. (2007). The Characterization of Ice Cloud Properties from Doppler Radar
-        Measurements, Journal of Applied Meteorology and Climatology, 46(10),
-        1682-1698.
-        from https://journals.ametsoc.org/view/journals/apme/46/10/jam2543.1.xml
+        Delanoë, J., Protat, A., Bouniol, D., Heymsfield, A., Bansemer, A., &
+        Brown, P. (2007). The Characterization of Ice Cloud Properties from
+        Doppler Radar Measurements, Journal of Applied Meteorology and
+        Climatology, 46(10), 1682-1698. https://doi.org/10.1175/JAM2543.1
 
-        Griesche, H. J., Seifert, P., Ansmann, A., Baars, H., Barrientos Velasco,
-        C., Bühl, J., Engelmann, R., Radenz, M., Zhenping, Y., and Macke, A. (2020):
-        Application of the shipborne remote sensing supersite OCEANET for
-        profiling of Arctic aerosols and clouds during Polarstern cruise PS106,
-        Atmos. Meas. Tech., 13, 5335–5358.
-        from https://doi.org/10.5194/amt-13-5335-2020,
+        Griesche, H. J., Seifert, P., Ansmann, A., Baars, H., Barrientos
+        Velasco, C., Bühl, J., Engelmann, R., Radenz, M., Zhenping, Y., &
+        Macke, A. (2020): Application of the shipborne remote sensing supersite
+        OCEANET for profiling of Arctic aerosols and clouds during Polarstern
+        cruise PS106, Atmos. Meas. Tech., 13, 5335–5358.
+        https://doi.org/10.5194/amt-13-5335-2020
 
     """
     uuid = get_uuid(uuid)

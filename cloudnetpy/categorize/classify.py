@@ -29,6 +29,9 @@ def classify_measurements(data: Observations) -> ClassificationResult:
     The input data needs to be averaged or interpolated to the common
     time / height grid before calling this function.
 
+    The classification scheme is based on methodology proposed by Hogan and
+    O'Connor (2004) and its proprietary Matlab implementation.
+
     Args:
         data: A :class:`Observations` instance.
 
@@ -36,9 +39,9 @@ def classify_measurements(data: Observations) -> ClassificationResult:
         A :class:`ClassificationResult` instance.
 
     References:
-        The Cloudnet classification scheme is based on methodology proposed by
-        Hogan R. and O'Connor E., 2004, https://bit.ly/2Yjz9DZ and its
-        proprietary Matlab implementation.
+        Hogan, R. J., & O'Connor, E. J. (2004). Facilitating cloud radar and
+        lidar algorithms: the Cloudnet Instrument Synergy/Target Categorization
+        product. https://www.met.reading.ac.uk/~swrhgnrj/publications/categorization.pdf
 
     Notes:
         Some individual classification methods are changed in this Python

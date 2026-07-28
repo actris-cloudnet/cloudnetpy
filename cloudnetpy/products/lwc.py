@@ -43,11 +43,13 @@ def generate_lwc(
         >>> generate_lwc('categorize.nc', 'lwc.nc')
 
     References:
-        Illingworth, A.J., R.J. Hogan, E. O'Connor, D. Bouniol, M.E. Brooks,
-        J. Delanoé, D.P. Donovan, J.D. Eastment, N. Gaussiat, J.W. Goddard,
-        M. Haeffelin, H.K. Baltink, O.A. Krasnov, J. Pelon, J. Piriou, A. Protat,
-        H.W. Russchenberg, A. Seifert, A.M. Tompkins, G. van Zadelhoff, F. Vinit,
-        U. Willén, D.R. Wilson, and C.L. Wrench, 2007: Cloudnet.
+        Illingworth, A. J., Hogan, R. J., O'Connor, E. J., Bouniol, D., Brooks,
+        M. E., Delanoë, J., Donovan, D. P., Eastment, J. D., Gaussiat, N.,
+        Goddard, J. W. F., Haeffelin, M., Klein Baltink, H., Krasnov, O. A.,
+        Pelon, J.-M., Piriou, Protat, A., Russchenberg, H. W. J., Seifert, A.,
+        Tompkins, A. M., van Zadelhoff, G.-J., Vinit, F., Willén, U., Wilson,
+        D. R., & Wrench, C. L. (2007). Cloudnet: Continuous Evaluation of Cloud
+        Profiles in Seven Operational Models Using Ground-Based Observations.
         Bull. Amer. Meteor. Soc., 88, 883–898, https://doi.org/10.1175/BAMS-88-6-883
 
     """

@@ -212,11 +212,6 @@ class Radar(DataSource):
 
         Args:
             attenuations: Radar attenuation object.
-
-        References:
-            The method is based on Hogan R. and O'Connor E., 2004,
-            https://bit.ly/2Yjz9DZ and the original Cloudnet Matlab implementation.
-
         """
         z_corrected = self.data["Z"][:] + attenuations.gas.amount
         ind = ma.where(attenuations.liquid.amount)
@@ -237,13 +232,17 @@ class Radar(DataSource):
         Calculates and adds `Z_error`, `Z_sensitivity` and `Z_bias`
         :class:`CloudnetArray` instances to `data` attribute.
 
+        This method is based on Hogan and O'Connor (2004) and the original
+        Cloudnet Matlab implementation.
+
         Args:
             attenuations: 2-D attenuations due to atmospheric gases.
             is_clutter: 2-D boolean array denoting pixels contaminated by clutter.
 
         References:
-            The method is based on Hogan R. and O'Connor E., 2004,
-            https://bit.ly/2Yjz9DZ and the original Cloudnet Matlab implementation.
+            Hogan, R. J., & O'Connor, E. J. (2004). Facilitating cloud radar and
+            lidar algorithms: the Cloudnet Instrument Synergy/Target Categorization
+            product. https://www.met.reading.ac.uk/~swrhgnrj/publications/categorization.pdf
 
         """
 
@@ -260,7 +259,7 @@ class Radar(DataSource):
             """Returns error of radar as function of altitude.
 
             References:
-                Hogan, R. J., 1998: Dual-wavelength radar studies of clouds.
+                Hogan, R. J. (1998). Dual-wavelength radar studies of clouds.
                 PhD Thesis, University of Reading, UK.
 
             """
@@ -290,8 +289,8 @@ class Radar(DataSource):
             """Returns number of independent pulses.
 
             References:
-                Atlas, D., 1964: Advances in radar meteorology.
-                Advances in Geophys., 10, 318-478.
+                Atlas, D. (1964). Advances in radar meteorology. Advances in
+                Geophys., 10, 318-478. https://doi.org/10.1016/S0065-2687(08)60009-6
 
             """
             if "width" not in self.data:

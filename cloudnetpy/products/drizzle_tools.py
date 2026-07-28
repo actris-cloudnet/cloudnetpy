@@ -309,7 +309,10 @@ class DrizzleSolver:
             ndarray: Drizzle diameter.
 
         References:
-            https://journals.ametsoc.org/doi/pdf/10.1175/JAM-2181.1
+            O'Connor, E. J., Hogan, R. J., & Illingworth, A. J. (2005).
+            Retrieving Stratocumulus Drizzle Parameters Using Doppler Radar and
+            Lidar. J. Appl. Meteor. Climatol., 44, 14–27,
+            https://doi.org/10.1175/JAM-2181.1.
 
         """
         const = ray * k * beta_z_ratio

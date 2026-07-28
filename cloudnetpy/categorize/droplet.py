@@ -29,7 +29,9 @@ def correct_liquid_top(
         Corrected liquid cloud array.
 
     References:
-        Hogan R. and O'Connor E., 2004, https://bit.ly/2Yjz9DZ.
+        Hogan, R. J., & O'Connor, E. J. (2004). Facilitating cloud radar and
+        lidar algorithms: the Cloudnet Instrument Synergy/Target Categorization
+        product. https://www.met.reading.ac.uk/~swrhgnrj/publications/categorization.pdf
 
     """
     is_liquid_corrected = np.copy(is_liquid)
@@ -61,6 +63,8 @@ def find_liquid(
 ) -> npt.NDArray:
     """Estimate liquid layers from SNR-screened attenuated backscatter.
 
+    This method is based on Tuononen et al. (2019).
+
     Args:
         obs: The :class:`ClassData` instance.
         peak_amp: Minimum value of peak. Default is 1e-6.
@@ -68,16 +72,17 @@ def find_liquid(
         min_points: Minimum number of valid points in peak. Default is 3.
         min_top_der: Minimum derivative above peak, defined as
             (beta_peak-beta_top) / (alt_top-alt_peak). Default is 1e-7.
-        min_lwp: Minimum value from linearly interpolated lwp (kg m-2)
-            measured by the mwr. Default is 0.
+        min_lwp: Minimum value from linearly interpolated LWP (kg m-2)
+            measured by MWR. Default is 0.
         min_alt: Minimum altitude of the peak from the ground. Default is 100 (m).
 
     Returns:
         2-D boolean array denoting liquid layers.
 
     References:
-        The method is based on Tuononen, M. et.al, 2019,
-        https://acp.copernicus.org/articles/19/1985/2019/.
+        Tuononen, M., O'Connor, E. J., and Sinclair, V. A. (2019). Evaluating
+        solar radiation forecast uncertainty, Atmos. Chem. Phys., 19,
+        1985–2000, https://doi.org/10.5194/acp-19-1985-2019
 
     """
 

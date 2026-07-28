@@ -12,8 +12,9 @@ class LiquidAttenuation:
     """Class for calculating liquid attenuation.
 
     References:
-        Hogan, Robin & Connor, Ewan. (2004). Facilitating cloud radar and lidar
-        algorithms: the Cloudnet Instrument Synergy/Target Categorization product.
+        Hogan, R. J., & O'Connor, E. J. (2004). Facilitating cloud radar and
+        lidar algorithms: the Cloudnet Instrument Synergy/Target Categorization
+        product. https://www.met.reading.ac.uk/~swrhgnrj/publications/categorization.pdf
     """
 
     def __init__(

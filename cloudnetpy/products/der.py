@@ -66,7 +66,6 @@ def generate_der(
         Frisch, S., Shupe, M., Djalalova, I., Feingold, G., & Poellot, M. (2002).
         The Retrieval of Stratus Cloud Droplet Effective Radius with Cloud Radars,
         Journal of Atmospheric and Oceanic Technology, 19(6), 835-842.
-        Retrieved May 10, 2022, from
         https://doi.org/10.1175/1520-0426(2002)019%3C0835:TROSCD%3E2.0.CO;2
 
     """

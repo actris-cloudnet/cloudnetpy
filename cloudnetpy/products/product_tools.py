@@ -29,7 +29,10 @@ def get_ice_coefficients(product: str, wl_band: str) -> IceCoefficients:
     """Returns coefficients for ice retrieval.
 
     References:
-        Hogan et.al. 2006, https://doi.org/10.1175/JAM2340.1
+        Hogan, R. J., Mittermaier, M. P., & Illingworth, A. J. (2006). The
+        Retrieval of Ice Water Content from Radar Reflectivity Factor and
+        Temperature and Its Use in Evaluating a Mesoscale Model. J. Appl.
+        Meteor. Climatol., 45, 301–317, https://doi.org/10.1175/JAM2340.1
     """
     msg = f"Unsupported band: {wl_band}"
     if product == "ier":
@@ -53,7 +56,10 @@ def z_to_iwc(
     """Converts reflectivity to ice water content with the Z-T method.
 
     References:
-        Hogan et.al. 2006, https://doi.org/10.1175/JAM2340.1
+        Hogan, R. J., Mittermaier, M. P., & Illingworth, A. J. (2006). The
+        Retrieval of Ice Water Content from Radar Reflectivity Factor and
+        Temperature and Its Use in Evaluating a Mesoscale Model. J. Appl.
+        Meteor. Climatol., 45, 301–317, https://doi.org/10.1175/JAM2340.1
     """
     return 10 ** (
         coefficients.ZT * z * temperature

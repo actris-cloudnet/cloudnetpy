@@ -61,10 +61,10 @@ def _calc_melting_attenuation(
     """Calculates total attenuation due to melting layer (dB).
 
     References:
-        Li, H., & Moisseev, D. (2019). Melting layer attenuation
-        at Ka- and W-bands as derived from multifrequency radar
-        Doppler spectra observations. Journal of Geophysical
-        Research: Atmospheres, 124, 9520–9533. https://doi.org/10.1029/2019JD030316
+        Li, H., & Moisseev, D. (2019). Melting layer attenuation at Ka- and
+        W-bands as derived from multifrequency radar Doppler spectra
+        observations. Journal of Geophysical Research: Atmospheres, 124,
+        9520–9533. https://doi.org/10.1029/2019JD030316
 
     """
     band = utils.get_wl_band(frequency)
