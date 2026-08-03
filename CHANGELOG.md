@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.94.0 – 2026-08-03
+
+- Calculate disdrometer variables from raw data
+- Support RD-80 processing in CLI
+
 ## 1.93.6 – 2026-07-20
 
 - Handle missing values in Limassol weather station
