@@ -48,6 +48,7 @@ class DisdroL2:
 def process_l2(l1: DisdroL1) -> DisdroL2:
     time, time_ind = np.unique(l1.time, return_index=True)
     data_raw = l1.data_raw[time_ind]
+    interval = l1.interval[time_ind]
 
     n_time = len(time)
     n_diameter = len(l1.diameter)
@@ -62,12 +63,12 @@ def process_l2(l1: DisdroL1) -> DisdroL2:
     )
     area_m2 = area_mm2 * 1e-6
     diameter_m = l1.diameter / 1000
-    interval_h = l1.interval / 3600
+    interval_h = interval / 3600
     rho_w = 1e-6  # kg mm-3
 
     if spec.ndim == 2:
         number_concentration = spec / (
-            l1.velocity * l1.diameter_spread * area_m2 * l1.interval[:, np.newaxis]
+            l1.velocity * l1.diameter_spread * area_m2 * interval[:, np.newaxis]
         )
         fall_velocity = ma.masked_where(spec == 0, np.tile(l1.velocity, (n_time, 1)))
         rain_amount = np.pi / 6 * np.sum(spec * l1.diameter**3 / area_mm2, axis=1)
@@ -93,7 +94,7 @@ def process_l2(l1: DisdroL1) -> DisdroL2:
             * np.sum(
                 spec
                 * diameter_m**2
-                / (l1.velocity * area_m2 * l1.interval[:, np.newaxis]),
+                / (l1.velocity * area_m2 * interval[:, np.newaxis]),
                 axis=1,
             )
         )
@@ -104,7 +105,7 @@ def process_l2(l1: DisdroL1) -> DisdroL2:
                 l1.velocity
                 * l1.diameter_spread[:, np.newaxis]
                 * area_m2[:, np.newaxis]
-                * l1.interval[:, np.newaxis, np.newaxis]
+                * interval[:, np.newaxis, np.newaxis]
             ),
             axis=2,
         )
@@ -128,7 +129,7 @@ def process_l2(l1: DisdroL1) -> DisdroL2:
             / (
                 l1.velocity
                 * area_m2[:, np.newaxis]
-                * l1.interval[:, np.newaxis, np.newaxis]
+                * interval[:, np.newaxis, np.newaxis]
             ),
             axis=(1, 2),
         )
@@ -153,7 +154,7 @@ def process_l2(l1: DisdroL1) -> DisdroL2:
                 / (
                     l1.velocity
                     * area_m2[:, np.newaxis]
-                    * l1.interval[:, np.newaxis, np.newaxis]
+                    * interval[:, np.newaxis, np.newaxis]
                 ),
                 axis=(1, 2),
             )
@@ -177,7 +178,7 @@ def process_l2(l1: DisdroL1) -> DisdroL2:
         velocity_bins=l1.velocity_bins,
         velocity_spread=l1.velocity_spread,
         time=time,
-        interval=l1.interval,
+        interval=interval,
         area_nom=l1.area_nom,
         area_eff=l1.area_eff,
         data_raw=data_raw,
