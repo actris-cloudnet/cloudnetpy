@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.94.1 – 2026-08-04
+
+- Fix interval handling in disdrometer processing
+
 ## 1.94.0 – 2026-08-03
 
 - Calculate disdrometer variables from raw data
