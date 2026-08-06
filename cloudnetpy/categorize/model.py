@@ -1,6 +1,7 @@
 """Model module, containing the :class:`Model` class."""
 
 import os.path
+import re
 from os import PathLike
 
 import atmoslib
@@ -173,13 +174,12 @@ def _calc_mean_height(model_heights: npt.NDArray) -> npt.NDArray:
 
 def _find_model_type(file_name: str | PathLike) -> str:
     """Finds model type from the model filename."""
-    possible_keys = ("gdas1", "icon", "ecmwf", "harmonie", "era5", "arpege")
     basename = os.path.basename(file_name)
-    for key in possible_keys:
-        if key in basename:
-            return key
-    msg = f"Unknown model type: {file_name}"
-    raise ValueError(msg)
+    m = re.search(r"_([a-z0-9-]+?)(-\d+-\d+)?\.nc$", basename)
+    if m is None:
+        msg = f"Unknown model type: {file_name}"
+        raise ValueError(msg)
+    return m[1]
 
 
 def _find_number_of_valid_profiles(array: npt.NDArray) -> int:

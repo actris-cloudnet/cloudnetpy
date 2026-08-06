@@ -16,12 +16,21 @@ SCRIPT_PATH = os.path.dirname(os.path.realpath(__file__))
 @pytest.mark.parametrize(
     "input, result",
     [
-        ("this_is_a_ecmwf_model_file.nc", "ecmwf"),
-        ("a_gdas1XYZ_model_file.nc", "gdas1"),
+        ("20260801_cluj_ecmwf.nc", "ecmwf"),
+        ("20250511_athens_gdas1.nc", "gdas1"),
+        ("20260805_bucharest_ecmwf-open.nc", "ecmwf-open"),
+        ("20260805_cabauw_arpege-24-35.nc", "arpege"),
+        ("20260805_juelich_icon-d2-0-2.nc", "icon-d2"),
+        ("20260805_kenttarova_arome-arctic-0-2.nc", "arome-arctic"),
     ],
 )
 def test_find_model_type(input, result):
     assert model._find_model_type(input) == result
+
+
+def test_find_model_type_raises():
+    with pytest.raises(ValueError):
+        model._find_model_type("model.nc")
 
 
 def test_calc_mean_height():

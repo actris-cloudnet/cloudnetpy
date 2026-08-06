@@ -174,6 +174,6 @@ def _get_temp_indices(t_prof: npt.NDArray, t_range: tuple) -> npt.NDArray:
 
 def _find_model_temperature_range(model_type: str) -> tuple[float, float]:
     """Returns temperature range around 0C for given model type."""
-    if "gdas1" in model_type.lower():
+    if model_type == "gdas1":
         return -8, 6
     return -4, 3
