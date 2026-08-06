@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.94.2 – 2026-08-06
+
+- Parse model from filename without hardcoding valid values
+
 ## 1.94.1 – 2026-08-04
 
 - Fix interval handling in disdrometer processing
