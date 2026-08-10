@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.94.3 – 2026-08-10
+
+- Handle ETX character before Thies LPM telegram
+
 ## 1.94.2 – 2026-08-06
 
 - Parse model from filename without hardcoding valid values
