@@ -12,7 +12,7 @@ LpmOutput: TypeAlias = tuple[list, dict[int, list]]
 
 
 def _read_telegram(telegram: str, data: dict[int, list]) -> None:
-    telegram = telegram.lstrip("\x02").rstrip(";\r\n\x03 ")
+    telegram = telegram.lstrip("\x02\x03").rstrip(";\r\n\x03 ")
     values = telegram.split(";")
     # 520 = no weather data, 524 = weather data
     if len(values) not in (520, 524):
