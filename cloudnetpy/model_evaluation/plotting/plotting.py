@@ -422,6 +422,13 @@ def plot_data_area(
 ) -> None:
     data = p_tools.create_segment_values(model, obs)
 
+    x, y = axes
+    if getattr(y, "ndim", 1) > 1:
+        # Collapse 2D (time, level) grid to 1D monotonic cell centers
+        x = x[:, 0]
+        y = ma.mean(y, axis=0)
+        data = data.T
+
     colors = mpl.colormaps["YlGnBu"]
     newcolors = colors(np.linspace(0, 1, 256))
     c_map = {
@@ -434,7 +441,7 @@ def plot_data_area(
     c_list = [c_map[value] for value in unique_values if value in c_map]
     cmap = ListedColormap(c_list)
 
-    ax.pcolormesh(*axes, data, cmap=cmap)
+    ax.pcolormesh(x, y, data, cmap=cmap)
 
     if title:
         ax.set_title(f"{day_stat.title}", fontsize=14)
