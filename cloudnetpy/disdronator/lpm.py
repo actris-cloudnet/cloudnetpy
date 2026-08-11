@@ -1,4 +1,5 @@
 import datetime
+from collections import defaultdict
 from os import PathLike
 from typing import TypeAlias
 
@@ -11,7 +12,7 @@ from cloudnetpy.disdronator.utils import convert_to_numpy
 LpmOutput: TypeAlias = tuple[list, dict[int, list]]
 
 
-def _read_telegram(telegram: str, data: dict[int, list]) -> None:
+def _read_telegram(telegram: str) -> dict:
     telegram = telegram.lstrip("\x02\x03").rstrip(";\r\n\x03 ")
     values = telegram.split(";")
     # 520 = no weather data, 524 = weather data
@@ -27,34 +28,35 @@ def _read_telegram(telegram: str, data: dict[int, list]) -> None:
         if checksum_hex != telegram[-2:]:
             msg = "Invalid telegram checksum"
             raise ValueError(msg)
+    row: dict = {}
     for i, value in enumerate(values[:-1]):
         no = i + 2
-        parsed: datetime.date | datetime.time | int | float | str
         if no == 5:
-            parsed = datetime.datetime.strptime(value, "%d.%m.%y").date()
+            row[no] = datetime.datetime.strptime(value, "%d.%m.%y").date()
         elif no == 6:
-            parsed = datetime.datetime.strptime(value, "%H:%M:%S").time()
+            row[no] = datetime.datetime.strptime(value, "%H:%M:%S").time()
         elif no in INT_KEYS or 81 <= no <= 520:
-            parsed = int(value)
+            row[no] = int(value)
         elif no in FLOAT_KEYS:
-            parsed = float(value)
+            row[no] = float(value)
         else:
-            parsed = value
-        if no not in data:
-            data[no] = []
-        data[no].append(parsed)
+            row[no] = value
+    return row
 
 
 def _read_pyatmoslogger(filename: str | PathLike) -> LpmOutput:
     time = []
-    data: dict = {}
+    data = defaultdict(list)
     with open(filename, errors="ignore") as f:
         f.readline()
         for line in f:
             timestamp, telegram = line.split(";", maxsplit=1)
             try:
-                _read_telegram(telegram, data)
-                time.append(datetime.datetime.strptime(timestamp, "%Y-%m-%d %H:%M:%S"))
+                dt = datetime.datetime.strptime(timestamp, "%Y-%m-%d %H:%M:%S")
+                row = _read_telegram(telegram)
+                for key, value in row.items():
+                    data[key].append(value)
+                time.append(dt)
             except ValueError:
                 pass
     return time, data
@@ -62,14 +64,17 @@ def _read_pyatmoslogger(filename: str | PathLike) -> LpmOutput:
 
 def _read_lampedusa(filename: str | PathLike) -> LpmOutput:
     time = []
-    data: dict = {}
+    data = defaultdict(list)
     with open(filename) as f:
         _, _, _, _ = f.readline(), f.readline(), f.readline(), f.readline()
         for line in f:
             cols = [col.strip('"') for col in line.strip().split(",")]
             try:
-                _read_telegram(cols[2], data)
-                time.append(datetime.datetime.strptime(cols[0], "%Y-%m-%d %H:%M:%S"))
+                dt = datetime.datetime.strptime(cols[0], "%Y-%m-%d %H:%M:%S")
+                row = _read_telegram(cols[2])
+                for key, value in row.items():
+                    data[key].append(value)
+                time.append(dt)
             except ValueError:
                 pass
     return time, data
@@ -77,12 +82,15 @@ def _read_lampedusa(filename: str | PathLike) -> LpmOutput:
 
 def _read_raw(filename: str | PathLike) -> LpmOutput:
     time = []
-    data: dict = {}
+    data = defaultdict(list)
     with open(filename) as f:
         for line in f:
             try:
-                _read_telegram(line, data)
-                time.append(datetime.datetime.combine(data[5][-1], data[6][-1]))
+                row = _read_telegram(line)
+                dt = datetime.datetime.combine(row[5], row[6])
+                for key, value in row.items():
+                    data[key].append(value)
+                time.append(dt)
             except ValueError:
                 pass
     return time, data

@@ -438,6 +438,25 @@ class TestThies7(Check):
         assert np.allclose(self.nc["time"][:], [0, 1 / 60, 2 / 60])
 
 
+class TestThiesSkipInvalid(Check):
+    date = "2025-02-09"
+    temp_dir = TemporaryDirectory()
+    temp_path = temp_dir.name + "/test.nc"
+    filename = f"{SCRIPT_PATH}/data/thies-lnm/rsa1_2025020919.txt"
+    site_meta = SITE_META
+    uuid = disdrometer.thies2nc(filename, temp_path, site_meta, date=date)
+
+    def test_processing(self):
+        assert self.nc.title == f"LNM disdrometer from {self.site_meta['name']}"
+        assert self.nc.year == "2025"
+        assert self.nc.month == "02"
+        assert self.nc.day == "09"
+        assert self.nc.location == "Kumpula"
+        assert self.nc.cloudnet_file_type == "disdrometer"
+        assert self.nc.serial_number == "3933"
+        assert np.allclose(self.nc["time"][:], [19 + 10 / 60, 19 + 15 / 60])
+
+
 class TestInvalidCharacters(Check):
     temp_dir = TemporaryDirectory()
     temp_path = temp_dir.name + "/test.nc"
