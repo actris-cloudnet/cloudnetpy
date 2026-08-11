@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.94.4 – 2026-08-11
+
+- Handle invalid data better in Thies LPM reader
+- Fix non-monotonic pcolormesh warning in area statistic plot
+
 ## 1.94.3 – 2026-08-10
 
 - Handle ETX character before Thies LPM telegram
