@@ -150,8 +150,16 @@ class ModelManager(DataSource):
         the model file. This keeps the model IWC consistent with the observed
         IWC, which also includes precipitating ice.
         """
+        if (
+            var == "lwc"
+            and "ql" not in self.dataset.variables  # liquid
+            and "qc" in self.dataset.variables  # condensed means liquid + ice
+            and "qi" in self.dataset.variables  # ice
+        ):
+            return self.getvar("qc") - self.getvar("qi")
         q = self._getvar_checked(var)
         if var == "iwc":
+            # ice means ice + snow + graupel
             for name in OPTIONAL_IWC_VARIABLES:
                 if name in self.dataset.variables:
                     q = q + self.getvar(name)
