@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.94.6 – 2026-08-13
+
+- Skip plotting hydrometer type for models without mixing ratios
+
 ## 1.94.5 – 2026-08-13
 
 - Add dominant hydrometeor plot for model product
