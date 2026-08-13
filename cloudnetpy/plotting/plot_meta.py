@@ -170,6 +170,15 @@ _CLABEL = {
         ("Unquantifiable", _COLORS["seaweed_roll"]),
         ("Undetected", _COLORS["skyblue"]),
     ),
+    "dominant_hydrometeor_type": (
+        ("_Clear sky", _COLORS["white"]),
+        ("Ice", _COLORS["lightgray"]),
+        ("Snow", _COLORS["gray"]),
+        ("Graupel", _COLORS["yellow"]),
+        ("Hail", _COLORS["red"]),
+        ("Rain", _COLORS["blue"]),
+        ("Liquid", _COLORS["lightblue"]),
+    ),
 }
 
 
@@ -671,6 +680,9 @@ ATTRIBUTES = {
             cmap="inferno",
             plot_range=(1e-7, 1e-1),
             log_scale=True,
+        ),
+        "dominant_hydrometeor_type": PlotMeta(
+            clabel=_CLABEL["dominant_hydrometeor_type"],
         ),
     },
 }

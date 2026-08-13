@@ -122,6 +122,21 @@ class Dimensions:
         )
 
 
+class VirtualVariable:
+    def __init__(self, name: str, data: ma.MaskedArray, long_name: str) -> None:
+        self.name = name
+        self.data = data
+        self.long_name = long_name
+        self.units = ""
+
+    @property
+    def ndim(self) -> int:
+        return self.data.ndim
+
+    def __getitem__(self, ind: slice) -> ma.MaskedArray:
+        return self.data[ind]
+
+
 class FigureData:
     def __init__(
         self,
@@ -165,8 +180,8 @@ class FigureData:
 
     def _get_valid_variables_and_indices(
         self, requested_variables: list[str]
-    ) -> tuple[list[netCDF4.Variable], list[int | None]]:
-        valid_variables = []
+    ) -> tuple[list[netCDF4.Variable | VirtualVariable], list[int | None]]:
+        valid_variables: list = []
         variable_indices = []
         for variable_name in requested_variables:
             if variable_name.startswith(("tb_", "irt_")):
@@ -176,7 +191,10 @@ class FigureData:
             else:
                 extracted_name = variable_name
                 extracted_ind = None
-            if extracted_name in self.file.variables:
+            if extracted_name == "dominant_hydrometeor_type":
+                valid_variables.append(self._calc_dominant_hydrometeor_type())
+                variable_indices.append(extracted_ind)
+            elif extracted_name in self.file.variables:
                 valid_variables.append(self.file.variables[extracted_name])
                 variable_indices.append(extracted_ind)
         if not valid_variables:
@@ -239,6 +257,25 @@ class FigureData:
     def is_mwrpy_product(self) -> bool:
         return self.file_type in ("mwr-single", "mwr-multi")
 
+    def _calc_dominant_hydrometeor_type(self) -> VirtualVariable:
+        ids = []
+        mrat = {}
+        for i, key in enumerate(("qi", "qs", "qg", "qh", "qr", "ql")):
+            if key in self.file.variables:
+                mrat[key] = self.file[key][:]
+                ids.append(i + 1)
+        if "ql" not in mrat and "qi" in mrat and "qc" in self.file.variables:
+            mrat["ql"] = self.file["qc"][:] - mrat["qi"]
+            ids.append(6)
+        mrat_arr = np.array(list(mrat.values()))
+        id_arr = np.array(ids)
+        max_ratio = np.max(mrat_arr, axis=0)
+        max_ind = np.argmax(mrat_arr, axis=0)
+        kind = ma.where(max_ratio < 1e-10, 0, id_arr[max_ind])
+        return VirtualVariable(
+            "dominant_hydrometeor_type", kind, "Dominant hydrometeor type"
+        )
+
     def __len__(self) -> int:
         return len(self.variables)
 
@@ -247,7 +284,7 @@ class SubPlot:
     def __init__(
         self,
         ax: Axes,
-        variable: netCDF4.Variable,
+        variable: netCDF4.Variable | VirtualVariable,
         options: PlotParameters,
         file_type: str | None,
     ) -> None:
@@ -650,7 +687,7 @@ class Plot2D(Plot):
         self._mark_gaps(figure_data, min_x=min_x, max_x=max_x)
         if self.sub_plot.variable.name == "cloud_fraction":
             self._data[self._data == 0] = ma.masked
-        if any(
+        if self.sub_plot.variable.name == "dominant_hydrometeor_type" or any(
             key in self.sub_plot.variable.name for key in ("status", "classification")
         ):
             self._plot_segment_data(figure_data)
