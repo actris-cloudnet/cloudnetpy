@@ -192,8 +192,10 @@ class FigureData:
                 extracted_name = variable_name
                 extracted_ind = None
             if extracted_name == "dominant_hydrometeor_type":
-                valid_variables.append(self._calc_dominant_hydrometeor_type())
-                variable_indices.append(extracted_ind)
+                v = self._calc_dominant_hydrometeor_type()
+                if v is not None:
+                    valid_variables.append(v)
+                    variable_indices.append(extracted_ind)
             elif extracted_name in self.file.variables:
                 valid_variables.append(self.file.variables[extracted_name])
                 variable_indices.append(extracted_ind)
@@ -257,7 +259,7 @@ class FigureData:
     def is_mwrpy_product(self) -> bool:
         return self.file_type in ("mwr-single", "mwr-multi")
 
-    def _calc_dominant_hydrometeor_type(self) -> VirtualVariable:
+    def _calc_dominant_hydrometeor_type(self) -> VirtualVariable | None:
         ids = []
         mrat = {}
         for i, key in enumerate(("qi", "qs", "qg", "qh", "qr", "ql")):
@@ -267,6 +269,8 @@ class FigureData:
         if "ql" not in mrat and "qi" in mrat and "qc" in self.file.variables:
             mrat["ql"] = self.file["qc"][:] - mrat["qi"]
             ids.append(6)
+        if not mrat:
+            return None
         mrat_arr = np.array(list(mrat.values()))
         id_arr = np.array(ids)
         max_ratio = np.max(mrat_arr, axis=0)
