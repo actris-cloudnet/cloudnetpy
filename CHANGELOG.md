@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.94.5 – 2026-08-13
+
+- Add dominant hydrometeor plot for model product
+- Support AROME-Arctic in L3
+
 ## 1.94.4 – 2026-08-11
 
 - Handle invalid data better in Thies LPM reader
