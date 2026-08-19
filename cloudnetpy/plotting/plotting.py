@@ -197,12 +197,21 @@ class FigureData:
                     valid_variables.append(v)
                     variable_indices.append(extracted_ind)
             elif extracted_name in self.file.variables:
-                valid_variables.append(self.file.variables[extracted_name])
+                variable = self.file.variables[extracted_name]
+                if extracted_ind is not None and not self._is_valid_index(
+                    variable, extracted_ind
+                ):
+                    continue
+                valid_variables.append(variable)
                 variable_indices.append(extracted_ind)
         if not valid_variables:
             msg = f"None of the variables {requested_variables} found in the file."
             raise PlottingError(msg)
         return valid_variables, variable_indices
+
+    @staticmethod
+    def _is_valid_index(variable: netCDF4.Variable, ind: int) -> bool:
+        return variable.ndim == 2 and 0 <= ind < variable.shape[1]
 
     def _get_time(self) -> ndarray:
         variable_names = [f.name for f in self.variables]
