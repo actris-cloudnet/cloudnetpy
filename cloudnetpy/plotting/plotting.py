@@ -269,6 +269,9 @@ class FigureData:
         return self.file_type in ("mwr-single", "mwr-multi")
 
     def _calc_dominant_hydrometeor_type(self) -> VirtualVariable | None:
+        if "cloud_fraction" not in self.file.variables:
+            return None
+        is_cloud = self.file["cloud_fraction"][:] > 0
         ids = []
         mrat = {}
         for i, key in enumerate(("qi", "qs", "qg", "qh", "qr", "ql")):
@@ -282,9 +285,8 @@ class FigureData:
             return None
         mrat_arr = np.array(list(mrat.values()))
         id_arr = np.array(ids)
-        max_ratio = np.max(mrat_arr, axis=0)
         max_ind = np.argmax(mrat_arr, axis=0)
-        kind = ma.where(max_ratio < 1e-10, 0, id_arr[max_ind])
+        kind = ma.where(is_cloud, id_arr[max_ind], 0)
         return VirtualVariable(
             "dominant_hydrometeor_type", kind, "Dominant hydrometeor type"
         )
