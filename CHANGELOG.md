@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.95.0 – 2026-08-28
+
+- Add support for ARM instruments and sites
+
 ## 1.94.7 – 2026-08-28
 
 - Show dominant hydrometeor type only when there's cloud fraction
