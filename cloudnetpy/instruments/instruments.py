@@ -291,3 +291,25 @@ DA10 = Instrument(
     model="DA10",
     wavelength=911.0,
 )
+
+MMCR = Instrument(
+    domain="radar",
+    category="cloud radar",
+    model="MMCR",
+    frequency=34.86,
+)
+
+WVR1100 = Instrument(
+    manufacturer="Radiometrics",
+    domain="mwr",
+    category="microwave radiometer",
+    model="WVR-1100",
+)
+
+KAZR = Instrument(
+    manufacturer="ProSensing",
+    domain="radar",
+    category="cloud radar",
+    model="KAZR",
+    frequency=34.89,
+)

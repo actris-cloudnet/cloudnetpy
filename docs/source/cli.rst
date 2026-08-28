@@ -44,6 +44,42 @@ If the date is omitted, today's date is used. The full list of valid
 sites and products is fetched from the data portal at runtime; pass
 ``--help`` to see all options.
 
+ARM sites
+---------
+
+For ARM sites (``arm-sgp``, ``arm-nsa``, ``arm-andoya`` and the other
+``arm-*`` sites listed in ``cloudnetpy.arm.ARM_SITES``) the raw
+instrument files are not stored in the Cloudnet data portal. Instead, the
+CLI downloads them directly from `ARM Live
+<https://adc.arm.gov/armlive/>`_, converts the cloud radar (KAZR, or MMCR
+before 2011), Vaisala ceilometer, microwave radiometer and disdrometer data
+into Level 1b files, and continues with the normal
+categorize and product processing. Model data
+still comes from the data portal.
+
+ARM Live requires a user name and an access token, given as environment
+variables:
+
+.. code-block:: sh
+
+   export ARM_USER=<your ARM user name>
+   export ARM_TOKEN=<your ARM Live token>
+   cloudnetpy -s arm-sgp -d 2010-03-10 -p classification --plot
+
+Because ARM files are not stored in the data portal, already processed local
+files in the output folder are reused: requesting ``categorize`` reuses
+existing Level 1b files (radar, lidar, mwr), and requesting a categorize-based
+product (e.g. ``classification``) reuses an existing categorize file. Missing
+files are generated. Request a product explicitly to regenerate it, e.g.
+``-p radar,categorize`` reprocesses the radar but reuses the lidar and mwr
+files.
+
+Large ARM files (e.g. daily KAZR files of 1-2 GB) may be cut off by the ARM
+Live server; interrupted downloads are resumed automatically, also on the
+next run.
+
+The ``--instrument`` option has no effect for ARM sites.
+
 Selecting an instrument
 -----------------------
 

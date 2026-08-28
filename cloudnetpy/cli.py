@@ -9,6 +9,7 @@ import json
 import logging
 import re
 import shutil
+import sys
 from os import PathLike
 from pathlib import Path
 from tempfile import TemporaryDirectory
@@ -16,11 +17,17 @@ from typing import TYPE_CHECKING, Any, Final, Literal, cast
 
 import requests
 from cloudnet_api_client import APIClient, CloudnetAPIError
-from cloudnet_api_client.containers import Instrument, ProductMetadata, RawMetadata
+from cloudnet_api_client.containers import (
+    Instrument,
+    ProductMetadata,
+    RawMetadata,
+    Site,
+)
 
-from cloudnetpy import concat_lib, instruments
+from cloudnetpy import arm, concat_lib, instruments
+from cloudnetpy.arm import ArmDataError
 from cloudnetpy.categorize import CategorizeInput, generate_categorize
-from cloudnetpy.exceptions import ModelDataError, PlottingError
+from cloudnetpy.exceptions import CloudnetException, ModelDataError, PlottingError
 from cloudnetpy.plotting import PlotParameters, generate_figure
 
 if TYPE_CHECKING:
@@ -40,13 +47,34 @@ L3_SOURCE_PRODUCTS: Final = {
 # Model used for L3 products when none is given with --model.
 DEFAULT_L3_MODEL: Final = "ecmwf"
 
+# Instrument products available for ARM sites
+ARM_PRODUCTS: Final = frozenset({"radar", "lidar", "mwr", "disdrometer"})
+
 
 def run(args: argparse.Namespace, tmpdir: str, client: APIClient) -> None:
-    cat_files = {}
+    cat_files: dict[str, str | None] = {}
     instrument_prefs = _parse_instrument_preferences(args.instrument)
+    prod_sources = _get_product_sources(args.products, client)
+    site = next(s for s in client.sites() if s.id == args.site)
+
+    cat_products = [p for p in prod_sources if "categorize" in prod_sources[p]]
+    is_arm = "arm" in site.type and arm.is_arm_site(site.id)
+    process_categorize = "categorize" in args.products
+    cat_filepath = None
+    if is_arm and cat_products and not process_categorize:
+        # ARM categorize files are not in the data portal: use a local one
+        if not ARM_PRODUCTS & set(args.products):
+            cat_filepath = _find_existing_categorize(args)
+        process_categorize = cat_filepath is None
 
     # Instrument based products
-    if source_instruments := _get_source_instruments(
+    if is_arm:
+        cat_files = _process_arm_instruments(
+            args, site, client, needs_categorize=process_categorize
+        )
+        if args.dl:
+            return
+    elif source_instruments := _get_source_instruments(
         args.products, instrument_prefs, client
     ):
         for product, possible_instruments in source_instruments.items():
@@ -70,20 +98,15 @@ def run(args: argparse.Namespace, tmpdir: str, client: APIClient) -> None:
             _plot(output_filepath, product, args)
             cat_files[product] = output_filepath
 
-    prod_sources = _get_product_sources(args.products, client)
-
     # Categorize based products
-    if "categorize" in args.products:
+    if process_categorize:
         cat_filepath = _process_categorize(cat_files, instrument_prefs, args, client)
         _plot(cat_filepath, "categorize", args)
-    else:
-        cat_filepath = None
-    cat_products = [p for p in prod_sources if "categorize" in prod_sources[p]]
     for product in cat_products:
         if cat_filepath is None:
             cat_filepath = _fetch_product(args, "categorize", client)
         if cat_filepath is None:
-            logging.info("No categorize data available for {}")
+            logging.info("No categorize data available for %s", product)
             break
         l2_filename = _process_cat_product(product, cat_filepath)
         _plot(l2_filename, product, args)
@@ -116,6 +139,74 @@ def run(args: argparse.Namespace, tmpdir: str, client: APIClient) -> None:
                 logging.info("No model specified, using default '%s'", model)
             l3_filepath = _process_l3_product(base_product, args, client, model)
             _plot_l3(l3_filepath, base_product, args)
+
+
+def _get_instrument_products(client: APIClient) -> set[str]:
+    return {p.id for p in client.products() if "instrument" in p.type}
+
+
+def _find_existing_categorize(args: argparse.Namespace) -> str | None:
+    filepath = _create_categorize_filepath(args)
+    if Path(filepath).exists():
+        logging.info("Using existing categorize file: %s", filepath)
+        return filepath
+    return None
+
+
+def _process_arm_instruments(
+    args: argparse.Namespace, site: Site, client: APIClient, *, needs_categorize: bool
+) -> dict[str, str | None]:
+    """Fetches ARM raw files and converts them into Level 1b files.
+
+    Existing local Level 1b files are reused unless the product is explicitly
+    requested.
+    """
+    requested = {p for p in args.products if p in ARM_PRODUCTS}
+    for product in set(args.products) & _get_instrument_products(client):
+        if product not in requested:
+            logging.warning("Product %s is not supported for ARM sites", product)
+    needed = requested | (ARM_PRODUCTS if needs_categorize else set())
+    if not needed:
+        return {}
+    date = datetime.date.fromisoformat(args.date)
+    output_folder = _create_output_folder("instrument", args)
+    l1b_files: dict[str, str | None] = {}
+    for product, filepath in arm.find_l1b_files(args.site, date, output_folder).items():
+        if product in needed and product not in requested:
+            logging.info("Using existing %s file: %s", product, filepath)
+            l1b_files[product] = filepath
+    to_process = needed - set(l1b_files)
+    if not to_process:
+        return l1b_files
+    input_folder = _create_input_folder("arm", args)
+    raw_files: dict[str, list[Path]] = {}
+    if needs_categorize and "radar" in to_process:
+        # Fetch radar first: without it the other instruments are of no use
+        raw_files = arm.fetch_files(
+            args.site, date, input_folder, ("radar",), force=args.force_download
+        )
+        if not raw_files:
+            msg = f"No radar data available for {args.site} on {args.date}"
+            raise ArmDataError(msg)
+        to_process -= {"radar"}
+    raw_files.update(
+        arm.fetch_files(
+            args.site, date, input_folder, to_process, force=args.force_download
+        )
+    )
+    if args.dl:
+        return {}
+    site_meta = {
+        "name": site.human_readable_name,
+        "latitude": site.latitude,
+        "longitude": site.longitude,
+        "altitude": site.altitude,
+    }
+    new_files = arm.convert_to_l1b(args.site, date, raw_files, output_folder, site_meta)
+    for product, filepath in new_files.items():
+        _plot(filepath, product, args)
+    l1b_files.update(new_files)
+    return l1b_files
 
 
 def _process_epsilon_radar(
@@ -238,21 +329,17 @@ def _process_categorize(
     if mwr_path:
         input_files[mwr_key] = mwr_path
 
-    if "model" not in input_files:
-        logging.info("No model data available for this date.")
+    if missing := [p for p in ("radar", "lidar", "model") if p not in input_files]:
+        logging.info("No %s data available for this date.", ", ".join(missing))
         return None
 
-    try:
-        logging.info("Processing categorize...")
-        generate_categorize(
-            cast("CategorizeInput", input_files),
-            cat_filepath,
-            options=args.options,
-        )
-        logging.info("Processed categorize to %s", cat_filepath)
-    except NameError:
-        logging.info("No data available for this date.")
-        return None
+    logging.info("Processing categorize...")
+    generate_categorize(
+        cast("CategorizeInput", input_files),
+        cat_filepath,
+        options=args.options,
+    )
+    logging.info("Processed categorize to %s", cat_filepath)
     return cat_filepath
 
 
@@ -882,7 +969,11 @@ def main() -> None:
     logger.handlers = [handler]
 
     with TemporaryDirectory() as tmpdir:
-        run(args, tmpdir, client)
+        try:
+            run(args, tmpdir, client)
+        except CloudnetException as err:
+            logging.error("%s", err)  # noqa: TRY400
+            sys.exit(1)
 
 
 def md5sum(filename: str | PathLike, *, is_base64: bool = False) -> str:

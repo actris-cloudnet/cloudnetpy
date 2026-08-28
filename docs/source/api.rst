@@ -38,12 +38,18 @@ Cloud radars
 
 .. autofunction:: instruments.wr2nc
 
+.. autofunction:: instruments.mmcr2nc
+
+.. autofunction:: instruments.kazr2nc
+
 Lidars
 ~~~~~~
 
 .. autofunction:: instruments.ceilo2nc
 
 .. autofunction:: instruments.pollyxt2nc
+
+.. autofunction:: instruments.armceilo2nc
 
 Microwave radiometers
 ~~~~~~~~~~~~~~~~~~~~~
@@ -54,6 +60,8 @@ Microwave radiometers
 
 .. autofunction:: instruments.radiometrics2nc
 
+.. autofunction:: instruments.mwrlos2nc
+
 Disdrometers
 ~~~~~~~~~~~~
 
@@ -62,6 +70,8 @@ Disdrometers
 .. autofunction:: instruments.thies2nc
 
 .. autofunction:: instruments.rd802nc
+
+.. autofunction:: instruments.armld2nc
 
 Other instruments
 ~~~~~~~~~~~~~~~~~

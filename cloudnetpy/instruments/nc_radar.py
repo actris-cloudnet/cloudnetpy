@@ -62,13 +62,25 @@ class NcRadar(DataSource, CloudnetInstrument):
             self.data["range"].correction_factor = range_correction_factor
         self.append_data(time, "time", dtype=time_dtype)
 
-    def screen_by_snr(self, snr_limit: float) -> None:
-        """Mask values where SNR smaller than threshold."""
-        ind = np.where(self.data["SNR"][:] < snr_limit)
+    def screen_by_snr(self, snr_limit: float | None = None) -> None:
+        """Masks values where SNR is smaller than threshold.
+
+        Without a fixed `snr_limit`, the threshold is estimated for each
+        profile from the noise in the top range gates, and remaining
+        isolated pixels are removed as false detections.
+        """
+        snr = self.data["SNR"][:]
+        if snr_limit is None:
+            limit = estimate_snr_limit(snr)[:, np.newaxis]
+            is_noise = ma.filled(snr < limit, fill_value=True)
+            is_noise |= ~utils.filter_isolated_pixels(~is_noise)
+        else:
+            is_noise = ma.filled(snr < snr_limit, fill_value=False)
+            limit = np.array(snr_limit)
         for cloudnet_array in self.data.values():
             if cloudnet_array.data.ndim == 2:
-                cloudnet_array.mask_indices(ind)
-        self.append_data(float(snr_limit), "snr_limit")
+                cloudnet_array.mask_indices(is_noise)
+        self.append_data(float(np.median(limit)), "snr_limit")
 
     def screen_using_top_gates_snr(self, snr_limit: float = 2) -> None:
         """Masks values where SNR is smaller than mean SNR of top gates."""
@@ -198,3 +210,19 @@ class ChilboltonRadar(NcRadar):
 
     def _init_date(self) -> datetime.date:
         return utils.get_epoch(self.dataset["time"].units).date()
+
+
+def estimate_snr_limit(
+    snr: ma.MaskedArray, n_gates: int = 50, percentile: float = 99.99
+) -> np.ndarray:
+    """Estimates per-profile SNR threshold from noise in the top range gates.
+
+    The noise level of each profile is the median SNR of its top gates. The
+    margin above it is the given percentile of the noise scatter around the
+    level, pooled over all profiles.
+    """
+    top = snr[:, -n_gates:]
+    noise_level = ma.median(top, axis=1)
+    residual = (top - noise_level[:, np.newaxis]).compressed()
+    margin = np.percentile(residual, percentile) if residual.size else 0
+    return ma.filled(noise_level + margin, fill_value=np.inf)

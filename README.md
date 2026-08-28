@@ -56,7 +56,7 @@ cloudnetpy -s kenttarova -d 2025-05-28 -p l3-cf -m harmonie-fmi-6-11 --show
 ```
 
 See the [command-line usage documentation](https://actris-cloudnet.github.io/cloudnetpy/cli.html)
-for instrument selection, different products, plotting, and all options.
+for instrument selection, different products, plotting, ARM sites, and all options.
 
 ## Citing
 

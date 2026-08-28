@@ -4,6 +4,7 @@ import pytest
 from numpy import ma
 
 from cloudnetpy.exceptions import ValidTimeStampError
+from cloudnetpy.instruments import nc_radar
 from cloudnetpy.instruments.nc_radar import NcRadar
 from cloudnetpy.cloudnetarray import CloudnetArray
 
@@ -146,3 +147,15 @@ class TestZenithAzimuthAnglesOffsets:
         )
         assert all(result)
         assert "zenith_offset" in radar.data
+
+
+def test_estimate_snr_limit():
+    rng = np.random.default_rng(0)
+    snr = ma.array(rng.normal(-24, 1.5, (100, 200)))
+    snr[:50] += 5  # Different noise level in the first profiles
+    snr[:, :150] += 40  # Signal in the lower gates
+    limit = nc_radar.estimate_snr_limit(snr)
+    assert limit.shape == (100,)
+    assert np.allclose(limit[:50], -19 + 4.5, atol=1)
+    assert np.allclose(limit[50:], -24 + 4.5, atol=1)
+    assert np.all(snr[:, -50:] < limit[:, np.newaxis] + 0.5)
