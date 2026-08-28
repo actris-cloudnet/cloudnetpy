@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.94.7 – 2026-08-28
+
+- Show dominant hydrometeor type only when there's cloud fraction
+- Skip out-of-range channel indices when plotting tb and irt
+
 ## 1.94.6 – 2026-08-13
 
 - Skip plotting hydrometer type for models without mixing ratios
