@@ -1293,6 +1293,7 @@ def _get_max_gap_in_minutes(figure_data: FigureData) -> float:
         "radar": 5,
         "cpr-simulation": 60,
         "weather-radar": 20,
+        "iwc-weather-radar": 20,
     }
     return max_allowed_gap.get(file_type, 10)
 

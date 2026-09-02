@@ -101,6 +101,8 @@ class Model(DataSource):
         """
         half_height = height_grid - np.diff(height_grid, prepend=self.alt_site) / 2
         for key in self.fields_dense + self.fields_atten:
+            if key not in self.data_sparse:
+                continue
             array = self.data_sparse[key][:]
             valid_profiles = _find_number_of_valid_profiles(array)
             if valid_profiles < 2:
