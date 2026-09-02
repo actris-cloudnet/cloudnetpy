@@ -13,6 +13,7 @@ from .kazr import kazr2nc
 from .mira import mira2nc
 from .mmcr import mmcr2nc
 from .mrr import mrr2nc
+from .mwr3c import mwr3c2nc
 from .mwrlos import mwrlos2nc
 from .pollyxt import pollyxt2nc
 from .radiometrics import radiometrics2nc

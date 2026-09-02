@@ -306,6 +306,13 @@ WVR1100 = Instrument(
     model="WVR-1100",
 )
 
+MWR3C = Instrument(
+    manufacturer="Radiometrics",
+    domain="mwr",
+    category="microwave radiometer",
+    model="MWR-3C",
+)
+
 KAZR = Instrument(
     manufacturer="ProSensing",
     domain="radar",

@@ -66,6 +66,7 @@ def test_datastream():
         "sgpmmcrmomC1.b1",
         "sgpceilC1.b1",
         "sgpmwrlosC1.b1",
+        "sgpmwr3cC1.b1",
         "sgpldC1.b1",
     ]
     assert arm.get_datastream("arm-darwin", arm.ARM_INSTRUMENTS[4]) == (

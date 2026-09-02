@@ -20,6 +20,7 @@ from cloudnetpy.instruments import (
     armld2nc,
     kazr2nc,
     mmcr2nc,
+    mwr3c2nc,
     mwrlos2nc,
 )
 
@@ -73,6 +74,8 @@ ARM_INSTRUMENTS: Final = (
     ArmInstrument("radar", "mmcr", "mmcrmom.b1", mmcr2nc, multi_file=False),
     ArmInstrument("lidar", "cl31", "ceil.b1", armceilo2nc, multi_file=False),
     ArmInstrument("mwr", "wvr-1100", "mwrlos.b1", mwrlos2nc, multi_file=True),
+    # 3-channel MWR (e.g. ENA)
+    ArmInstrument("mwr", "mwr-3c", "mwr3c.b1", mwr3c2nc, multi_file=True),
     ArmInstrument("disdrometer", "parsivel", "ld.b1", armld2nc, multi_file=False),
 )
 

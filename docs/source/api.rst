@@ -62,6 +62,8 @@ Microwave radiometers
 
 .. autofunction:: instruments.mwrlos2nc
 
+.. autofunction:: instruments.mwr3c2nc
+
 Disdrometers
 ~~~~~~~~~~~~
 
