@@ -60,6 +60,7 @@ def test_datastream():
     streams = [arm.get_datastream("arm-sgp", i) for i in arm.ARM_INSTRUMENTS]
     assert streams == [
         "sgpkazrcfrgeC1.a1",
+        "sgpkazr2cfrgeC1.a1",
         "sgpkazrcorgeC1.c1",
         "sgpkazrgeC1.a1",
         "sgpmmcrmomC1.b1",
@@ -67,7 +68,7 @@ def test_datastream():
         "sgpmwrlosC1.b1",
         "sgpldC1.b1",
     ]
-    assert arm.get_datastream("arm-darwin", arm.ARM_INSTRUMENTS[3]) == (
+    assert arm.get_datastream("arm-darwin", arm.ARM_INSTRUMENTS[4]) == (
         "twpmmcrmomC3.b1"
     )
     assert arm.get_datastream("arm-andoya", arm.ARM_INSTRUMENTS[0]) == (
@@ -399,8 +400,8 @@ def test_convert_to_l1b_reader_error(monkeypatch, tmp_path, caplog):
         msg = "Radar mode not found"
         raise ValueError(msg)
 
-    instrument = arm.ARM_INSTRUMENTS[3]._replace(reader=broken_reader)
-    monkeypatch.setattr(arm, "ARM_INSTRUMENTS", (instrument, *arm.ARM_INSTRUMENTS[4:]))
+    instrument = arm.ARM_INSTRUMENTS[4]._replace(reader=broken_reader)
+    monkeypatch.setattr(arm, "ARM_INSTRUMENTS", (instrument, *arm.ARM_INSTRUMENTS[5:]))
     l1b = arm.convert_to_l1b("arm-sgp", DATE, RAW_FILES, tmp_path, SITE_META)
     assert set(l1b) == {"mwr"}
     assert "Failed to process radar: Radar mode not found" in caplog.text

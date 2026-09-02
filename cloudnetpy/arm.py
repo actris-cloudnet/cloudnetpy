@@ -63,6 +63,8 @@ class ArmInstrument(NamedTuple):
 ARM_INSTRUMENTS: Final = (
     # KAZR2 (approx. 2019 onwards, hourly files)
     ArmInstrument("radar", "kazr", "kazrcfrge.a1", kazr2nc, multi_file=True),
+    # KAZR2 at ENA (Dec 2019 onwards, hourly files)
+    ArmInstrument("radar", "kazr", "kazr2cfrge.a1", kazr2nc, multi_file=True),
     # KAZR corrected moments (approx. 2011-2019)
     ArmInstrument("radar", "kazr", "kazrcorge.c1", kazr2nc, multi_file=True),
     # KAZR moments (approx. 2011-2019, e.g. mobile facilities)
