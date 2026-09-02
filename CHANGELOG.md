@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.95.2 – 2026-09-02
+
+- Add `iwc-weather-radar` product
+
 ## 1.95.1 – 2026-09-02
 
 - Add ENA KAZR2 datastream to ARM instrument table
