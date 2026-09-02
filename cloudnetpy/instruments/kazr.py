@@ -212,8 +212,11 @@ class Kazr(CloudnetInstrument):
         """Screens LDR using the cross-polar SNR.
 
         LDR is removed completely if the cross-polar channel shows signal in
-        noise gates (broken channel). LDR calculated from reflectivities is
-        masked in gates where the cross-polar signal is below the noise.
+        noise gates (broken channel). Otherwise LDR is masked where the
+        cross-polar signal is below the noise: there the reported LDR is only
+        an upper bound set by the noise floor, which at low SNR mimics the
+        high LDR of insects. Corrected files use the fixed `snrx_limit`, the
+        others a limit estimated from the noise in the top range gates.
         """
         if "ldr" not in self.data or "SNRx" not in self.data:
             return
@@ -223,8 +226,12 @@ class Kazr(CloudnetInstrument):
         if np.any(is_noise) and ma.median(snrx[is_noise]) > snrx_limit:
             logging.warning("Cross-polar channel unreliable, removing LDR")
             del self.data["ldr"]
-        elif self.corrected:
-            self.data["ldr"].mask_indices(np.where(snrx < snrx_limit))
+        else:
+            limit: float | np.ndarray = snrx_limit
+            if not self.corrected:
+                limit = estimate_snr_limit(snrx)[:, np.newaxis]
+            is_below = ma.filled(snrx < limit, fill_value=True)
+            self.data["ldr"].mask_indices(np.where(is_below))
         del self.data["SNRx"]
 
     def correct_ldr_leakage(self, min_ldr: float = -30, n_sigma: float = 3) -> None:
