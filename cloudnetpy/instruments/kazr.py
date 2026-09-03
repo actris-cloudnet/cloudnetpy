@@ -39,6 +39,13 @@ KEYMAP_CFR = {
     "signal_to_noise_ratio_crosspolar_v": "SNRx",
 }
 
+# Same format with short SNR names (e.g. olikazrgeM1.a1)
+KEYMAP_CFR_SHORT = {
+    **{k: v for k, v in KEYMAP_CFR.items() if v not in ("SNR", "SNRx")},
+    "snr_copol": "SNR",
+    "snr_xpol": "SNRx",
+}
+
 # KAZR moments (e.g. sgpkazrgeC1.a1) and corrected moments (sgpkazrcorgeC1.c1)
 KEYMAP_COR = {
     "reflectivity_copol": "Zh",
@@ -282,6 +289,8 @@ class Kazr(CloudnetInstrument):
     def _init_metadata(self, nc: netCDF4.Dataset) -> None:
         if "reflectivity" in nc.variables:
             self.keymap = KEYMAP_CFR
+            if "snr_copol" in nc.variables:
+                self.keymap = KEYMAP_CFR_SHORT
         elif "reflectivity_copol" in nc.variables:
             self.keymap = KEYMAP_COR
             self.corrected = "significant_detection_mask" in nc.variables
