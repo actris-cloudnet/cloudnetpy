@@ -73,7 +73,8 @@ def kazr2nc(
     screened using the ARM significant detection mask and LDR is calculated
     from the cross- and co-polar reflectivities. LDR is screened using the
     cross-polar SNR and removed completely if the cross-polar channel is found
-    unreliable. Velocities of the non-corrected formats are dealiased using
+    unreliable. Stationary clutter layers (zero velocity and spectral width)
+    are removed. Velocities of the non-corrected formats are dealiased using
     velocity continuity.
 
     Args:
@@ -112,6 +113,7 @@ def kazr2nc(
     kazr.screen_ldr()
     kazr.correct_ldr_leakage()
     kazr.screen_noise(snr_limit)
+    kazr.screen_stationary_clutter()
     kazr.dealias_velocity()
     kazr.add_correction_bits()
     kazr.mask_invalid_data()
@@ -193,6 +195,46 @@ class Kazr(CloudnetInstrument):
         for cloudnet_array in self.data.values():
             if cloudnet_array.data.ndim == 2:
                 cloudnet_array.mask_indices(is_noise)
+
+    def screen_stationary_clutter(
+        self,
+        v_lim: float = 0.03,
+        width_lim: float = 0.05,
+        min_fraction: float = 0.05,
+    ) -> None:
+        """Masks stationary clutter layers.
+
+        Some KAZRs (e.g. Oliktok 2015-2019) show persistent echoes with zero
+        Doppler velocity and minimal spectral width in fixed range gates, also
+        well above the ground (1.5-2 km at Oliktok). Pixels with near-zero
+        velocity and width are masked in range gates where such pixels are
+        found in at least `min_fraction` of the profiles. Real hydrometeors
+        with zero velocity have larger spectral width due to turbulence.
+        """
+        if "width" not in self.data:
+            return
+        v = self.data["v"][:]
+        width = self.data["width"][:]
+        is_stationary = ma.filled(
+            (ma.abs(v) < v_lim) & (width < width_lim), fill_value=False
+        )
+        fraction = np.mean(is_stationary, axis=0)
+        is_clutter = is_stationary & (fraction >= min_fraction)
+        if not np.any(is_clutter):
+            return
+        gates = np.nonzero(fraction >= min_fraction)[0]
+        height = self.data["range"].data
+        logging.info(
+            "Masking stationary clutter in %s range gates (%.0f-%.0f m)",
+            len(gates),
+            height[gates[0]],
+            height[gates[-1]],
+        )
+        is_valid = ~ma.getmaskarray(self.data["Zh"][:]) & ~is_clutter
+        is_valid = utils.remove_small_objects(is_valid, max_size=20, connectivity=2)
+        for cloudnet_array in self.data.values():
+            if cloudnet_array.data.ndim == 2:
+                cloudnet_array.mask_indices(~is_valid)
 
     def dealias_velocity(self) -> None:
         """Unfolds aliased Doppler velocities using continuity."""

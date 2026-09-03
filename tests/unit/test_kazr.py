@@ -357,3 +357,38 @@ class TestLdrFloor:
         floor = kazr._find_ldr_floor(ldr)
         assert floor is not None
         assert abs(floor + 20) < 0.3
+
+
+class TestStationaryClutter:
+    @staticmethod
+    def _kazr(v, width):
+        radar = kazr.Kazr([], {"name": "Oliktok"}, None)
+        radar.data["range"] = kazr.CloudnetArray(np.arange(v.shape[1]) * 30.0, "range")
+        for key, array in (("Zh", ma.zeros(v.shape)), ("v", v), ("width", width)):
+            radar.data[key] = kazr.CloudnetArray(ma.array(array), key)
+        return radar
+
+    def test_stationary_layer_masked(self):
+        v = ma.ones((100, 40)) * -0.5
+        width = ma.ones((100, 40)) * 0.1
+        v[:, 20:25] = 0.01
+        width[:, 20:25] = 0.015
+        v[:10, 20:25] = -4  # rain passing through the layer
+        width[:10, 20:25] = 0.8
+        radar = self._kazr(v, width)
+        radar.screen_stationary_clutter()
+        mask = ma.getmaskarray(radar.data["Zh"][:])
+        assert np.all(mask[10:, 20:25])
+        assert not np.any(mask[:10, 20:25])
+        assert not np.any(mask[:, :20])
+        assert not np.any(mask[:, 25:])
+        assert np.all(ma.getmaskarray(radar.data["v"][:]) == mask)
+
+    def test_rare_zero_velocity_kept(self):
+        v = ma.ones((100, 40)) * -0.5
+        width = ma.ones((100, 40)) * 0.1
+        v[:3, 20] = 0.0
+        width[:3, 20] = 0.01
+        radar = self._kazr(v, width)
+        radar.screen_stationary_clutter()
+        assert not np.any(ma.getmaskarray(radar.data["Zh"][:]))
