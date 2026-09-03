@@ -215,3 +215,27 @@ class TestEcmwf:
                 assert not test.exceptions, test.exceptions
                 n += 1
         assert n == len(keys)
+
+
+def test_interpolate_with_missing_top_levels(tmpdir):
+    file_name = tmpdir.join("gdas1_file.nc")
+    with netCDF4.Dataset(file_name, "w", format="NETCDF4_CLASSIC") as root_grp:
+        root_grp.createDimension("time", 2)
+        root_grp.createDimension("height", 4)
+        root_grp.createVariable("time", "f8", "time")[:] = np.arange(2)
+        var = root_grp.createVariable("height", "f8", ("time", "height"))
+        var[:] = np.array([[1000, 2000, 3000, 4000], [1000, 2000, 3000, 4000]])
+        var.units = "m"
+        for key in ("temperature", "pressure", "uwind", "vwind", "rh"):
+            _create_var(root_grp, key, data=var[:])
+        q = root_grp.createVariable("q", "f8", ("time", "height"), fill_value=1e36)
+        q[:] = ma.array(
+            [[1, 2, 3, 4], [1, 2, 3, 4]],
+            mask=[[False, False, True, True], [False, False, False, True]],
+        )
+        q.units = "1"
+    obj = model.Model(str(file_name), ALT_SITE)
+    obj.interpolate_to_common_height()
+    q_interp = obj.data_sparse["q"][:]
+    assert not ma.is_masked(q_interp)
+    assert_array_equal(q_interp, [[1, 2, 3, 4], [1, 2, 3, 4]])

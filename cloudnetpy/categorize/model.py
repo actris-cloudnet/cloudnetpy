@@ -71,10 +71,12 @@ class Model(DataSource):
             for ind, (alt, prof) in enumerate(
                 zip(self.model_heights, data_in, strict=True),
             ):
-                if prof.mask.all():
+                # Use only valid levels so that fill values don't leak in
+                valid = ~ma.getmaskarray(prof)
+                if np.count_nonzero(valid) < 2:
                     datai[ind, :] = ma.masked
                 else:
-                    fun = interp1d(alt, prof, fill_value="extrapolate")
+                    fun = interp1d(alt[valid], prof[valid], fill_value="extrapolate")
                     datai[ind, :] = fun(self.mean_height)
             return CloudnetArray(datai, key, units)
 
