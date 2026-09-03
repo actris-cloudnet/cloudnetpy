@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.95.3 – 2026-09-03
+
+- Accept short SNR variable names in KAZR CF/Radial files
+- Mask stationary clutter layers in KAZR data
+
 ## 1.95.2 – 2026-09-02
 
 - Add `iwc-weather-radar` product
