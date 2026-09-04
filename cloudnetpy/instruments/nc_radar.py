@@ -213,16 +213,26 @@ class ChilboltonRadar(NcRadar):
 
 
 def estimate_snr_limit(
-    snr: ma.MaskedArray, n_gates: int = 50, percentile: float = 99.99
+    snr: ma.MaskedArray,
+    n_gates: int = 50,
+    percentile: float = 99.99,
+    max_sigma: float = 8,
 ) -> np.ndarray:
     """Estimates per-profile SNR threshold from noise in the top range gates.
 
     The noise level of each profile is the median SNR of its top gates. The
     margin above it is the given percentile of the noise scatter around the
-    level, pooled over all profiles.
+    level, pooled over all profiles, but at most `max_sigma` times the robust
+    (median absolute deviation) scatter so that signal in the top gates does
+    not inflate it.
     """
     top = snr[:, -n_gates:]
     noise_level = ma.median(top, axis=1)
     residual = (top - noise_level[:, np.newaxis]).compressed()
-    margin = np.percentile(residual, percentile) if residual.size else 0
+    if residual.size:
+        margin = np.percentile(residual, percentile)
+        sigma = 1.4826 * np.median(np.abs(residual))
+        margin = min(margin, max_sigma * sigma)
+    else:
+        margin = 0
     return ma.filled(noise_level + margin, fill_value=np.inf)

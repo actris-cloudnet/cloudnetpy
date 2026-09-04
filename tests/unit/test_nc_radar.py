@@ -159,3 +159,12 @@ def test_estimate_snr_limit():
     assert np.allclose(limit[:50], -19 + 4.5, atol=1)
     assert np.allclose(limit[50:], -24 + 4.5, atol=1)
     assert np.all(snr[:, -50:] < limit[:, np.newaxis] + 0.5)
+
+
+def test_estimate_snr_limit_with_signal_in_top_gates():
+    rng = np.random.default_rng(0)
+    snr = ma.array(rng.normal(-24, 1.5, (100, 200)))
+    snr[:10, -20:] += 40  # Cloud reaching the top gates in some profiles
+    limit = nc_radar.estimate_snr_limit(snr)
+    assert np.allclose(limit[10:], -24 + 8 * 1.5, atol=1.5)
+    assert np.all(snr[10:, -50:] < limit[10:, np.newaxis] + 0.5)
