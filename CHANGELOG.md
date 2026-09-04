@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.95.5 – 2026-09-04
+
+- Prefer calibrated KAZR files and record reflectivity offset
+- Pass radar calibration offset through to categorize as Z_offset
+- Fix line break in categorize reflectivity comment
+
 ## 1.95.4 – 2026-09-04
 
 - Ignore masked model levels when interpolating to common height
