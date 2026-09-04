@@ -437,6 +437,8 @@ def _process_instrument_product(
             input_files = input_folder
         case ("mrr", _id):
             fun = instruments.mrr2nc
+        case ("weather-radar", _id):
+            fun = instruments.wr2nc
         case ("weather-station", _id):
             fun = instruments.ws2nc
         case (invalid_product_id, invalid_instrument_id):
