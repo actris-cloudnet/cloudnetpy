@@ -1,4 +1,5 @@
 import os
+import shutil
 from tempfile import TemporaryDirectory
 
 import netCDF4
@@ -46,3 +47,28 @@ class TestCategorize(Check):
         del input_files_without_mwr["mwr"]
         temp_path = self.temp_dir.name + "/categorize_without_lwp.nc"
         generate_categorize(input_files_without_mwr, temp_path)
+
+    def test_zh_offset_not_in_output_by_default(self):
+        with netCDF4.Dataset(self.temp_path) as nc:
+            assert "Z_offset" not in nc.variables
+            assert (
+                nc.variables["Z"].ancillary_variables == "Z_error Z_bias Z_sensitivity"
+            )
+
+    def test_zh_offset_passed_through(self):
+        radar_path = self.temp_dir.name + "/radar_with_offset.nc"
+        shutil.copy(self.radar_path, radar_path)
+        with netCDF4.Dataset(radar_path, "a") as nc:
+            var = nc.createVariable("Zh_offset", "f4")
+            var[:] = 2.5
+        input_files = self.input_files.copy()
+        input_files["radar"] = radar_path
+        temp_path = self.temp_dir.name + "/categorize_with_offset.nc"
+        generate_categorize(input_files, temp_path)
+        with netCDF4.Dataset(temp_path) as nc:
+            var = nc.variables["Z_offset"]
+            assert var[:] == 2.5
+            assert var.dimensions == ()
+            assert var.units == "dBZ"
+            assert var.source == nc.variables["Z"].source
+            assert nc.variables["Z"].ancillary_variables.endswith(" Z_offset")

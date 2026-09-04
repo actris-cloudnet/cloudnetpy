@@ -212,6 +212,10 @@ def generate_categorize(
         attributes = output.add_time_attribute(CATEGORIZE_ATTRIBUTES, date)
         attributes = output.add_time_attribute(attributes, date, "model_time")
         attributes = output.add_source_attribute(attributes, data)
+        if "Z_offset" in cloudnet_arrays:
+            attributes["Z"] = attributes["Z"]._replace(
+                ancillary_variables=f"{attributes['Z'].ancillary_variables} Z_offset"
+            )
         output.update_attributes(cloudnet_arrays, attributes)
         _save_cat(output_file, data, cloudnet_arrays, uuid)
         return uuid
@@ -438,6 +442,12 @@ CATEGORIZE_ATTRIBUTES = {
     "zdr": COMMON_ATTRIBUTES["zdr"]._replace(dimensions=("time", "height")),
     "nyquist_velocity": COMMON_ATTRIBUTES["nyquist_velocity"]._replace(
         dimensions=("time", "height")
+    ),
+    "Z_offset": MetaData(
+        long_name="Radar reflectivity calibration offset",
+        units="dBZ",
+        comment="Calibration offset applied to the reflectivity in the radar file.",
+        dimensions=None,
     ),
     # Lidar variables
     "beta": MetaData(

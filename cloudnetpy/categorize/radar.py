@@ -341,10 +341,19 @@ class Radar(DataSource):
     def _init_data(self) -> None:
         self.append_data(self.getvar("Zh"), "Z", units="dBZ")
         self.append_data(self.getvar("v"), "v_sigma")
-        for key in ("v", "ldr", "width", "sldr", "rainfall_rate", "nyquist_velocity"):
+        for key in (
+            "v",
+            "ldr",
+            "width",
+            "sldr",
+            "rainfall_rate",
+            "nyquist_velocity",
+        ):
             if key in self.dataset.variables:
                 data = self.dataset.variables[key]
                 self.append_data(data, key)
+        if "Zh_offset" in self.dataset.variables:
+            self.append_data(self.dataset.variables["Zh_offset"], "Z_offset")
 
     def _rebin_velocity(
         self,

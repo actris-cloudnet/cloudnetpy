@@ -401,6 +401,7 @@ def add_source_attribute(attributes: dict, data: Observations) -> dict:
             "radar_frequency",
             "nyquist_velocity",
             "rainfall_rate",
+            "Z_offset",
         ),
         "lidar": ("beta", "lidar_wavelength"),
         "mwr": ("lwp",),
