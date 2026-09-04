@@ -61,8 +61,14 @@ class ArmInstrument(NamedTuple):
 
 
 # In order of preference within each product; the first with files is used.
-# Raw moments are preferred over ARM corrected products for consistency.
+# Raw moments are preferred over ARM corrected products for consistency. The
+# b1-level KAZR moments are identical to the a1-level ones except for the
+# reflectivity calibration applied by ARM.
 ARM_INSTRUMENTS: Final = (
+    # KAZR2 calibrated moments (2020 onwards, hourly files, months of delay)
+    ArmInstrument("radar", "kazr", "kazrcfrgeqc.b1", kazr2nc, multi_file=True),
+    # KAZR2 calibrated moments at ENA
+    ArmInstrument("radar", "kazr", "kazr2cfrgeqc.b1", kazr2nc, multi_file=True),
     # KAZR2 (approx. 2019 onwards, hourly files)
     ArmInstrument("radar", "kazr", "kazrcfrge.a1", kazr2nc, multi_file=True),
     # KAZR2 at ENA (Dec 2019 onwards, hourly files)

@@ -27,7 +27,7 @@ from cloudnetpy.instruments.dealias import (
 )
 from cloudnetpy.instruments.instruments import KAZR
 from cloudnetpy.instruments.nc_radar import estimate_snr_limit
-from cloudnetpy.metadata import COMMON_ATTRIBUTES
+from cloudnetpy.metadata import COMMON_ATTRIBUTES, MetaData
 
 # KAZR2 CF/Radial format (e.g. sgpkazrcfrgeC1.a1, hourly files)
 KEYMAP_CFR = {
@@ -67,15 +67,18 @@ def kazr2nc(
 ) -> UUID:
     """Converts ARM KAZR cloud radar data into Cloudnet Level 1b netCDF file.
 
-    Supports the KAZR2 CF/Radial moments (`kazrcfrge.a1`, hourly files), the
-    ARM corrected moments (`kazrcorge.c1`, daily files) and the original KAZR
-    moments (`kazrge.a1`, daily files). With the corrected moments, noise is
-    screened using the ARM significant detection mask and LDR is calculated
-    from the cross- and co-polar reflectivities. LDR is screened using the
-    cross-polar SNR and removed completely if the cross-polar channel is found
-    unreliable. Stationary clutter layers (zero velocity and spectral width)
-    are removed. Velocities of the non-corrected formats are dealiased using
-    velocity continuity.
+    Supports the KAZR2 CF/Radial moments (`kazrcfrge.a1` and the calibrated
+    `kazrcfrgeqc.b1`, hourly files), the ARM corrected moments (`kazrcorge.c1`,
+    daily files) and the original KAZR moments (`kazrge.a1`, daily files). The
+    reflectivity calibration offset applied by ARM in the calibrated files is
+    kept and recorded in `Zh_offset`. Uncalibrated files are calibrated with
+    `Zh_offset` from `site_meta` if given. With the corrected moments, noise is
+    screened using the ARM significant detection mask and
+    LDR is calculated from the cross- and co-polar reflectivities. LDR is
+    screened using the cross-polar SNR and removed completely if the
+    cross-polar channel is found unreliable. Stationary clutter layers (zero
+    velocity and spectral width) are removed. Velocities of the non-corrected
+    formats are dealiased using velocity continuity.
 
     Args:
         raw_files: Input file, a sequence of files, or a folder containing the
@@ -83,9 +86,11 @@ def kazr2nc(
         output_file: Output filename.
         site_meta: Dictionary containing information about the site. Required key
             value pair is `name`. Optional are `latitude`, `longitude` and
-            `altitude` (taken from the raw file if missing) and `snr_limit`
+            `altitude` (taken from the raw file if missing), `snr_limit`
             (fixed SNR threshold in dB; by default the threshold is estimated
-            from the noise in the top range gates).
+            from the noise in the top range gates) and `Zh_offset` (reflectivity
+            calibration offset in dB, used only if the file is not calibrated
+            by ARM).
         uuid: Set specific UUID for the file.
         date: Expected date as YYYY-MM-DD of all profiles in the file.
 
@@ -107,6 +112,7 @@ def kazr2nc(
     snr_limit = site_meta.get("snr_limit")
     kazr = Kazr(_get_files(raw_files), site_meta, date)
     kazr.read_files()
+    kazr.calibrate_reflectivity()
     kazr.sort_timestamps()
     kazr.remove_duplicate_timestamps()
     kazr.calc_ldr()
@@ -152,6 +158,7 @@ class Kazr(CloudnetInstrument):
         self.dealiased = False
         self.ldr_floor: float | None = None
         self.corrected = False  # ARM corrected (dealiased) moments
+        self.offset_applied: float | None = None  # Calibration offset by ARM
         self._raw: dict[str, list] = {}
 
     def read_files(self) -> None:
@@ -170,6 +177,20 @@ class Kazr(CloudnetInstrument):
         for key, arrays in self._raw.items():
             self.data[key] = CloudnetArray(ma.concatenate(arrays), key)
         self._screen_date()
+
+    def calibrate_reflectivity(self) -> None:
+        """Applies `Zh_offset` from site_meta unless already calibrated by ARM."""
+        zh_offset = self.site_meta.get("Zh_offset")
+        if self.offset_applied is not None:
+            if zh_offset is not None:
+                logging.info("File calibrated by ARM, ignoring Zh_offset")
+            zh_offset = self.offset_applied
+        elif zh_offset is None:
+            zh_offset = 0.0
+        else:
+            zh_offset = float(zh_offset)
+            self.data["Zh"].data[:] += zh_offset
+        self.append_data(np.array(zh_offset, dtype=np.float32), "Zh_offset")
 
     def screen_noise(self, snr_limit: float | None = None) -> None:
         """Masks noise using ARM detection mask if available, otherwise SNR.
@@ -339,6 +360,10 @@ class Kazr(CloudnetInstrument):
         else:
             msg = "Unknown KAZR file format"
             raise RadarDataError(msg)
+        zh_key = next(k for k, v in self.keymap.items() if v == "Zh")
+        bias = getattr(nc[zh_key], "applied_bias_correction", None)
+        if bias is not None:
+            self.offset_applied = round(float(bias), 2)
         self.serial_number = getattr(nc, "serial_number", None) or None
         self.append_data(np.array(nc["range"][:], dtype=float), "range")
         self.append_data(0.0, "zenith_angle")
@@ -508,6 +533,15 @@ def _get_files(raw_files: str | PathLike | Sequence[str | PathLike]) -> list[Pat
 
 ATTRIBUTES = {
     "correction_bits": CORRECTION_BITS_ATTRIBUTES,
+    "Zh_offset": MetaData(
+        long_name="Radar reflectivity calibration offset",
+        units="dBZ",
+        comment=(
+            "Calibration offset applied to the reflectivity, either by ARM "
+            "in the calibrated (b1) files or by Cloudnet in the other files."
+        ),
+        dimensions=None,
+    ),
     "zenith_angle": COMMON_ATTRIBUTES["zenith_angle"]._replace(dimensions=None),
     "nyquist_velocity": COMMON_ATTRIBUTES["nyquist_velocity"]._replace(dimensions=None),
 }

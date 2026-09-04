@@ -59,6 +59,8 @@ def credentials(monkeypatch):
 def test_datastream():
     streams = [arm.get_datastream("arm-sgp", i) for i in arm.ARM_INSTRUMENTS]
     assert streams == [
+        "sgpkazrcfrgeqcC1.b1",
+        "sgpkazr2cfrgeqcC1.b1",
         "sgpkazrcfrgeC1.a1",
         "sgpkazr2cfrgeC1.a1",
         "sgpkazrgeC1.a1",
@@ -69,11 +71,11 @@ def test_datastream():
         "sgpmwr3cC1.b1",
         "sgpldC1.b1",
     ]
-    assert arm.get_datastream("arm-darwin", arm.ARM_INSTRUMENTS[4]) == (
+    assert arm.get_datastream("arm-darwin", arm.ARM_INSTRUMENTS[6]) == (
         "twpmmcrmomC3.b1"
     )
     assert arm.get_datastream("arm-andoya", arm.ARM_INSTRUMENTS[0]) == (
-        "anxkazrcfrgeM1.a1"
+        "anxkazrcfrgeqcM1.b1"
     )
 
 
@@ -323,8 +325,23 @@ def test_fetch_files_prefers_newer_datastream(monkeypatch, credentials, tmp_path
     monkeypatch.setattr(arm, "download_file", fake_download)
     files = arm.fetch_files("arm-sgp", datetime.date(2022, 6, 1), tmp_path)
     assert len(files["radar"]) == 2
-    assert files["radar"][0].parent.name == "sgpkazrcfrgeC1.a1"
+    assert files["radar"][0].parent.name == "sgpkazrcfrgeqcC1.b1"
     assert files["lidar"][0].parent.name == "sgpceilC1.b1"
+
+
+def test_fetch_files_falls_back_to_uncalibrated(monkeypatch, credentials, tmp_path):
+    def fake_query(datastream, date, credentials):
+        if datastream.endswith("qcC1.b1"):
+            return []
+        return [f"{datastream}.20220601.000007.nc"]
+
+    def fake_download(filename, output_dir, credentials, *, force):
+        return Path(output_dir) / filename
+
+    monkeypatch.setattr(arm, "query_files", fake_query)
+    monkeypatch.setattr(arm, "download_file", fake_download)
+    files = arm.fetch_files("arm-sgp", datetime.date(2022, 6, 1), tmp_path)
+    assert files["radar"][0].parent.name == "sgpkazrcfrgeC1.a1"
 
 
 def test_fetch_files_skips_unavailable_datastream(monkeypatch, credentials, tmp_path):
@@ -332,7 +349,7 @@ def test_fetch_files_skips_unavailable_datastream(monkeypatch, credentials, tmp_
         return [f"{datastream}.20120124.000000.nc"]
 
     def fake_download(filename, output_dir, credentials, *, force):
-        if filename.startswith("gankazrcorgeM1.c1"):
+        if filename.startswith(("gankazrcfrgeqcM1.b1", "gankazr2cfrgeqcM1.b1")):
             raise arm.ArmFileNotFoundError(filename)
         return Path(output_dir) / filename
 
@@ -401,8 +418,8 @@ def test_convert_to_l1b_reader_error(monkeypatch, tmp_path, caplog):
         msg = "Radar mode not found"
         raise ValueError(msg)
 
-    instrument = arm.ARM_INSTRUMENTS[4]._replace(reader=broken_reader)
-    monkeypatch.setattr(arm, "ARM_INSTRUMENTS", (instrument, *arm.ARM_INSTRUMENTS[5:]))
+    instrument = arm.ARM_INSTRUMENTS[6]._replace(reader=broken_reader)
+    monkeypatch.setattr(arm, "ARM_INSTRUMENTS", (instrument, *arm.ARM_INSTRUMENTS[7:]))
     l1b = arm.convert_to_l1b("arm-sgp", DATE, RAW_FILES, tmp_path, SITE_META)
     assert set(l1b) == {"mwr"}
     assert "Failed to process radar: Radar mode not found" in caplog.text

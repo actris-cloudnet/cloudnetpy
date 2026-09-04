@@ -46,6 +46,7 @@ class TestKazr2nc(Check):
             "radar_frequency",
             "nyquist_velocity",
             "snr_limit",
+            "Zh_offset",
             "latitude",
             "longitude",
             "altitude",
@@ -204,6 +205,7 @@ class TestKazrCorrected2nc(Check):
             "range",
             "radar_frequency",
             "nyquist_velocity",
+            "Zh_offset",
             "latitude",
             "longitude",
             "altitude",
@@ -392,3 +394,50 @@ class TestStationaryClutter:
         radar = self._kazr(v, width)
         radar.screen_stationary_clutter()
         assert not np.any(ma.getmaskarray(radar.data["Zh"][:]))
+
+
+class TestKazrCalibrated(Check):
+    site_meta = {
+        "name": "Southern Great Plains",
+        "latitude": 36.605,
+        "longitude": -97.485,
+        "altitude": 318,
+    }
+    temp_dir = TemporaryDirectory()
+    temp_path = temp_dir.name + "/kazr-b1.nc"
+    filepath = f"{SCRIPT_PATH}/data/kazr-b1/sgpkazrcfrgeqcC1.b1.20210601.000012.nc"
+    uuid = kazr.kazr2nc(filepath, temp_path, site_meta)
+    date = "2021-06-01"
+
+    def test_zh_offset(self):
+        assert np.isclose(self.nc.variables["Zh_offset"][:], 1.3)
+        with netCDF4.Dataset(self.filepath) as raw:
+            raw_zh = raw["reflectivity"][:]
+        assert np.allclose(self.nc.variables["Zh"][:10, :10], raw_zh[:10, :10])
+
+
+def test_zh_offset_ignored_in_calibrated_file():
+    filepath = f"{SCRIPT_PATH}/data/kazr-b1/sgpkazrcfrgeqcC1.b1.20210601.000012.nc"
+    with TemporaryDirectory() as temp_dir:
+        kazr.kazr2nc(filepath, f"{temp_dir}/a.nc", {"name": "SGP"})
+        kazr.kazr2nc(filepath, f"{temp_dir}/b.nc", {"name": "SGP", "Zh_offset": 2.0})
+        with (
+            netCDF4.Dataset(f"{temp_dir}/a.nc") as a,
+            netCDF4.Dataset(f"{temp_dir}/b.nc") as b,
+        ):
+            assert np.isclose(b["Zh_offset"][:], 1.3)
+            assert np.allclose(b["Zh"][:].filled(0), a["Zh"][:].filled(0))
+
+
+def test_zh_offset_applied_to_uncalibrated_file():
+    with TemporaryDirectory() as temp_dir:
+        kazr.kazr2nc(FILES, f"{temp_dir}/a.nc", {"name": "SGP"})
+        kazr.kazr2nc(FILES, f"{temp_dir}/b.nc", {"name": "SGP", "Zh_offset": 2.0})
+        with (
+            netCDF4.Dataset(f"{temp_dir}/a.nc") as a,
+            netCDF4.Dataset(f"{temp_dir}/b.nc") as b,
+        ):
+            assert a["Zh_offset"][:] == 0
+            assert b["Zh_offset"][:] == 2.0
+            diff = b["Zh"][:] - a["Zh"][:]
+            assert np.allclose(diff.compressed(), 2.0, atol=1e-3)
