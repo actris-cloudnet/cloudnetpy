@@ -54,6 +54,8 @@ class PlotParameters:
             plotted variable.
         minor_ticks: Whether to display minor ticks on the x-axis.
         plot_above_ground: Whether to plot above ground instead of above mean sea level.
+        start_time: Start time in fractional hours for time-axis limits.
+        stop_time: Stop time in fractional hours for time-axis limits.
 
     """
 
@@ -70,6 +72,8 @@ class PlotParameters:
     raise_on_empty: bool = False
     minor_ticks: bool = True
     plot_above_ground: bool = True
+    start_time: float | None = None
+    stop_time: float | None = None
 
 
 class Dimensions:
@@ -337,7 +341,11 @@ class SubPlot:
         if self.options.minor_ticks:
             self.ax.xaxis.set_minor_locator(AutoMinorLocator(4))
             self.ax.tick_params(which="minor", length=2.5)
-        self.ax.set_xlim(0, 24)
+        start_time = (
+            self.options.start_time if self.options.start_time is not None else 0
+        )
+        stop_time = self.options.stop_time if self.options.stop_time is not None else 24
+        self.ax.set_xlim(start_time, stop_time)
 
     def set_yax(
         self,
