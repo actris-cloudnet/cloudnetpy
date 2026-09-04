@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.95.4 – 2026-09-04
+
+- Ignore masked model levels when interpolating to common height
+- Cap estimated SNR margin to avoid over-screening when cloud reaches top gates
+
 ## 1.95.3 – 2026-09-03
 
 - Accept short SNR variable names in KAZR CF/Radial files
