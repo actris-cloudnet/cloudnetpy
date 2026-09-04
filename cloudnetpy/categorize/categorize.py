@@ -336,7 +336,7 @@ COMMENTS = {
         "and possibly liquid water, rain and melting layer (see quality_bits\n"
         "variable). Calibration convention: in the absence of attenuation, a cloud\n"
         "at 273 K containing one million 100-micron droplets per cubic metre will\n"
-        "have\n a reflectivity of 0 dBZ at all frequencies."
+        "have a reflectivity of 0 dBZ at all frequencies."
     ),
     "bias": (
         "This variable is an estimate of the one-standard-deviation\ncalibration error."
