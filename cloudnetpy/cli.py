@@ -772,6 +772,10 @@ def _plot(
     options = PlotParameters()
     if args.max_y is not None:
         options.max_y = args.max_y
+    if args.start_time is not None:
+        options.start_time = args.start_time
+    if args.stop_time is not None:
+        options.stop_time = args.stop_time
     try:
         generate_figure(
             filepath,
@@ -949,6 +953,18 @@ def main() -> None:
         "--max-y",
         type=int,
         help="Maximum y-axis value (km) in 2D time/height plots (default: 12)",
+        default=None,
+    )
+    parser.add_argument(
+        "--start-time",
+        type=float,
+        help="Start time in fractional hours since midnight UTC (default: 0)",
+        default=None,
+    )
+    parser.add_argument(
+        "--stop-time",
+        type=float,
+        help="Stop time in fractional hours since midnight UTC (default: 24)",
         default=None,
     )
     parser.add_argument(
