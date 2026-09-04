@@ -61,15 +61,16 @@ class ArmInstrument(NamedTuple):
 
 
 # In order of preference within each product; the first with files is used.
+# Raw moments are preferred over ARM corrected products for consistency.
 ARM_INSTRUMENTS: Final = (
     # KAZR2 (approx. 2019 onwards, hourly files)
     ArmInstrument("radar", "kazr", "kazrcfrge.a1", kazr2nc, multi_file=True),
     # KAZR2 at ENA (Dec 2019 onwards, hourly files)
     ArmInstrument("radar", "kazr", "kazr2cfrge.a1", kazr2nc, multi_file=True),
-    # KAZR corrected moments (approx. 2011-2019)
-    ArmInstrument("radar", "kazr", "kazrcorge.c1", kazr2nc, multi_file=True),
-    # KAZR moments (approx. 2011-2019, e.g. mobile facilities)
+    # KAZR moments (approx. 2011-2019, daily files)
     ArmInstrument("radar", "kazr", "kazrge.a1", kazr2nc, multi_file=True),
+    # KAZR corrected moments (approx. 2011-2012), fallback if raw missing
+    ArmInstrument("radar", "kazr", "kazrcorge.c1", kazr2nc, multi_file=True),
     # MMCR (before 2011)
     ArmInstrument("radar", "mmcr", "mmcrmom.b1", mmcr2nc, multi_file=False),
     ArmInstrument("lidar", "cl31", "ceil.b1", armceilo2nc, multi_file=False),

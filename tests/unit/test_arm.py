@@ -61,8 +61,8 @@ def test_datastream():
     assert streams == [
         "sgpkazrcfrgeC1.a1",
         "sgpkazr2cfrgeC1.a1",
-        "sgpkazrcorgeC1.c1",
         "sgpkazrgeC1.a1",
+        "sgpkazrcorgeC1.c1",
         "sgpmmcrmomC1.b1",
         "sgpceilC1.b1",
         "sgpmwrlosC1.b1",
