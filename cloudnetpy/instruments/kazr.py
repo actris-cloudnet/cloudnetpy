@@ -12,6 +12,7 @@ from uuid import UUID
 
 import netCDF4
 import numpy as np
+import numpy.typing as npt
 from numpy import ma
 
 from cloudnetpy import output, utils
@@ -363,7 +364,7 @@ class Kazr(CloudnetInstrument):
         zh_key = next(k for k, v in self.keymap.items() if v == "Zh")
         bias = getattr(nc[zh_key], "applied_bias_correction", None)
         if bias is not None:
-            self.offset_applied = round(float(bias), 2)
+            self.offset_applied = _parse_bias(bias)
         self.serial_number = getattr(nc, "serial_number", None) or None
         self.append_data(np.array(nc["range"][:], dtype=float), "range")
         self.append_data(0.0, "zenith_angle")
@@ -545,3 +546,13 @@ ATTRIBUTES = {
     "zenith_angle": COMMON_ATTRIBUTES["zenith_angle"]._replace(dimensions=None),
     "nyquist_velocity": COMMON_ATTRIBUTES["nyquist_velocity"]._replace(dimensions=None),
 }
+
+
+def _parse_bias(bias: npt.ArrayLike) -> float | None:
+    """Parses ARM reflectivity bias attribute, which may be an empty array."""
+    values = np.atleast_1d(np.asarray(bias, dtype=float))
+    if len(values) == 0:
+        return None
+    if len(np.unique(values)) > 1:
+        logging.warning("Multiple bias corrections %s, using the first one", values)
+    return round(float(values[0]), 2)
