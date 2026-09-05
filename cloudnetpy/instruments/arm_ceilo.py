@@ -112,6 +112,8 @@ class ArmCeilo(Ceilometer):
             self.data["time"] = np.array(nc["time"][:])
             calibration_factor = float(self.site_meta.get("calibration_factor", 1))
             backscatter = ma.masked_invalid(nc["backscatter"][:])
+            # Missing profiles are filled with int32 min without _FillValue
+            backscatter = ma.masked_less(backscatter, -1e6)
             self.data["beta_raw"] = backscatter * BACKSCATTER_SCALE * calibration_factor
             self.data["calibration_factor"] = calibration_factor
             self.data["zenith_angle"] = float(ma.median(nc["tilt_angle"][:]))
