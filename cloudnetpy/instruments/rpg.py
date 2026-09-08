@@ -44,7 +44,8 @@ def rpg2nc(
         date: Expected date in the input files. If not set,
             all files will be used. This might cause unexpected behavior if
             there are files from several days. If date is set as 'YYYY-MM-DD',
-            only files that match the date will be used.
+            only samples that match the date will be used. The input folder
+            must include any adjacent-day files overlapping the requested day.
 
     Returns:
         2-element tuple containing
@@ -282,11 +283,18 @@ def _expand_time_related_fields(objects: list[Fmcw94Bin]) -> list[Fmcw94Bin]:
 
 
 def _validate_date(obj: Fmcw94Bin, expected_date: datetime.date) -> None:
-    for t in obj.data["time"][:]:
-        date = utils.seconds2date(t).date()
-        if date != expected_date:
-            msg = "Ignoring a file (time stamps not what expected)"
-            raise ValueError(msg)
+    """Keep requested UTC-day samples, including from midnight-spanning files."""
+    epoch = utils.seconds2date(0).date()
+    start = (expected_date - epoch).days * 86400
+    times = np.asarray(obj.data["time"], dtype=np.float64)
+    times = times + np.asarray(obj.data.get("time_ms", 0)) * 1e-3
+    valid = (times >= start) & (times < start + 86400)
+    if not np.any(valid):
+        msg = "Ignoring a file (no time stamps on the requested UTC day)"
+        raise ValueError(msg)
+    for key, values in obj.data.items():
+        if values.ndim and values.shape[0] == len(times):
+            obj.data[key] = values[valid]
 
 
 class Rpg(CloudnetInstrument):
