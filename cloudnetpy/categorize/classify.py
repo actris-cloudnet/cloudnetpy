@@ -62,7 +62,9 @@ def classify_measurements(data: Observations) -> ClassificationResult:
 
     bits.melting = melting.find_melting_layer(obs)
     bits.freezing = freezing.find_freezing_region(obs, bits.melting)
-    liquid_from_lidar = droplet.find_liquid(obs)
+    # Vaisala CL51/CL61 have reliable near-range data, so allow lower liquid peaks
+    is_cl = any(model in obs.lidar_type.lower() for model in ("cl51", "cl61"))
+    liquid_from_lidar = droplet.find_liquid(obs, min_alt=70 if is_cl else 100)
     if obs.lv0_files is not None and len(obs.lv0_files) > 0:
         if "rpg-fmcw-94" not in obs.radar_type.lower():
             msg = "VoodooNet is only implemented for RPG-FMCW-94 radar."

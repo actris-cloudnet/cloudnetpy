@@ -56,6 +56,7 @@ class ClassData:
         height (ndarray): 1D height vector (m).
         model_type (str): Model identifier.
         radar_type (str): Radar identifier.
+        lidar_type (str): Lidar identifier.
         is_rain (ndarray): 2D boolean array denoting rain.
         is_clutter (ndarray): 2D boolean array denoting clutter.
         altitude: site altitude.
@@ -76,6 +77,7 @@ class ClassData:
         self.tw = data.model.data["Tw"][:]
         self.model_type = data.model.source_type
         self.beta = data.lidar.data["beta"][:]
+        self.lidar_type = data.lidar.source
         self.lwp = (
             data.mwr.data["lwp"][:]
             if data.mwr is not None
