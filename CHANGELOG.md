@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.95.7 – 2026-09-08
+
+- Keep low-SNR KAZR LDR in leakage correction
+
 ## 1.95.6 – 2026-09-08
 
 - Handle empty KAZR bias correction attribute
