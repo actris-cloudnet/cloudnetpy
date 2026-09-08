@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.95.6 – 2026-09-08
+
+- Handle empty KAZR bias correction attribute
+- Mask fill values in ARM ceilometer backscatter
+- Lower liquid peak altitude limit for CL51 and CL61 ceilometers
+- Add start and stop times to plot parameters
+
 ## 1.95.5 – 2026-09-04
 
 - Prefer calibrated KAZR files and record reflectivity offset
