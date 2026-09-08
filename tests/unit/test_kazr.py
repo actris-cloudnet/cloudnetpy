@@ -361,6 +361,34 @@ class TestLdrFloor:
         assert abs(floor + 20) < 0.3
 
 
+class TestLdrScatter:
+    def test_low_snr_bins_take_nearest_estimate(self):
+        rng = np.random.default_rng(0)
+        n = 5000
+        snr = ma.array(np.concatenate([rng.uniform(0, 10, n), rng.uniform(-10, 0, n)]))
+        # Near the floor only at high SNR; low SNR has only strongly
+        # depolarizing targets far above the floor
+        excess = ma.array(np.concatenate([rng.normal(0, 1, n), rng.normal(10, 1, n)]))
+        valid = np.ones(2 * n, dtype=bool)
+        scatter = kazr._ldr_scatter(excess, snr, valid)
+        assert np.all(np.isfinite(scatter))
+        assert np.allclose(scatter[snr < 0], scatter[(snr >= 0) & (snr < 5)][0])
+
+    def test_masked_snr_is_never_significant(self):
+        rng = np.random.default_rng(0)
+        snr = ma.array(rng.uniform(0, 5, 500), mask=np.arange(500) < 10)
+        excess = ma.array(rng.normal(0, 1, 500))
+        scatter = kazr._ldr_scatter(excess, snr, np.ones(500, dtype=bool))
+        assert np.all(np.isinf(scatter[:10]))
+        assert np.all(np.isfinite(scatter[10:]))
+
+    def test_no_estimate_when_nothing_near_floor(self):
+        snr = ma.array(np.full(500, 5.0))
+        excess = ma.array(np.full(500, 10.0))
+        scatter = kazr._ldr_scatter(excess, snr, np.ones(500, dtype=bool))
+        assert np.all(np.isinf(scatter))
+
+
 class TestStationaryClutter:
     @staticmethod
     def _kazr(v, width):

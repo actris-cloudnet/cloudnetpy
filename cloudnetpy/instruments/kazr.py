@@ -474,18 +474,29 @@ def _find_ldr_floor(
 def _ldr_scatter(
     excess: ma.MaskedArray, snr: ma.MaskedArray, valid: np.ndarray
 ) -> np.ndarray:
-    """Estimates noise scatter (std) of LDR around the floor per SNR bin."""
+    """Estimates noise scatter (std) of LDR around the floor per SNR bin.
+
+    Bins with too few samples near the floor (typically low SNR, where only
+    strongly depolarizing targets have a detectable cross-polar signal) take
+    the scatter of the nearest populated bin.
+    """
     edges = np.arange(-10, 60, 5.0)
-    scatter = np.full(excess.shape, np.inf)
     near_floor = valid & (np.abs(excess) < 3)
-    for lo, hi in pairwise(edges):
+    per_bin = np.full(len(edges) - 1, np.nan)
+    for i, (lo, hi) in enumerate(pairwise(edges)):
         in_bin = (snr >= lo) & (snr < hi)
         samples = excess[in_bin & near_floor].compressed()
         if samples.size < 100:
             continue
         mad = np.median(np.abs(samples - np.median(samples)))
-        scatter[in_bin] = 1.4826 * mad
-    return scatter
+        per_bin[i] = 1.4826 * mad
+    known = ~np.isnan(per_bin)
+    if not known.any():
+        return np.full(excess.shape, np.inf)
+    ind = np.arange(per_bin.size)
+    per_bin = np.interp(ind, ind[known], per_bin[known])
+    bin_ind = np.clip(np.digitize(ma.filled(snr, -np.inf), edges) - 1, 0, ind[-1])
+    return np.where(ma.getmaskarray(snr), np.inf, per_bin[bin_ind])
 
 
 def _parse_global_attribute(nc: netCDF4.Dataset, key: str) -> float | None:
