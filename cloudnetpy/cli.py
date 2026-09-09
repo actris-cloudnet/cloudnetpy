@@ -62,9 +62,11 @@ def run(args: argparse.Namespace, tmpdir: str, client: APIClient) -> None:
     process_categorize = "categorize" in args.products
     cat_filepath = None
     if is_arm and cat_products and not process_categorize:
-        # ARM categorize files are not in the data portal: use a local one
+        # Prefer a local file, then the portal; process only if neither exists
         if not ARM_PRODUCTS & set(args.products):
             cat_filepath = _find_existing_categorize(args)
+        if cat_filepath is None:
+            cat_filepath = _fetch_product(args, "categorize", client)
         process_categorize = cat_filepath is None
 
     # Instrument based products
