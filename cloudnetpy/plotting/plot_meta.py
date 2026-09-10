@@ -170,6 +170,15 @@ _CLABEL = {
         ("Unquantifiable", _COLORS["seaweed_roll"]),
         ("Undetected", _COLORS["skyblue"]),
     ),
+    "extinction_retrieval_status": (
+        ("_No cloud", _COLORS["white"]),
+        ("Liquid", _COLORS["lightblue"]),
+        ("Liquid, assumed radius", _COLORS["yellow"]),
+        ("Ice", _COLORS["lightsteel"]),
+        ("Ice, corrected atten.", _COLORS["skyblue"]),
+        ("Liquid & ice", _COLORS["darkpurple"]),
+        ("No retrieval", _COLORS["seaweed_roll"]),
+    ),
     "dominant_hydrometeor_type": (
         ("_Clear sky", _COLORS["white"]),
         ("Ice", _COLORS["lightgray"]),
@@ -683,6 +692,41 @@ ATTRIBUTES = {
         ),
         "dominant_hydrometeor_type": PlotMeta(
             clabel=_CLABEL["dominant_hydrometeor_type"],
+        ),
+        "extinction_liquid": PlotMeta(
+            cmap="Blues",
+            plot_range=(1e-4, 1e-1),
+            log_scale=True,
+        ),
+        "extinction_ice": PlotMeta(
+            plot_range=(1e-5, 1e-2),
+            log_scale=True,
+        ),
+        "extinction_retrieval_status": PlotMeta(
+            clabel=_CLABEL["extinction_retrieval_status"],
+        ),
+        "extinction_liquid_error": PlotMeta(
+            cmap="RdYlGn_r",
+            plot_range=(0, 5),
+        ),
+        "extinction_ice_error": PlotMeta(
+            cmap="RdYlGn_r",
+            plot_range=(0, 5),
+        ),
+        "optical_depth_error": PlotMeta(
+            zero_line=True,
+        ),
+        "optical_depth": PlotMeta(
+            plot_range=(0.02, 1000),
+            log_scale=True,
+        ),
+        "optical_depth_liquid": PlotMeta(
+            plot_range=(0.02, 1000),
+            log_scale=True,
+        ),
+        "optical_depth_ice": PlotMeta(
+            plot_range=(0.02, 1000),
+            log_scale=True,
         ),
     },
 }

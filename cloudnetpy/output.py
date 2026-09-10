@@ -195,6 +195,14 @@ def get_references(identifier: str | None = None, extra: list | None = None) -> 
             references += ", https://doi.org/10.1175/JAM2340.1"
         case "drizzle":
             references += ", https://doi.org/10.1175/JAM-2181.1"
+        case "optical-depth":
+            references += (
+                ", https://doi.org/10.1175/BAMS-88-6-883"
+                ", https://doi.org/10.1175/1520-0426(2002)019<0835:TROSCD>2.0.CO;2"
+                ", https://doi.org/10.1175/JAM2340.1"
+                ", https://doi.org/10.1175/JAM2543.1"
+                ", https://doi.org/10.5194/amt-13-5335-2020"
+            )
         case "epsilon-radar":
             references += (
                 ", https://doi.org/10.5194/amt-13-5335-2020"
@@ -472,6 +480,7 @@ def _get_identifier(short_id: str) -> str:
         "classification",
         "der",
         "ier",
+        "optical-depth",
         "classification-voodoo",
         "epsilon-radar",
     )
@@ -486,6 +495,8 @@ def _get_identifier(short_id: str) -> str:
         return "ice effective radius"
     if short_id == "der":
         return "droplet effective radius"
+    if short_id == "optical-depth":
+        return "cloud optical depth"
     if short_id == "epsilon-radar":
         return "dissipation rate of turbulent kinetic energy"
     return short_id

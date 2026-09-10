@@ -904,6 +904,8 @@ class Plot1D(Plot):
         units = self._convert_units()
         if self._plot_meta.mask_zeros:
             self._mask_zeros()
+        if self._is_log:
+            self._mask_non_positive()
         self._mark_gaps(figure_data)
         self._ax.plot(
             figure_data.time_including_gaps,
@@ -914,9 +916,11 @@ class Plot1D(Plot):
         )
         if self._plot_meta.moving_average:
             self._plot_moving_average(figure_data, hacky_freq_ind)
-        if self._plot_meta.zero_line:
+        if self._plot_meta.zero_line and not self._is_log:
             self._ax.axhline(0, color="black", alpha=0.5, label="_nolegend_")
         self._fill_between_data_gaps(figure_data)
+        if self._is_log:
+            self._ax.set_yscale("log")
         self.sub_plot.set_yax(ylabel=units, y_limits=self._get_y_limits())
         pos = self._ax.get_position()
         self._ax.set_position((pos.x0, pos.y0, pos.width * 0.965, pos.height))
@@ -1021,9 +1025,18 @@ class Plot1D(Plot):
             frameon=False,
         )
 
+    def _mask_non_positive(self) -> None:
+        self._data = ma.masked_less_equal(self._data, 0)
+        self._data_orig = ma.masked_less_equal(self._data_orig, 0)
+
     def _get_y_limits(self) -> tuple[float, float]:
         percent_gap = 0.05
         fallback = (-percent_gap, percent_gap)
+        if self._is_log:
+            if self._plot_meta.plot_range is not None:
+                return self._plot_meta.plot_range
+            valid = self._data[~ma.getmaskarray(self._data)]
+            return (valid.min() / 2, valid.max() * 2) if valid.size else (0.1, 10)
         if ma.all(self._data.mask):
             return fallback
         min_data = self._data.min()
@@ -1066,6 +1079,9 @@ class Plot1D(Plot):
     ) -> None:
         time = figure_data.time.copy()
         data = self._data_orig.copy()
+        if self._is_log:
+            # Average in log space so large values do not dominate
+            data = ma.log10(ma.masked_less_equal(data, 0))
 
         if figure_data.is_mwrpy_product() or self.sub_plot.variable.name in (
             "tb",
@@ -1097,6 +1113,8 @@ class Plot1D(Plot):
                 )
             else:
                 sma = self._calculate_moving_average(data1, time1, window=5)
+                if self._is_log:
+                    sma = 10**sma
             gap_time = _get_max_gap_in_minutes(figure_data)
             gaps = self._find_time_gap_indices(time1, max_gap_min=gap_time) + 1
 
