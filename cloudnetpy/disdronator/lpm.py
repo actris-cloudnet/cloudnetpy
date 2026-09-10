@@ -1,4 +1,5 @@
 import datetime
+import logging
 from collections import defaultdict
 from os import PathLike
 from typing import TypeAlias
@@ -114,7 +115,13 @@ def read_lpm_l1(
     au: int | None = None,
     altitude: float | None = None,
 ) -> DisdroL1:
-    area_nom = 4600 * 1000 / au if au is not None else 4560
+    if au is None:
+        area_nom = 4560.0
+        logging.warning(
+            "No AU parameter given, assuming nominal sampling area: %d mm2", area_nom
+        )
+    else:
+        area_nom = 4600.0 * 1000.0 / au
     area_eff = area_nom * (1 - D / (2 * LASER_WIDTH))
     data_raw = np.stack([l0[i] for i in range(81, 521)], axis=1).reshape(
         (len(time), len(D), len(V))
