@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.96.0 – 2026-09-10
+
+- Add cloud optical depth product (#137)
+- Recompute LWC after adjusting lidar-only cloud tops
+- Prefer local or portal categorize for ARM L2 products in CLI
+
 ## 1.95.7 – 2026-09-08
 
 - Keep low-SNR KAZR LDR in leakage correction
