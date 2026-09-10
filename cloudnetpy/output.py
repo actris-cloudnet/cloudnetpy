@@ -181,7 +181,7 @@ def get_references(identifier: str | None = None, extra: list | None = None) -> 
     match identifier:
         case "der":
             references += (
-                ", https://doi.org/10.1175/1520-0426(2002)019<0835:TROSCD>2.0.CO;2"
+                ", https://doi.org/10.1175/1520-0426(2002)019%3C0835:TROSCD%3E2.0.CO;2"
             )
         case "ier":
             references += (
@@ -198,7 +198,7 @@ def get_references(identifier: str | None = None, extra: list | None = None) -> 
         case "optical-depth":
             references += (
                 ", https://doi.org/10.1175/BAMS-88-6-883"
-                ", https://doi.org/10.1175/1520-0426(2002)019<0835:TROSCD>2.0.CO;2"
+                ", https://doi.org/10.1175/1520-0426(2002)019%3C0835:TROSCD%3E2.0.CO;2"
                 ", https://doi.org/10.1175/JAM2340.1"
                 ", https://doi.org/10.1175/JAM2543.1"
                 ", https://doi.org/10.5194/amt-13-5335-2020"

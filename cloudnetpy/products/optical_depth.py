@@ -104,7 +104,11 @@ def generate_optical_depth(
         attributes = _add_extinction_comments(attributes, od_source)
         output.update_attributes(od_source.data, attributes)
         output.save_product_file(
-            "optical-depth", od_source, output_file, uuid, copy_from_cat=("lwp",)
+            "optical-depth",
+            od_source,
+            output_file,
+            uuid,
+            copy_from_cat=("lwp", "lwp_error"),
         )
     return uuid
 
@@ -113,6 +117,9 @@ class OpticalDepthSource(DataSource):
     """Data container for cloud optical depth calculations."""
 
     def __init__(self, categorize_file: str | PathLike, assumed_der: float) -> None:
+        if not np.isfinite(assumed_der) or assumed_der <= 0:
+            msg = "Assumed droplet effective radius must be finite and positive."
+            raise ValueError(msg)
         super().__init__(categorize_file)
         self.categorize_file = categorize_file
         self.assumed_der = assumed_der
@@ -401,8 +408,8 @@ DEFINITIONS = {
         {
             0: """Clear sky: no cloud detected, optical depth is zero.""",
             1: """Reliable retrieval.""",
-            2: """Assumed droplet effective radius used in liquid layers
-                  not detected by the radar.""",
+            2: """Assumed droplet effective radius used where the radar-based
+                  retrieval was unavailable or outside the valid range.""",
             3: """Ice detected only by lidar in part of the profile: ice
                   optical depth is a lower bound.""",
             4: """Liquid water path exceeds the adiabatic liquid water path of
