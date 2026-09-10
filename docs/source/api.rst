@@ -112,6 +112,8 @@ generated.
 
 .. autofunction:: products.generate_ier
 
+.. autofunction:: products.generate_cod
+
 .. autofunction:: products.generate_mwr_single
 
 .. autofunction:: products.generate_mwr_multi
