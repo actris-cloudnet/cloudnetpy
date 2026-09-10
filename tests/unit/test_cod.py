@@ -5,8 +5,8 @@ from numpy import ma
 from numpy.testing import assert_array_almost_equal, assert_array_equal
 
 from cloudnetpy import constants
-from cloudnetpy.products import optical_depth
-from cloudnetpy.products.optical_depth import OpticalDepthSource, generate_optical_depth
+from cloudnetpy.products import cod
+from cloudnetpy.products.cod import OpticalDepthSource, generate_cod
 
 # category bits: droplet=1, falling=2, freezing=4
 DROPLET, FALLING, FREEZING = 1, 2, 4
@@ -304,12 +304,12 @@ class TestOpticalDepthSource:
         assert self.obj.data["optical_depth"][:][1] > 0
 
 
-def test_generate_optical_depth(categorize_file, tmp_path):
+def test_generate_cod(categorize_file, tmp_path):
     output_file = tmp_path / "optical_depth.nc"
-    uuid = generate_optical_depth(categorize_file, output_file)
+    uuid = generate_cod(categorize_file, output_file)
     with netCDF4.Dataset(output_file) as nc:
         assert nc.file_uuid == str(uuid)
-        assert nc.cloudnet_file_type == "optical-depth"
+        assert nc.cloudnet_file_type == "cod"
         for key in (
             "extinction_liquid",
             "extinction_ice",
@@ -355,7 +355,7 @@ def test_non_positive_lwp_gives_no_liquid_retrieval(categorize_file, tmp_path):
         nc.variables["lwp"][1] = 0.0
     try:
         output_file = tmp_path / "optical_depth.nc"
-        generate_optical_depth(categorize_file, output_file)
+        generate_cod(categorize_file, output_file)
         with netCDF4.Dataset(output_file) as nc:
             assert nc.variables["optical_depth"][:][1] is ma.masked
             assert nc.variables["optical_depth_retrieval_status"][:][1] == 5
@@ -369,7 +369,7 @@ def test_non_positive_lwp_gives_no_liquid_retrieval(categorize_file, tmp_path):
 
 def test_generate_without_mwr(categorize_file_no_mwr, tmp_path):
     output_file = tmp_path / "optical_depth.nc"
-    generate_optical_depth(categorize_file_no_mwr, output_file)
+    generate_cod(categorize_file_no_mwr, output_file)
     with netCDF4.Dataset(output_file) as nc:
         assert "lwp" not in nc.variables
         assert nc.variables["extinction_liquid"][:].mask.all()
@@ -381,16 +381,16 @@ def test_generate_without_mwr(categorize_file_no_mwr, tmp_path):
         assert status[1] == 5
 
 
-def test_generate_optical_depth_custom_der(categorize_file, tmp_path):
+def test_generate_cod_custom_der(categorize_file, tmp_path):
     output_file = tmp_path / "optical_depth.nc"
-    generate_optical_depth(categorize_file, output_file, assumed_der=5e-6)
+    generate_cod(categorize_file, output_file, assumed_der=5e-6)
     with netCDF4.Dataset(output_file) as nc:
         assert "5 um" in nc.variables["extinction_liquid"].comment
 
 
 def test_attributes_cover_all_variables(categorize_file, tmp_path):
     output_file = tmp_path / "optical_depth.nc"
-    generate_optical_depth(categorize_file, output_file)
+    generate_cod(categorize_file, output_file)
     with netCDF4.Dataset(output_file) as nc:
-        for key in optical_depth.OPTICAL_DEPTH_ATTRIBUTES:
+        for key in cod.OPTICAL_DEPTH_ATTRIBUTES:
             assert nc.variables[key].long_name

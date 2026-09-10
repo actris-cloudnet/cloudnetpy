@@ -112,7 +112,7 @@ generated.
 
 .. autofunction:: products.generate_ier
 
-.. autofunction:: products.generate_optical_depth
+.. autofunction:: products.generate_cod
 
 .. autofunction:: products.generate_mwr_single
 

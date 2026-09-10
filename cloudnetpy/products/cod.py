@@ -33,7 +33,7 @@ LWP_RATIO_LIMIT = 2.0
 ASSUMED_DER_REL_ERROR = 0.4
 
 
-def generate_optical_depth(
+def generate_cod(
     categorize_file: str | PathLike,
     output_file: str | PathLike,
     uuid: str | UUID | None = None,
@@ -63,8 +63,8 @@ def generate_optical_depth(
         UUID of the generated file.
 
     Examples:
-        >>> from cloudnetpy.products import generate_optical_depth
-        >>> generate_optical_depth('categorize.nc', 'optical_depth.nc')
+        >>> from cloudnetpy.products import generate_cod
+        >>> generate_cod('categorize.nc', 'cod.nc')
 
     References:
         Frisch, S., Shupe, M., Djalalova, I., Feingold, G., & Poellot, M. (2002).
@@ -104,7 +104,7 @@ def generate_optical_depth(
         attributes = _add_extinction_comments(attributes, od_source)
         output.update_attributes(od_source.data, attributes)
         output.save_product_file(
-            "optical-depth",
+            "cod",
             od_source,
             output_file,
             uuid,

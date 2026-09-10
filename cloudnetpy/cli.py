@@ -822,9 +822,7 @@ def _plot_l3(
 def _process_cat_product(product: str, categorize_file: str) -> str:
     output_file = categorize_file.replace("categorize", product)
     module = importlib.import_module("cloudnetpy.products")
-    getattr(module, f"generate_{product.replace('-', '_')}")(
-        categorize_file, output_file
-    )
+    getattr(module, f"generate_{product}")(categorize_file, output_file)
     logging.info("Processed %s: %s", product, output_file)
     return output_file
 
