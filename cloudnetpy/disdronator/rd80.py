@@ -1,4 +1,5 @@
 import datetime
+import logging
 from os import PathLike
 
 import numpy as np
@@ -35,7 +36,14 @@ def read_rd80(filename: str | PathLike) -> tuple[npt.NDArray, dict[str, npt.NDAr
     return np.array(time), convert_to_numpy(data)
 
 
-def read_rd80_l1(time: npt.NDArray, l0: dict[str, npt.NDArray]) -> DisdroL1:
+def read_rd80_l1(
+    time: npt.NDArray, l0: dict[str, npt.NDArray], altitude: float | None = None
+) -> DisdroL1:
+    if altitude is not None:
+        logging.warning(
+            "Altitude given but the correction for non-sea-level "
+            "conditions is not implemented for RD-80."
+        )
     return DisdroL1(
         diameter=D,
         diameter_spread=D_SPREAD,
@@ -48,6 +56,7 @@ def read_rd80_l1(time: npt.NDArray, l0: dict[str, npt.NDArray]) -> DisdroL1:
         area_nom=AREA_NOM,
         area_eff=None,
         data_raw=l0["n"],
+        altitude=altitude,
     )
 
 

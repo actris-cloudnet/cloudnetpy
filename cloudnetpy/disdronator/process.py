@@ -20,6 +20,7 @@ class DisdroL1:
     area_nom: float
     area_eff: npt.NDArray | None
     data_raw: npt.NDArray
+    altitude: float | None
 
 
 @dataclass
@@ -43,6 +44,7 @@ class DisdroL2:
     radar_refl: npt.NDArray
     energy_flux: npt.NDArray
     visibility: npt.NDArray
+    altitude: float | None
 
 
 def process_l2(l1: DisdroL1) -> DisdroL2:
@@ -112,7 +114,7 @@ def process_l2(l1: DisdroL1) -> DisdroL2:
         fall_velocity = ma.divide(
             np.sum(l1.velocity * spec, axis=2), np.sum(spec, axis=2)
         )
-        is_rain = make_rain_mask(l1.diameter, l1.velocity)
+        is_rain = make_rain_mask(l1.diameter, l1.velocity, altitude=l1.altitude)
         spec_rain = np.copy(spec)
         spec_rain[:, ~is_rain] = 0
         rain_amount = (
@@ -190,4 +192,5 @@ def process_l2(l1: DisdroL1) -> DisdroL2:
         radar_refl=radar_refl_db,
         energy_flux=energy_flux,
         visibility=visibility,
+        altitude=l1.altitude,
     )

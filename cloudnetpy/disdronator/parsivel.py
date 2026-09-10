@@ -522,7 +522,9 @@ def read_parsivel(
     return np.array(time), convert_to_numpy(data, {}, INT_KEYS, FLOAT_KEYS)
 
 
-def read_parsivel_l1(time: npt.NDArray, l0: dict[int, npt.NDArray]) -> DisdroL1:
+def read_parsivel_l1(
+    time: npt.NDArray, l0: dict[int, npt.NDArray], altitude: float | None = None
+) -> DisdroL1:
     if 93 not in l0:
         msg = "No raw data"
         raise ValueError(msg)
@@ -544,6 +546,7 @@ def read_parsivel_l1(time: npt.NDArray, l0: dict[int, npt.NDArray]) -> DisdroL1:
         area_nom=AREA_NOM,
         area_eff=AREA_EFF,
         data_raw=data_raw,
+        altitude=altitude,
     )
 
 

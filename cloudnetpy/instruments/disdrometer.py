@@ -71,7 +71,7 @@ def parsivel2nc(
             field_separator=field_separator,
             decimal_separator=decimal_separator,
         ),
-        read_parsivel_l1,
+        functools.partial(read_parsivel_l1, altitude=site_meta.get("altitude")),
         ATTRIBUTES,
         disdrometer_file,
         output_file,
@@ -117,7 +117,7 @@ def thies2nc(
     return _process_disdrometer(
         Thies,
         read_lpm,
-        functools.partial(read_lpm_l1, au=au),
+        functools.partial(read_lpm_l1, au=au, altitude=site_meta.get("altitude")),
         ATTRIBUTES,
         disdrometer_file,
         output_file,
@@ -160,7 +160,7 @@ def rd802nc(
     return _process_disdrometer(
         Rd80,
         read_rd80,
-        read_rd80_l1,
+        functools.partial(read_rd80_l1, altitude=site_meta.get("altitude")),
         RD80_ATTRIBUTES,
         input_file,
         output_file,

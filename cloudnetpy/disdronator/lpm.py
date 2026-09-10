@@ -109,7 +109,10 @@ def read_lpm(filename: str | PathLike) -> tuple[npt.NDArray, dict[int, npt.NDArr
 
 
 def read_lpm_l1(
-    time: npt.NDArray, l0: dict[int, npt.NDArray], au: int | None = None
+    time: npt.NDArray,
+    l0: dict[int, npt.NDArray],
+    au: int | None = None,
+    altitude: float | None = None,
 ) -> DisdroL1:
     area_nom = 4600 * 1000 / au if au is not None else 4560
     area_eff = area_nom * (1 - D / (2 * LASER_WIDTH))
@@ -128,6 +131,7 @@ def read_lpm_l1(
         area_nom=area_nom,
         area_eff=area_eff,
         data_raw=data_raw,
+        altitude=altitude,
     )
 
 
