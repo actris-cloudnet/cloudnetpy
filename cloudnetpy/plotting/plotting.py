@@ -904,6 +904,7 @@ class Plot1D(Plot):
         units = self._convert_units()
         if self._plot_meta.mask_zeros:
             self._mask_zeros()
+        is_zero = ~ma.getmaskarray(self._data) & (ma.filled(self._data, 1) == 0)
         if self._is_log:
             self._mask_non_positive()
         self._mark_gaps(figure_data)
@@ -921,10 +922,28 @@ class Plot1D(Plot):
         self._fill_between_data_gaps(figure_data)
         if self._is_log:
             self._ax.set_yscale("log")
-        self.sub_plot.set_yax(ylabel=units, y_limits=self._get_y_limits())
+        y_limits = self._get_y_limits()
+        self.sub_plot.set_yax(ylabel=units, y_limits=y_limits)
+        if self._is_log and np.any(is_zero):
+            self._plot_zeros(figure_data.time[is_zero], y_limits[0])
         pos = self._ax.get_position()
         self._ax.set_position((pos.x0, pos.y0, pos.width * 0.965, pos.height))
         self._plot_flags(figure_data)
+
+    def _plot_zeros(self, time: ndarray, y_min: float) -> None:
+        """Marks zero values along the bottom of a logarithmic axis."""
+        is_cloud_variable = self.sub_plot.variable.name.startswith("optical_depth")
+        self._ax.plot(
+            time,
+            np.full(len(time), y_min * 1.3),
+            color="lightgrey",
+            marker=".",
+            lw=0,
+            markersize=3,
+            label="Clear sky" if is_cloud_variable else "Zero",
+            zorder=_get_zorder("data"),
+        )
+        self._ax.legend(markerscale=3, numpoints=1, frameon=False)
 
     def _plot_flags(self, figure_data: FigureData) -> None:
         if figure_data.is_mwrpy_product():
