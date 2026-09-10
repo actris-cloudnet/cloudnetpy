@@ -147,8 +147,8 @@ class Lwc:
         self.height_agl = lwc_source.height_agl
         self.is_liquid = self._get_liquid()
         self.lwc_adiabatic = self._init_lwc_adiabatic()
-        self.lwc = self._adiabatic_lwc_to_lwc()
-        self._mask_rain()
+        self.lwc: npt.NDArray
+        self.update()
 
     def _get_liquid(self) -> npt.NDArray:
         category_bits = self.lwc_source.categorize_bits.category_bits
@@ -161,6 +161,11 @@ class Lwc:
             self.is_liquid,
         )
         return atmos_utils.calc_adiabatic_lwc(lwc_dz, self.height_agl)
+
+    def update(self) -> None:
+        """Recalculates LWC after the adiabatic profile has been modified."""
+        self.lwc = self._adiabatic_lwc_to_lwc()
+        self._mask_rain()
 
     def _adiabatic_lwc_to_lwc(self) -> npt.NDArray:
         """Initialises liquid water content (kg/m3).
@@ -203,6 +208,9 @@ class CloudAdjustor:
         self.echo = self._get_echo()
         self.status = self._init_status()
         self._adjust_cloud_tops(self._find_adjustable_clouds())
+        # Adjusted cloud tops change the adiabatic profile, so LWC is recomputed
+        lwc.update()
+        self.lwc = lwc.lwc
         self._mask_rain()
         self._mask_missing()
 

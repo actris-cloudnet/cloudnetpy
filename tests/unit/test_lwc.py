@@ -280,3 +280,16 @@ def test_append_data(lwc_source_file, key):
     lwc_source = LwcSource(lwc_source_file)
     lwc_source.append_results(LWC_OBJ.lwc, STATUS_OBJ.status, ERROR_OBJ.error)
     assert key in lwc_source.data.keys()
+
+
+def test_update_recomputes_lwc_after_top_adjustment():
+    lwc_source = LwcSourceObj()
+    lwc = Lwc(lwc_source)
+    assert lwc.lwc_adiabatic[0, 1] == 0
+    # pixel added at cloud top by CloudAdjustor
+    lwc.lwc_adiabatic[0, 1] = 1e-3
+    lwc.update()
+    assert lwc.lwc[0, 1] > 0
+    dz = np.diff(lwc_source.height_agl, prepend=0)
+    assert_array_almost_equal(ma.sum(lwc.lwc[0] * dz), lwc_source.lwp[0])
+    assert lwc.lwc[1].mask.all()  # rain profile stays masked
