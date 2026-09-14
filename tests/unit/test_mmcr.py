@@ -33,6 +33,7 @@ class TestMmcr2nc(Check):
             "v",
             "width",
             "SNR",
+            "ldr",
             "correction_bits",
             "time",
             "range",
@@ -99,6 +100,18 @@ class TestMmcr2nc(Check):
         for key in ("Zh", "v", "width"):
             mask = ma.getmaskarray(self.nc.variables[key][:])
             assert np.all(mask[ma.getmaskarray(snr)])
+
+    def test_ldr(self):
+        ldr = self.nc.variables["ldr"][:]
+        z = self.nc.variables["Zh"][:]
+        height = self.nc.variables["range"][:]
+        assert ma.count(ldr) > 0
+        assert np.all(ma.getmaskarray(ldr)[ma.getmaskarray(z)])
+        assert ma.min(ldr) >= mmcr.LDR_MIN
+        # Cross-talk floor removed: ice cloud should have very low ldr
+        ice = ldr[:, (height > 3000) & (height < 6000)]
+        assert ma.median(ice) < -25
+        assert "cross-talk floor" in self.nc.variables["ldr"].comment
 
     def test_other_mode(self, tmp_path):
         test_path = tmp_path / "ci.nc"
