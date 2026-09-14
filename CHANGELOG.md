@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.96.1 – 2026-09-14
+
+- Implement correction for disdrometers in non-sea-level conditions
+- Add cross-talk corrected depolarization ratio to MMCR reader
+- Output warning if AU parameter is not given in LPM processing
+
 ## 1.96.0 – 2026-09-10
 
 - Add cloud optical depth product (#137)
