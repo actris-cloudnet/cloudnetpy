@@ -3,20 +3,20 @@
 import math
 from typing import Final
 
-# Triple point of water
 T0: Final = 273.16
+"""Triple point of water"""
 
-# Freezing point of water at standard pressure (K), i.e. 0 degrees Celsius
 T_FREEZING: Final = 273.15
+"""Freezing point of water at standard pressure (K), i.e. 0 degrees Celsius"""
 
-# Specific gas constant for dry  air (J kg-1 K-1)
 RS: Final = 287.058
+"""Specific gas constant for dry  air (J kg-1 K-1)"""
 
-# ice density kg m-3
 RHO_ICE: Final = 917
+"""Ice density (kg m-3)"""
 
-# liquid water density kg m-3
 RHO_WATER: Final = 1000
+"""Liquid water density (kg m-3)"""
 
 # other
 SPEED_OF_LIGHT: Final = 299_792_458
@@ -36,11 +36,11 @@ MM_H_TO_M_S: Final = 1 / M_S_TO_MM_H
 GHZ_TO_HZ: Final = 1e9
 HZ_TO_GHZ: Final = 1e-9
 HPA_TO_PA: Final = 100
-# Integrated water vapour: cm of liquid water equivalent to kg m-2
 CM_TO_KG_M2: Final = 10
+"""Liquid water equivalent cm to kg m-2"""
 KM_H_TO_M_S: Final = 1000 / SEC_IN_HOUR
 TWO_WAY: Final = 2
 G: Final = 9.80665
 
-# Natural logarithm of a power ratio to decibels
 LN_TO_DB: Final = 10 / math.log(10)
+"""Natural logarithm of a power ratio to decibels"""
