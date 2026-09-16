@@ -14,6 +14,9 @@ RS: Final = 287.058
 # ice density kg m-3
 RHO_ICE: Final = 917
 
+# liquid water density kg m-3
+RHO_WATER: Final = 1000
+
 # Standard atmospheric pressure at sea level Pa
 P0: Final = 1013_25
 

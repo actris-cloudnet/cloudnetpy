@@ -8,7 +8,7 @@ import numpy.typing as npt
 from numpy import ma
 from scipy.special import gamma
 
-from cloudnetpy import output, utils
+from cloudnetpy import constants, output, utils
 from cloudnetpy.metadata import MetaData
 from cloudnetpy.products.drizzle_error import get_drizzle_error
 from cloudnetpy.products.drizzle_tools import (
@@ -122,13 +122,12 @@ class DrizzleProducts:
 
     def _calc_lwc(self) -> npt.NDArray:
         """Calculates drizzle liquid water content (kg m-3)."""
-        rho_water = 1000
         dia, mu, s = (self._params.get(key) for key in ("Do", "mu", "S"))
         dia = ma.array(dia)
         mu = ma.array(mu)
         s = ma.array(s)
         gamma_ratio = gamma(4 + mu) / gamma(3 + mu) / (3.67 + mu)
-        return rho_water / 3 * self._data.beta * s * dia * gamma_ratio
+        return constants.RHO_WATER / 3 * self._data.beta * s * dia * gamma_ratio
 
     def _calc_lwf(self, lwc_in: npt.NDArray) -> npt.NDArray:
         """Calculates drizzle liquid water flux."""

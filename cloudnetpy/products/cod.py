@@ -16,9 +16,6 @@ from cloudnetpy.products.iwc import IwcSource
 from cloudnetpy.products.lwc import CloudAdjustor, Lwc, LwcError, LwcSource
 from cloudnetpy.products.product_tools import IceClassification
 
-# Density of liquid water (kg m-3)
-RHO_WATER = 1000
-
 # Droplet effective radius (m) assumed when it cannot be retrieved from radar
 DEFAULT_ASSUMED_DER = 10e-6
 
@@ -145,7 +142,7 @@ class OpticalDepthSource(DataSource):
         der_rel_error_filled = ma.filled(der_rel_error, ASSUMED_DER_REL_ERROR).copy()
         der_rel_error_filled[self.is_der_assumed] = ASSUMED_DER_REL_ERROR
         # Includes pixels added at lidar-only cloud tops by the lwc retrieval
-        extinction = 3 * lwc / (2 * RHO_WATER * der_filled)
+        extinction = 3 * lwc / (2 * constants.RHO_WATER * der_filled)
         rel_error = utils.l2norm(ma.filled(lwc_rel_error, 0), der_rel_error_filled)
         self._rel_error["liquid"] = ma.masked_where(
             ma.getmaskarray(extinction), rel_error

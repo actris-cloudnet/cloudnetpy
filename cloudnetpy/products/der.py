@@ -10,7 +10,7 @@ import numpy as np
 import numpy.typing as npt
 from numpy import ma
 
-from cloudnetpy import output, utils
+from cloudnetpy import constants, output, utils
 from cloudnetpy.categorize import atmos_utils
 from cloudnetpy.datasource import DataSource
 from cloudnetpy.exceptions import InvalidSourceFileError
@@ -131,8 +131,6 @@ class DerSource(DataSource):
     def append_der(self) -> None:
         """Estimate liquid droplet effective radius using Frisch et al. 2002."""
         params = self.parameters
-        rho_l = 1000  # density of liquid water (kg m-3)
-
         var_x = params.sigma_x * params.sigma_x
 
         Z = self.getvar("Z")
@@ -183,7 +181,7 @@ class DerSource(DataSource):
 
             # der scaled formula (6)
             A = Z[ind_t, idx_layer] ** (1 / 6) / (2 * lwp[ind_t] ** (1 / 3))
-            B = (np.pi * rho_l / 6) ** (1 / 3)
+            B = (np.pi * constants.RHO_WATER / 6) ** (1 / 3)
             C = integral ** (1 / 3) * ma.exp(-2 * var_x)
             der_scaled[ind_t, idx_layer] = 1.0e-3 * A * B * C  # μm => mm
 

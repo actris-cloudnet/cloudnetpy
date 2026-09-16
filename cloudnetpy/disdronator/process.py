@@ -4,6 +4,7 @@ import numpy as np
 import numpy.typing as npt
 from numpy import ma
 
+from cloudnetpy import constants
 from cloudnetpy.disdronator.utils import make_rain_mask
 
 
@@ -66,7 +67,6 @@ def process_l2(l1: DisdroL1) -> DisdroL2:
     area_m2 = area_mm2 * 1e-6
     diameter_m = l1.diameter / 1000
     interval_h = interval / 3600
-    rho_w = 1e-6  # kg mm-3
 
     if spec.ndim == 2:
         number_concentration = spec / (
@@ -81,10 +81,10 @@ def process_l2(l1: DisdroL1) -> DisdroL2:
         energy_flux = (
             np.pi
             / 12
-            * rho_w
+            * constants.RHO_WATER
             * np.sum(
                 spec
-                * l1.diameter**3
+                * diameter_m**3
                 * l1.velocity**2
                 / (area_m2 * interval_h[:, np.newaxis]),
                 axis=1,
@@ -138,10 +138,10 @@ def process_l2(l1: DisdroL1) -> DisdroL2:
         energy_flux = (
             np.pi
             / 12
-            * rho_w
+            * constants.RHO_WATER
             * np.sum(
                 spec_rain
-                * l1.diameter[:, np.newaxis] ** 3
+                * diameter_m[:, np.newaxis] ** 3
                 * l1.velocity**2
                 / (area_m2[:, np.newaxis] * interval_h[:, np.newaxis, np.newaxis]),
                 axis=(1, 2),
