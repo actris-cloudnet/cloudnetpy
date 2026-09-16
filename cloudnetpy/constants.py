@@ -9,9 +9,6 @@ T0: Final = 273.16
 # Freezing point of water at standard pressure (K), i.e. 0 degrees Celsius
 T_FREEZING: Final = 273.15
 
-# Ratio of the molecular weight of water vapor to dry air
-MW_RATIO: Final = 0.62198
-
 # Specific gas constant for dry  air (J kg-1 K-1)
 RS: Final = 287.058
 
@@ -20,9 +17,6 @@ RHO_ICE: Final = 917
 
 # liquid water density kg m-3
 RHO_WATER: Final = 1000
-
-# Standard atmospheric pressure at sea level Pa
-P0: Final = 1013_25
 
 # other
 SPEED_OF_LIGHT: Final = 299_792_458
@@ -42,7 +36,6 @@ MM_H_TO_M_S: Final = 1 / M_S_TO_MM_H
 GHZ_TO_HZ: Final = 1e9
 HZ_TO_GHZ: Final = 1e-9
 HPA_TO_PA: Final = 100
-PA_TO_HPA: Final = 1 / HPA_TO_PA
 KM_H_TO_M_S: Final = 1000 / SEC_IN_HOUR
 TWO_WAY: Final = 2
 G: Final = 9.80665
