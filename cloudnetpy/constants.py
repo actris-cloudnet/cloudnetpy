@@ -12,8 +12,10 @@ RHO_ICE: Final = 917
 RHO_WATER: Final = 1000
 """Liquid water density (kg m-3)"""
 
-# other
 SPEED_OF_LIGHT: Final = 299_792_458
+"""Speed of light in vacuum (m s-1)"""
+
+# Unit conversions
 SEC_IN_MINUTE: Final = 60
 SEC_IN_HOUR: Final = 3600
 SEC_IN_DAY: Final = 86400
@@ -30,10 +32,10 @@ MM_H_TO_M_S: Final = 1 / M_S_TO_MM_H
 GHZ_TO_HZ: Final = 1e9
 HZ_TO_GHZ: Final = 1e-9
 HPA_TO_PA: Final = 100
+KM_H_TO_M_S: Final = 1000 / SEC_IN_HOUR
+
 CM_TO_KG_M2: Final = 10
 """Liquid water equivalent cm to kg m-2"""
-KM_H_TO_M_S: Final = 1000 / SEC_IN_HOUR
-TWO_WAY: Final = 2
 
 LN_TO_DB: Final = 10 / math.log(10)
 """Natural logarithm of a power ratio to decibels"""

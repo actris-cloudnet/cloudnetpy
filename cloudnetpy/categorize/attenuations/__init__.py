@@ -31,7 +31,7 @@ def calc_two_way_attenuation(
     """Calculates two-way attenuation (dB) for given specific attenuation
     (dB km-1) and height above ground level (m).
     """
-    path_lengths = path_lengths_from_ground(height_agl) * con.M_TO_KM  # km
+    path_lengths = path_lengths_from_ground(height_agl) * con.M_TO_KM
     one_way_attenuation = specific_attenuation * path_lengths
     accumulated_attenuation = ma.cumsum(one_way_attenuation, axis=1)
-    return accumulated_attenuation * con.TWO_WAY
+    return accumulated_attenuation * 2  # two way
