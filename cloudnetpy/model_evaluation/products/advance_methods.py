@@ -5,6 +5,7 @@ import scipy.stats
 from numpy import ma
 
 import cloudnetpy.utils as cl_tools
+from cloudnetpy.constants import T_FREEZING
 from cloudnetpy.model_evaluation.model_metadata import MODEL_PREFIX
 from cloudnetpy.model_evaluation.products.model_products import ModelManager
 from cloudnetpy.model_evaluation.products.observation_products import ObservationManager
@@ -49,7 +50,7 @@ class AdvanceProductMethods:
         cf = self.getvar_from_object("cf")
         h = self.getvar_from_object("h")
         temperature = self._model_obj.getvar("temperature")
-        t_screened = self.remove_extra_levels(temperature - 273.15)
+        t_screened = self.remove_extra_levels(temperature - T_FREEZING)
         iwc, lwc = (self._model_obj.get_water_content(var) for var in ["iwc", "lwc"])
         coeffs = self.set_frequency_parameters()
         z_sen = self.fit_z_sensitivity(h)

@@ -9,6 +9,7 @@ import numpy as np
 from numpy import ma
 
 from cloudnetpy import output
+from cloudnetpy.constants import MM_H_TO_M_S, MM_TO_M
 from cloudnetpy.exceptions import ValidTimeStampError
 from cloudnetpy.instruments import instruments
 from cloudnetpy.instruments.cloudnet_instrument import CSVFile
@@ -122,11 +123,9 @@ class FD12P(CSVFile):
 
     def convert_units(self) -> None:
         precipitation_rate = self.data["precipitation_rate"][:]
-        self.data["precipitation_rate"].data = (
-            precipitation_rate / 3600 / 1000
-        )  # mm/h -> m/s
+        self.data["precipitation_rate"].data = precipitation_rate * MM_H_TO_M_S
         for key in ("precipitation_amount", "snowfall_amount"):
-            self.data[key].data = self.data[key][:] / 1000  # mm -> m
+            self.data[key].data = self.data[key][:] * MM_TO_M
 
     def screen_all_masked(self) -> None:
         is_valid = np.ones_like(self.data["time"][:], dtype=np.bool_)

@@ -14,7 +14,13 @@ from numpy import ma
 
 from cloudnetpy import output
 from cloudnetpy.cloudnetarray import CloudnetArray
-from cloudnetpy.constants import HPA_TO_PA, MM_H_TO_M_S, SEC_IN_HOUR
+from cloudnetpy.constants import (
+    HPA_TO_PA,
+    MM_H_TO_M_S,
+    MM_TO_M,
+    SEC_IN_HOUR,
+    SEC_IN_MINUTE,
+)
 from cloudnetpy.exceptions import ValidTimeStampError
 from cloudnetpy.instruments import instruments
 from cloudnetpy.instruments.cloudnet_instrument import CSVFile
@@ -147,7 +153,9 @@ class WS(CSVFile):
         if "rainfall_rate" not in self.data:
             return
         rainfall_rate = self.data["rainfall_rate"][:]
-        self.data["rainfall_rate"].data = rainfall_rate / 60 / 1000  # mm/min -> m/s
+        self.data["rainfall_rate"].data = (
+            rainfall_rate * MM_TO_M / SEC_IN_MINUTE
+        )  # mm/min -> m/s
 
     def convert_pressure(self) -> None:
         if "air_pressure" not in self.data:
@@ -249,9 +257,7 @@ class PalaiseauWS(WS):
             self.data[key] = CloudnetArray(array_masked, key)
 
     def convert_rainfall_amount(self) -> None:
-        self.data["rainfall_amount"].data = (
-            self.data["rainfall_amount"][:] / 1000
-        )  # mm -> m
+        self.data["rainfall_amount"].data = self.data["rainfall_amount"][:] * MM_TO_M
 
     def _validate_header(self, header: list[str]) -> None:
         column_titles = [row for row in header if "Col." in row]
@@ -710,7 +716,7 @@ class LimassolWS(WS):
     def convert_rainfall_rate(self) -> None:
         rainfall_rate = self.data["rainfall_rate"][:]
         self.data["rainfall_rate"].data = (
-            rainfall_rate / (10 * 60) / 1000
+            rainfall_rate * MM_TO_M / (10 * SEC_IN_MINUTE)
         )  # mm/(10 min) -> m/s
 
 

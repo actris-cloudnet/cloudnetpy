@@ -6,6 +6,7 @@ from uuid import UUID
 import numpy as np
 
 from cloudnetpy import output
+from cloudnetpy.constants import MM_H_TO_M_S, MM_TO_M
 from cloudnetpy.exceptions import ValidTimeStampError
 from cloudnetpy.instruments import instruments
 from cloudnetpy.instruments.cloudnet_instrument import CSVFile
@@ -165,7 +166,5 @@ class RainEH3(CSVFile):
 
     def convert_units(self) -> None:
         rainfall_rate = self.data["rainfall_rate"][:]
-        self.data["rainfall_rate"].data = rainfall_rate / 3600 / 1000  # mm/h -> m/s
-        self.data["rainfall_amount"].data = (
-            self.data["rainfall_amount"][:] / 1000
-        )  # mm -> m
+        self.data["rainfall_rate"].data = rainfall_rate * MM_H_TO_M_S
+        self.data["rainfall_amount"].data = self.data["rainfall_amount"][:] * MM_TO_M

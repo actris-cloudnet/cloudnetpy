@@ -9,6 +9,7 @@ import netCDF4
 import numpy as np
 import numpy.typing as npt
 
+from cloudnetpy.constants import M_S_TO_MM_H
 from cloudnetpy.disdronator.process import DisdroL1
 from cloudnetpy.disdronator.utils import convert_to_numpy
 
@@ -434,7 +435,7 @@ def _read_parsivel2nc(filename: str | PathLike) -> ParsivelOutput:
         time = cftime.num2pydate(nc["time"][:], units=nc["time"].units)
         data = {num: nc[key][:] for key, num in PARSIVEL2NC_KEYS.items()}
         # The data logger converts mm/h to m/s, so we need to revert this.
-        data[1] *= 3600 * 1000
+        data[1] *= M_S_TO_MM_H
         # The data logger attempts to convert temperature from °C to K, but this
         # is incorrectly done only for the first value.
         data[12][0] -= 273

@@ -455,17 +455,17 @@ class Plot:
 
     def _convert_units(self) -> str:
         multiply, add = "multiply", "add"
-        k_to_c = (add, -273.15, "\u00b0C")
+        k_to_c = (add, -con.T_FREEZING, "\u00b0C")
         units_conversion = {
-            "rainfall_rate": (multiply, 3600000, "mm h$^{-1}$"),
-            "snowfall_rate": (multiply, 3600000, "mm h$^{-1}$"),
-            "precipitation_rate": (multiply, 3600000, "mm h$^{-1}$"),
+            "rainfall_rate": (multiply, con.M_S_TO_MM_H, "mm h$^{-1}$"),
+            "snowfall_rate": (multiply, con.M_S_TO_MM_H, "mm h$^{-1}$"),
+            "precipitation_rate": (multiply, con.M_S_TO_MM_H, "mm h$^{-1}$"),
             "air_pressure": (multiply, 0.01, "hPa"),
             "relative_humidity": (multiply, 100, "%"),
             "rh": (multiply, 100, "%"),
-            "rainfall_amount": (multiply, 1000, "mm"),
-            "snowfall_amount": (multiply, 1000, "mm"),
-            "precipitation_amount": (multiply, 1000, "mm"),
+            "rainfall_amount": (multiply, con.M_TO_MM, "mm"),
+            "snowfall_amount": (multiply, con.M_TO_MM, "mm"),
+            "precipitation_amount": (multiply, con.M_TO_MM, "mm"),
             "air_temperature": k_to_c,
             "temperature": k_to_c,
             "Tw": k_to_c,
@@ -476,8 +476,8 @@ class Plot:
             "transmitter_temperature": k_to_c,
             "receiver_temperature": k_to_c,
             "pc_temperature": k_to_c,
-            "r_accum_RT": (multiply, 1000, "mm"),
-            "r_accum_NRT": (multiply, 1000, "mm"),
+            "r_accum_RT": (multiply, con.M_TO_MM, "mm"),
+            "r_accum_NRT": (multiply, con.M_TO_MM, "mm"),
             "cloud_top_height_agl": (multiply, con.M_TO_KM, "Height (km AGL)"),
         }
         conversion_method, conversion, units = units_conversion.get(

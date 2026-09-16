@@ -8,7 +8,7 @@ from cloudnetpy import output, utils
 from cloudnetpy.categorize.disdrometer import DataSource
 from cloudnetpy.categorize.model import Model
 from cloudnetpy.cloudnetarray import CloudnetArray
-from cloudnetpy.constants import T0
+from cloudnetpy.constants import MM_H_TO_M_S, T0
 from cloudnetpy.metadata import COMMON_ATTRIBUTES, MetaData
 
 
@@ -49,7 +49,7 @@ def generate_iwc_from_weather_radar(
     z_rain = ma.masked_where(is_noise | ~is_rain, z)
     rainfall_rate = (utils.db2lin(z_rain) / 200) ** 0.625  # Marshall-Palmer
     output_data["rainfall_rate"] = CloudnetArray(
-        rainfall_rate * 1e-3 / 3600, "rainfall_rate"
+        rainfall_rate * MM_H_TO_M_S, "rainfall_rate"
     )
 
     z_ice = ma.masked_where(is_noise | is_rain | ~is_ice, z)

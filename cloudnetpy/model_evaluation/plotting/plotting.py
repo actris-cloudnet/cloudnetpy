@@ -18,6 +18,7 @@ from mpl_toolkits.axes_grid1 import make_axes_locatable
 from numpy import ma
 
 import cloudnetpy.model_evaluation.plotting.plot_tools as p_tools
+from cloudnetpy.constants import T_FREEZING
 from cloudnetpy.model_evaluation.plotting.plot_meta import ATTRIBUTES, PlotMeta
 from cloudnetpy.model_evaluation.statistics.statistical_methods import DayStatistics
 from cloudnetpy.plotting.plotting import (
@@ -205,7 +206,7 @@ def plot_colormesh(
         data = data.T
     vmin, vmax = variable_info.plot_range
     if variable_info.clabel == "\u00b0C":
-        data = data - 273.15
+        data = data - T_FREEZING
     if variable_info.plot_scale == "logarithmic":
         data, vmin, vmax = lin2log(data, vmin, vmax)
     cmap = plt.get_cmap(variable_info.cbar, 22)

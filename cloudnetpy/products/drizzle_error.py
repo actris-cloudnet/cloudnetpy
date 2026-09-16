@@ -3,6 +3,7 @@ import numpy.typing as npt
 from numpy import ma
 
 from cloudnetpy import utils
+from cloudnetpy.constants import LN_TO_DB
 from cloudnetpy.products.drizzle_tools import DrizzleSolver, DrizzleSource
 
 MU_ERROR = 0.07
@@ -172,18 +173,15 @@ def _stack_errors(
     return error
 
 
-COR = 10 / np.log(10)
-
-
 def db2lin(x_in: npt.NDArray) -> ma.MaskedArray:
     x = ma.copy(x_in)
     threshold = 100
     x[x > threshold] = threshold
-    return ma.exp(x / COR) - 1
+    return ma.exp(x / LN_TO_DB) - 1
 
 
 def lin2db(x_in: npt.NDArray) -> ma.MaskedArray:
     x = ma.copy(x_in)
     threshold = -0.9
     x[x < threshold] = threshold
-    return ma.log(x + 1) * COR
+    return ma.log(x + 1) * LN_TO_DB

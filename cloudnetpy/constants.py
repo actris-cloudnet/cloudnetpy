@@ -1,9 +1,13 @@
 """Constants used in Cloudnet processing."""
 
+import math
 from typing import Final
 
 # Triple point of water
 T0: Final = 273.16
+
+# Freezing point of water at standard pressure (K), i.e. 0 degrees Celsius
+T_FREEZING: Final = 273.15
 
 # Ratio of the molecular weight of water vapor to dry air
 MW_RATIO: Final = 0.62198
@@ -42,3 +46,6 @@ PA_TO_HPA: Final = 1 / HPA_TO_PA
 KM_H_TO_M_S: Final = 1000 / SEC_IN_HOUR
 TWO_WAY: Final = 2
 G: Final = 9.80665
+
+# Natural logarithm of a power ratio to decibels
+LN_TO_DB: Final = 10 / math.log(10)

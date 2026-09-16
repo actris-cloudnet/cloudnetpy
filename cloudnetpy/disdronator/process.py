@@ -64,9 +64,9 @@ def process_l2(l1: DisdroL1) -> DisdroL2:
     area_mm2 = (
         l1.area_eff if l1.area_eff is not None else np.repeat(l1.area_nom, n_diameter)
     )
-    area_m2 = area_mm2 * 1e-6
-    diameter_m = l1.diameter / 1000
-    interval_h = interval / 3600
+    area_m2 = area_mm2 * constants.MM2_TO_M2
+    diameter_m = l1.diameter * constants.MM_TO_M
+    interval_h = interval / constants.SEC_IN_HOUR
 
     if spec.ndim == 2:
         number_concentration = spec / (
