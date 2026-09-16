@@ -7,7 +7,6 @@ from os import PathLike
 import numpy as np
 import numpy.typing as npt
 from numpy import ma
-from scipy import constants
 
 from cloudnetpy import utils
 from cloudnetpy.categorize.attenuations import RadarAttenuation
@@ -438,8 +437,7 @@ class Radar(DataSource):
 
 
 def _prf_to_folding_velocity(prf: npt.NDArray, radar_frequency: float) -> npt.NDArray:
-    ghz_to_hz = 1e9
     if len(prf) != 1:
         msg = "Unable to determine folding velocity"
         raise RuntimeError(msg)
-    return prf[0] * constants.c / (4 * radar_frequency * ghz_to_hz)
+    return prf[0] * SPEED_OF_LIGHT / (4 * radar_frequency * GHZ_TO_HZ)

@@ -7,12 +7,12 @@ import doppy.netcdf
 import netCDF4
 import numpy as np
 import numpy.typing as npt
-import scipy.constants
 from doppy.product.turbulence import HorizontalWind, Options, Turbulence, VerticalWind
 from scipy.interpolate import LinearNDInterpolator, NearestNDInterpolator
 
 import cloudnetpy
 from cloudnetpy import output
+from cloudnetpy.constants import SPEED_OF_LIGHT
 from cloudnetpy.exceptions import ValidTimeStampError
 from cloudnetpy.utils import get_time, get_uuid
 
@@ -170,9 +170,8 @@ def _get_options(doppler_lidar_file: str | PathLike) -> Options:
 
 
 def _infer_pulse_repetition_frequency(range_: npt.NDArray[np.float64]) -> float:
-    c = scipy.constants.c
     dist = range_.max() - range_.min()
-    round_trip_time = 2 * dist / c
+    round_trip_time = 2 * dist / SPEED_OF_LIGHT
 
     T_LOW = 1 / 10_000  # Halo XR instruments operate on lower frequency
     T_HIGH = 1 / 15_000  # Rest should operate on higher frequency

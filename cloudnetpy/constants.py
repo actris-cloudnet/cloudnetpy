@@ -25,7 +25,7 @@ RHO_WATER: Final = 1000
 P0: Final = 1013_25
 
 # other
-SPEED_OF_LIGHT: Final = 3.0e8
+SPEED_OF_LIGHT: Final = 299_792_458
 SEC_IN_MINUTE: Final = 60
 SEC_IN_HOUR: Final = 3600
 SEC_IN_DAY: Final = 86400
