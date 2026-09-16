@@ -14,6 +14,7 @@ from typing import Literal, TypeVar
 import netCDF4
 import numpy as np
 import numpy.typing as npt
+from atmoslib.constants import G
 from numpy import ma
 from scipy import ndimage, stats
 from scipy import ndimage as ndi
@@ -25,7 +26,7 @@ from scipy.interpolate import (
 )
 
 from cloudnetpy.cloudnetarray import CloudnetArray
-from cloudnetpy.constants import SEC_IN_DAY, SEC_IN_HOUR, SEC_IN_MINUTE, G
+from cloudnetpy.constants import SEC_IN_DAY, SEC_IN_HOUR, SEC_IN_MINUTE
 from cloudnetpy.exceptions import ValidTimeStampError
 
 

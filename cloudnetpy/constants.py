@@ -3,14 +3,8 @@
 import math
 from typing import Final
 
-T0: Final = 273.16
-"""Triple point of water"""
-
 T_FREEZING: Final = 273.15
 """Freezing point of water at standard pressure (K), i.e. 0 degrees Celsius"""
-
-RS: Final = 287.058
-"""Specific gas constant for dry  air (J kg-1 K-1)"""
 
 RHO_ICE: Final = 917
 """Ice density (kg m-3)"""
@@ -40,7 +34,6 @@ CM_TO_KG_M2: Final = 10
 """Liquid water equivalent cm to kg m-2"""
 KM_H_TO_M_S: Final = 1000 / SEC_IN_HOUR
 TWO_WAY: Final = 2
-G: Final = 9.80665
 
 LN_TO_DB: Final = 10 / math.log(10)
 """Natural logarithm of a power ratio to decibels"""

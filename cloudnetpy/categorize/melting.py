@@ -2,13 +2,13 @@
 
 import numpy as np
 import numpy.typing as npt
+from atmoslib.constants import T0
 from numpy import ma
 from scipy.ndimage import gaussian_filter
 
 from cloudnetpy import utils
 from cloudnetpy.categorize import droplet
 from cloudnetpy.categorize.containers import ClassData
-from cloudnetpy.constants import T0
 
 
 def find_melting_layer(obs: ClassData, *, smooth: bool = True) -> npt.NDArray:

@@ -4,12 +4,12 @@ import logging
 
 import numpy as np
 import numpy.typing as npt
+from atmoslib.constants import T0
 from numpy import ma
 from scipy.interpolate import interp1d
 
 from cloudnetpy import utils
 from cloudnetpy.categorize.containers import ClassData
-from cloudnetpy.constants import T0
 
 
 def find_freezing_region(obs: ClassData, melting_layer: npt.NDArray) -> npt.NDArray:

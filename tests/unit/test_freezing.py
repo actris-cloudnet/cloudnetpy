@@ -4,7 +4,7 @@ from numpy import ma
 from numpy.testing import assert_array_equal
 
 from cloudnetpy.categorize import freezing
-from cloudnetpy.constants import T0
+from atmoslib.constants import T0
 
 
 def test_find_t0_alt():

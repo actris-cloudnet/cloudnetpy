@@ -2,11 +2,11 @@
 
 import numpy as np
 import numpy.typing as npt
+from atmoslib.constants import T0
 from numpy import ma
 
 from cloudnetpy.categorize import atmos_utils
 from cloudnetpy.categorize.containers import ClassData
-from cloudnetpy.constants import T0
 
 
 def find_falling_hydrometeors(

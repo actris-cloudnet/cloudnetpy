@@ -3,9 +3,9 @@ from os import PathLike
 
 import numpy as np
 import numpy.typing as npt
+from atmoslib.constants import RS
 from numpy import ma
 
-from cloudnetpy.constants import RS
 from cloudnetpy.datasource import DataSource
 from cloudnetpy.exceptions import ModelDataError
 from cloudnetpy.model_evaluation.model_metadata import (

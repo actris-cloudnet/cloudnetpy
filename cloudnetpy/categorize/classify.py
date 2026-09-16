@@ -1,5 +1,6 @@
 import numpy as np
 import numpy.typing as npt
+from atmoslib.constants import T0
 from numpy import ma
 from scipy import ndimage
 
@@ -18,7 +19,6 @@ from cloudnetpy.categorize.containers import (
     ClassificationResult,
     Observations,
 )
-from cloudnetpy.constants import T0
 from cloudnetpy.products.product_tools import CategoryBits, QualityBits
 
 

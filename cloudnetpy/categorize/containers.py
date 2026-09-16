@@ -4,10 +4,11 @@ from os import PathLike
 
 import numpy as np
 import numpy.typing as npt
+from atmoslib.constants import T0
 from numpy import ma
 
 from cloudnetpy import utils
-from cloudnetpy.constants import MM_H_TO_M_S, T0
+from cloudnetpy.constants import MM_H_TO_M_S
 from cloudnetpy.products.product_tools import CategoryBits
 
 from .disdrometer import Disdrometer

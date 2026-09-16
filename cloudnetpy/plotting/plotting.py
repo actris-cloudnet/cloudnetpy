@@ -12,6 +12,7 @@ import matplotlib.pyplot as plt
 import netCDF4
 import numpy as np
 import numpy.typing as npt
+from atmoslib.constants import G
 from matplotlib import rcParams
 from matplotlib.axes import Axes
 from matplotlib.colorbar import Colorbar
@@ -264,7 +265,7 @@ class FigureData:
             "sfc_geopotential" in self.file.variables
             and "gdas1" not in self.file.source.lower()  # uncertain unit in gdas1
         ):
-            return np.mean(self.file.variables["sfc_geopotential"][:]) / con.G
+            return np.mean(self.file.variables["sfc_geopotential"][:]) / G
         pressure = ma.mean(self.file.variables["pressure"][:, 0])
         temperature = ma.mean(self.file.variables["temperature"][:, 0])
         return float(atmoslib.isa_altitude(temperature, pressure))

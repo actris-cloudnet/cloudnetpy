@@ -2,13 +2,14 @@ from os import PathLike
 from uuid import UUID
 
 import numpy as np
+from atmoslib.constants import T0
 from numpy import ma
 
 from cloudnetpy import output, utils
 from cloudnetpy.categorize.disdrometer import DataSource
 from cloudnetpy.categorize.model import Model
 from cloudnetpy.cloudnetarray import CloudnetArray
-from cloudnetpy.constants import MM_H_TO_M_S, T0
+from cloudnetpy.constants import MM_H_TO_M_S
 from cloudnetpy.metadata import COMMON_ATTRIBUTES, MetaData
 
 

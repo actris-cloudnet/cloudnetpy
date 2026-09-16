@@ -3,7 +3,7 @@ import numpy as np
 import pytest
 from numpy import testing
 
-from cloudnetpy.constants import RS
+from atmoslib.constants import RS
 from cloudnetpy.exceptions import ModelDataError
 from cloudnetpy.model_evaluation.products.model_products import ModelManager
 
