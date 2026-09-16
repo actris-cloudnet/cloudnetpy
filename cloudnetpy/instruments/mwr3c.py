@@ -10,6 +10,7 @@ import numpy as np
 from numpy import ma
 
 from cloudnetpy import output, utils
+from cloudnetpy.constants import CM_TO_KG_M2
 from cloudnetpy.datasource import DataSource
 from cloudnetpy.exceptions import ValidTimeStampError
 from cloudnetpy.instruments.arm_utils import concatenate_files, read_geolocation
@@ -17,7 +18,6 @@ from cloudnetpy.instruments.cloudnet_instrument import CloudnetInstrument
 from cloudnetpy.instruments.instruments import MWR3C
 from cloudnetpy.metadata import COMMON_ATTRIBUTES
 
-CM_TO_KG_M2 = 10
 MISSING_VALUE = -9999
 MAX_OFF_ZENITH = 1.0  # deg
 RAW_VARIABLES = (

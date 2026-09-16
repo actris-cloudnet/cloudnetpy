@@ -36,6 +36,8 @@ MM_H_TO_M_S: Final = 1 / M_S_TO_MM_H
 GHZ_TO_HZ: Final = 1e9
 HZ_TO_GHZ: Final = 1e-9
 HPA_TO_PA: Final = 100
+# Integrated water vapour: cm of liquid water equivalent to kg m-2
+CM_TO_KG_M2: Final = 10
 KM_H_TO_M_S: Final = 1000 / SEC_IN_HOUR
 TWO_WAY: Final = 2
 G: Final = 9.80665
