@@ -18,6 +18,7 @@ from numpy import ma
 
 from cloudnetpy import output, utils
 from cloudnetpy.cloudnetarray import CloudnetArray
+from cloudnetpy.constants import CM_TO_KG_M2, G_TO_KG
 from cloudnetpy.exceptions import InconsistentDataError, ValidTimeStampError
 from cloudnetpy.instruments import instruments
 from cloudnetpy.metadata import MetaData
@@ -236,8 +237,8 @@ class RadiometricsMP:
             _process_superblock()
 
         self.data["time"] = np.array(times, dtype="datetime64[s]")
-        self.data["lwp"] = np.array(lwps)  # mm => kg m-2
-        self.data["iwv"] = np.array(iwvs) * 10  # cm => kg m-2
+        self.data["lwp"] = np.array(lwps)  # mm = kg m-2
+        self.data["iwv"] = np.array(iwvs) * CM_TO_KG_M2
         if irt_times:
             self.data["irt"] = _find_closest(
                 np.array(irt_times, dtype="datetime64[s]"),
@@ -259,7 +260,7 @@ class RadiometricsMP:
         if ah_times:
             self.data["absolute_humidity"] = _find_closest(
                 np.array(ah_times, dtype="datetime64[s]"),
-                np.array(ahs) / 1000,  # g m-3 => kg m-3
+                np.array(ahs) * G_TO_KG,  # g m-3 => kg m-3
                 self.data["time"],
             )
 
@@ -312,8 +313,8 @@ class RadiometricsWVR:
             ],
             dtype="datetime64[s]",
         )
-        self.data["lwp"] = np.array(self.raw_data["LiqCM"]) * 10  # cm => kg m-2
-        self.data["iwv"] = np.array(self.raw_data["VapCM"]) * 10  # cm => kg m-2
+        self.data["lwp"] = np.array(self.raw_data["LiqCM"]) * CM_TO_KG_M2
+        self.data["iwv"] = np.array(self.raw_data["VapCM"]) * CM_TO_KG_M2
         is_zenith = np.abs(np.array(self.raw_data["ELact"]) - 90.0) < 1.0
         tb23_valid = np.array(self.raw_data["TbSky23"]) > 0
         tb31_valid = np.array(self.raw_data["TbSky31"]) > 0
