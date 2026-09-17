@@ -21,3 +21,4 @@ from .rain_e_h3 import rain_e_h32nc
 from .rpg import rpg2nc
 from .weather_radar import wr2nc
 from .weather_station import ws2nc
+from .xpol import xpol2nc

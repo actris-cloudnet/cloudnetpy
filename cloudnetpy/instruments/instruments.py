@@ -320,3 +320,11 @@ KAZR = Instrument(
     model="KAZR",
     frequency=34.89,
 )
+
+XPOL = Instrument(
+    manufacturer="ProSensing",
+    domain="radar",
+    category="weather radar",
+    model="XPOL",
+    frequency=9.41,
+)
