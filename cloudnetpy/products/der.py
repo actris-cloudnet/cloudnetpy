@@ -179,6 +179,10 @@ class DerSource(DataSource):
                 A * A + B * B + C * C,
             )  # mm
 
+            # Scaled retrieval needs positive lwp
+            if lwp[ind_t] <= 0:
+                continue
+
             # der scaled formula (6)
             A = Z[ind_t, idx_layer] ** (1 / 6) / (2 * lwp[ind_t] ** (1 / 3))
             B = (np.pi * constants.RHO_WATER / 6) ** (1 / 3)
