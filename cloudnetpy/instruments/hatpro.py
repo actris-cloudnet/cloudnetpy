@@ -69,8 +69,8 @@ def hatpro2l1c(
 
     try:
         hatpro_raw = lev1_to_nc(
-            "1C01",
-            str(mwr_dir),
+            data_type="1C01",
+            path_to_files=str(mwr_dir),
             instrument_type=instrument_type,
             output_file=str(output_file),
             lidar_path=lidar_file,

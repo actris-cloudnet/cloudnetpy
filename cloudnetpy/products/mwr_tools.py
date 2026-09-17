@@ -97,11 +97,25 @@ def _generate_product(
         coeffs = _read_mwrpy_coeffs(mwr_l1c_file, temp_dir)
         try:
             if product == "multi":
-                gen_multi(None, mwr_l1c_file, output_file, coeffs)
+                gen_multi(
+                    mwr_l1c_file=mwr_l1c_file,
+                    output_file=output_file,
+                    coeff_files=coeffs,
+                )
             elif product == "single":
-                gen_single(None, mwr_l1c_file, output_file, lwp_offset, coeffs)
+                gen_single(
+                    mwr_l1c_file=mwr_l1c_file,
+                    output_file=output_file,
+                    lwp_offset=lwp_offset,
+                    coeff_files=coeffs,
+                )
             else:
-                gen_lhumpro(None, mwr_l1c_file, output_file, lwp_offset, coeffs)
+                gen_lhumpro(
+                    mwr_l1c_file=mwr_l1c_file,
+                    output_file=output_file,
+                    lwp_offset=lwp_offset,
+                    coeff_files=coeffs,
+                )
                 product = "single"
         except MissingInputData as err:
             raise ValidTimeStampError from err
