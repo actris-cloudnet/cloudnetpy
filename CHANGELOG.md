@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.96.2 – 2026-09-17
+
+- Refactor constants
+- Call mwrpy with keyword arguments and drop site argument
+
 ## 1.96.1 – 2026-09-14
 
 - Implement correction for disdrometers in non-sea-level conditions
