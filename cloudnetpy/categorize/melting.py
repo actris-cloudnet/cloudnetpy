@@ -10,6 +10,9 @@ from cloudnetpy import utils
 from cloudnetpy.categorize import droplet
 from cloudnetpy.categorize.containers import ClassData
 
+MIN_LAPSE_RATE = 0.004  # K m-1
+MIN_LDR_COVERAGE = 0.5
+
 
 def find_melting_layer(obs: ClassData, *, smooth: bool = True) -> npt.NDArray:
     """Finds melting layer from model temperature, ldr, and velocity.
@@ -27,11 +30,15 @@ def find_melting_layer(obs: ClassData, *, smooth: bool = True) -> npt.NDArray:
     The peak in *ldr* is the primary parameter we analyze. If
     *ldr* has a proper peak, and *v* < -1 m/s in the base, melting layer
     has been found. If *ldr* is missing we only analyze the behaviour
-    of *v*, which is always present, to detect the melting layer.
+    of *v*, which is always present, to detect the melting layer. If *ldr*
+    covers the profile but shows no peak, there is no melting layer.
 
     Model temperature is used to limit the melting layer search to a certain
     temperature range around 0 C. For ECMWF the range is -4..+3, and for
-    the rest -8..+6.
+    the rest -8..+6. Model temperature must also reach 0 C in the profile,
+    and the search is limited in altitude above the highest 0 C level,
+    because in temperature inversions the temperature range alone may
+    span several kilometers.
 
     Notes:
         This melting layer detection method is novel and needs to be validated.
@@ -63,7 +70,7 @@ def find_melting_layer(obs: ClassData, *, smooth: bool = True) -> npt.NDArray:
     t_range = _find_model_temperature_range(obs.model_type)
 
     for ind, t_prof in enumerate(obs.tw):
-        temp_indices = _get_temp_indices(t_prof, t_range)
+        temp_indices = _get_temp_indices(t_prof, t_range, obs.height)
         if len(temp_indices) <= 1:
             continue
         z_prof = obs.z[ind, temp_indices]
@@ -90,6 +97,8 @@ def find_melting_layer(obs: ClassData, *, smooth: bool = True) -> npt.NDArray:
                     z_prof,
                 )
             except (ValueError, IndexError, AssertionError):
+                if _has_ldr_coverage(ldr_prof, v_prof):
+                    continue
                 height = obs.height[temp_indices]
                 if hasattr(obs, "width"):
                     width_prof = obs.width[ind, temp_indices]
@@ -102,6 +111,16 @@ def find_melting_layer(obs: ClassData, *, smooth: bool = True) -> npt.NDArray:
         melting_layer = (smoothed_layer > 0.2).astype(bool)
 
     return melting_layer
+
+
+def _has_ldr_coverage(ldr_prof: npt.NDArray | None, v_prof: npt.NDArray) -> bool:
+    """Checks if ldr covers enough of the profile to rule out melting layer."""
+    if ldr_prof is None:
+        return False
+    is_v = ~ma.getmaskarray(v_prof)
+    is_ldr = ~ma.getmaskarray(ldr_prof)
+    n_ldr = np.count_nonzero(is_ldr & is_v)
+    return bool(n_ldr >= MIN_LDR_COVERAGE * np.count_nonzero(is_v))
 
 
 def _find_melting_layer_from_ldr(
@@ -166,10 +185,23 @@ def _basetop(dprof: npt.NDArray, pind: int) -> tuple[int, int]:
     return base, top
 
 
-def _get_temp_indices(t_prof: npt.NDArray, t_range: tuple) -> npt.NDArray:
+def _get_temp_indices(
+    t_prof: npt.NDArray, t_range: tuple, height: npt.NDArray | None = None
+) -> npt.NDArray:
     """Finds indices of temperature profile covering the given range."""
-    ind = np.where((t_prof > min(t_range) + T0) & (t_prof < max(t_range) + T0))[0]
+    in_range = (t_prof > min(t_range) + T0) & (t_prof < max(t_range) + T0)
+    if height is not None:
+        in_range &= height <= _find_max_height(t_prof, t_range, height)
+    ind = np.where(in_range)[0]
     return np.array([]) if len(ind) == 0 else np.arange(np.min(ind), np.max(ind) + 1)
+
+
+def _find_max_height(t_prof: npt.NDArray, t_range: tuple, height: npt.NDArray) -> float:
+    """Finds maximum melting layer height assuming realistic lapse rate."""
+    warm = np.where(t_prof >= T0)[0]
+    if len(warm) == 0:
+        return -np.inf
+    return height[warm[-1]] - min(t_range) / MIN_LAPSE_RATE
 
 
 def _find_model_temperature_range(model_type: str) -> tuple[float, float]:
