@@ -12,6 +12,7 @@ from cloudnetpy.categorize.containers import ClassData
 
 MIN_LAPSE_RATE = 0.004  # K m-1
 MIN_LDR_COVERAGE = 0.5
+T0_TOLERANCE = 1  # K
 
 
 def find_melting_layer(obs: ClassData, *, smooth: bool = True) -> npt.NDArray:
@@ -35,7 +36,7 @@ def find_melting_layer(obs: ClassData, *, smooth: bool = True) -> npt.NDArray:
 
     Model temperature is used to limit the melting layer search to a certain
     temperature range around 0 C. For ECMWF the range is -4..+3, and for
-    the rest -8..+6. Model temperature must also reach 0 C in the profile,
+    the rest -8..+6. Model temperature must also reach -1 C in the profile,
     and the search is limited in altitude above the highest 0 C level,
     because in temperature inversions the temperature range alone may
     span several kilometers.
@@ -199,6 +200,9 @@ def _get_temp_indices(
 def _find_max_height(t_prof: npt.NDArray, t_range: tuple, height: npt.NDArray) -> float:
     """Finds maximum melting layer height assuming realistic lapse rate."""
     warm = np.where(t_prof >= T0)[0]
+    if len(warm) == 0:
+        # Model may be slightly too cold when melting layer is near the ground
+        warm = np.where(t_prof >= T0 - T0_TOLERANCE)[0]
     if len(warm) == 0:
         return -np.inf
     return height[warm[-1]] - min(t_range) / MIN_LAPSE_RATE

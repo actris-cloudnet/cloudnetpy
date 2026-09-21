@@ -62,6 +62,8 @@ def test_get_temp_indices(t_prof, t_range, result):
         (np.array([274, 272, 268, 268, 268, 274, 268]), [0, 1, 2, 3, 4, 5]),
         # All subzero
         (np.array([270, 271, 268, 268, 270, 271, 268]), []),
+        # Slightly subzero near the ground is tolerated
+        (np.array([272.5, 271, 268, 268, 270, 271, 268]), [0, 1]),
     ],
 )
 def test_get_temp_indices_with_height(t_prof, result):
