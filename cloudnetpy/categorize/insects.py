@@ -58,7 +58,8 @@ def _insect_probability(obs: ClassData) -> tuple[npt.NDArray, npt.NDArray]:
     prob_from_ldr = _calc_prob_from_ldr(prob)
     prob_from_others = _calc_prob_from_all(prob)
     prob_from_others = _adjust_for_radar(obs, prob, prob_from_others)
-    prob_combined = _fill_missing_pixels(prob_from_ldr, prob_from_others)
+    is_ldr = ~ma.getmaskarray(obs.ldr) if hasattr(obs, "ldr") else None
+    prob_combined = _fill_missing_pixels(prob_from_ldr, prob_from_others, is_ldr)
     return prob_combined, prob_from_others
 
 
@@ -150,8 +151,13 @@ def _adjust_for_radar(
 def _fill_missing_pixels(
     prob_from_ldr: npt.NDArray,
     prob_from_others: npt.NDArray,
+    is_ldr: npt.NDArray | None = None,
 ) -> npt.NDArray:
-    return np.maximum(prob_from_ldr, prob_from_others)
+    """Combines probabilities trusting measured ldr over other parameters."""
+    prob = np.maximum(prob_from_ldr, prob_from_others)
+    if is_ldr is not None:
+        prob[is_ldr] = prob_from_ldr[is_ldr]
+    return prob
 
 
 def _screen_insects(

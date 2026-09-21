@@ -69,6 +69,17 @@ def test_fill_missing_pixels():
     )
 
 
+def test_fill_missing_pixels_with_measured_ldr():
+    prob_from_ldr = np.array([[0.0, 0.0, 1.0, 1.0]])
+    prob_from_others = np.array([[0.9, 0.9, 0.5, 0.5]])
+    is_ldr = np.array([[True, False, True, False]])
+    result = np.array([[0.0, 0.9, 1.0, 1.0]])
+    assert_array_equal(
+        insects._fill_missing_pixels(prob_from_ldr, prob_from_others, is_ldr),
+        result,
+    )
+
+
 def test_get_smoothed_v():
     obs = Obs()
     result = ma.array(
