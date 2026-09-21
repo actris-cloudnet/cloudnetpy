@@ -178,6 +178,12 @@ addition to) saving them. Restrict which variables to plot with
     $ cloudnetpy -s munich -d 2023-07-29 -p radar --plot \
         --variables Zh,v
 
+The variables can also be given directly to ``--show``:
+
+.. code-block:: console
+
+    $ cloudnetpy -s munich -d 2023-07-29 -p radar --show Zh,v
+
 Other useful flags
 ------------------
 

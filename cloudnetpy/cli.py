@@ -928,9 +928,11 @@ def main() -> None:
     )
     parser.add_argument(
         "--show",
-        help="Show plotted image",
+        nargs="?",
+        const=True,
         default=False,
-        action=argparse.BooleanOptionalAction,
+        metavar="VARIABLES",
+        help="Show plotted image, optionally only given variables (comma-separated)",
     )
     parser.add_argument(
         "--dl",
@@ -980,6 +982,10 @@ def main() -> None:
         default=None,
     )
     args = parser.parse_args()
+    if isinstance(args.show, str):
+        if args.variables is None:
+            args.variables = args.show
+        args.show = True
 
     logger = logging.getLogger()
     logger.setLevel(logging.INFO)
