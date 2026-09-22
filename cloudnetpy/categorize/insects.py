@@ -58,6 +58,7 @@ def _insect_probability(obs: ClassData) -> tuple[npt.NDArray, npt.NDArray]:
     prob_from_ldr = _calc_prob_from_ldr(prob)
     prob_from_others = _calc_prob_from_all(prob)
     prob_from_others = _adjust_for_radar(obs, prob, prob_from_others)
+    prob_from_others = _adjust_for_lidar(obs, prob_from_others)
     is_ldr = ~ma.getmaskarray(obs.ldr) if hasattr(obs, "ldr") else None
     prob_combined = _fill_missing_pixels(prob_from_ldr, prob_from_others, is_ldr)
     return prob_combined, prob_from_others
@@ -145,6 +146,21 @@ def _adjust_for_radar(
     """Adds radar-specific weighting to insect probabilities."""
     if "mira" in obs.radar_type.lower():
         prob_from_others *= prob["lwp"]
+    return prob_from_others
+
+
+def _adjust_for_lidar(
+    obs: ClassData,
+    prob_from_others: npt.NDArray,
+    weight: float = 0.8,
+) -> npt.NDArray:
+    """Reduces probability above the lidar signal, where liquid may be hidden."""
+    is_beta = ~ma.getmaskarray(obs.beta)
+    n_gates = is_beta.shape[1]
+    top = n_gates - np.argmax(is_beta[:, ::-1], axis=1)
+    top[~is_beta.any(axis=1)] = 0
+    above_lidar = np.arange(n_gates)[np.newaxis, :] >= top[:, np.newaxis]
+    prob_from_others[above_lidar] *= weight
     return prob_from_others
 
 

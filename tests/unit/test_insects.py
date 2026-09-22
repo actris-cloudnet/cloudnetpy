@@ -80,6 +80,30 @@ def test_fill_missing_pixels_with_measured_ldr():
     )
 
 
+def test_adjust_for_lidar():
+    obs = Obs()
+    obs.beta = ma.array(
+        np.ones((3, 4)),
+        mask=[
+            [False, False, True, True],
+            [False, True, False, True],
+            [True, True, True, True],
+        ],
+    )
+    prob_from_others = np.ones((3, 4))
+    result = np.array(
+        [
+            [1.0, 1.0, 0.5, 0.5],
+            [1.0, 1.0, 1.0, 0.5],
+            [0.5, 0.5, 0.5, 0.5],
+        ]
+    )
+    assert_array_equal(
+        insects._adjust_for_lidar(obs, prob_from_others, weight=0.5),
+        result,
+    )
+
+
 def test_get_smoothed_v():
     obs = Obs()
     result = ma.array(
