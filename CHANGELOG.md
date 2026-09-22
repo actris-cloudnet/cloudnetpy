@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.96.3 – 2026-09-22
+
+- Fix false melting layer in temperature inversions
+- Reduce false insects from weak echoes without LDR
+- Allow giving variables directly to --show
+
 ## 1.96.2 – 2026-09-17
 
 - Refactor constants
