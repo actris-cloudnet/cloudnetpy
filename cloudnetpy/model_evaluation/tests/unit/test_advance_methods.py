@@ -69,12 +69,28 @@ def test_fit_z_sensitivity(obs_file, model_file) -> None:
     obs = ObservationManager(PRODUCT, str(obs_file))
     model = ModelManager(str(model_file), MODEL, PRODUCT)
     advance = AdvanceProductMethods(model, obs)
+    # obs heights above ground 7, 8, 11 and 14 km with sensitivities
+    # 0.1, 0.2, 0.0, 1.0; levels above the radar range are NaN
     height = np.array(
         [[5000, 9000, 13000], [10000, 15000, 20000], [8000, 12000, 16000]]
     )
-    expected = ma.masked_invalid([[np.nan, 0.15, 0.5], [0.1, 1, np.nan], [0.15, 0, 1]])
+    expected = np.array(
+        [[0.1, 0.4 / 3, 2 / 3], [0.2 / 3, np.nan, np.nan], [0.2, 1 / 3, np.nan]]
+    )
     result = advance.fit_z_sensitivity(height)
     testing.assert_array_almost_equal(result, expected)
+
+
+def test_fit_z_sensitivity_stretched_grid(obs_file, model_file) -> None:
+    obs = ObservationManager(PRODUCT, str(obs_file))
+    model = ModelManager(str(model_file), MODEL, PRODUCT)
+    advance = AdvanceProductMethods(model, obs)
+    # unevenly spaced model levels within the radar range must all get a value
+    height = np.array([[7000, 7100, 7300, 7700, 8500, 10000, 13000, 14000]])
+    result = advance.fit_z_sensitivity(height)
+    assert np.isfinite(result).all()
+    assert result[0, 0] == pytest.approx(0.1)
+    assert result[0, -1] == pytest.approx(1.0)
 
 
 def test_filter_high_iwc_low_cf(obs_file, model_file) -> None:

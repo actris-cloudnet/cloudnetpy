@@ -105,11 +105,20 @@ class AdvanceProductMethods:
         if self._obs_obj.height is None:
             msg = "No height in observation file"
             raise ValueError(msg)
-        z_sen = [
-            cl_tools.rebin_1d(self._obs_obj.height, self._obs_obj.z_sensitivity, h[i])
-            for i in range(len(h))
-        ]
-        return np.asarray(z_sen)
+        # Interpolate at the model level heights: rebinning assumes evenly
+        # spaced levels, which maps stretched model levels to wrong heights.
+        obs_height = self._obs_obj.height_agl
+        if obs_height is None:
+            obs_height = self._obs_obj.height
+        obs_height = np.asarray(ma.filled(obs_height, np.nan), dtype=float)
+        z_obs = np.asarray(ma.filled(self._obs_obj.z_sensitivity, np.nan), dtype=float)
+        is_valid = np.isfinite(obs_height) & np.isfinite(z_obs)
+        model_height = np.asarray(ma.filled(h, np.nan), dtype=float)
+        z_sen = np.interp(
+            model_height, obs_height[is_valid], z_obs[is_valid], right=np.nan
+        )
+        z_sen[~np.isfinite(model_height)] = np.nan
+        return z_sen
 
     def filter_high_iwc_low_cf(
         self,
