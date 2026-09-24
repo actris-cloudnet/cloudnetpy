@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.96.4 – 2026-09-24
+
+- Support old Parsivel files from Eriswil
+- Interpolate radar sensitivity at model levels in L3 cirrus filter
+
 ## 1.96.3 – 2026-09-22
 
 - Fix false melting layer in temperature inversions
