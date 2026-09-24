@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.96.5 – 2026-09-24
+
+- Skip disdrometer measurements with zero interval
+
 ## 1.96.4 – 2026-09-24
 
 - Support old Parsivel files from Eriswil
