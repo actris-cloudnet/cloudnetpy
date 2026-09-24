@@ -475,6 +475,21 @@ def _read_leipzig(filename: str | PathLike) -> ParsivelOutput:
         return time, data
 
 
+def _read_cloudlab(filename: str | PathLike) -> ParsivelOutput:
+    # Data acquired with ASDO and converted to daily netCDF files. The netCDF
+    # files are similar to parsivel2nc files but without "number_concentration"
+    # and "fall_velocity" variables.
+    with netCDF4.Dataset(filename) as nc:
+        time = cftime.num2pydate(nc["time"][:], units=nc["time"].units)
+        data = {
+            num: nc[key][:]
+            for key, num in PARSIVEL2NC_KEYS.items()
+            if key in nc.variables
+        }
+        data[13] = np.repeat(int(nc.Sensor_ID), len(time))
+        return time, data
+
+
 def _read_parsivel(
     filename: str | PathLike,
     telegram: Sequence[int | str | None] | None = None,
@@ -483,6 +498,8 @@ def _read_parsivel(
 ) -> ParsivelOutput:
     try:
         with netCDF4.Dataset(filename) as nc:
+            if hasattr(nc, "Title") and "CLOUDLAB" in nc.Title:
+                return _read_cloudlab(filename)
             if "number_concentration" in nc.variables:
                 return _read_parsivel2nc(filename)
             if "fieldN" in nc.variables:
