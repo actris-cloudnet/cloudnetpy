@@ -53,6 +53,11 @@ def process_l2(l1: DisdroL1) -> DisdroL2:
     data_raw = l1.data_raw[time_ind]
     interval = l1.interval[time_ind]
 
+    is_valid = interval > 0
+    time = time[is_valid]
+    data_raw = data_raw[is_valid]
+    interval = interval[is_valid]
+
     n_time = len(time)
     n_diameter = len(l1.diameter)
     n_particles = data_raw.reshape(n_time, -1).sum(axis=1)
