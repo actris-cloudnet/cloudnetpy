@@ -2,6 +2,7 @@ import argparse
 import base64
 import concurrent.futures
 import datetime
+import functools
 import gzip
 import hashlib
 import importlib
@@ -401,7 +402,12 @@ def _process_instrument_product(
         case ("radar", _id) if "galileo" in _id:
             fun = instruments.galileo2nc
         case ("disdrometer", _id) if "parsivel" in _id:
-            fun = instruments.parsivel2nc
+            fun = functools.partial(
+                instruments.parsivel2nc,
+                telegram=calibration.get("telegram"),
+                field_separator=calibration.get("field_separator", ";"),
+                decimal_separator=calibration.get("decimal_separator", "."),
+            )
         case ("disdrometer", _id) if "thies" in _id:
             fun = instruments.thies2nc
         case ("disdrometer", _id) if "rd-80" in _id:
