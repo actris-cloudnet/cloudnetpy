@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.96.6 – 2026-10-01
+
+- Calculate Zh from SNRg in old MIRA files without Zg
+- Support Parsivel calibration in CLI
+
 ## 1.96.5 – 2026-09-24
 
 - Skip disdrometer measurements with zero interval
