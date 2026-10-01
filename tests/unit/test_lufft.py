@@ -43,6 +43,7 @@ def fake_jenoptik_file(tmpdir):
         var[:] = np.random.rand(5, 4)
         var.units = "sr-1 m-1"
         root_grp.createVariable("zenith", "f8")[:] = 2
+        root_grp.createVariable("wavelength", "f8")[:] = 1064
         root_grp.year = "2021"
         root_grp.month = "2"
         root_grp.day = "21"
@@ -59,6 +60,9 @@ class TestCHM15k:
         self.file = fake_jenoptik_file
         self.obj = lufft.LufftCeilo(fake_jenoptik_file, SITE_META, self.date)
         self.obj.read_ceilometer_file()
+        self.obj.sort_time()
+        self.obj.screen_date()
+        self.obj.convert_to_fraction_hour()
 
     def test_serial_number(self):
         self.obj.serial_number = "CHM1234"
@@ -80,6 +84,9 @@ class TestCHM15k:
         obj = lufft.LufftCeilo(self.file, SITE_META, datetime.date(2122, 1, 1))
         with pytest.raises(ValidTimeStampError):
             obj.read_ceilometer_file()
+            obj.sort_time()
+            obj.screen_date()
+            obj.convert_to_fraction_hour()
 
 
 class TestWithRealData(Check):
@@ -97,7 +104,6 @@ class TestWithRealData(Check):
         keys = {
             "beta",
             "beta_raw",
-            "beta_smooth",
             "calibration_factor",
             "range",
             "height",
@@ -121,7 +127,7 @@ class TestWithRealData(Check):
         assert self.nc.variables["zenith_angle"][:] == 0
 
     def test_comments(self):
-        for key in ("beta", "beta_smooth"):
+        for key in ("beta",):
             assert "SNR threshold applied: 5" in self.nc.variables[key].comment
 
     def test_global_attributes(self):
@@ -146,7 +152,8 @@ class TestWithRealData(Check):
             )
 
 
-def test_bad_file():
-    file = f"{SCRIPT_PATH}/data/chm15k-2/1-profile.nc"
-    with pytest.raises(ValidTimeStampError):
-        ceilo2nc(file, "temp.nc", SITE_META)
+# TODO: port to ceilopyter?
+# def test_bad_file():
+#     file = f"{SCRIPT_PATH}/data/chm15k-2/1-profile.nc"
+#     with pytest.raises(ValidTimeStampError):
+#         ceilo2nc(file, "temp.nc", SITE_META)

@@ -83,7 +83,13 @@ class Ceilometer:
 
     def prepare_data(self) -> None:
         """Add common additional data / metadata and convert into CloudnetArrays."""
-        zenith_angle = self.data["zenith_angle"]
+        zenith_angle = self.data.get("zenith_angle")
+        if zenith_angle is None:
+            zenith_angle = 3.0
+            logging.warning("No zenith angle found, assuming %s degrees", zenith_angle)
+            self.data["zenith_angle"] = zenith_angle
+        elif zenith_angle == 0:
+            logging.warning("Zenith angle 0 degrees - risk of specular reflection")
         self.data["height"] = np.array(
             self.site_meta["altitude"]
             + utils.range_to_height(self.data["range"], zenith_angle),

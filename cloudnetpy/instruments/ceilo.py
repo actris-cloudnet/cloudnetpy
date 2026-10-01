@@ -98,6 +98,11 @@ def ceilo2nc(
         ceilo_obj.sort_time()
         ceilo_obj.screen_date()
         ceilo_obj.convert_to_fraction_hour()
+    elif isinstance(ceilo_obj, LufftCeilo):
+        ceilo_obj.read_ceilometer_file(calibration_factor)
+        ceilo_obj.sort_time()
+        ceilo_obj.screen_date()
+        ceilo_obj.convert_to_fraction_hour()
     else:
         ceilo_obj.read_ceilometer_file(calibration_factor)
         ceilo_obj.check_beta_raw_shape()
