@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.96.7 – 2026-10-01
+
+- Process CHM 15k using Ceilopyter
+- Drop Python 3.10 support
+
 ## 1.96.6 – 2026-10-01
 
 - Calculate Zh from SNRg in old MIRA files without Zg
