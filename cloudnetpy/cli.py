@@ -386,9 +386,8 @@ def _process_instrument_product(
     fun: Callable
     match (product, instrument.instrument_id):
         case ("radar", _id) if "mira" in _id:
-            site_meta["range_correction_factor"] = calibration.get(
-                "range_correction_factor"
-            )
+            for key in ("range_correction_factor", "radar_constant"):
+                site_meta[key] = calibration.get(key)
             fun = instruments.mira2nc
         case ("radar", _id) if "rpg" in _id:
             fun = instruments.rpg2nc
