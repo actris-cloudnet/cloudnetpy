@@ -403,7 +403,7 @@ class Kazr(CloudnetInstrument):
         if not hasattr(self, "date"):
             self.date = epoch.date()
         midnight = datetime.datetime.combine(
-            self.date, datetime.time.min, tzinfo=datetime.timezone.utc
+            self.date, datetime.time.min, tzinfo=datetime.UTC
         )
         return seconds + (epoch - midnight).total_seconds()
 
@@ -519,9 +519,7 @@ def _parse_time_units(units: str) -> datetime.datetime:
     text = " ".join(parts[2:4])
     for fmt in ("%Y-%m-%d %H:%M:%S", "%Y-%m-%d"):
         try:
-            return datetime.datetime.strptime(text, fmt).replace(
-                tzinfo=datetime.timezone.utc
-            )
+            return datetime.datetime.strptime(text, fmt).replace(tzinfo=datetime.UTC)
         except ValueError:
             continue
     msg = f"Invalid time units: {units}"

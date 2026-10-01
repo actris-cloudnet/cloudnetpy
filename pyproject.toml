@@ -4,7 +4,7 @@ description = "Python package for Cloudnet processing"
 authors = [{name = "Simo Tukiainen"}]
 readme = "README.md"
 license = {file = "LICENSE"}
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 classifiers = [
   "Development Status :: 5 - Production/Stable",
   "Intended Audience :: Science/Research",

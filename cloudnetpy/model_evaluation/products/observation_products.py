@@ -1,5 +1,5 @@
 import logging
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from os import PathLike
 
 import numpy as np
@@ -43,7 +43,7 @@ class ObservationManager(DataSource):
             0,
             0,
             0,
-            tzinfo=timezone.utc,
+            tzinfo=UTC,
         )
 
     def _get_radar_frequency(self) -> npt.NDArray | None:

@@ -6,11 +6,11 @@ import os
 from collections.abc import Callable
 from os import PathLike
 from types import TracebackType
+from typing import Self
 
 import netCDF4
 import numpy as np
 import numpy.typing as npt
-from typing_extensions import Self
 
 from cloudnetpy import utils
 from cloudnetpy.cloudnetarray import CloudnetArray

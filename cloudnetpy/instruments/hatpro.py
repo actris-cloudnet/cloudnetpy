@@ -97,7 +97,7 @@ def hatpro2l1c(
             msg = "Timestamps are not increasing"
             raise RuntimeError(msg)
         dates = [
-            datetime.datetime.fromtimestamp(t, tz=datetime.timezone.utc).date()
+            datetime.datetime.fromtimestamp(t, tz=datetime.UTC).date()
             for t in timestamps
         ]
         if len(set(dates)) != 1:

@@ -888,7 +888,7 @@ def main() -> None:
         "--date",
         type=str,
         help="Date in YYYY-MM-DD (default: today)",
-        default=datetime.datetime.now(tz=datetime.timezone.utc).date().isoformat(),
+        default=datetime.datetime.now(tz=datetime.UTC).date().isoformat(),
     )
     parser.add_argument(
         "-p",

@@ -3,7 +3,7 @@
 import re
 import textwrap
 from dataclasses import dataclass
-from datetime import date, datetime, timedelta, timezone
+from datetime import UTC, date, datetime, timedelta
 from os import PathLike
 from typing import Any
 
@@ -180,7 +180,7 @@ class FigureData:
             int(self.file.year),
             int(self.file.month),
             int(self.file.day),
-            tzinfo=timezone.utc,
+            tzinfo=UTC,
         )
 
     def _get_valid_variables_and_indices(

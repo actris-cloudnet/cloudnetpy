@@ -276,7 +276,7 @@ def merge_history(
             )
         except ValueError:
             return datetime.datetime.min.replace(
-                tzinfo=datetime.timezone.utc
+                tzinfo=datetime.UTC
             )  # malformed lines to bottom
 
     histories.sort(key=parse_time, reverse=True)

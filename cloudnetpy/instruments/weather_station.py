@@ -223,7 +223,7 @@ class PalaiseauWS(WS):
                         continue
                     timestamp = datetime.datetime.strptime(
                         columns[0], "%Y-%m-%dT%H:%M:%SZ"
-                    ).replace(tzinfo=datetime.timezone.utc)
+                    ).replace(tzinfo=datetime.UTC)
                     values.append([timestamp] + [float(x) for x in columns[1:]])
                     timestamps.append(timestamp)
                 else:
@@ -750,12 +750,12 @@ def _parse_sirta(filename: str | PathLike) -> dict:
             parsed: float | datetime.datetime
             if column == "Date Time (yyyy-mm-ddThh:mm:ss)":
                 parsed = datetime.datetime.strptime(value, "%Y-%m-%dT%H:%M:%S").replace(
-                    tzinfo=datetime.timezone.utc
+                    tzinfo=datetime.UTC
                 )
             elif column == "Date Time (yyyy-mm-ddThh:mm:ssZ)":
                 parsed = datetime.datetime.strptime(
                     value, "%Y-%m-%dT%H:%M:%SZ"
-                ).replace(tzinfo=datetime.timezone.utc)
+                ).replace(tzinfo=datetime.UTC)
             else:
                 try:
                     parsed = float(value)
@@ -794,7 +794,7 @@ class LAquilaWS(WS):
                         continue
                     timestamp = datetime.datetime.strptime(
                         columns[0], "%Y-%m-%dT%H:%M:%SZ"
-                    ).replace(tzinfo=datetime.timezone.utc)
+                    ).replace(tzinfo=datetime.UTC)
                     data["time"].append(timestamp)
                     data["air_temperature"].append(self._parse_value(columns[1]))
                     data["air_pressure"].append(self._parse_value(columns[2]))
@@ -852,7 +852,7 @@ class ClujWS(WS):
 
     def _parse_datetime(self, value: str) -> datetime.datetime:
         return datetime.datetime.strptime(value, "%d.%m.%y %H:%M:%S.%f").replace(
-            tzinfo=datetime.timezone.utc
+            tzinfo=datetime.UTC
         )
 
     def _parse_value(self, value: str) -> float:

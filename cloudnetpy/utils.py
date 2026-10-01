@@ -52,9 +52,7 @@ def seconds2hours(time_in_seconds: npt.NDArray) -> npt.NDArray:
 
 def seconds2date(
     time_in_seconds: float,
-    epoch: datetime.datetime = datetime.datetime(
-        2001, 1, 1, tzinfo=datetime.timezone.utc
-    ),
+    epoch: datetime.datetime = datetime.datetime(2001, 1, 1, tzinfo=datetime.UTC),
 ) -> datetime.datetime:
     """Converts seconds since some epoch to datetime (UTC).
 
@@ -753,7 +751,7 @@ def isscalar(array: npt.NDArray | float | list | netCDF4.Variable) -> bool:
 
 def get_time() -> str:
     """Returns current UTC-time."""
-    t_zone = datetime.timezone.utc
+    t_zone = datetime.UTC
     form = "%Y-%m-%d %H:%M:%S"
     return f"{datetime.datetime.now(tz=t_zone).strftime(form)} +00:00"
 
@@ -924,7 +922,7 @@ def str_to_numeric(value: str) -> int | float:
 
 def get_epoch(units: str) -> datetime.datetime:
     """Finds epoch from units string."""
-    fallback = datetime.datetime(2001, 1, 1, tzinfo=datetime.timezone.utc)
+    fallback = datetime.datetime(2001, 1, 1, tzinfo=datetime.UTC)
     try:
         date = units.split()[2]
     except IndexError:
@@ -940,9 +938,9 @@ def get_epoch(units: str) -> datetime.datetime:
         except ValueError:
             return fallback
     year, month, day = date_components
-    current_year = datetime.datetime.now(tz=datetime.timezone.utc).year
+    current_year = datetime.datetime.now(tz=datetime.UTC).year
     if (1900 < year <= current_year) and (0 < month < 13) and (0 < day < 32):
-        return datetime.datetime(year, month, day, tzinfo=datetime.timezone.utc)
+        return datetime.datetime(year, month, day, tzinfo=datetime.UTC)
     return fallback
 
 

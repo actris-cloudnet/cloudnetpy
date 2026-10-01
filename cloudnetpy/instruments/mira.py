@@ -128,7 +128,7 @@ class Mira(NcRadar):
 
     """
 
-    epoch = datetime.datetime(1970, 1, 1, tzinfo=datetime.timezone.utc)
+    epoch = datetime.datetime(1970, 1, 1, tzinfo=datetime.UTC)
 
     def __init__(self, full_path: str | PathLike, site_meta: dict) -> None:
         super().__init__(full_path, site_meta)

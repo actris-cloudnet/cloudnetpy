@@ -7,13 +7,12 @@ from collections.abc import Iterable, Sequence
 from os import PathLike
 from pathlib import Path
 from types import TracebackType
-from typing import Literal
+from typing import Literal, Self
 
 import netCDF4
 import numpy as np
 import numpy.typing as npt
 from numpy import ma
-from typing_extensions import Self
 
 from cloudnetpy import utils
 from cloudnetpy.exceptions import ValidTimeStampError

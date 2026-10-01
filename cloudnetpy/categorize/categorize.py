@@ -5,12 +5,11 @@ import logging
 from collections.abc import Sequence
 from dataclasses import fields
 from os import PathLike
-from typing import TypedDict
+from typing import NotRequired, TypedDict
 from uuid import UUID
 
 import numpy as np
 from numpy.typing import NDArray
-from typing_extensions import NotRequired
 
 from cloudnetpy import output, utils
 from cloudnetpy.categorize import attenuation, classify
