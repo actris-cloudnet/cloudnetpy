@@ -319,3 +319,49 @@ def test_masked_mira():
 )
 def test_get_suffix(filename: str, suffix: str):
     assert mira._get_suffix(filename) == suffix
+
+
+class TestOldFilesWithoutZg(Check):
+    """Tests that Zh is calculated from SNRg when the file has only Ze."""
+
+    site_meta = {**SITE_META, "radar_constant": -81.61}
+    date = "2007-06-16"
+    temp_dir = TemporaryDirectory()
+    temp_path = temp_dir.name + "/mira.nc"
+    filepath = f"{SCRIPT_PATH}/data/mira-old/"
+    raw_file = f"{filepath}20070616_0000-trunc.mmclx"
+    uuid = mira.mira2nc(raw_file, temp_path, site_meta, date=date)
+
+    def test_common_radar(self):
+        radar_fun = RadarFun(self.nc, self.site_meta, self.date, self.uuid)
+        for name, method in RadarFun.__dict__.items():
+            if "test_" in name:
+                getattr(radar_fun, name)()
+
+    def test_radar_constant(self):
+        assert np.isclose(self.nc.variables["radar_constant"][:], -81.61)
+
+    def test_zh_covers_more_than_ze(self):
+        zh = self.nc.variables["Zh"][:]
+        with netCDF4.Dataset(self.raw_file) as raw:
+            ze = raw.variables["Ze"][:]
+            snrg = raw.variables["SNRg"][:]
+        n_ze = np.isfinite(ze).sum()
+        assert zh.count() > n_ze
+        assert zh.count() <= np.isfinite(snrg).sum()
+
+    def test_zh_matches_ze(self):
+        zh = self.nc.variables["Zh"][:]
+        with netCDF4.Dataset(self.raw_file) as raw:
+            ze = np.ma.getdata(raw.variables["Ze"][:])
+        ind = np.isfinite(ze) & ~zh.mask
+        diff = zh.data[ind] - 10 * np.log10(ze[ind])
+        assert np.median(np.abs(diff)) < 0.05
+
+    def test_without_radar_constant(self, tmp_path, caplog):
+        test_path = tmp_path / "estimated.nc"
+        mira.mira2nc(self.raw_file, test_path, SITE_META, date=self.date)
+        assert "using estimate from file: -81.61 dB" in caplog.text
+        with netCDF4.Dataset(test_path) as nc, netCDF4.Dataset(self.raw_file) as raw:
+            assert np.isclose(nc.variables["radar_constant"][:], -81.61)
+            assert nc.variables["Zh"][:].count() > np.isfinite(raw["Ze"][:]).sum()

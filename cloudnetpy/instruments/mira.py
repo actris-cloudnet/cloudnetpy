@@ -42,7 +42,8 @@ def mira2nc(
         output_file: Output filename.
         site_meta: Dictionary containing information about the site. Required
             key-value pair is `name`. Optional `model` takes `mira-35` (default),
-            `mira-35s`, `mira-35c`, or `mira-10`.
+            `mira-35s`, `mira-35c`, or `mira-10`. Optional `radar_constant` (dB)
+            is used to calculate Zh from SNRg in old files without Zg.
         uuid: Set specific UUID for the file.
         date: Expected date as YYYY-MM-DD of all profiles in the file.
 
@@ -78,8 +79,9 @@ def mira2nc(
                 mira.date = date
             mira.sort_timestamps()
             mira.remove_duplicate_timestamps()
-            mira.linear_to_db(("Zh", "ldr", "SNR"))
             mira.screen_low_power()
+            mira.add_zh_from_snr()
+            mira.linear_to_db(("Zh", "ldr", "SNR"))
 
             if "snr_limit" in site_meta and site_meta["snr_limit"] is not None:
                 snr_limit = site_meta["snr_limit"]
@@ -240,6 +242,58 @@ class Mira(NcRadar):
         self.data["tpow"].data[:] *= 100
         self.data["tpow"].correction_factor = 100
 
+    def add_zh_from_snr(self) -> None:
+        """Calculates unfiltered Zh from SNRg in old mmclx files without Zg.
+
+        Old files contain only Ze, where signal classified as plankton
+        (insects) has been removed. Zh is calculated as
+        SNRg * range^2 * K / tpow, where the radar constant K (dB) is given
+        in `site_meta["radar_constant"]`. Without it, K is estimated from
+        Ze in the file.
+
+        Example case:
+
+        - Lindenberg 2007-06-16: K = -81.61 dB
+        """
+        if "Zg" in self.dataset.variables or "SNR" not in self.data:
+            return
+        if "tpow" not in self.data:
+            logging.warning("Variable tpow missing, can not calculate Zh from SNRg")
+            return
+        radar_constant = self.site_meta.get("radar_constant")
+        if radar_constant is None:
+            radar_constant = self._estimate_radar_constant()
+            if radar_constant is None:
+                logging.warning("Can not estimate radar_constant, using Ze")
+                return
+            logging.warning(
+                "No radar_constant given, using estimate from file: %s dB",
+                radar_constant,
+            )
+        logging.info("Variable Zg missing, calculating Zh from SNRg")
+        snrg = self.data["SNR"][:]
+        range_sq = np.array(self.getvar("range")) ** 2
+        tpow = self.data["tpow"][:]
+        factor = utils.db2lin(float(radar_constant)) / tpow
+        self.append_data(snrg * range_sq * factor[:, np.newaxis], "Zh")
+        self.data["radar_constant"] = CloudnetArray(
+            float(radar_constant), "radar_constant"
+        )
+
+    def _estimate_radar_constant(self) -> float | None:
+        """Estimates radar constant K (dB) from Ze = SNR * range^2 * K / tpow."""
+        try:
+            ze = ma.masked_less_equal(ma.masked_invalid(self.getvar("Ze")), 0)
+            snr = ma.masked_less_equal(ma.masked_invalid(self.getvar("SNR")), 0)
+            tpow = self.getvar("tpow")
+        except KeyError:
+            return None
+        range_sq = np.array(self.getvar("range")) ** 2
+        factor = ma.median(ze / (snr * range_sq), axis=1) * tpow
+        if ma.getmaskarray(factor).all():
+            return None
+        return round(float(utils.lin2db(ma.median(factor))), 2)
+
     def screen_invalid_ldr(self) -> None:
         """Masks LDR in MIRA STSR mode data.
         Is there a better way to identify this mode?
@@ -309,7 +363,8 @@ def _parse_input_files(
 
             keymap = _get_keymap(filetypes[0])
 
-            variables = list(keymap.keys())
+            # SNR and Ze are needed to recover Zh in old files without Zg
+            variables = [*keymap.keys(), "SNR"]
             concat_lib.concatenate_files(
                 valid_files,
                 input_filename,
@@ -417,6 +472,12 @@ ATTRIBUTES = {
     ),
     "tpow": MetaData(
         long_name="Average Transmit Power", units="W", dimensions=("time",)
+    ),
+    "radar_constant": MetaData(
+        long_name="Radar constant",
+        units="dB",
+        comment="Zh = SNRg * range^2 * radar_constant / tpow",
+        dimensions=None,
     ),
     "zenith_offset": MetaData(
         long_name="Zenith offset of the instrument",

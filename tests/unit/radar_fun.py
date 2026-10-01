@@ -30,7 +30,9 @@ class RadarFun:
 
     def test_variable_values(self):
         if "zenith_angle" in self.nc.variables:
-            assert 0 <= np.all(self.nc.variables["zenith_angle"][:]) < 10
+            zenith = self.nc.variables["zenith_angle"][:]
+            if not np.ma.getmaskarray(zenith).all():
+                assert 0 <= np.all(zenith) < 10
         assert np.all(
             (
                 self.nc.variables["height"][:]
