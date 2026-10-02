@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.96.8 – 2026-10-02
+
+- Map new ARM sites
+
 ## 1.96.7 – 2026-10-01
 
 - Process CHM 15k using Ceilopyter
