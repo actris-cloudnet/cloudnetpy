@@ -49,6 +49,8 @@ ARM_SITES: Final = {
     "arm-oliktok": ("oli", "M1"),
     "arm-sgp": ("sgp", "C1"),
     "arm-yacanto": ("cor", "M1"),
+    "arm-phoenix": ("dst", "M1"),
+    "arm-bankhead": ("bnf", "M1"),
 }
 
 
