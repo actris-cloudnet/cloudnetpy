@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.97.0 – 2026-10-06
+
+- Make IWC retrieval uncertainty depend on temperature and radar band
+- Include gas attenuation error in Z_error
+- Remove dead uncorrected-ice error code and fix stale IWC comments
+- Place rain legend always to top right in signal source plot
+- Indicate rainy profiles with translucent bands in signal source plot
+
 ## 1.96.8 – 2026-10-02
 
 - Map new ARM sites
