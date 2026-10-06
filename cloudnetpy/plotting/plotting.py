@@ -746,6 +746,7 @@ class Plot2D(Plot):
             label="Rain",
         )
         self._ax.legend(
+            loc="upper right",
             markerscale=0.75,
             numpoints=1,
             frameon=False,
