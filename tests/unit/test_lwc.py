@@ -221,18 +221,14 @@ def test_limit_error():
 
 
 def test_calc_lwc_gradient():
-    from cloudnetpy.utils import l2norm
-
     ERROR_OBJ.lwc = ma.array([[0.1, 0.2, 0.3], [0.1, 0.3, 0.6]])
-    expected = l2norm(*np.gradient(ERROR_OBJ.lwc))
+    expected = np.abs(np.gradient(ERROR_OBJ.lwc, axis=1))
     assert_array_almost_equal(ERROR_OBJ._calc_lwc_gradient(), expected)
 
 
 def test_calc_lwc_relative_error():
-    from cloudnetpy.utils import l2norm
-
     ERROR_OBJ.lwc = ma.array([[0.1, 0.2, 0.3], [0.1, 0.3, 0.6]])
-    x = l2norm(*np.gradient(ERROR_OBJ.lwc))
+    x = np.abs(np.gradient(ERROR_OBJ.lwc, axis=1))
     expected = x / ERROR_OBJ.lwc / 2
     expected[expected > 5] = 5
     assert_array_almost_equal(ERROR_OBJ._calc_lwc_relative_error(), expected)

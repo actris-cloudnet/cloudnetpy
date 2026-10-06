@@ -668,7 +668,7 @@ ATTRIBUTES = {
         ),
         "lwc_error": PlotMeta(
             cmap="RdYlGn_r",
-            plot_range=(0, 2),
+            plot_range=(0, 100),
         ),
         "lwc_retrieval_status": PlotMeta(
             clabel=_CLABEL["lwc_retrieval_status"],

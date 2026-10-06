@@ -464,6 +464,7 @@ class Plot:
             "air_pressure": (multiply, 0.01, "hPa"),
             "relative_humidity": (multiply, 100, "%"),
             "rh": (multiply, 100, "%"),
+            "lwc_error": (multiply, 100, "%"),
             "rainfall_amount": (multiply, con.M_TO_MM, "mm"),
             "snowfall_amount": (multiply, con.M_TO_MM, "mm"),
             "precipitation_amount": (multiply, con.M_TO_MM, "mm"),

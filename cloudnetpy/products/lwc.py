@@ -117,7 +117,7 @@ class LwcSource(DataSource):
     ) -> None:
         self.append_data(lwc, "lwc", units="kg m-3")
         self.append_data(status, "lwc_retrieval_status")
-        self.append_data(error, "lwc_error", units="dB")
+        self.append_data(error, "lwc_error", units="1")
 
     @staticmethod
     def _get_atmosphere(
@@ -348,15 +348,16 @@ class LwcError:
         return self._fill_error_array(combined_error)
 
     def _calc_lwc_relative_error(self) -> npt.NDArray:
+        # Half a range gate uncertainty in cloud base and top height
         lwc_gradient = self._calc_lwc_gradient()
         error = lwc_gradient / self.lwc / 2
         return self._limit_error(error, 5)
 
     def _calc_lwc_gradient(self) -> npt.NDArray:
+        """Returns absolute vertical gradient of LWC per range gate."""
         if not isinstance(self.lwc, ma.MaskedArray):
             self.lwc = ma.array(self.lwc)
-        gradient_elements = np.gradient(self.lwc.filled(0))
-        return utils.l2norm(*gradient_elements)
+        return np.abs(np.gradient(self.lwc.filled(0), axis=1))
 
     def _calc_lwp_relative_error(self) -> npt.NDArray:
         err = self.lwc_source.lwp_error
@@ -412,9 +413,15 @@ COMMENTS = {
         "   liquid layers is difficult to ascertain."
     ),
     "lwc_error": (
-        "This variable is an estimate of the random error in liquid water content\n"
-        "due to the uncertainty in the microwave radiometer liquid water path\n"
-        "retrieval and the uncertainty in cloud base and/or cloud top height."
+        "This variable is an estimate of the one-standard-deviation random error\n"
+        "in liquid water content, expressed as a fraction of the liquid water\n"
+        "content. It combines the relative uncertainty in the microwave radiometer\n"
+        "liquid water path retrieval (limited to 10) and the uncertainty in cloud\n"
+        "base and cloud top height, taken as half a range gate and estimated from\n"
+        "the vertical gradient of liquid water content (limited to 5). If the liquid\n"
+        "layer is detected by the lidar only, there is the potential for cloud top\n"
+        "height to be underestimated. The error contribution from using the model\n"
+        "temperature and pressure at cloud base is assumed to be negligible."
     ),
     "lwc_retrieval_status": (
         "This variable describes whether a retrieval was performed for each pixel,\n"
@@ -469,9 +476,9 @@ LWC_ATTRIBUTES = {
         dimensions=("time", "height"),
     ),
     "lwc_error": MetaData(
-        long_name="Random error in liquid water content, one standard deviation",
+        long_name="Relative random error in liquid water content",
         comment=COMMENTS["lwc_error"],
-        units="dB",
+        units="1",
         dimensions=("time", "height"),
     ),
     "lwc_retrieval_status": MetaData(
