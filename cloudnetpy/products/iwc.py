@@ -3,12 +3,19 @@
 from os import PathLike
 from uuid import UUID
 
+import numpy as np
 import numpy.typing as npt
 from numpy import ma
 
 from cloudnetpy import output, utils
 from cloudnetpy.metadata import MetaData
 from cloudnetpy.products.product_tools import IceClassification, IceSource
+
+# Rms error (dB) of the Z-T retrieval at warm (-20...-10 degC) and cold
+# (< -40 degC) temperatures from Hogan et al. (2006).
+RETRIEVAL_UNCERTAINTY = {"Ka": (1.5, 3.0), "W": (1.9, 2.8)}
+T_WARM = -15.0  # degC
+T_COLD = -40.0  # degC
 
 
 def generate_iwc(
@@ -49,12 +56,12 @@ def generate_iwc(
         iwc_source.append_icy_data(ice_classification)
         iwc_source.append_bias()
         iwc_source.append_sensitivity()
-        bias = iwc_source.append_error(ice_classification)
+        iwc_source.append_error(ice_classification)
         iwc_source.append_status(ice_classification)
         date = iwc_source.get_date()
         attributes = output.add_time_attribute(IWC_ATTRIBUTES, date)
         attributes = _add_iwc_comment(attributes, iwc_source)
-        attributes = _add_iwc_error_comment(attributes, bias)
+        attributes = _add_iwc_error_comment(attributes, iwc_source.wl_band)
         output.update_attributes(iwc_source.data, attributes)
         output.save_product_file(product, iwc_source, output_file, uuid)
         return uuid
@@ -73,7 +80,7 @@ class IwcSource(IceSource):
         bias = self.getvar("Z_bias") * self.coefficients.Z * 10
         self.append_data(bias, f"{self.product}_bias")
 
-    def append_error(self, ice_classification: IceClassification) -> float:
+    def append_error(self, ice_classification: IceClassification) -> None:
         """Estimates error of ice water content."""
 
         def _calc_random_error() -> npt.NDArray:
@@ -81,21 +88,27 @@ class IwcSource(IceSource):
             scaled_temperature += self.coefficients.Z
             return self.getvar("Z_error") * scaled_temperature * 10
 
-        retrieval_uncertainty = 1.7  # dB
+        def _calc_retrieval_uncertainty() -> npt.NDArray:
+            # Linear in temperature between the cold and warm values
+            warm, cold = RETRIEVAL_UNCERTAINTY[self.wl_band]
+            return np.interp(self.temperature, [T_COLD, T_WARM], [cold, warm])
+
+        retrieval_uncertainty = _calc_retrieval_uncertainty()
         random_error = _calc_random_error()
         iwc_error = utils.l2norm(retrieval_uncertainty, random_error)
         iwc_error[~ice_classification.is_ice | ice_classification.uncorrected_ice] = (
             ma.masked
         )
         self.append_data(iwc_error, f"{self.product}_error")
-        return retrieval_uncertainty
 
 
-def _add_iwc_error_comment(attributes: dict, uncertainty: float) -> dict:
+def _add_iwc_error_comment(attributes: dict, wl_band: str) -> dict:
+    warm, cold = RETRIEVAL_UNCERTAINTY[wl_band]
     attributes["iwc_error"] = attributes["iwc_error"]._replace(
         comment="This variable is an estimate of the one-standard-deviation random\n"
         "error in ice water content due to both the uncertainty of the retrieval\n"
-        f"(about {uncertainty} dB), and the random error in radar reflectivity\n"
+        f"(about {warm} dB between -20 and -10 degC, rising linearly to {cold} dB\n"
+        f"at -40 degC and below), and the random error in radar reflectivity\n"
         "factor from which ice water content was calculated.",
     )
     return attributes
