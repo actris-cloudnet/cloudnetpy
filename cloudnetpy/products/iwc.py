@@ -7,7 +7,6 @@ import numpy.typing as npt
 from numpy import ma
 
 from cloudnetpy import output, utils
-from cloudnetpy.constants import G_TO_KG
 from cloudnetpy.metadata import MetaData
 from cloudnetpy.products.product_tools import IceClassification, IceSource
 
@@ -50,12 +49,12 @@ def generate_iwc(
         iwc_source.append_icy_data(ice_classification)
         iwc_source.append_bias()
         iwc_source.append_sensitivity()
-        lwp_prior, bias = iwc_source.append_error(ice_classification)
+        bias = iwc_source.append_error(ice_classification)
         iwc_source.append_status(ice_classification)
         date = iwc_source.get_date()
         attributes = output.add_time_attribute(IWC_ATTRIBUTES, date)
         attributes = _add_iwc_comment(attributes, iwc_source)
-        attributes = _add_iwc_error_comment(attributes, lwp_prior, bias)
+        attributes = _add_iwc_error_comment(attributes, bias)
         output.update_attributes(iwc_source.data, attributes)
         output.save_product_file(product, iwc_source, output_file, uuid)
         return uuid
@@ -74,9 +73,7 @@ class IwcSource(IceSource):
         bias = self.getvar("Z_bias") * self.coefficients.Z * 10
         self.append_data(bias, f"{self.product}_bias")
 
-    def append_error(
-        self, ice_classification: IceClassification
-    ) -> tuple[float, float]:
+    def append_error(self, ice_classification: IceClassification) -> float:
         """Estimates error of ice water content."""
 
         def _calc_random_error() -> npt.NDArray:
@@ -84,39 +81,22 @@ class IwcSource(IceSource):
             scaled_temperature += self.coefficients.Z
             return self.getvar("Z_error") * scaled_temperature * 10
 
-        def _calc_error_in_uncorrected_ice() -> float:
-            spec_liq_atten = 1.0 if self.wl_band == "Ka" else 4.5
-            liq_atten_scaled = spec_liq_atten * self.coefficients.Z
-            return lwp_prior * G_TO_KG * liq_atten_scaled * 2 * 10
-
-        lwp_prior = 250  # g m-2
         retrieval_uncertainty = 1.7  # dB
         random_error = _calc_random_error()
-        error_uncorrected = _calc_error_in_uncorrected_ice()
         iwc_error = utils.l2norm(retrieval_uncertainty, random_error)
-        iwc_error[ice_classification.uncorrected_ice] = utils.l2norm(
-            retrieval_uncertainty,
-            error_uncorrected,
-        )
         iwc_error[~ice_classification.is_ice | ice_classification.uncorrected_ice] = (
             ma.masked
         )
         self.append_data(iwc_error, f"{self.product}_error")
-        return lwp_prior, retrieval_uncertainty
+        return retrieval_uncertainty
 
 
-def _add_iwc_error_comment(
-    attributes: dict, lwp_prior: float, uncertainty: float
-) -> dict:
+def _add_iwc_error_comment(attributes: dict, uncertainty: float) -> dict:
     attributes["iwc_error"] = attributes["iwc_error"]._replace(
         comment="This variable is an estimate of the one-standard-deviation random\n"
         "error in ice water content due to both the uncertainty of the retrieval\n"
         f"(about {uncertainty} dB), and the random error in radar reflectivity\n"
-        "factor from which ice water content was calculated. When liquid water is\n"
-        "present beneath the ice but no microwave radiometer data were available to\n"
-        "correct for the associated attenuation, the error also includes a\n"
-        f"contribution equivalent to approximately {lwp_prior} g m-2 of liquid water\n"
-        "path being uncorrected for.",
+        "factor from which ice water content was calculated.",
     )
     return attributes
 
@@ -141,17 +121,15 @@ def _add_iwc_comment(attributes: dict, iwc: IwcSource) -> dict:
         "supercooled drizzle will erroneously be identified as ice. Missing data\n"
         "indicates either that ice cloud was present but it was only detected by\n"
         "the lidar so its ice water content could not be estimated, or that there\n"
-        "was rain below the ice associated with uncertain attenuation of the\n"
-        "reflectivities in the ice. Note that where microwave radiometer liquid water\n"
-        "path was available it was used to correct the radar for liquid attenuation\n"
-        "when liquid cloud occurred below the ice; this is indicated a value of 3\n"
-        "in the iwc_retrieval_status variable. There is some uncertainty in this\n"
-        "procedure which is reflected by an increase in the associated values\n"
-        "in the iwc_error variable. When microwave radiometer data were not available\n"
-        "and liquid cloud occurred below the ice, the retrieval was still performed\n"
-        "but its reliability is questionable due to the uncorrected liquid water\n"
-        "attenuation. This is indicated by a value of 2 in the iwc_retrieval_status\n"
-        "variable, and an increase in the value of the iwc_error variable.",
+        "was liquid cloud, rain or melting layer below the ice whose attenuation\n"
+        "could not be corrected for. Where microwave radiometer liquid water path\n"
+        "and disdrometer rainfall rate were available they were used to correct the\n"
+        "radar for liquid, rain and melting layer attenuation; this is indicated by\n"
+        "a value of 3 in the iwc_retrieval_status variable. There is some uncertainty\n"
+        "in this procedure which is reflected by an increase in the associated\n"
+        "values in the iwc_error variable. Where no correction was possible, no\n"
+        "retrieval was performed; this is indicated by a value of 2 in the\n"
+        "iwc_retrieval_status variable.",
     )
     return attributes
 
@@ -177,8 +155,8 @@ DEFINITIONS = {
         {
             0: """No ice present.""",
             1: """Reliable retrieval.""",
-            2: """Unreliable retrieval due to uncorrected liquid, rain or
-                  melting attenuation.""",
+            2: """No retrieval due to uncorrected liquid, rain or melting
+                  layer attenuation.""",
             3: """Retrieval performed with radar corrected for liquid, rain and
                   melting attenuation.""",
             4: """Ice detected only by the lidar.""",
