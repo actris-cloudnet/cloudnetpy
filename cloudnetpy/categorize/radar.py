@@ -270,6 +270,7 @@ class Radar(DataSource):
 
             z_error = utils.l2norm(
                 z_precision,
+                attenuations.gas.error,
                 attenuations.liquid.error.filled(0),
                 attenuations.rain.error.filled(0),
                 attenuations.melting.error.filled(0),
