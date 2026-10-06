@@ -20,7 +20,7 @@ def generate_ier(
 ) -> UUID:
     """Generates Cloudnet ice effective radius product.
 
-    This function calculates ice particle effective radius using the Grieche
+    This function calculates ice particle effective radius using the Griesche
     et al. 2020 method which uses Hogan et al. 2006 to estimate ice water content
     and alpha from Delanoë et al. 2007. In this method, effective radius
     of ice particles is calculated from attenuated-corrected radar reflectivity
