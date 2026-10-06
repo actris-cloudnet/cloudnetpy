@@ -725,30 +725,28 @@ class Plot2D(Plot):
         if figure_data.is_mwrpy_product():
             self._fill_flagged_data(figure_data)
 
-        if figure_data.variables[0].name == "signal_source_status":
+        if self.sub_plot.variable.name == "signal_source_status":
             self._indicate_rainy_profiles(figure_data)
 
     def _indicate_rainy_profiles(self, figure_data: FigureData) -> None:
         if "rain_detected" not in figure_data.file.variables:
             return
-        rain = figure_data.file.variables["rain_detected"][:]
-        is_rain: ma.MaskedArray = ma.array(np.zeros_like(rain), mask=(rain == 0))
-        if is_rain.mask.all():
+        is_rain = figure_data.file.variables["rain_detected"][:] == 1
+        if not is_rain.any():
             return
-        self._ax.plot(
+        self._ax.fill_between(
             figure_data.time,
-            is_rain,
-            color="red",
-            marker="|",
-            linestyle="None",
-            markersize=10,
-            zorder=-999,
+            *self._get_y_limits(),
+            where=is_rain,
+            step="mid",
+            facecolor="#1f77b4",
+            alpha=0.18,
+            linewidth=0,
             label="Rain",
+            zorder=_get_zorder("flags"),
         )
         self._ax.legend(
             loc="upper right",
-            markerscale=0.75,
-            numpoints=1,
             frameon=False,
         )
 
