@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.97.1 – 2026-10-07
+
+- Fix lwc_error units to fraction, use vertical gradient only and plot in percent
+
 ## 1.97.0 – 2026-10-06
 
 - Make IWC retrieval uncertainty depend on temperature and radar band
