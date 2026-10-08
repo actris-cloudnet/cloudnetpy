@@ -24,7 +24,12 @@ class ProductGrid:
         self._obs_obj = obs_obj
         self._date = obs_obj.date
         self._obs_time = tl.time2datetime(obs_obj.time, self._date)
-        self._obs_height = obs_obj.data["height"][:]
+        # Model heights are above ground; the observation file's height is
+        # above mean sea level.
+        obs_height = obs_obj.height_agl
+        if obs_height is None:
+            obs_height = obs_obj.data["height"][:]
+        self._obs_height = np.asarray(obs_height)
         self._obs_data = obs_obj.data[obs_obj.product][:]
         self.model_obj = model_obj
         self._model_time = model_obj.time
