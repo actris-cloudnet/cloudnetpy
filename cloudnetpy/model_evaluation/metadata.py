@@ -171,7 +171,9 @@ REGRID_PRODUCT_ATTRIBUTES = {
             "This variable is the observed mean ice water content derived from radar\n"
             "reflectivity factor averaged onto the model grid with height and time.\n"
             "The formula has been applied where the categorization data has\n"
-            "diagnosed that the radar echo is due to ice."
+            "diagnosed that the radar echo is due to ice; pixels without ice count\n"
+            "as zero and unreliable retrievals (e.g. rain) are excluded, so the\n"
+            "value is a grid-box mean comparable to the model ice water content."
         ),
         dimensions=("time", "level"),
     ),

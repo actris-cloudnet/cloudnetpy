@@ -103,10 +103,14 @@ class ObservationManager(DataSource):
         """Keeps only reliable ice water content retrievals.
 
         Status 1 is a reliable retrieval and status 3 is a retrieval with the
-        radar corrected for liquid, rain and melting attenuation; everything
-        else (uncorrected attenuation, lidar-only, rain) is masked out.
+        radar corrected for liquid, rain and melting attenuation. Status 0 (no
+        ice) is set to zero so that the regridded value is a grid-box mean,
+        comparable to the model. Everything else (uncorrected attenuation,
+        lidar-only, rain) is masked out.
         """
         iwc = self.getvar("iwc")
-        iwc_status = self.getvar("iwc_retrieval_status")
-        iwc[~np.isin(iwc_status, (1, 3))] = ma.masked
+        status = ma.filled(self.getvar("iwc_retrieval_status"), -1)
+        no_ice = status == 0
+        invalid = (ma.getmaskarray(iwc) & ~no_ice) | ~np.isin(status, (0, 1, 3))
+        iwc = ma.array(ma.filled(iwc, 0), mask=invalid)
         self.append_data(iwc, "iwc")

@@ -113,6 +113,7 @@ def test_mask_iwc(obs_file) -> None:
     obs = ObservationManager("iwc", str(obs_file))
     iwc_status = obs.getvar("iwc_retrieval_status")
     expected = ma.copy(obs.getvar("iwc"))
-    expected[~np.isin(iwc_status, (1, 3))] = ma.masked
+    expected[iwc_status == 0] = 0
+    expected[~np.isin(iwc_status, (0, 1, 3))] = ma.masked
     obs._mask_iwc()
     testing.assert_array_almost_equal(expected, obs.data["iwc"][:])
