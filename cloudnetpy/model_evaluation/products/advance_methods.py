@@ -167,12 +167,16 @@ class AdvanceProductMethods:
         v = self._model_obj.getvar("vwind")
         u = self.remove_extra_levels(u)
         v = self.remove_extra_levels(v)
-        w_shear = self.calculate_wind_shear(self._model_obj.wind, u, v, height)
+        w_shear = self.calculate_wind_shear(u, v, height)
         return self.calculate_variance_iwc(w_shear, ice_ind)
 
     def calculate_variance_iwc(
         self, w_shear: npt.NDArray, ice_ind: tuple
     ) -> npt.NDArray:
+        """Fractional variance of IWC within a grid box (Hogan and Illingworth
+        2003, eq. 11), with the horizontal resolution in km and the wind shear
+        in m s-1 km-1.
+        """
         return 10 ** (
             0.3 * np.log10(self._model_obj.resolution_h)
             - 0.04 * w_shear[ice_ind]
@@ -181,17 +185,16 @@ class AdvanceProductMethods:
 
     @staticmethod
     def calculate_wind_shear(
-        wind: npt.NDArray,
         u: npt.NDArray,
         v: npt.NDArray,
         height: npt.NDArray,
     ) -> npt.NDArray:
-        """Vertical wind shear (m s-1 km-1) of (time, level) arrays, negative
-        where the wind speed decreases with height.
+        """Magnitude of the vertical shear of the horizontal wind (m s-1 km-1)
+        from (time, level) arrays.
         """
         height_km = height / 1000
         gradients = []
-        for w in (wind, u, v):
+        for w in (u, v):
             grad_w = np.zeros(w.shape)
             grad_w[:, 0] = (w[:, 1] - w[:, 0]) / (height_km[:, 1] - height_km[:, 0])
             grad_w[:, 1:-1] = (w[:, 2:] - w[:, :-2]) / (
@@ -202,9 +205,7 @@ class AdvanceProductMethods:
             )
             gradients.append(grad_w)
 
-        w_shear = np.sqrt(np.power(gradients[1], 2) + np.power(gradients[2], 2))
-        w_shear[gradients[0] < 0] *= -1
-        return w_shear
+        return np.sqrt(np.power(gradients[0], 2) + np.power(gradients[1], 2))
 
     @staticmethod
     def calculate_iwc_distribution(
