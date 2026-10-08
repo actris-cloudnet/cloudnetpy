@@ -13,6 +13,17 @@ def time2datetime(time: npt.NDArray, date: datetime.datetime) -> npt.NDArray:
     return np.asarray([date + timedelta(hours=float(t)) for t in time])
 
 
+def time_windows(time: npt.NDArray) -> list[tuple[float, float]]:
+    """Averaging window around each model time step.
+
+    Each window is +/- half the smallest time step, so a gap in the time
+    vector (e.g. a missing forecast run) does not widen the windows.
+    """
+    time = np.asarray(time, dtype=float)
+    half = np.min(np.diff(time)) / 2 if time.size > 1 else 0.5
+    return [(t - half, t + half) for t in time]
+
+
 def rebin_edges(arr: npt.NDArray) -> npt.NDArray:
     """Rebins array bins by half and adds boundaries."""
     new_arr = [(arr[i] + arr[i + 1]) / 2 for i in range(len(arr) - 1)]

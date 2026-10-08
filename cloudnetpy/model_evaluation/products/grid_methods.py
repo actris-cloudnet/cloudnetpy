@@ -2,7 +2,6 @@ import numpy as np
 import numpy.typing as npt
 from numpy import ma
 
-from cloudnetpy import utils
 from cloudnetpy.model_evaluation.products import tools as tl
 from cloudnetpy.model_evaluation.products.model_products import ModelManager
 from cloudnetpy.model_evaluation.products.observation_products import ObservationManager
@@ -39,8 +38,10 @@ class ProductGrid:
             ma.array(model_obj.wind),
             1,
         )
-        time_steps = utils.binvec(self._model_time)
-        self._time_steps = tl.time2datetime(time_steps, self._date)
+        self._time_windows = [
+            tuple(tl.time2datetime(np.array(edges), self._date))
+            for edges in tl.time_windows(self._model_time)
+        ]
         self._generate_downsample_product()
 
     def _generate_downsample_product(self) -> None:
@@ -51,11 +52,8 @@ class ProductGrid:
         """
         product_dict, product_adv_dict = self._get_method_storage()
         model_t = tl.time2datetime(self._model_time, self._date)
-        for i in range(len(self._time_steps) - 1):
-            x_ind = tl.get_1d_indices(
-                (self._time_steps[i], self._time_steps[i + 1]),
-                self._obs_time,
-            )
+        for i, window in enumerate(self._time_windows):
+            x_ind = tl.get_1d_indices(window, self._obs_time)
             y_steps = tl.rebin_edges(self._model_height[i])
             for j in range(len(y_steps) - 1):
                 x_ind_adv = tl.get_adv_indices(

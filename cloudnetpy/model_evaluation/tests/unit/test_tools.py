@@ -128,3 +128,17 @@ def test_obs_windows_size_first_index() -> None:
     result = tools.get_obs_window_size(ind_x, ind_y)
     assert result is not None
     testing.assert_almost_equal(result, (1, 1))
+
+
+def test_time_windows_even_spacing() -> None:
+    result = tools.time_windows(np.array([0.0, 1.0, 2.0]))
+    testing.assert_array_almost_equal(result, [(-0.5, 0.5), (0.5, 1.5), (1.5, 2.5)])
+
+
+def test_time_windows_gap() -> None:
+    result = tools.time_windows(np.array([0.0, 1.0, 24.0]))
+    testing.assert_array_almost_equal(result, [(-0.5, 0.5), (0.5, 1.5), (23.5, 24.5)])
+
+
+def test_time_windows_single() -> None:
+    testing.assert_array_almost_equal(tools.time_windows(np.array([3.0])), [(2.5, 3.5)])
