@@ -229,6 +229,15 @@ def test_calculate_variance_iwc(obs_file, model_file) -> None:
     testing.assert_array_almost_equal(result, expected)
 
 
+def test_calculate_variance_iwc_shear_cap(obs_file, model_file) -> None:
+    obs = ObservationManager(PRODUCT, str(obs_file))
+    model = ModelManager(str(model_file), MODEL, PRODUCT)
+    advance = AdvanceProductMethods(model, obs)
+    shear = np.array([[20.0, 50.0]])
+    result = advance.calculate_variance_iwc(shear, (np.array([0, 0]), np.array([0, 1])))
+    assert result[0] == result[1]
+
+
 def test_calculate_wind_shear(obs_file, model_file) -> None:
     obs = ObservationManager(PRODUCT, str(obs_file))
     model = ModelManager(str(model_file), MODEL, PRODUCT)

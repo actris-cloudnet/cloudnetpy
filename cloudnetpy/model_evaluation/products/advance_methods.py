@@ -15,6 +15,8 @@ from cloudnetpy.products.product_tools import (
     z_to_iwc,
 )
 
+MAX_WIND_SHEAR = 20.0  # m s-1 km-1
+
 
 class AdvanceProductMethods:
     """Class that adds advance methods of product to nc-file.
@@ -53,7 +55,8 @@ class AdvanceProductMethods:
         t_screened = self.remove_extra_levels(temperature - T_FREEZING)
         iwc, lwc = (self._model_obj.get_water_content(var) for var in ["iwc", "lwc"])
         coeffs = self.set_frequency_parameters()
-        z_sen = self.fit_z_sensitivity(h)
+        # Same dielectric factor scaling of Z as in the IWC product.
+        z_sen = self.fit_z_sensitivity(h) + 10 * np.log10(coeffs.K2liquid0 / 0.93)
         cf_filtered = self.filter_high_iwc_low_cf(cf, iwc, lwc)
         cloud_iwc, ice_ind = self.find_ice_in_clouds(cf_filtered, iwc, lwc)
         variance_iwc = self.iwc_variance(h, ice_ind)
@@ -175,12 +178,12 @@ class AdvanceProductMethods:
     ) -> npt.NDArray:
         """Fractional variance of IWC within a grid box (Hogan and Illingworth
         2003, eq. 11), with the horizontal resolution in km and the wind shear
-        in m s-1 km-1.
+        in m s-1 km-1. The shear is capped and the constant is -1.03 as in the
+        original Cloudnet code (the published equation has -0.93).
         """
+        shear = np.minimum(w_shear[ice_ind], MAX_WIND_SHEAR)
         return 10 ** (
-            0.3 * np.log10(self._model_obj.resolution_h)
-            - 0.04 * w_shear[ice_ind]
-            - 1.03
+            0.3 * np.log10(self._model_obj.resolution_h) - 0.04 * shear - 1.03
         )
 
     @staticmethod
