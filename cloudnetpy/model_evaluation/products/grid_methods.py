@@ -41,6 +41,8 @@ class ProductGrid:
     def _generate_downsample_product(self) -> None:
         """Downsampling products are generated with different averaging methods
         for a selected size of model time-height window.
+
+        Grid cells without any observation pixels stay masked.
         """
         product_dict, product_adv_dict = self._get_method_storage()
         model_t = tl.time2datetime(self._model_time, self._date)
@@ -91,19 +93,21 @@ class ProductGrid:
 
     def _cf_method_storage(self) -> tuple[dict, dict]:
         cf_dict = {
-            "cf_V": ma.zeros(self._model_height.shape),
-            "cf_A": ma.zeros(self._model_height.shape),
+            "cf_V": ma.masked_all(self._model_height.shape),
+            "cf_A": ma.masked_all(self._model_height.shape),
         }
         cf_adv_dict = {
-            "cf_V_adv": ma.zeros(self._model_height.shape),
-            "cf_A_adv": ma.zeros(self._model_height.shape),
+            "cf_V_adv": ma.masked_all(self._model_height.shape),
+            "cf_A_adv": ma.masked_all(self._model_height.shape),
         }
         return cf_dict, cf_adv_dict
 
     def _product_method_storage(self) -> tuple[dict, dict]:
-        product_dict = {f"{self._obs_obj.product}": ma.zeros(self._model_height.shape)}
+        product_dict = {
+            f"{self._obs_obj.product}": ma.masked_all(self._model_height.shape)
+        }
         product_adv_dict = {
-            f"{self._obs_obj.product}_adv": ma.zeros(self._model_height.shape),
+            f"{self._obs_obj.product}_adv": ma.masked_all(self._model_height.shape),
         }
         return product_dict, product_adv_dict
 
