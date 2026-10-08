@@ -6,6 +6,7 @@ from numpy import ma
 
 import cloudnetpy.utils as cl_tools
 from cloudnetpy.constants import T_FREEZING
+from cloudnetpy.exceptions import InvalidSourceFileError
 from cloudnetpy.model_evaluation.model_metadata import MODEL_PREFIX
 from cloudnetpy.model_evaluation.products.model_products import ModelManager
 from cloudnetpy.model_evaluation.products.observation_products import ObservationManager
@@ -105,15 +106,14 @@ class AdvanceProductMethods:
         if self._obs_obj.z_sensitivity is None:
             msg = "No z_sensitivity in observation file"
             raise ValueError(msg)
-        if self._obs_obj.height is None:
-            msg = "No height in observation file"
-            raise ValueError(msg)
+        if self._obs_obj.height_agl is None:
+            msg = "Observation file is missing height or altitude"
+            raise InvalidSourceFileError(msg)
         # Interpolate at the model level heights: rebinning assumes evenly
         # spaced levels, which maps stretched model levels to wrong heights.
-        obs_height = self._obs_obj.height_agl
-        if obs_height is None:
-            obs_height = self._obs_obj.height
-        obs_height = np.asarray(ma.filled(obs_height, np.nan), dtype=float)
+        obs_height = np.asarray(
+            ma.filled(self._obs_obj.height_agl, np.nan), dtype=float
+        )
         z_obs = np.asarray(ma.filled(self._obs_obj.z_sensitivity, np.nan), dtype=float)
         is_valid = np.isfinite(obs_height) & np.isfinite(z_obs)
         model_height = np.asarray(ma.filled(h, np.nan), dtype=float)

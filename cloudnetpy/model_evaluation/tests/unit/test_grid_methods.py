@@ -2,6 +2,7 @@ import numpy as np
 import pytest
 from numpy import ma, testing
 
+from cloudnetpy.exceptions import InvalidSourceFileError
 from cloudnetpy.model_evaluation.products.grid_methods import ProductGrid
 from cloudnetpy.model_evaluation.products.model_products import ModelManager
 from cloudnetpy.model_evaluation.products.observation_products import ObservationManager
@@ -40,6 +41,14 @@ def test_generate_regrid_product(model_file, obs_file, product, variables) -> No
     ProductGrid(model, obs)
     for var in variables:
         assert var in model.data
+
+
+def test_missing_height_agl_raises(model_file, obs_file) -> None:
+    obs = ObservationManager(PRODUCT, str(obs_file))
+    model = ModelManager(str(model_file), MODEL, PRODUCT)
+    obs.height_agl = None
+    with pytest.raises(InvalidSourceFileError):
+        ProductGrid(model, obs)
 
 
 @pytest.mark.parametrize("key, value", [("iwc", 1), ("lwc", 1), ("cf", 2)])

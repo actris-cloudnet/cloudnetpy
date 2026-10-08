@@ -2,6 +2,7 @@ import numpy as np
 import numpy.typing as npt
 from numpy import ma
 
+from cloudnetpy.exceptions import InvalidSourceFileError
 from cloudnetpy.model_evaluation.products import tools as tl
 from cloudnetpy.model_evaluation.products.model_products import ModelManager
 from cloudnetpy.model_evaluation.products.observation_products import ObservationManager
@@ -25,10 +26,10 @@ class ProductGrid:
         self._obs_time = tl.time2datetime(obs_obj.time, self._date)
         # Model heights are above ground; the observation file's height is
         # above mean sea level.
-        obs_height = obs_obj.height_agl
-        if obs_height is None:
-            obs_height = obs_obj.data["height"][:]
-        self._obs_height = np.asarray(obs_height)
+        if obs_obj.height_agl is None:
+            msg = "Observation file is missing height or altitude"
+            raise InvalidSourceFileError(msg)
+        self._obs_height = np.asarray(obs_obj.height_agl)
         self._obs_data = obs_obj.data[obs_obj.product][:]
         self.model_obj = model_obj
         self._model_time = model_obj.time
