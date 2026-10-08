@@ -233,13 +233,27 @@ def test_calculate_wind_shear(obs_file, model_file) -> None:
     obs = ObservationManager(PRODUCT, str(obs_file))
     model = ModelManager(str(model_file), MODEL, PRODUCT)
     advance = AdvanceProductMethods(model, obs)
-    u = np.array([[1, 2, 0, 1], [-1, 0, 1, -1], [1, 0, 1, -1]])
-    v = np.array([[1, 0, 1, -1], [1, 2, -1, 0], [1, 2, 0, 1]])
+    # (time, level) arrays; shear is the vertical gradient in m s-1 km-1
+    u = np.array([[1, 2, 0, 1], [-1, 0, 1, -1], [1, 0, 1, -1]]).T
+    v = np.array([[1, 0, 1, -1], [1, 2, -1, 0], [1, 2, 0, 1]]).T
     wind = np.sqrt(np.power(u, 2) + np.power(v, 2))
-    height = np.array([[1, 1, 1, 1], [2, 2, 2, 2], [3, 3, 3, 3]])
-    expected = np.array([[2, 2.83, 2.24, -2.24], [0, 1.41, 0.71, 1.41], [2, 0, -1, 1]])
+    height = np.array([[1, 1, 1, 1], [2, 2, 2, 2], [3, 3, 3, 3]]).T * 1000
+    expected = np.array(
+        [[2, 2.83, 2.24, -2.24], [0, 1.41, 0.71, 1.41], [2, 0, -1, 1]]
+    ).T
     result = advance.calculate_wind_shear(wind, u, v, height)
     testing.assert_array_almost_equal(np.round(result, 2), expected)
+
+
+def test_calculate_wind_shear_constant_height_in_time(obs_file, model_file) -> None:
+    obs = ObservationManager(PRODUCT, str(obs_file))
+    model = ModelManager(str(model_file), MODEL, PRODUCT)
+    advance = AdvanceProductMethods(model, obs)
+    u = np.array([[1.0, 3.0, 4.0], [1.0, 3.0, 4.0]])
+    v = np.zeros_like(u)
+    height = np.array([[0.0, 1000.0, 2000.0], [0.0, 1000.0, 2000.0]])
+    result = advance.calculate_wind_shear(u, u, v, height)
+    testing.assert_array_almost_equal(result, [[2, 1.5, 1], [2, 1.5, 1]])
 
 
 def test_calculate_iwc_distribution(obs_file, model_file) -> None:

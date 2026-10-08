@@ -186,16 +186,24 @@ class AdvanceProductMethods:
         v: npt.NDArray,
         height: npt.NDArray,
     ) -> npt.NDArray:
-        grand_winds = []
+        """Vertical wind shear (m s-1 km-1) of (time, level) arrays, negative
+        where the wind speed decreases with height.
+        """
+        height_km = height / 1000
+        gradients = []
         for w in (wind, u, v):
             grad_w = np.zeros(w.shape)
-            grad_w[0, :] = (w[1, :] - w[0, :]) / (height[1, :] - height[0, :])
-            grad_w[1:-1, :] = (w[2:, :] - w[:-2, :]) / (height[2:, :] - height[:-2, :])
-            grad_w[-1, :] = (w[-1, :] - w[-2, :]) / (height[-1, :] - height[-2, :])
-            grand_winds.append(grad_w)
+            grad_w[:, 0] = (w[:, 1] - w[:, 0]) / (height_km[:, 1] - height_km[:, 0])
+            grad_w[:, 1:-1] = (w[:, 2:] - w[:, :-2]) / (
+                height_km[:, 2:] - height_km[:, :-2]
+            )
+            grad_w[:, -1] = (w[:, -1] - w[:, -2]) / (
+                height_km[:, -1] - height_km[:, -2]
+            )
+            gradients.append(grad_w)
 
-        w_shear = np.sqrt(np.power(grand_winds[1], 2) + np.power(grand_winds[-1], 2))
-        w_shear[grand_winds[0] < 0] = 0 - w_shear[grand_winds[0] < 0]
+        w_shear = np.sqrt(np.power(gradients[1], 2) + np.power(gradients[2], 2))
+        w_shear[gradients[0] < 0] *= -1
         return w_shear
 
     @staticmethod
