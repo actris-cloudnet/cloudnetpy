@@ -421,7 +421,11 @@ class Kazr(CloudnetInstrument):
     @staticmethod
     def _read_frequency(nc: netCDF4.Dataset) -> float:
         if "frequency" in nc.variables:
-            return float(np.mean(nc["frequency"][:]) / 1e9)  # Hz -> GHz
+            frequency = ma.mean(nc["frequency"][:])
+            if not ma.is_masked(frequency) and np.isfinite(frequency):
+                return float(frequency / 1e9)  # Hz -> GHz
+            # E.g. bnfkazr2cfrgeqcM1.b1 files have only a fill value
+            logging.warning("Radar frequency missing from file, using default")
         value = _parse_global_attribute(nc, "radar_operating_frequency")
         if value is not None:
             return value

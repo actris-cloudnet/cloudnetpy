@@ -158,6 +158,16 @@ class TestKazr2nc(Check):
         with pytest.raises(RadarDataError, match="Nyquist"):
             kazr.kazr2nc(invalid, tmp_path / "x.nc", self.site_meta, date=self.date)
 
+    def test_masked_frequency_uses_default(self, tmp_path, caplog):
+        invalid = tmp_path / "sgpkazrcfrgeC1.a1.20220601.000007.nc"
+        shutil.copy(FILES[0], invalid)
+        with netCDF4.Dataset(invalid, "a") as nc:
+            nc["frequency"][:] = ma.masked
+        kazr.kazr2nc(invalid, tmp_path / "x.nc", self.site_meta, date=self.date)
+        assert "Radar frequency missing" in caplog.text
+        with netCDF4.Dataset(tmp_path / "x.nc") as nc:
+            assert np.isclose(nc.variables["radar_frequency"][:], 34.89)
+
     def test_geolocation_from_file(self, tmp_path):
         test_path = tmp_path / "geo.nc"
         kazr.kazr2nc(FILEPATH, test_path, {"name": "SGP"})
