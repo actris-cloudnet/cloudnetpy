@@ -168,6 +168,15 @@ class TestKazr2nc(Check):
         with netCDF4.Dataset(tmp_path / "x.nc") as nc:
             assert np.isclose(nc.variables["radar_frequency"][:], 34.89)
 
+    def test_range_grid_from_majority_of_profiles(self, tmp_path, caplog):
+        # A short file with a different range grid should not define the grid
+        odd = f"{SCRIPT_PATH}/data/kazr-andoya/anxkazrcfrgeM1.a1.20200301.120001.nc"
+        kazr.kazr2nc([odd, *FILES], tmp_path / "x.nc", self.site_meta, date=self.date)
+        assert "Skipping file" in caplog.text
+        with netCDF4.Dataset(tmp_path / "x.nc") as nc:
+            assert nc.dimensions["range"].size == 678
+            assert nc.dimensions["time"].size == 80
+
     def test_geolocation_from_file(self, tmp_path):
         test_path = tmp_path / "geo.nc"
         kazr.kazr2nc(FILEPATH, test_path, {"name": "SGP"})

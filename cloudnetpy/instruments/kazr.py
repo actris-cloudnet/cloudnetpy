@@ -164,10 +164,10 @@ class Kazr(CloudnetInstrument):
 
     def read_files(self) -> None:
         """Reads and concatenates all input files."""
+        with netCDF4.Dataset(self._find_reference_file()) as nc:
+            self._init_metadata(nc)
         for file in self.files:
             with netCDF4.Dataset(file) as nc:
-                if not self.keymap:
-                    self._init_metadata(nc)
                 try:
                     self._read_file(nc)
                 except (KeyError, ValueError) as err:
@@ -350,6 +350,24 @@ class Kazr(CloudnetInstrument):
             msg = "All radar data are masked"
             raise RadarDataError(msg)
 
+    def _find_reference_file(self) -> Path:
+        """Returns the first file using the range grid with the most profiles."""
+        n_profiles: dict[int, int] = {}
+        first_file: dict[int, Path] = {}
+        for file in self.files:
+            with netCDF4.Dataset(file) as nc:
+                if "range" not in nc.dimensions or "time" not in nc.dimensions:
+                    continue
+                n_range = nc.dimensions["range"].size
+                n_profiles[n_range] = (
+                    n_profiles.get(n_range, 0) + nc.dimensions["time"].size
+                )
+                first_file.setdefault(n_range, file)
+        if not first_file:
+            msg = "No valid KAZR files found"
+            raise ValidTimeStampError(msg)
+        return first_file[max(n_profiles, key=lambda k: n_profiles[k])]
+
     def _init_metadata(self, nc: netCDF4.Dataset) -> None:
         if "reflectivity" in nc.variables:
             self.keymap = KEYMAP_CFR
@@ -366,6 +384,7 @@ class Kazr(CloudnetInstrument):
         if bias is not None:
             self.offset_applied = _parse_bias(bias)
         self.serial_number = getattr(nc, "serial_number", None) or None
+        self.date = _parse_time_units(nc["time"].units).date()
         self.append_data(np.array(nc["range"][:], dtype=float), "range")
         self.append_data(0.0, "zenith_angle")
         self.append_data(self._read_frequency(nc), "radar_frequency")
