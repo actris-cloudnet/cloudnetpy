@@ -237,6 +237,32 @@ LEIPZIG_KEYS = {
 FLOAT_KEYS = {1, 2, 7, 16, 17, 24, 30, 31, 33, 34, 35}
 INT_KEYS = {3, 4, 8, 9, 10, 11, 12, 18, 25, 26, 27, 28, 60}
 
+KOLSASS_TELEGRAM: list[str | int | None] = [
+    "%Y-%m-%d %H:%M:%S",
+    18,
+    20,
+    25,
+    1,
+    2,
+    7,
+    9,
+    35,
+    11,
+    90,
+    91,
+    93,
+    13,
+    14,
+    15,
+    16,
+    17,
+    10,
+    12,
+    26,
+    27,
+    28,
+]
+
 
 def _read_lines(
     telegram: Sequence[str | int | None],
@@ -387,6 +413,17 @@ def _read_granada(filename: str | PathLike) -> ParsivelOutput:
     return _read_lines(telegram, content, b",", b".")
 
 
+def _read_kolsass(filename: str | PathLike) -> ParsivelOutput:
+    with open(filename, "rb") as f:
+        _header = f.readline()
+        content = f.read()
+    # Fix "0-9" to "-9" (e.g. 2025-01-01)
+    content = re.sub(rb",0-(\d),", rb",-\1,", content)
+    # Remove decimal part from integers (e.g. 2025-01-02)
+    content = re.sub(rb"(\d+)\.0,", rb"\1,", content, flags=re.MULTILINE)
+    return _read_lines(KOLSASS_TELEGRAM, content, b",", b".")
+
+
 def _read_headerless(
     filename: str | PathLike,
     telegram: Sequence[int | str | None],
@@ -516,6 +553,8 @@ def _read_parsivel(
         head = f.read(50)
     if head.startswith(b"datetime_utc;"):
         return _read_pyatmoslogger(filename)
+    if head.startswith(b"datetime_utc,sensor status,sensor time,"):
+        return _read_kolsass(filename)
     if head.startswith(b"Date;Time;"):
         return _read_asdo(filename)
     if head.startswith(b'"TOA5"'):

@@ -288,6 +288,30 @@ class TestParsivelEriswilOld(Check):
         assert self.nc.dimensions["time"].size == 3
 
 
+class TestKolsass1(Check):
+    date = "2025-01-01"
+    temp_dir = TemporaryDirectory()
+    temp_path = temp_dir.name + "/test.nc"
+    filename = f"{SCRIPT_PATH}/data/parsivel/Daily_20250101.csv"
+    site_meta = SITE_META
+    uuid = disdrometer.parsivel2nc(filename, temp_path, site_meta, date=date)
+
+    def test_dimensions(self):
+        assert self.nc.dimensions["time"].size == 3
+
+
+class TestKolsass2(Check):
+    date = "2025-01-02"
+    temp_dir = TemporaryDirectory()
+    temp_path = temp_dir.name + "/test.nc"
+    filename = f"{SCRIPT_PATH}/data/parsivel/Daily_20250102.csv"
+    site_meta = SITE_META
+    uuid = disdrometer.parsivel2nc(filename, temp_path, site_meta, date=date)
+
+    def test_dimensions(self):
+        assert self.nc.dimensions["time"].size == 3
+
+
 class TestThies(Check):
     date = "2021-09-15"
     temp_dir = TemporaryDirectory()
