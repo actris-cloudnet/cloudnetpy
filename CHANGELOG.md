@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.97.2 – 2026-10-09
+
+- Improve KAZR processing
+- Fix bugs in L3 processing
+- Add support for Kolsass Parsivel
+
 ## 1.97.1 – 2026-10-07
 
 - Fix lwc_error units to fraction, use vertical gradient only and plot in percent
