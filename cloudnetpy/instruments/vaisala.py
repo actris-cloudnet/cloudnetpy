@@ -7,7 +7,7 @@ from os import PathLike
 import ceilopyter.version
 import numpy as np
 import numpy.typing as npt
-from ceilopyter import read_cl_file, read_cs_file, read_ct_file
+from ceilopyter import read_cl_file, read_cs_file
 
 from cloudnetpy.exceptions import ValidTimeStampError
 from cloudnetpy.instruments import instruments
@@ -118,11 +118,29 @@ class Ct25k(VaisalaCeilo):
         site_meta: dict,
         expected_date: datetime.date | None = None,
     ) -> None:
-        super().__init__(read_ct_file, full_path, site_meta, expected_date)
+        super().__init__(no_reader, full_path, site_meta, expected_date)
         self._store_ceilometer_info()
 
     def _store_ceilometer_info(self) -> None:
         self.instrument = instruments.CT25K
+
+
+class Ld40(VaisalaCeilo):
+    """Class for Vaisala LD40 ceilometer."""
+
+    noise_param = NoiseParam(noise_min=0.7e-7, noise_smooth_min=1.2e-8)
+
+    def __init__(
+        self,
+        full_path: str | PathLike,
+        site_meta: dict,
+        expected_date: datetime.date | None = None,
+    ) -> None:
+        super().__init__(no_reader, full_path, site_meta, expected_date)
+        self._store_ceilometer_info()
+
+    def _store_ceilometer_info(self) -> None:
+        self.instrument = instruments.LD40
 
 
 class Cs135(VaisalaCeilo):
@@ -140,3 +158,8 @@ class Cs135(VaisalaCeilo):
 
     def _store_ceilometer_info(self) -> None:
         self.instrument = instruments.CS135
+
+
+def no_reader() -> None:
+    msg = "No ceilometer reader"
+    raise RuntimeError(msg)

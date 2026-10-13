@@ -9,18 +9,18 @@ from uuid import UUID
 
 import netCDF4
 import numpy as np
-from ceilopyter import read_ct25k
+from ceilopyter import read_ct25k, read_ld40
 from numpy import ma
 
 from cloudnetpy import output
 from cloudnetpy.instruments.cl61d import Cl61d
 from cloudnetpy.instruments.da10 import Da10
 from cloudnetpy.instruments.lufft import LufftCeilo
-from cloudnetpy.instruments.vaisala import ClCeilo, Cs135, Ct25k
+from cloudnetpy.instruments.vaisala import ClCeilo, Cs135, Ct25k, Ld40
 from cloudnetpy.metadata import COMMON_ATTRIBUTES, MetaData
 from cloudnetpy.utils import get_uuid
 
-CeiloObject = ClCeilo | Ct25k | LufftCeilo | Cl61d | Cs135 | Da10
+CeiloObject = ClCeilo | Ct25k | LufftCeilo | Cl61d | Cs135 | Da10 | Ld40
 
 
 def ceilo2nc(
@@ -88,6 +88,18 @@ def ceilo2nc(
         logging.warning("Raw data not range-corrected.")
     if isinstance(ceilo_obj, Ct25k):
         c_obj = read_ct25k(full_path, calibration_factor, range_corrected)
+        ceilo_obj.data["beta"] = c_obj.beta
+        ceilo_obj.data["beta_raw"] = c_obj.beta_raw
+        ceilo_obj.data["time"] = c_obj.time
+        ceilo_obj.data["range"] = c_obj.range
+        if c_obj.zenith_angle is not None:
+            ceilo_obj.data["zenith_angle"] = np.median(c_obj.zenith_angle)
+        ceilo_obj.data["calibration_factor"] = c_obj.calibration_factor
+        ceilo_obj.sort_time()
+        ceilo_obj.screen_date()
+        ceilo_obj.convert_to_fraction_hour()
+    elif isinstance(ceilo_obj, Ld40):
+        c_obj = read_ld40(full_path, calibration_factor)
         ceilo_obj.data["beta"] = c_obj.beta
         ceilo_obj.data["beta_raw"] = c_obj.beta_raw
         ceilo_obj.data["time"] = c_obj.time
@@ -174,6 +186,7 @@ def _initialize_ceilo(
             "chm15k",
             "cs135",
             "da10",
+            "ld40",
         ):
             msg = f"Invalid ceilometer model: {site_meta['model']}"
             raise ValueError(msg)
@@ -193,6 +206,8 @@ def _initialize_ceilo(
         return Da10(full_path, site_meta, date)
     if model == "cs135":
         return Cs135(full_path, site_meta, date)
+    if model == "ld40":
+        return Ld40(full_path, site_meta, date)
     return LufftCeilo(full_path, site_meta, date)
 
 

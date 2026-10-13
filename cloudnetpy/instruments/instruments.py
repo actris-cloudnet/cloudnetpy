@@ -51,6 +51,14 @@ CT25K = Instrument(
     wavelength=905.0,
 )
 
+LD40 = Instrument(
+    manufacturer="Vaisala",
+    domain="lidar",
+    category="ceilometer",
+    model="LD40",
+    wavelength=855.0,
+)
+
 CL61D = Instrument(
     manufacturer="Vaisala",
     domain="lidar",
