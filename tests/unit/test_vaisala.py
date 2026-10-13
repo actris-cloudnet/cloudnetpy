@@ -184,6 +184,7 @@ class TestCT25k(Check):
         keys = {
             "beta",
             "beta_raw",
+            "beta_smooth",
             "calibration_factor",
             "range",
             "height",

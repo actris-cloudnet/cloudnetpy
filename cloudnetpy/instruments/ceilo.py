@@ -90,6 +90,7 @@ def ceilo2nc(
         c_obj = read_ct25k(full_path, calibration_factor, range_corrected)
         ceilo_obj.data["beta"] = c_obj.beta
         ceilo_obj.data["beta_raw"] = c_obj.beta_raw
+        ceilo_obj.data["beta_smooth"] = c_obj.beta_smooth
         ceilo_obj.data["time"] = c_obj.time
         ceilo_obj.data["range"] = c_obj.range
         if c_obj.zenith_angle is not None:
@@ -102,6 +103,7 @@ def ceilo2nc(
         c_obj = read_ld40(full_path, calibration_factor)
         ceilo_obj.data["beta"] = c_obj.beta
         ceilo_obj.data["beta_raw"] = c_obj.beta_raw
+        ceilo_obj.data["beta_smooth"] = c_obj.beta_smooth
         ceilo_obj.data["time"] = c_obj.time
         ceilo_obj.data["range"] = c_obj.range
         if c_obj.zenith_angle is not None:

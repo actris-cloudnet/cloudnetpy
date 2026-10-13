@@ -34,6 +34,7 @@ class LufftCeilo(Ceilometer):
         ceilo = read_chm15k(self.file_name, calibration_factor)
         self.data["beta"] = ceilo.beta
         self.data["beta_raw"] = ceilo.beta_raw
+        self.data["beta_smooth"] = ceilo.beta_smooth
         self.data["time"] = ceilo.time
         self.data["range"] = ceilo.range
         if ceilo.zenith_angle is not None:

@@ -104,6 +104,7 @@ class TestWithRealData(Check):
         keys = {
             "beta",
             "beta_raw",
+            "beta_smooth",
             "calibration_factor",
             "range",
             "height",
@@ -127,7 +128,7 @@ class TestWithRealData(Check):
         assert self.nc.variables["zenith_angle"][:] == 0
 
     def test_comments(self):
-        for key in ("beta",):
+        for key in ("beta", "beta_smooth"):
             assert "SNR threshold applied: 5" in self.nc.variables[key].comment
 
     def test_global_attributes(self):
