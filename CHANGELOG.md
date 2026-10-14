@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.97.3 – 2026-10-14
+
+- Add support for LD40 ceilometer
+- Add `beta_smooth` for files processed with Ceilopyter
+
 ## 1.97.2 – 2026-10-09
 
 - Improve KAZR processing
