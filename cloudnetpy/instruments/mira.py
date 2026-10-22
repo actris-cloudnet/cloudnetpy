@@ -43,7 +43,10 @@ def mira2nc(
         site_meta: Dictionary containing information about the site. Required
             key-value pair is `name`. Optional `model` takes `mira-35` (default),
             `mira-35s`, `mira-35c`, or `mira-10`. Optional `radar_constant` (dB)
-            is used to calculate Zh from SNRg in old files without Zg.
+            is used to calculate Zh from SNRg in old files without Zg. Optional
+            `zenith_angle` (deg) overrides the angle reported in the raw file.
+            Optional `zenith_offset` and `azimuth_offset` (deg) are added to the
+            angles reported in the raw file.
         uuid: Set specific UUID for the file.
         date: Expected date as YYYY-MM-DD of all profiles in the file.
 
@@ -88,6 +91,10 @@ def mira2nc(
             else:
                 # Empirical values, should be checked
                 snr_limit = -30 if mira.instrument == MIRA10 else -17
+
+            zenith = site_meta.get("zenith_angle")
+            if zenith is not None:
+                mira.override_elevation_angle(zenith=zenith)
 
             # Old MIRA files don't have angle variables.
             if "elevation" not in mira.data:
@@ -155,6 +162,13 @@ class Mira(NcRadar):
             key, value = line.split(":", maxsplit=1)
             output[key] = value.strip()
         return output
+
+    def override_elevation_angle(self, zenith: float) -> None:
+        if not isinstance(zenith, int | float) or zenith < -90 or zenith > 90:
+            msg = f"Invalid zenith angle: {zenith}"
+            raise ValueError(msg)
+        elevation = float(90 - zenith)
+        self.append_data(np.repeat(elevation, len(self.time)), "elevation")
 
     def add_radar_frequency(self) -> None:
         # XMT should always be present. In newer files, there's also
