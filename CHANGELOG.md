@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.97.4 – 2026-10-22
+
+- Allow overriding instrument angle in MIRA processing
+
 ## 1.97.3 – 2026-10-14
 
 - Add support for LD40 ceilometer
