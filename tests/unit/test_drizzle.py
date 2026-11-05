@@ -225,8 +225,29 @@ def test_calculate_spectral_width(drizzle_cat_file):
     width = netCDF4.Dataset(drizzle_cat_file).variables["width"][:]
     v_sigma = netCDF4.Dataset(drizzle_cat_file).variables["v_sigma"][:]
     factor = obj._calc_v_sigma_factor()
-    expected = width - factor * v_sigma
+    expected = np.sqrt(np.clip(width**2 - factor * v_sigma**2, 0, None))
     testing.assert_almost_equal(obj._calculate_spectral_width(), expected)
+
+
+def test_spectral_width_is_subtracted_in_quadrature(drizzle_cat_file, monkeypatch):
+    obj = drizzle.SpectralWidth(drizzle_cat_file)
+    monkeypatch.setattr(obj, "_calc_v_sigma_factor", lambda: 0.25)
+    result = obj._calculate_spectral_width()
+    # width = 2, v_sigma = -2: sqrt(4 - 0.25 * 4)
+    testing.assert_almost_equal(result[0, 0], np.sqrt(3))
+    # width = 3, v_sigma = -1: sqrt(9 - 0.25 * 1)
+    testing.assert_almost_equal(result[1, 1], np.sqrt(8.75))
+
+
+def test_spectral_width_is_zero_when_turbulence_dominates(
+    drizzle_cat_file, monkeypatch
+):
+    obj = drizzle.SpectralWidth(drizzle_cat_file)
+    monkeypatch.setattr(obj, "_calc_v_sigma_factor", lambda: 10)
+    result = obj._calculate_spectral_width()
+    # width = 2, v_sigma = -2 and width = 1, v_sigma = 2
+    testing.assert_array_equal(result[0, [0, 2]], [0, 0])
+    assert np.all(result[np.isfinite(result)] >= 0)
 
 
 def test_calc_beam_divergence(drizzle_cat_file):

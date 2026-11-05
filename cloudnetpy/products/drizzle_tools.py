@@ -175,9 +175,12 @@ class SpectralWidth:
             width = ma.array([0])
             logging.warning("No spectral width, assuming width = %s", width[0])
         sigma_factor = self._calc_v_sigma_factor()
-        return width - sigma_factor * v_sigma
+        # Variances add, and sigma_factor is a ratio of variances (Eqs. 5 and 13)
+        variance = width**2 - sigma_factor * v_sigma**2
+        return np.sqrt(np.clip(variance, 0, None))
 
     def _calc_v_sigma_factor(self) -> npt.NDArray:
+        """Ratio of turbulent variance to variance of mean Doppler velocity."""
         beam_divergence = self._calc_beam_divergence()
         wind = self._calc_horizontal_wind()
         actual_wind = (wind + beam_divergence) ** (2 / 3)
