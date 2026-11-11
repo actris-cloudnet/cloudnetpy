@@ -80,7 +80,7 @@ def process_l2(l1: DisdroL1) -> DisdroL2:
         fall_velocity = ma.masked_where(spec == 0, np.tile(l1.velocity, (n_time, 1)))
         rain_amount = np.pi / 6 * np.sum(spec * l1.diameter**3 / area_mm2, axis=1)
         radar_refl = np.sum(
-            spec * l1.diameter**6 / (l1.velocity * area_m2 * interval_h[:, np.newaxis]),
+            spec * l1.diameter**6 / (l1.velocity * area_m2 * interval[:, np.newaxis]),
             axis=1,
         )
         energy_flux = (
