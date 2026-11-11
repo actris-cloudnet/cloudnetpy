@@ -1,3 +1,4 @@
+import datetime
 from dataclasses import dataclass
 
 import numpy as np
@@ -167,7 +168,11 @@ def process_l2(l1: DisdroL1) -> DisdroL2:
             )
         )
     rain_rate = rain_amount / interval_h
-    rain_accum = np.cumsum(rain_amount)
+
+    # Typically time_diff matches interval, but in Bucharest time_diff is 60 s
+    # and interval is 5 s as of 2026-11-11.
+    time_diff = np.median(np.diff(time) / datetime.timedelta(hours=1))
+    rain_accum = np.cumsum(rain_rate * time_diff)
 
     min_radar_refl = -10
     radar_refl_db = 10 * ma.log10(radar_refl)
