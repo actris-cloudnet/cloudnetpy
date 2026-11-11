@@ -1,3 +1,4 @@
 recursive-exclude tests *
+recursive-exclude docs *
 include cloudnetpy/products/mie_lu_tables.nc
 include cloudnetpy/py.typed
