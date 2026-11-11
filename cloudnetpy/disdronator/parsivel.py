@@ -1,4 +1,5 @@
 import datetime
+import logging
 import re
 from collections.abc import Sequence
 from os import PathLike
@@ -586,11 +587,13 @@ def read_parsivel_l1(
         msg = "No raw data"
         raise ValueError(msg)
     data_raw = np.swapaxes(l0[93], 1, 2)
-    interval = (
-        l0[9]
-        if 9 in l0
-        else np.median(np.diff(time.astype("datetime64[s]"))).astype(int)
-    )
+    if 9 in l0:
+        interval = l0[9]
+    else:
+        interval = np.median(np.diff(time.astype("datetime64[s]"))).astype(int)
+        logging.warning(
+            "Interval is not available, using mean time difference: %d s", interval
+        )
     return DisdroL1(
         diameter=D,
         diameter_bins=D_BINS,
