@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.97.5 – 2026-11-11
+
+- Fix disdrometer rainfall integration
+- Fix RD-80 reflectivity calculation
+
 ## 1.97.4 – 2026-10-22
 
 - Allow overriding instrument angle in MIRA processing
