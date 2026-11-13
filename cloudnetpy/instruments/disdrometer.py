@@ -189,11 +189,14 @@ class Disdrometer(CloudnetInstrument):
         self.l0_reader = l0_reader
         self.l1_reader = l1_reader
         self.site_meta = site_meta
-        self._read_data(filenames)
+        self._read_data(filenames, expected_date)
         self._process_data()
-        self._screen_time(expected_date)
 
-    def _read_data(self, filenames: Iterable[str | PathLike]) -> None:
+    def _read_data(
+        self,
+        filenames: Iterable[str | PathLike],
+        expected_date: datetime.date | None = None,
+    ) -> None:
         times = []
         data = defaultdict(list)
         for filename in filenames:
@@ -201,11 +204,23 @@ class Disdrometer(CloudnetInstrument):
             times.append(file_time)
             for key, value in file_data.items():
                 data[key].append(value)
-        self.l0_time = np.concatenate(times)
-        if len(self.l0_time) == 0:
+        all_times = np.concatenate(times)
+        if len(all_times) == 0:
             msg = "No data found"
             raise DisdrometerDataError(msg)
-        self.l0_data = {key: np.concatenate(value) for key, value in data.items()}
+        all_times, time_ind = np.unique(all_times, return_index=True)
+        if expected_date is None:
+            expected_date = all_times[0].date()
+        valid_ind = [t.date() == expected_date for t in all_times]
+        if not np.any(valid_ind):
+            msg = "No data found for expected date"
+            raise DisdrometerDataError(msg)
+        self.l0_time = all_times[valid_ind]
+        self.l0_data = {
+            key: np.concatenate(value)[time_ind][valid_ind]
+            for key, value in data.items()
+        }
+        self.date = expected_date
 
     def _process_data(self) -> None:
         l1 = self.l1_reader(self.l0_time, self.l0_data)
@@ -236,23 +251,6 @@ class Disdrometer(CloudnetInstrument):
             "kinetic_energy": l2.energy_flux,
             "visibility": np.round(l2.visibility).astype(np.int32),
         }
-
-    def _screen_time(self, expected_date: datetime.date | None = None) -> None:
-        if expected_date is None:
-            expected_date = self.raw_time[0].date()
-        is_valid = [dt.date() == expected_date for dt in self.raw_time]
-        if not np.any(is_valid):
-            msg = "No data found for expected date"
-            raise DisdrometerDataError(msg)
-        self.raw_time = self.raw_time[is_valid]
-        for key in self.raw_data:
-            self.raw_data[key] = self.raw_data[key][is_valid]
-        self.date = expected_date
-
-    def sort_and_dedup_timestamps(self) -> None:
-        self.raw_time, time_ind = np.unique(self.raw_time, return_index=True)
-        for key in self.raw_data:
-            self.raw_data[key] = self.raw_data[key][time_ind]
 
     def add_meta(self) -> None:
         valid_keys = ("latitude", "longitude", "altitude")
@@ -345,7 +343,6 @@ def _process_disdrometer(
         input_file = [input_file]
     disdrometer = klass(l0_reader, l1_reader, input_file, site_meta, date)
     disdrometer.add_raw_data()
-    disdrometer.sort_and_dedup_timestamps()
     disdrometer.convert_to_cloudnet_arrays()
     disdrometer.add_meta()
     attributes = output.add_time_attribute(attributes, disdrometer.date)

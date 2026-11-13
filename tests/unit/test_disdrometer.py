@@ -527,6 +527,11 @@ class TestRd80(Check):
         assert self.nc.location == "Kumpula"
         assert self.nc.cloudnet_file_type == "disdrometer"
         assert np.allclose(
+            self.nc["rainfall_amount"][:],
+            np.cumsum([0.0284, 0.1546, 1.8136]) / 60 / 1000,
+            rtol=1e-3,
+        )
+        assert np.allclose(
             self.nc["rainfall_rate"][:],
             [0.0284 / 3600000, 0.1546 / 3600000, 1.8136 / 3600000],
         )
