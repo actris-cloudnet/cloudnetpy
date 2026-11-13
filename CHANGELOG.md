@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.97.6 – 2026-11-13
+
+- Fix disdrometer rainfall amount with multiday input
+
 ## 1.97.5 – 2026-11-11
 
 - Fix disdrometer rainfall integration
