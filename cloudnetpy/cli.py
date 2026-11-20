@@ -365,11 +365,7 @@ def _process_categorize(
         return None
 
     logging.info("Processing categorize...")
-    generate_categorize(
-        cast("CategorizeInput", input_files),
-        cat_filepath,
-        options=args.options,
-    )
+    generate_categorize(cast("CategorizeInput", input_files), cat_filepath)
     logging.info("Processed categorize to %s", cat_filepath)
     return cat_filepath
 
@@ -1024,16 +1020,6 @@ def main() -> None:
         "--stop-time",
         type=float,
         help="Stop time in fractional hours since midnight UTC (default: 24)",
-        default=None,
-    )
-    parser.add_argument(
-        "-o",
-        "--options",
-        type=json.loads,
-        help=(
-            "Options for categorize processing as a JSON string, "
-            "e.g. '{\"temperature_offset\": 3}'"
-        ),
         default=None,
     )
     parser.add_argument(

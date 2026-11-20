@@ -38,7 +38,6 @@ def generate_categorize(
     input_files: CategorizeInput,
     output_file: str | PathLike,
     uuid: str | UUID | None = None,
-    options: dict | None = None,
 ) -> UUID:
     """Generates a Cloudnet Level 1c categorize file.
 
@@ -55,7 +54,6 @@ def generate_categorize(
             Level 0 files).
         output_file (str): The full path of the output file.
         uuid (str): Specific UUID to assign to the generated file.
-        options (dict): Dictionary containing optional parameters.
 
     Returns:
         str: UUID of the generated file.
@@ -170,7 +168,7 @@ def generate_categorize(
         data = Observations(
             radar=radar,
             lidar=Lidar(input_files["lidar"]),
-            model=Model(input_files["model"], radar.altitude, options),
+            model=Model(input_files["model"], radar.altitude),
             lv0_files=input_files.get("lv0_files"),
         )
         if "mwr" in input_files:

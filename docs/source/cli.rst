@@ -156,13 +156,6 @@ instrument-level products to the chain:
     $ cloudnetpy -s munich -d 2023-07-29 \
         -p radar,lidar,mwr,categorize,classification
 
-Options for the categorize step are passed as JSON via ``--options``:
-
-.. code-block:: console
-
-    $ cloudnetpy -s munich -d 2023-07-29 -p categorize \
-        --options '{"temperature_offset": 3}'
-
 A specific weather model can be selected with ``--model``:
 
 .. code-block:: console
