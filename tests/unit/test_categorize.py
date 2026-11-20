@@ -69,6 +69,6 @@ class TestCategorize(Check):
             var = nc.variables["Z_offset"]
             assert var[:] == 2.5
             assert var.dimensions == ()
-            assert var.units == "dBZ"
+            assert var.units == "dB"
             assert var.source == nc.variables["Z"].source
             assert nc.variables["Z"].ancillary_variables.endswith(" Z_offset")

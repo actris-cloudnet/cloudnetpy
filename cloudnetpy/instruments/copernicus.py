@@ -184,7 +184,7 @@ class Copernicus(ChilboltonRadar):
 ATTRIBUTES = {
     "Zh_offset": MetaData(
         long_name="Radar reflectivity calibration offset",
-        units="dBZ",
+        units="dB",
         comment=(
             "Calibration offset applied after removing the original offset "
             "from the raw files."

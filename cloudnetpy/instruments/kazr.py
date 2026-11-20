@@ -568,7 +568,7 @@ ATTRIBUTES = {
     "correction_bits": CORRECTION_BITS_ATTRIBUTES,
     "Zh_offset": MetaData(
         long_name="Radar reflectivity calibration offset",
-        units="dBZ",
+        units="dB",
         comment=(
             "Calibration offset applied to the reflectivity, either by ARM "
             "in the calibrated (b1) files or by Cloudnet in the other files."

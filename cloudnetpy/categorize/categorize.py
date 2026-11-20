@@ -444,7 +444,7 @@ CATEGORIZE_ATTRIBUTES = {
     ),
     "Z_offset": MetaData(
         long_name="Radar reflectivity calibration offset",
-        units="dBZ",
+        units="dB",
         comment="Calibration offset applied to the reflectivity in the radar file.",
         dimensions=None,
     ),

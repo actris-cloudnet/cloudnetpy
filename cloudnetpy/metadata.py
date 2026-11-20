@@ -68,7 +68,7 @@ COMMON_ATTRIBUTES = {
     ),
     "Zh_offset": MetaData(
         long_name="Radar reflectivity calibration offset",
-        units="dBZ",
+        units="dB",
         comment="Calibration offset added to the reflectivity of the raw files.",
         dimensions=None,
     ),
