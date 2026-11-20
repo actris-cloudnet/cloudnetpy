@@ -83,3 +83,18 @@ class TestBASTA(Check):
         with netCDF4.Dataset(test_path) as nc:
             assert nc.file_uuid == uuid_from_user
             assert str(uuid) == uuid_from_user
+
+
+def test_zh_offset(tmp_path):
+    meta = {"name": "Palaiseau", "altitude": 158}
+    basta2nc(filename, tmp_path / "a.nc", meta)
+    basta2nc(filename, tmp_path / "b.nc", {**meta, "Zh_offset": 2.0})
+    with (
+        netCDF4.Dataset(tmp_path / "a.nc") as a,
+        netCDF4.Dataset(tmp_path / "b.nc") as b,
+    ):
+        assert "Zh_offset" not in a.variables
+        assert b["Zh_offset"][:] == 2.0
+        assert b["Zh"].ancillary_variables == "Zh_offset"
+        diff = b["Zh"][:] - a["Zh"][:]
+        assert np.allclose(diff.compressed(), 2.0, atol=1e-3)

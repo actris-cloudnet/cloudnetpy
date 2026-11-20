@@ -46,6 +46,18 @@ class CloudnetInstrument:
         for name in variables_to_log:
             self.data[name].lin2db()
 
+    def calibrate_reflectivity(self) -> None:
+        """Adds optional `Zh_offset` (dB) from site_meta to reflectivity."""
+        zh_offset = self.site_meta.get("Zh_offset")
+        if zh_offset is None:
+            return
+        zh_offset = float(zh_offset)
+        self.data["Zh"].data[:] += zh_offset
+        self.data["Zh"].ancillary_variables = "Zh_offset"
+        self.data["Zh_offset"] = CloudnetArray(
+            np.array(zh_offset, dtype=np.float32), "Zh_offset"
+        )
+
     def remove_duplicate_timestamps(self) -> None:
         time = self._get_time()
         _, ind = np.unique(time, return_index=True)

@@ -38,7 +38,8 @@ def rpg2nc(
         output_file: Output file name.
         site_meta: Dictionary containing information about the
             site. Required key value pairs are `altitude` (metres above mean
-            sea level) and `name`.
+            sea level) and `name`. Optional `Zh_offset` (dB) is added to the
+            reflectivity.
         uuid: Set specific UUID for the file.
         date: Expected date in the input files. If not set,
             all files will be used. This might cause unexpected behavior if
@@ -75,6 +76,7 @@ def rpg2nc(
     fmcw.sort_timestamps()
     fmcw.remove_duplicate_timestamps()
     fmcw.linear_to_db(("Zh", "antenna_gain"))
+    fmcw.calibrate_reflectivity()
     fmcw.convert_units()
     fmcw.add_site_geolocation()
     valid_ind = fmcw.add_zenith_angle()

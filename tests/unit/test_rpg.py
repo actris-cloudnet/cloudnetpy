@@ -324,3 +324,18 @@ def test_filter_zenith_angle(data: ma.MaskedArray, expected: ma.MaskedArray):
     assert_equal(res.data, expected.data)
     if isinstance(res, ma.MaskedArray):
         assert_equal(res.mask, expected.mask)
+
+
+def test_zh_offset(tmp_path):
+    meta = {"name": "Bucharest", "altitude": 77}
+    rpg2nc(FILEPATH, tmp_path / "a.nc", meta, date="2020-10-22")
+    rpg2nc(FILEPATH, tmp_path / "b.nc", {**meta, "Zh_offset": 2.0}, date="2020-10-22")
+    with (
+        netCDF4.Dataset(tmp_path / "a.nc") as a,
+        netCDF4.Dataset(tmp_path / "b.nc") as b,
+    ):
+        assert "Zh_offset" not in a.variables
+        assert b["Zh_offset"][:] == 2.0
+        assert b["Zh"].ancillary_variables == "Zh_offset"
+        diff = b["Zh"][:] - a["Zh"][:]
+        assert np.allclose(diff.compressed(), 2.0, atol=1e-3)

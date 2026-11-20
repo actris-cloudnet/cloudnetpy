@@ -66,6 +66,12 @@ COMMON_ATTRIBUTES = {
         "per cubic metre will have a reflectivity of 0 dBZ at all frequencies.",
         dimensions=("time", "range"),
     ),
+    "Zh_offset": MetaData(
+        long_name="Radar reflectivity calibration offset",
+        units="dBZ",
+        comment="Calibration offset added to the reflectivity of the raw files.",
+        dimensions=None,
+    ),
     "width": MetaData(
         long_name="Spectral width",
         units="m s-1",

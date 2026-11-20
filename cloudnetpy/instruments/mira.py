@@ -44,6 +44,7 @@ def mira2nc(
             key-value pair is `name`. Optional `model` takes `mira-35` (default),
             `mira-35s`, `mira-35c`, or `mira-10`. Optional `radar_constant` (dB)
             is used to calculate Zh from SNRg in old files without Zg. Optional
+            `Zh_offset` (dB) is added to the reflectivity. Optional
             `zenith_angle` (deg) overrides the angle reported in the raw file.
             Optional `zenith_offset` and `azimuth_offset` (deg) are added to the
             angles reported in the raw file.
@@ -85,6 +86,7 @@ def mira2nc(
             mira.screen_low_power()
             mira.add_zh_from_snr()
             mira.linear_to_db(("Zh", "ldr", "SNR"))
+            mira.calibrate_reflectivity()
 
             if "snr_limit" in site_meta and site_meta["snr_limit"] is not None:
                 snr_limit = site_meta["snr_limit"]

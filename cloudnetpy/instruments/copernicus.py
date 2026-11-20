@@ -29,7 +29,8 @@ def copernicus2nc(
         output_file: Output filename.
         site_meta: Dictionary containing information about the site. Required key
             value pair is `name`. Optional are `latitude`, `longitude`, `altitude` and
-            'calibration_offset' (default = -146.8).
+            `Zh_offset` (default = -149.5), which replaces the calibration offset
+            applied in the raw files.
         uuid: Set specific UUID for the file.
         date: Expected date as YYYY-MM-DD of all profiles in the file.
 

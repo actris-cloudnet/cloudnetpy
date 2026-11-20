@@ -31,7 +31,7 @@ def basta2nc(
         basta_file: Filename of a daily BASTA .nc file.
         output_file: Output filename.
         site_meta: Dictionary containing information about the site. Required key
-            is `name`.
+            is `name`. Optional `Zh_offset` (dB) is added to the reflectivity.
         uuid: Set specific UUID for the file.
         date: Expected date of the measurements as YYYY-MM-DD.
 
@@ -64,6 +64,7 @@ def basta2nc(
         if date is not None:
             basta.validate_date(date)
         basta.screen_data(keymap)
+        basta.calibrate_reflectivity()
         basta.add_time_and_range(time_dtype="f8")
         basta.add_site_geolocation()
         basta.add_zenith_angle()

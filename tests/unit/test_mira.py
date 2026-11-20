@@ -365,3 +365,19 @@ class TestOldFilesWithoutZg(Check):
         with netCDF4.Dataset(test_path) as nc, netCDF4.Dataset(self.raw_file) as raw:
             assert np.isclose(nc.variables["radar_constant"][:], -81.61)
             assert nc.variables["Zh"][:].count() > np.isfinite(raw["Ze"][:]).sum()
+
+
+def test_zh_offset(tmp_path):
+    file = f"{filepath}/20210102_0000.mmclx"
+    mira.mira2nc(file, tmp_path / "a.nc", SITE_META)
+    mira.mira2nc(file, tmp_path / "b.nc", {**SITE_META, "Zh_offset": -1.5})
+    with (
+        netCDF4.Dataset(tmp_path / "a.nc") as a,
+        netCDF4.Dataset(tmp_path / "b.nc") as b,
+    ):
+        assert "Zh_offset" not in a.variables
+        assert b["Zh_offset"][:] == -1.5
+        assert b["Zh"].ancillary_variables == "Zh_offset"
+        assert np.array_equal(a["Zh"][:].mask, b["Zh"][:].mask)
+        diff = b["Zh"][:] - a["Zh"][:]
+        assert np.allclose(diff.compressed(), -1.5, atol=1e-3)

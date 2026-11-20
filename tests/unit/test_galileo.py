@@ -119,3 +119,19 @@ class TestGalileo2nc(Check):
                 test_path,
                 self.site_meta,
             )
+
+
+def test_zh_offset(tmp_path):
+    meta = {"name": "Chilbolton", "altitude": 85}
+    galileo.galileo2nc(FILEPATH, tmp_path / "a.nc", meta)
+    galileo.galileo2nc(FILEPATH, tmp_path / "b.nc", {**meta, "Zh_offset": 2.0})
+    with (
+        netCDF4.Dataset(tmp_path / "a.nc") as a,
+        netCDF4.Dataset(tmp_path / "b.nc") as b,
+    ):
+        assert "Zh_offset" not in a.variables
+        assert b["Zh_offset"][:] == 2.0
+        assert b["Zh"].ancillary_variables == "Zh_offset"
+        assert np.array_equal(a["Zh"][:].mask, b["Zh"][:].mask)
+        diff = b["Zh"][:] - a["Zh"][:]
+        assert np.allclose(diff.compressed(), 2.0, atol=1e-3)
