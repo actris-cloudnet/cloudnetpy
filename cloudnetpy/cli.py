@@ -48,6 +48,26 @@ L3_SOURCE_PRODUCTS: Final = {
 # Model used for L3 products when none is given with --model.
 DEFAULT_L3_MODEL: Final = "ecmwf"
 
+# Reader options that can be set with --calibration
+CALIBRATION_KEYS: Final = {
+    "radar": frozenset(
+        {
+            "Zh_offset",
+            "azimuth_offset",
+            "mode",
+            "model",
+            "radar_constant",
+            "range_correction_factor",
+            "range_offset",
+            "snr_limit",
+            "zenith_angle",
+            "zenith_offset",
+        }
+    ),
+    "lidar": frozenset({"calibration_factor", "range_corrected", "snr_limit"}),
+    "disdrometer": frozenset({"decimal_separator", "field_separator", "telegram"}),
+}
+
 # Instrument products available for ARM sites
 ARM_PRODUCTS: Final = frozenset({"radar", "lidar", "mwr", "disdrometer"})
 
@@ -100,6 +120,12 @@ def run(args: argparse.Namespace, tmpdir: str, client: APIClient) -> None:
             )
             _plot(output_filepath, product, args)
             cat_files[product] = output_filepath
+
+    if not args.dl:
+        for product in args.calibration or {}:
+            if not cat_files.get(product):
+                msg = f"Can not apply --calibration: {product} not processed"
+                raise CloudnetException(msg)
 
     # Categorize based products
     if process_categorize:
@@ -205,7 +231,9 @@ def _process_arm_instruments(
         "longitude": site.longitude,
         "altitude": site.altitude,
     }
-    new_files = arm.convert_to_l1b(args.site, date, raw_files, output_folder, site_meta)
+    new_files = arm.convert_to_l1b(
+        args.site, date, raw_files, output_folder, site_meta, args.calibration
+    )
     for product, filepath in new_files.items():
         _plot(filepath, product, args)
     l1b_files.update(new_files)
@@ -382,7 +410,8 @@ def _process_instrument_product(
     if args.dl:
         return None
     input_folder = input_files[0].parent
-    calibration = _get_calibration(instrument, args, client)
+    overrides = (args.calibration or {}).get(product, {})
+    calibration = {**_get_calibration(instrument, args, client), **overrides}
     fun: Callable
     match (product, instrument.instrument_id):
         case ("radar", _id) if "mira" in _id:
@@ -454,6 +483,7 @@ def _process_instrument_product(
                 f" from instrument '{invalid_instrument_id}' is not supported"
             )
             raise ValueError(msg)
+    site_meta.update(overrides)
     logging.info("Processing %s...", product)
     fun(input_files, output_filepath, site_meta, date=args.date)
     logging.info("Processed %s: %s", product, output_filepath)
@@ -854,6 +884,26 @@ def _parse_products(product_argument: str, client: APIClient) -> list[str]:
     return valid_products
 
 
+def _parse_calibration(argument: str) -> dict[str, dict]:
+    try:
+        calibration = json.loads(argument)
+    except json.JSONDecodeError as err:
+        msg = f"Invalid JSON: {err}"
+        raise argparse.ArgumentTypeError(msg) from err
+    if not isinstance(calibration, dict):
+        msg = "Expected a JSON object with products as keys"
+        raise argparse.ArgumentTypeError(msg)
+    for product, values in calibration.items():
+        if product not in CALIBRATION_KEYS:
+            msg = f"Invalid product '{product}', use: {', '.join(CALIBRATION_KEYS)}"
+            raise argparse.ArgumentTypeError(msg)
+        valid_keys = CALIBRATION_KEYS[product]
+        if not isinstance(values, dict) or set(values) - valid_keys:
+            msg = f"Valid {product} keys are: {', '.join(sorted(valid_keys))}"
+            raise argparse.ArgumentTypeError(msg)
+    return calibration
+
+
 def _parse_model(model_id: str, client: APIClient) -> str:
     models = client.models()
     found = False
@@ -986,7 +1036,22 @@ def main() -> None:
         ),
         default=None,
     )
+    parser.add_argument(
+        "-c",
+        "--calibration",
+        type=_parse_calibration,
+        help=(
+            "Calibration for instrument processing as a JSON string with "
+            'products as keys, e.g. \'{"radar": {"Zh_offset": 2}}\'. Overrides '
+            "values from the data portal. The products must be included in "
+            "--products."
+        ),
+        default=None,
+    )
     args = parser.parse_args()
+    requested = {_parse_instrument(p)[0] for p in args.products}
+    if missing := set(args.calibration or {}) - requested:
+        parser.error(f"--calibration requires {', '.join(missing)} in the products")
     if isinstance(args.show, str):
         if args.variables is None:
             args.variables = args.show

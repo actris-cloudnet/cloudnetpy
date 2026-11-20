@@ -146,6 +146,29 @@ instrument-level products to the chain:
     $ cloudnetpy -s munich -d 2023-07-29 \
         -p radar,lidar,mwr,categorize,classification
 
+Instrument processing uses the calibration stored in the data portal.
+Individual values can be overridden with ``--calibration``, given as
+JSON with products as keys. The products must be included in
+``--products`` so that they are processed from raw data. For example,
+to add a reflectivity calibration offset (dB), which is stored in the
+radar file and carried over to the categorize file:
+
+.. code-block:: console
+
+    $ cloudnetpy -s munich -d 2023-07-29 -p radar,categorize \
+        --calibration '{"radar": {"Zh_offset": 1.5}}'
+
+Supported keys are:
+
+- ``radar``: ``Zh_offset``, ``snr_limit``, ``zenith_angle``,
+  ``zenith_offset``, ``azimuth_offset``, ``range_offset``,
+  ``range_correction_factor``, ``radar_constant``, ``model``, ``mode``
+- ``lidar``: ``calibration_factor``, ``range_corrected``, ``snr_limit``
+- ``disdrometer``: ``telegram``, ``field_separator``,
+  ``decimal_separator``
+
+Keys that the reader of the instrument does not use are ignored.
+
 Options for the categorize step are passed as JSON via ``--options``:
 
 .. code-block:: console
