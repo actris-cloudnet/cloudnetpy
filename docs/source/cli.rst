@@ -68,7 +68,8 @@ variables:
 
 Because ARM files are not stored in the data portal, already processed local
 files in the output folder are reused: requesting ``categorize`` reuses
-existing Level 1b files (radar, lidar, mwr), and requesting a categorize-based
+existing Level 1b files (radar, lidar, mwr, disdrometer), and requesting a
+categorize-based
 product (e.g. ``classification``) reuses an existing categorize file. Missing
 files are generated. Request a product explicitly to regenerate it, e.g.
 ``-p radar,categorize`` reprocesses the radar but reuses the lidar and mwr
@@ -105,7 +106,16 @@ The same can be expressed compactly inside the product list:
     $ cloudnetpy -s lindenberg -d 2024-06-01 -p 'radar[mira-35],lidar[cl61d]'
 
 The ``-i`` flag can be given multiple times to set preferences for
-several products at once.
+several products at once. Several instruments can be listed in order of
+preference, and the first one available is used:
+
+.. code-block:: console
+
+    $ cloudnetpy -s lindenberg -d 2024-06-01 -p categorize \
+        -i lidar:halo-doppler-lidar,cl61d
+
+The preferences apply both to instrument processing and to the
+instrument files used as categorize input.
 
 Generating L2 products
 ----------------------
@@ -130,9 +140,9 @@ Generating the categorize file locally
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 To rebuild the categorize file yourself, add ``categorize`` to the
-product list. The CLI downloads the L1b radar, lidar, MWR and model
-files from the portal and runs ``generate_categorize`` locally. The
-L2 step then uses the freshly-generated categorize file:
+product list. The CLI downloads the L1b radar, lidar, MWR, disdrometer
+and model files from the portal and runs ``generate_categorize`` locally.
+The L2 step then uses the freshly-generated categorize file:
 
 .. code-block:: console
 
@@ -146,9 +156,40 @@ instrument-level products to the chain:
     $ cloudnetpy -s munich -d 2023-07-29 \
         -p radar,lidar,mwr,categorize,classification
 
+Options for the categorize step are passed as JSON via ``--options``:
+
+.. code-block:: console
+
+    $ cloudnetpy -s munich -d 2023-07-29 -p categorize \
+        --options '{"temperature_offset": 3}'
+
+A specific weather model can be selected with ``--model``:
+
+.. code-block:: console
+
+    $ cloudnetpy -s munich -d 2023-07-29 -p categorize --model ecmwf
+
+Model evaluation products
+-------------------------
+
+The L3 products ``l3-cf``, ``l3-iwc`` and ``l3-lwc`` compare observed
+cloud fraction, ice water content and liquid water content with a
+weather model. The CLI downloads the observation product (categorize,
+iwc or lwc) and the model file from the portal and writes the result
+into an ``evaluation`` folder. The model is selected with ``--model``
+(default ``ecmwf``):
+
+.. code-block:: console
+
+    $ cloudnetpy -s kenttarova -d 2025-05-28 -p l3-cf \
+        --model harmonie-fmi-6-11
+
+Overriding calibration
+----------------------
+
 Instrument processing uses the calibration stored in the data portal.
-Individual values can be overridden with ``--calibration``, given as
-JSON with products as keys. The products must be included in
+Individual values can be overridden with ``-c`` / ``--calibration``,
+given as JSON with products as keys. The products must be included in
 ``--products`` so that they are processed from raw data. For example,
 to add a reflectivity calibration offset (dB), which is stored in the
 radar file and carried over to the categorize file:
@@ -169,18 +210,8 @@ Supported keys are:
 
 Keys that the reader of the instrument does not use are ignored.
 
-Options for the categorize step are passed as JSON via ``--options``:
-
-.. code-block:: console
-
-    $ cloudnetpy -s munich -d 2023-07-29 -p categorize \
-        --options '{"temperature_offset": 3}'
-
-A specific weather model can be selected with ``--model``:
-
-.. code-block:: console
-
-    $ cloudnetpy -s munich -d 2023-07-29 -p categorize --model ecmwf
+For ARM sites no calibration is read from the data portal, so
+``--calibration`` is the only way to set these values.
 
 Plotting
 --------
@@ -206,6 +237,15 @@ The variables can also be given directly to ``--show``:
 .. code-block:: console
 
     $ cloudnetpy -s munich -d 2023-07-29 -p radar --show Zh,v
+
+The plotted area can be limited with ``--max-y`` (maximum height in
+km, default 12) and with ``--start-time`` and ``--stop-time``
+(fractional hours UTC):
+
+.. code-block:: console
+
+    $ cloudnetpy -s munich -d 2023-07-29 -p radar --show Zh \
+        --max-y 6 --start-time 9 --stop-time 15.5
 
 Other useful flags
 ------------------
@@ -240,4 +280,5 @@ Files are organized by site, date, and processing level:
                 ├── 20230729_munich_categorize.nc
                 └── 20230729_munich_classification.nc
 
-The same layout is used for raw input files under ``input/``.
+Raw input files are stored under ``input/<site>/<date>/``, in one
+folder per instrument.
