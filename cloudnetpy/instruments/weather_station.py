@@ -423,7 +423,7 @@ class KenttarovaWS(WS):
                 "time": raw_data["DATA_TIME"],
                 "air_temperature": raw_data["TA 2m (degC)"],
                 "relative_humidity": raw_data["RH 2m (%)"],
-                "air_pressure": raw_data["PA #2/1 (hPa)"],
+                "air_pressure": raw_data["PA0_14"],
                 "wind_speed": raw_data["WS #3/1 23.6m (m/s)"],
                 "wind_direction": raw_data["WD #3/1 23.6m (deg)"],
                 "snow_depth": raw_data["SND #5/1 (cm)"],
