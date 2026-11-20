@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.97.8 – 2026-11-20
+
+- Fix pressure in Kenttärova weather station
+
 ## 1.97.7 – 2026-11-20
 
 - Support new format of Kenttärova weather station
