@@ -15,6 +15,7 @@ from numpy import ma
 from cloudnetpy import output
 from cloudnetpy.cloudnetarray import CloudnetArray
 from cloudnetpy.constants import (
+    CM_TO_M,
     HPA_TO_PA,
     MM_H_TO_M_S,
     MM_TO_M,
@@ -100,6 +101,7 @@ def ws2nc(
     ws.convert_pressure()
     ws.convert_rainfall_rate()
     ws.convert_rainfall_amount()
+    ws.convert_snow_depth()
     ws.normalize_cumulative_amount("rainfall_amount")
     ws.calculate_rainfall_amount()
     ws.wrap_wind_direction()
@@ -177,6 +179,9 @@ class WS(CSVFile):
         values = self.data["wind_direction"].data
         values[(values > -threshold) & (values < 0)] += 360
         values[(values >= 360) & (values < 360 + threshold)] -= 360
+
+    def convert_snow_depth(self) -> None:
+        pass
 
 
 class PalaiseauWS(WS):
@@ -394,16 +399,18 @@ class KenttarovaWS(WS):
         merged: dict = {}
         for filename in self.filenames:
             with open(filename, newline="") as f:
-                reader = csv.DictReader(f)
+                reader = csv.DictReader(f, delimiter=";")
                 raw_data: dict = {key: [] for key in reader.fieldnames}  # type: ignore[union-attr]
                 for row in reader:
+                    if row["FMISID"].startswith("#"):
+                        continue
                     for key, value in row.items():
                         parsed_value: float | datetime.datetime
-                        if key == "Read time (UTC+2)":
+                        if key == "DATA_TIME":
                             try:
                                 parsed_value = datetime.datetime.strptime(
                                     value, "%Y-%m-%d %H:%M:%S"
-                                ) - datetime.timedelta(hours=2)
+                                )
                             except ValueError:
                                 break  # Should be first column, so skip whole row.
                         else:
@@ -413,13 +420,13 @@ class KenttarovaWS(WS):
                                 parsed_value = math.nan
                         raw_data[key].append(parsed_value)
             data = {
-                "time": raw_data["Read time (UTC+2)"],
-                "air_temperature": raw_data["Temp 2m (C)"],
-                "relative_humidity": raw_data["Humidity 2m (%)"],
-                "air_pressure": raw_data["Pressure (hPa)"],
-                "wind_speed": raw_data["Wind speed (m/s)"],
-                "wind_direction": raw_data["Wind dir (deg)"],
-                "rainfall_rate": raw_data["Precipitation (?)"],
+                "time": raw_data["DATA_TIME"],
+                "air_temperature": raw_data["TA 2m (degC)"],
+                "relative_humidity": raw_data["RH 2m (%)"],
+                "air_pressure": raw_data["PA #2/1 (hPa)"],
+                "wind_speed": raw_data["WS #3/1 23.6m (m/s)"],
+                "wind_direction": raw_data["WD #3/1 23.6m (deg)"],
+                "snow_depth": raw_data["SND #5/1 (cm)"],
             }
             if merged:
                 merged = {key: [*merged[key], *data[key]] for key in merged}
@@ -427,14 +434,8 @@ class KenttarovaWS(WS):
                 merged = data
         return self.format_data(merged)
 
-    def convert_rainfall_rate(self) -> None:
-        # Rainfall rate is 10-minute averaged in mm h-1
-        rainfall_rate = self.data["rainfall_rate"][:]
-        self.data["rainfall_rate"].data = rainfall_rate * MM_H_TO_M_S / 10
-
-    def convert_pressure(self) -> None:
-        # Magic number 10 to convert to realistic Pa
-        self.data["air_pressure"].data = self.data["air_pressure"][:] * 10
+    def convert_snow_depth(self) -> None:
+        self.data["snow_depth"].data = self.data["snow_depth"][:] * CM_TO_M
 
 
 class HyytialaWS(WS):
@@ -919,6 +920,12 @@ ATTRIBUTES = {
         long_name="Meteorological optical range (MOR) visibility",
         units="m",
         standard_name="visibility_in_air",
+        dimensions=("time",),
+    ),
+    "snow_depth": MetaData(
+        long_name="Snow depth",
+        units="m",
+        standard_name="surface_snow_thickness",
         dimensions=("time",),
     ),
 }

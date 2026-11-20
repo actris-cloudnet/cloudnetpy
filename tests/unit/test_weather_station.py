@@ -149,19 +149,33 @@ class TestWeatherStationGranada(WS):
         assert self.nc.dimensions["time"].size == 10
 
 
-class TestWeatherStationKenttarova(WS):
-    date = "2024-05-20"
+# class TestWeatherStationKenttarovaOld(WS):
+#     date = "2024-05-20"
+#     temp_dir = TemporaryDirectory()
+#     temp_path = temp_dir.name + "/test.nc"
+#     site_meta = {**SITE_META, "name": "Kenttärova"}
+#     filename = [
+#         f"{SCRIPT_PATH}/data/ws/Krova_aws_pqBARLog5_20240520.csv",
+#         f"{SCRIPT_PATH}/data/ws/Krova_aws_pqBARLog5_20240521.csv",
+#     ]
+#     uuid = weather_station.ws2nc(filename, temp_path, site_meta, date=date)
+
+#     def test_dimensions(self):
+#         assert self.nc.dimensions["time"].size == 24 * (60 / 10) + 1
+
+
+class TestWeatherStationKenttarovaNew(WS):
+    date = "2026-11-20"
     temp_dir = TemporaryDirectory()
     temp_path = temp_dir.name + "/test.nc"
     site_meta = {**SITE_META, "name": "Kenttärova"}
     filename = [
-        f"{SCRIPT_PATH}/data/ws/Krova_aws_pqBARLog5_20240520.csv",
-        f"{SCRIPT_PATH}/data/ws/Krova_aws_pqBARLog5_20240521.csv",
+        f"{SCRIPT_PATH}/data/ws/kenttarova_20261120.csv",
     ]
     uuid = weather_station.ws2nc(filename, temp_path, site_meta, date=date)
 
     def test_dimensions(self):
-        assert self.nc.dimensions["time"].size == 24 * (60 / 10) + 1
+        assert self.nc.dimensions["time"].size == 3
 
 
 class TestWeatherStationHyytiala(WS):
