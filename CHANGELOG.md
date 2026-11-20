@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.97.7 – 2026-11-20
+
+- Support new format of Kenttärova weather station
+- Add Zh_offset support to BASTA, MIRA, RPG and Galileo radars
+- Change reflectivity offset units to dB
+- Add --calibration option to CLI
+
 ## 1.97.6 – 2026-11-13
 
 - Fix disdrometer rainfall amount with multiday input
