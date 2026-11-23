@@ -27,7 +27,7 @@ class PlotMeta(NamedTuple):
 
     cmap: str = "viridis"
     clabel: str | Sequence[tuple[str, str]] | None = None
-    plot_range: tuple[float, float] | None = None
+    plot_range: tuple[float | None, float | None] | None = None
     log_scale: bool = False
     moving_average: bool = True
     contour: bool = False
@@ -277,6 +277,7 @@ ATTRIBUTES = {
             time_smoothing_duration=_MWR_MULTI_SMOOTHING,
         ),
     },
+    "weather-station": {"relative_humidity": PlotMeta(plot_range=(0, 100))},
     "fallback": {
         "cloud_top_height_agl": PlotMeta(
             moving_average=False,
@@ -728,5 +729,12 @@ ATTRIBUTES = {
             plot_range=(0.02, 1000),
             log_scale=True,
         ),
+        "wind_direction": PlotMeta(plot_range=(0, 360)),
+        "wind_speed": PlotMeta(plot_range=(0, None)),
+        "rainfall_rate": PlotMeta(plot_range=(0, None)),
+        "rainfall_amount": PlotMeta(plot_range=(0, None)),
+        "snowfall_rate": PlotMeta(plot_range=(0, None)),
+        "snowfall_amount": PlotMeta(plot_range=(0, None)),
+        "snow_depth": PlotMeta(plot_range=(0, None)),
     },
 }

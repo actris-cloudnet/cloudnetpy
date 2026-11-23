@@ -1053,14 +1053,36 @@ class Plot1D(Plot):
         percent_gap = 0.05
         fallback = (-percent_gap, percent_gap)
         if self._is_log:
-            if self._plot_meta.plot_range is not None:
-                return self._plot_meta.plot_range
             valid = self._data[~ma.getmaskarray(self._data)]
-            return (valid.min() / 2, valid.max() * 2) if valid.size else (0.1, 10)
+            if valid.size == 0:
+                return (0.1, 10)
+            vmin = (
+                valid.min() / 2
+                if self._plot_meta.plot_range is None
+                or self._plot_meta.plot_range[0] is None
+                else self._plot_meta.plot_range[0]
+            )
+            vmax = (
+                valid.max() * 2
+                if self._plot_meta.plot_range is None
+                or self._plot_meta.plot_range[1] is None
+                else self._plot_meta.plot_range[1]
+            )
+            return (vmin, vmax)
         if ma.all(self._data.mask):
             return fallback
-        min_data = self._data.min()
-        max_data = self._data.max()
+        min_data = (
+            self._data.min()
+            if self._plot_meta.plot_range is None
+            or self._plot_meta.plot_range[0] is None
+            else self._plot_meta.plot_range[0]
+        )
+        max_data = (
+            self._data.max()
+            if self._plot_meta.plot_range is None
+            or self._plot_meta.plot_range[1] is None
+            else self._plot_meta.plot_range[1]
+        )
         range_val = max_data - min_data
         gap = percent_gap * range_val
         min_y = min_data - gap
