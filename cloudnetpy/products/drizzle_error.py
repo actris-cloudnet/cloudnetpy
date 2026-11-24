@@ -121,8 +121,9 @@ def _add_supplementary_errors(
         return _stack_errors(n_error, drizzle_indices)
 
     def _calc_v_error() -> ma.MaskedArray:
-        error = results["Do_error"]
-        error[drizzle_indices["tiny"]] *= error[drizzle_indices["tiny"]]
+        error = ma.copy(results["Do_error"])
+        # Stokes regime, v ~ D^2
+        error[drizzle_indices["tiny"]] *= 2
         return error
 
     results["drizzle_N_error"] = _calc_n_error()

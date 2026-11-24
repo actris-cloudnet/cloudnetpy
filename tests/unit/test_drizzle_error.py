@@ -57,9 +57,17 @@ def test_add_supplementary_errors(results, key):
 
 
 def test_calc_v_error(results):
-    results["Do_error"] = np.array([[2, 2, 2], [2, 2, 2]])
+    results["Do_error"] = np.full((2, 3), 0.3)
     x = de._add_supplementary_errors(results, DRIZZLE_INDICES, ERROR_INPUT, MU)
-    testing.assert_almost_equal(x["v_drizzle_error"][DRIZZLE_INDICES["tiny"]], 4)
+    tiny = DRIZZLE_INDICES["tiny"]
+    testing.assert_almost_equal(x["v_drizzle_error"][tiny], 0.6)
+    testing.assert_almost_equal(x["v_drizzle_error"][~tiny], 0.3)
+
+
+def test_calc_v_error_does_not_modify_dia_error(results):
+    results["Do_error"] = np.full((2, 3), 0.3)
+    x = de._add_supplementary_errors(results, DRIZZLE_INDICES, ERROR_INPUT, MU)
+    testing.assert_array_equal(x["Do_error"], 0.3)
 
 
 def test_calc_n_error(results):
