@@ -11,6 +11,7 @@ DRIZZLE_INDICES = {
 }
 ERROR_INPUT = (np.array([[0.01, 0.34, 0.5], [0.2, 0.3, 0.56]]), 0.14)
 BIAS_INPUT = (0.01, 0.57)
+MU = np.array([[0.0, 2.0, 5.0], [10.0, -0.5, -1.0]])
 
 
 @pytest.mark.parametrize(
@@ -51,14 +52,48 @@ def results():
 
 @pytest.mark.parametrize("key", ["drizzle_N_error", "v_drizzle_error", "mu_error"])
 def test_add_supplementary_errors(results, key):
-    x = de._add_supplementary_errors(results, DRIZZLE_INDICES, ERROR_INPUT)
+    x = de._add_supplementary_errors(results, DRIZZLE_INDICES, ERROR_INPUT, MU)
     assert key in x.keys()
 
 
 def test_calc_v_error(results):
     results["Do_error"] = np.array([[2, 2, 2], [2, 2, 2]])
-    x = de._add_supplementary_errors(results, DRIZZLE_INDICES, ERROR_INPUT)
+    x = de._add_supplementary_errors(results, DRIZZLE_INDICES, ERROR_INPUT, MU)
     testing.assert_almost_equal(x["v_drizzle_error"][DRIZZLE_INDICES["tiny"]], 4)
+
+
+def test_calc_n_error(results):
+    indices = {key: np.ones((2, 3), dtype=bool) for key in DRIZZLE_INDICES}
+    dia_error = np.full((2, 3), 0.3)
+    results["Do_error"] = dia_error.copy()
+    x = de._add_supplementary_errors(results, indices, ERROR_INPUT, MU)
+    mu_error = de._calc_n_mu_error(MU)
+    expected = np.sqrt(ERROR_INPUT[0] ** 2 + (6 * dia_error) ** 2 + mu_error**2)
+    testing.assert_allclose(x["drizzle_N_error"], expected)
+
+
+def test_calc_n_mu_error_matches_numerical_derivative():
+    from scipy.special import gammaln
+
+    def log_density(mu):
+        return gammaln(1 + mu) - gammaln(7 + mu) + 6 * np.log(3.67 + mu)
+
+    mu = np.array([-0.9, -0.5, 0.0, 2.0, 5.0, 10.0])
+    step = 1e-6
+    derivative = (log_density(mu + step) - log_density(mu - step)) / (2 * step)
+    expected = np.abs(derivative) * de.MU_STEP
+    testing.assert_allclose(de._calc_n_mu_error(mu), expected, rtol=1e-5)
+
+
+def test_calc_n_mu_error_is_zero_for_undefined_density():
+    result = de._calc_n_mu_error(np.array([-1.0, -1.5]))
+    testing.assert_array_equal(result, 0)
+
+
+def test_calc_n_bias(results):
+    x = de._add_supplementary_biases(results, BIAS_INPUT)
+    expected = np.sqrt(BIAS_INPUT[0] ** 2 + (6 * results["Do_bias"]) ** 2)
+    testing.assert_allclose(x["drizzle_N_bias"], expected)
 
 
 @pytest.mark.parametrize("key", ["drizzle_N_bias", "v_drizzle_bias"])

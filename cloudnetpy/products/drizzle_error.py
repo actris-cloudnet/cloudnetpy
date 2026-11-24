@@ -1,6 +1,7 @@
 import numpy as np
 import numpy.typing as npt
 from numpy import ma
+from scipy.special import digamma
 
 from cloudnetpy import utils
 from cloudnetpy.constants import LN_TO_DB
@@ -8,6 +9,7 @@ from cloudnetpy.products.drizzle_tools import DrizzleSolver, DrizzleSource
 
 MU_ERROR = 0.07
 MU_ERROR_SMALL = 0.25
+MU_STEP = 2  # Uncertainty of mu, one step of the sequence 0, 2, 5, 10
 
 
 def get_drizzle_error(
@@ -32,7 +34,7 @@ def get_drizzle_error(
         z_error = np.full(categorize.z.shape, z_error)
         error_input = z_error, bias_error
     bias_input = _read_input_uncertainty(categorize, "bias")
-    return _calc_errors(drizzle_indices, error_input, bias_input)
+    return _calc_errors(drizzle_indices, error_input, bias_input, parameters["mu"])
 
 
 def _get_drizzle_indices(diameter: npt.NDArray) -> dict:
@@ -49,11 +51,16 @@ def _read_input_uncertainty(categorize: DrizzleSource, uncertainty_type: str) ->
     )
 
 
-def _calc_errors(drizzle_indices: dict, error_input: tuple, bias_input: tuple) -> dict:
+def _calc_errors(
+    drizzle_indices: dict,
+    error_input: tuple,
+    bias_input: tuple,
+    mu: npt.NDArray,
+) -> dict:
     errors = _calc_parameter_errors(drizzle_indices, error_input)
     biases = _calc_parameter_biases(bias_input)
     results = {**errors, **biases}
-    _add_supplementary_errors(results, drizzle_indices, error_input)
+    _add_supplementary_errors(results, drizzle_indices, error_input, mu)
     _add_supplementary_biases(results, bias_input)
     return _convert_to_db(results)
 
@@ -105,11 +112,12 @@ def _add_supplementary_errors(
     results: dict,
     drizzle_indices: dict,
     error_input: tuple,
+    mu: npt.NDArray,
 ) -> dict:
     def _calc_n_error() -> ma.MaskedArray:
         z_error = error_input[0]
-        dia_error = db2lin(results["Do_error"])
-        n_error = utils.l2norm(z_error, 6 * dia_error)
+        dia_error = results["Do_error"]
+        n_error = utils.l2norm(z_error, 6 * dia_error, _calc_n_mu_error(mu))
         return _stack_errors(n_error, drizzle_indices)
 
     def _calc_v_error() -> ma.MaskedArray:
@@ -126,12 +134,22 @@ def _add_supplementary_errors(
 def _add_supplementary_biases(results: dict, bias_input: tuple) -> dict:
     def _calc_n_bias() -> ma.MaskedArray:
         z_bias = bias_input[0]
-        dia_bias = db2lin(results["Do_bias"])
+        dia_bias = results["Do_bias"]
         return utils.l2norm_weighted((z_bias, dia_bias), 1, (1, 6))
 
     results["drizzle_N_bias"] = _calc_n_bias()
     results["v_drizzle_bias"] = results["Do_bias"]
     return results
+
+
+def _calc_n_mu_error(mu: npt.NDArray) -> npt.NDArray:
+    """Error in number concentration due to uncertainty in mu, for fixed Do."""
+    sensitivity = np.zeros(mu.shape)
+    ind = mu > -1
+    sensitivity[ind] = (
+        digamma(1 + mu[ind]) - digamma(7 + mu[ind]) + 6 / (3.67 + mu[ind])
+    )
+    return np.abs(sensitivity) * MU_STEP
 
 
 def _convert_to_db(results: dict) -> dict:
