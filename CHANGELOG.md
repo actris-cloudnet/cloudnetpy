@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.97.9 – 2026-11-24
+
+- Preserve requested-day samples in midnight-spanning RPG files
+- Adjust ranges for weather station plots
+
 ## 1.97.8 – 2026-11-20
 
 - Fix pressure in Kenttärova weather station
