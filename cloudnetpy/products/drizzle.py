@@ -138,7 +138,9 @@ class DrizzleProducts:
         mu = ma.array(mu)
         s = ma.array(s)
         gamma_ratio = gamma(4 + mu) / gamma(3 + mu) / (3.67 + mu)
-        return constants.RHO_WATER / 3 * self._data.beta * s * dia * gamma_ratio
+        # Extinction from attenuation-corrected backscatter
+        alpha = self._data.beta * self._params["beta_corr"] * s
+        return constants.RHO_WATER / 3 * alpha * dia * gamma_ratio
 
     def _calc_lwf(self, lwc_in: npt.NDArray) -> npt.NDArray:
         """Calculates drizzle liquid water flux."""

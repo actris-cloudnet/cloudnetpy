@@ -462,8 +462,17 @@ def test_calc_lwc(class_objects, params_objects):
     assert dia is not None
     gamma_ratio = drizzle.gamma(4 + mu) / drizzle.gamma(3 + mu) / (3.67 + mu)
     assert gamma_ratio is not None
-    expected = 1000 / 3 * obj._data.beta * s * dia * gamma_ratio
+    beta = obj._data.beta * obj._params["beta_corr"]
+    expected = 1000 / 3 * beta * s * dia * gamma_ratio
     testing.assert_array_almost_equal(obj._calc_lwc(), expected)
+
+
+def test_calc_lwc_uses_attenuation_corrected_beta(class_objects, params_objects):
+    d_source, _, _ = class_objects
+    obj = drizzle.DrizzleProducts(d_source, params_objects)
+    reference = obj._calc_lwc()
+    obj._params = {**obj._params, "beta_corr": 2 * obj._params["beta_corr"]}
+    testing.assert_allclose(obj._calc_lwc(), 2 * reference)
 
 
 def test_calc_lwf(class_objects, params_objects):
