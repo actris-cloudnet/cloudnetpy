@@ -278,6 +278,7 @@ ATTRIBUTES = {
         ),
     },
     "weather-station": {"relative_humidity": PlotMeta(plot_range=(0, 100))},
+    "radar": {"relative_humidity": PlotMeta(plot_range=(0, 100))},
     "fallback": {
         "cloud_top_height_agl": PlotMeta(
             moving_average=False,
