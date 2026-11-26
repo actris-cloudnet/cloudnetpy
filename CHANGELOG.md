@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.98.0 – 2026-11-26
+
+- Remove `temperature_offset` option from categorize
+- Fix range in IWV plots
+
 ## 1.97.9 – 2026-11-24
 
 - Preserve requested-day samples in midnight-spanning RPG files
