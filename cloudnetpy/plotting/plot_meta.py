@@ -630,10 +630,6 @@ ATTRIBUTES = {
         "radar_melting_atten": PlotMeta(
             plot_range=(0, 5),
         ),
-        "iwv": PlotMeta(
-            cmap="Blues",
-            plot_range=(0, 1),
-        ),
         "target_classification": PlotMeta(
             clabel=_CLABEL["target_classification"],
         ),
