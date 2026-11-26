@@ -372,7 +372,7 @@ ATTRIBUTES = {
             plot_range=(0.1, 0.5),
         ),
         "drizzle_N": PlotMeta(
-            plot_range=(1e4, 1e9),
+            plot_range=(1e0, 1e6),
             log_scale=True,
         ),
         "drizzle_N_error": PlotMeta(

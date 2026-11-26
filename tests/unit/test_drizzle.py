@@ -3,7 +3,8 @@ from bisect import bisect_left
 import netCDF4
 import numpy as np
 import pytest
-from numpy import testing
+from numpy import ma, testing
+from scipy.integrate import quad
 
 from cloudnetpy import utils
 from cloudnetpy.products import drizzle
@@ -225,8 +226,29 @@ def test_calculate_spectral_width(drizzle_cat_file):
     width = netCDF4.Dataset(drizzle_cat_file).variables["width"][:]
     v_sigma = netCDF4.Dataset(drizzle_cat_file).variables["v_sigma"][:]
     factor = obj._calc_v_sigma_factor()
-    expected = width - factor * v_sigma
+    expected = np.sqrt(np.clip(width**2 - factor * v_sigma**2, 0, None))
     testing.assert_almost_equal(obj._calculate_spectral_width(), expected)
+
+
+def test_spectral_width_is_subtracted_in_quadrature(drizzle_cat_file, monkeypatch):
+    obj = drizzle.SpectralWidth(drizzle_cat_file)
+    monkeypatch.setattr(obj, "_calc_v_sigma_factor", lambda: 0.25)
+    result = obj._calculate_spectral_width()
+    # width = 2, v_sigma = -2: sqrt(4 - 0.25 * 4)
+    testing.assert_almost_equal(result[0, 0], np.sqrt(3))
+    # width = 3, v_sigma = -1: sqrt(9 - 0.25 * 1)
+    testing.assert_almost_equal(result[1, 1], np.sqrt(8.75))
+
+
+def test_spectral_width_is_zero_when_turbulence_dominates(
+    drizzle_cat_file, monkeypatch
+):
+    obj = drizzle.SpectralWidth(drizzle_cat_file)
+    monkeypatch.setattr(obj, "_calc_v_sigma_factor", lambda: 10)
+    result = obj._calculate_spectral_width()
+    # width = 2, v_sigma = -2 and width = 1, v_sigma = 2
+    testing.assert_array_equal(result[0, [0, 2]], [0, 0])
+    assert np.all(result[np.isfinite(result)] >= 0)
 
 
 def test_calc_beam_divergence(drizzle_cat_file):
@@ -355,13 +377,79 @@ def test_calc_derived_products(class_objects, params_objects, key):
     assert key in dictio.keys()
 
 
-def test_calc_density(class_objects, params_objects):
+def _calc_density(class_objects, params_objects, monkeypatch, z, dia, mu, ray=1.0):
     d_source, _, _ = class_objects
     obj = drizzle.DrizzleProducts(d_source, params_objects)
-    obj._data.z = np.array([[1, 1, 1], [1, 1, 1]])
-    a = 3.67**6 / 1**6
-    expected = np.array([[0.0, a, a], [a, a, 0.0]])
-    testing.assert_array_almost_equal(obj._calc_density(), expected)
+    shape = obj._params["Do"].shape
+    obj._params = {
+        **obj._params,
+        "Do": np.full(shape, dia),
+        "mu": np.full(shape, mu),
+    }
+    obj._ind_drizzle, obj._ind_lut = obj._find_indices()
+    mie = {**obj._data.mie, "ray": np.full(obj._data.mie["ray"].shape, ray)}
+    monkeypatch.setattr(obj._data, "mie", mie)
+    monkeypatch.setattr(obj._data, "z", np.full(shape, z))
+    return obj._calc_density()
+
+
+def test_calc_density_exponential(class_objects, params_objects, monkeypatch):
+    z, dia = 1e-19, 1e-4
+    density = _calc_density(class_objects, params_objects, monkeypatch, z, dia, mu=0)
+    expected = z * 3.67**6 / (720 * dia**6)
+    testing.assert_allclose(density, expected)
+
+
+@pytest.mark.parametrize("mu", [-0.5, 0, 2.5, 10])
+def test_calc_density_matches_integrated_distribution(
+    class_objects, params_objects, monkeypatch, mu
+):
+    dia = 2e-4
+
+    def moment(order: int) -> float:
+        def func(d: float) -> float:
+            return d ** (mu + order) * np.exp(-(3.67 + mu) * d)
+
+        return quad(func, 0, np.inf)[0] * dia**order
+
+    z = 1e3 * moment(6)
+    expected = 1e3 * moment(0)
+    density = _calc_density(class_objects, params_objects, monkeypatch, z, dia, mu)
+    testing.assert_allclose(density, expected, rtol=1e-6)
+
+
+@pytest.mark.parametrize("mu", [-1, -1.5])
+def test_calc_density_is_undefined_for_small_mu(
+    class_objects, params_objects, monkeypatch, mu
+):
+    density = _calc_density(class_objects, params_objects, monkeypatch, 1e-19, 1e-4, mu)
+    testing.assert_array_equal(density, 0)
+
+
+def test_calc_density_uses_rayleigh_reflectivity(
+    class_objects, params_objects, monkeypatch
+):
+    args = (class_objects, params_objects, monkeypatch, 1e-19, 1e-4, 0)
+    testing.assert_allclose(_calc_density(*args, ray=0.5), 2 * _calc_density(*args))
+
+
+def test_calc_density_is_zero_without_drizzle(class_objects, params_objects):
+    d_source, _, _ = class_objects
+    obj = drizzle.DrizzleProducts(d_source, params_objects)
+    no_drizzle = obj._params["Do"] == 0
+    assert np.any(no_drizzle)
+    testing.assert_array_equal(obj._calc_density()[no_drizzle], 0)
+
+
+def test_screen_undefined_density_error():
+    results = {
+        "drizzle_N": ma.array(
+            [[0.0, 2.0], [3.0, 4.0]], mask=[[False, False], [True, False]]
+        ),
+        "drizzle_N_error": ma.array([[1.0, 1.0], [1.0, 1.0]]),
+    }
+    drizzle._screen_undefined_density_error(results)
+    testing.assert_array_equal(results["drizzle_N_error"], [[0, 1], [0, 1]])
 
 
 def test_calc_lwc(class_objects, params_objects):
@@ -374,8 +462,17 @@ def test_calc_lwc(class_objects, params_objects):
     assert dia is not None
     gamma_ratio = drizzle.gamma(4 + mu) / drizzle.gamma(3 + mu) / (3.67 + mu)
     assert gamma_ratio is not None
-    expected = 1000 / 3 * obj._data.beta * s * dia * gamma_ratio
+    beta = obj._data.beta * obj._params["beta_corr"]
+    expected = 1000 / 3 * beta * s * dia * gamma_ratio
     testing.assert_array_almost_equal(obj._calc_lwc(), expected)
+
+
+def test_calc_lwc_uses_attenuation_corrected_beta(class_objects, params_objects):
+    d_source, _, _ = class_objects
+    obj = drizzle.DrizzleProducts(d_source, params_objects)
+    reference = obj._calc_lwc()
+    obj._params = {**obj._params, "beta_corr": 2 * obj._params["beta_corr"]}
+    testing.assert_allclose(obj._calc_lwc(), 2 * reference)
 
 
 def test_calc_lwf(class_objects, params_objects):

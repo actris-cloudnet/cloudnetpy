@@ -60,6 +60,7 @@ def generate_drizzle(
             **derived_products.derived_products,
             **errors,
         }
+        _screen_undefined_density_error(results)
         results = _screen_rain(results, drizzle_class)
         results["drizzle_retrieval_status"] = retrieval_status.retrieval_status
         _append_data(drizzle_source, results)
@@ -115,10 +116,20 @@ class DrizzleProducts:
         }
 
     def _calc_density(self) -> npt.NDArray:
-        """Calculates drizzle number density (m-3)."""
-        a = self._data.z * 3.67**6
-        b = self._params["Do"] ** 6
-        return np.divide(a, b, out=np.zeros_like(a), where=b != 0)
+        """Calculates drizzle number density (m-3).
+
+        Total number of the gamma size distribution, derived from its sixth moment
+        (Rayleigh reflectivity). Not defined when mu <= -1.
+        """
+        dia, mu = self._params["Do"], self._params["mu"]
+        density = ma.zeros(dia.shape)
+        is_finite = mu[self._ind_drizzle] > -1
+        ind = tuple(i[is_finite] for i in self._ind_drizzle)
+        ind_lut = tuple(i[is_finite] for i in self._ind_lut)
+        z_rayleigh = self._data.z[ind] / self._data.mie["ray"][ind_lut]
+        moment_ratio = gamma(1 + mu[ind]) / gamma(7 + mu[ind])
+        density[ind] = z_rayleigh * moment_ratio * ((3.67 + mu[ind]) / dia[ind]) ** 6
+        return density
 
     def _calc_lwc(self) -> npt.NDArray:
         """Calculates drizzle liquid water content (kg m-3)."""
@@ -127,7 +138,9 @@ class DrizzleProducts:
         mu = ma.array(mu)
         s = ma.array(s)
         gamma_ratio = gamma(4 + mu) / gamma(3 + mu) / (3.67 + mu)
-        return constants.RHO_WATER / 3 * self._data.beta * s * dia * gamma_ratio
+        # Extinction from attenuation-corrected backscatter
+        alpha = self._data.beta * self._params["beta_corr"] * s
+        return constants.RHO_WATER / 3 * alpha * dia * gamma_ratio
 
     def _calc_lwf(self, lwc_in: npt.NDArray) -> npt.NDArray:
         """Calculates drizzle liquid water flux."""
@@ -185,6 +198,12 @@ class RetrievalStatus:
         self.retrieval_status[in_warm_liquid == 1] = 4
 
 
+def _screen_undefined_density_error(results: dict) -> None:
+    """Removes number concentration error where the concentration is not defined."""
+    is_undefined = ma.filled(results["drizzle_N"], 0) == 0
+    results["drizzle_N_error"][is_undefined] = 0
+
+
 def _screen_rain(results: dict, classification: DrizzleClassification) -> dict:
     """Removes rainy profiles from drizzle variables.."""
     for key in results:
@@ -208,6 +227,10 @@ DRIZZLE_ATTRIBUTES = {
         long_name="Drizzle number concentration",
         units="m-3",
         ancillary_variables="drizzle_N_error drizzle_N_bias",
+        comment=(
+            "Total number concentration of the gamma drop size distribution.\n"
+            "Not defined when the shape parameter mu <= -1."
+        ),
         dimensions=("time", "height"),
     ),
     "drizzle_N_error": MetaData(
